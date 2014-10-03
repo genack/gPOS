@@ -1,0 +1,85 @@
+
+/*General styles not really related to the forms*/
+
+* {
+
+}
+
+body {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size:12px;
+	background:#FFF;
+}
+
+img {
+	border:0;
+}
+
+
+#container {
+	padding:20px;
+}
+
+
+
+/*Forms defaults*/
+
+select,input, textarea {
+	font-family:Verdana, Arial, Helvetica, sans-serif;
+	font-size:12px;
+}
+
+/*input[type=text]{
+	font-family: Courier,Terminal,Verdana, Arial, Helvetica, sans-serif;
+	font-size:12px;
+	background-color: #ffc;
+                  
+	padding: 2px;
+}*/
+fieldset{ 
+  border-radius: 5px;
+  border: solid 1px #D5D5D5;
+ }
+select,
+input[type="text"],
+input[type="submit"],
+input[type="password"] {
+  padding: 10px;
+  border: solid 1px #E5E5E5;
+  transition: box-shadow 0.3s, border 0.3s;
+  background-color: #DDEFFB;
+  color:#222;
+  border-radius: 5px;
+}
+
+input[type="submit"]:{
+  box-shadow: 0; 
+}
+
+input[type="submit"]:hover{
+  border: solid 1px #707070;
+  box-shadow: 0 0 5px 1px #969696;
+}
+input[type="submit"]{ 
+  margin-top:1em;
+ }
+select:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="text"].focus {
+  border: solid 1px #707070;
+  box-shadow: 0 0 5px 1px #969696;
+}
+
+
+
+
+label {
+	color:#555;
+	cursor:pointer;
+	padding-left:2px;
+	line-height:15px;
+	vertical-align:top;
+}
+
+

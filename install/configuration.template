@@ -1,0 +1,72 @@
+
+$modulos = array();
+$config = array();
+
+
+# Este es el fichero de configuracion principal de la aplicación
+
+
+#### Modulos  ####
+$modulos["generadorlistados"] = true;
+	// Generador de listados
+	
+$modulos["mensajeria"] = true;
+	// Sistema de mensajes en tiempo real 
+	
+$modulos["datepicker"] = true;
+	// Selector de fechas avanzado 
+	
+$modulos["arreglodecaja"] = true;
+	// Sistema de arqueos de caja
+
+#### Detalles  #### 
+
+$config["fotosproductos"] = true;
+	// Si aparece la foto del producto en la tpv
+	
+$config["mostrarbannerdga"] = false;
+	// Si aparece el banner indicando la ayuda de la dga
+
+#### Contraseñas ####
+
+$module_password = "%PASSMODULOS%";
+	// Contraseña para modulos auxiliares (recomendado modificar)
+	// Requieren su propia autentificación porque funcionan 
+	// de manera separada con la aplicación.
+
+
+#### Instalacion ####
+
+$_BasePath = "%BASEURL%";
+    // Direccion absoluta donde esta la aplicacion instalada
+    // Debe modificarla para apuntar al directorio donde tiene instalada
+    // la aplicacion.
+    //define ("CORREO_ADMIN","%ADMINEMAIL%");
+
+### GlobalGiroNegocio ###
+// PINF: Productos Informáticos
+
+#### DATOS DEL NEGOCIO ####
+$_SESSION["GlobalNombreNegocio"] = '%NOMBRENEGOCIO%';
+$_SESSION["GlobalGiroNegocio"] = '%GIRONEGOCIO%';
+
+#### Base de datos ####
+$_SESSION["GlobalHostDatabase"] = '%HOST%';	
+$_SESSION["GlobalGesDatabase"]  = '%DATABASE%';				
+$_SESSION["GlobalUserDatabase"] = '%USER%';	
+$_SESSION["GlobalPassDatabase"] = '%PASS%';  
+	// Debe configurar aqui los datos de acceso a su base de datos  
+  
+
+#### A partir de aquí no cambiar nada ####
+  
+$ges_database 	= $_SESSION["GlobalGesDatabase"];
+$global_host_db 	= $_SESSION["GlobalHostDatabase"];
+$global_user_db 	= $_SESSION["GlobalUserDatabase"];
+$global_pass_db 	= $_SESSION["GlobalPassDatabase"];
+
+	
+	
+	  
+  
+  

@@ -1,0 +1,8 @@
+*.*~
+*.swp
+*.swo
+#*#
+configuration.php
+update_table.php
+gpos-installer.xpi
+productos/

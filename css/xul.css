@@ -1,0 +1,198 @@
+
+/* Areas de cabecera que parecen pertenecer al iframe de listados*/
+.AreaPagina {
+  background-color: #ECE8DE;
+  border: 0px none!important;
+}
+
+
+
+/* Elementos que flotan dentro de una cabecera AreaPagina */
+.enAreaPagina {
+ /* background-color: #ECE8DE;*/
+ /*background-color: white;*/
+}
+
+
+/* Iframe con contenido html */
+.AreaListados {
+ /*background-color: white;*/
+ height: 100%;border: 0px none;
+}
+
+/* Areas añadidas con controles extra */
+
+.frameExtra {
+ background-color: #FBFBFB;
+ background-image:url('../img/gpos_marcagua.png');
+ background-repeat: no-repeat; 
+ background-position: bottom left;
+ border: 0px none;
+}
+toolbox{ 
+         border: 0px solid; 
+         }
+#gpostoolbox{ 
+              padding: .1em;
+ }
+
+
+.frameExtraDeck {
+ background-color: #FBFBFB;
+ border: 0px none;
+}
+
+/* Areas añadidas con controles extra */
+
+.frameNormal {
+ /*background-color: white;*/
+ /*background-image: url(img/bg2.png);
+ background-repeat: repeat-x;*/
+ border: 0px none;
+}
+
+/* areas con fondo transparente, como labels */
+
+.trans {
+ background-color: #FFFFFF;
+ border: 0px none;
+}
+
+button{ 
+  padding: .3em;      
+  box-shadow: 0px 0px 0px #888;
+  border: 1px solid #aaa;
+  border-radius:3px;
+ }
+
+button:hover{ 
+ /*  box-shadow: 0px 1px 2px #888; */
+ }
+
+tab{ 
+  background: #C1C1C1;
+  padding: 0.5em;      
+  /*box-shadow: -1px 0px 0px #333;*/
+  border: 1px solid #6B6B6B;
+  border-radius: 6px 6px 0  0;
+  font-size: 110%;
+  font-weight: bold;
+ }
+tab:hover{   background: #C9C9C9;   color: #000;  }
+
+textbox{ 
+  border: 0px solid #DFDFDF;
+  box-shadow: inset 0px 1px 2px #555;
+  background-color: #F0F0F0;
+  border-radius:3px;
+  min-height: 2em;      
+ }
+
+popup{ 
+  background-color: #e6e6e6;
+  border-radius: .2em;
+  border: 1px solid #aaa;       
+ }
+
+menubar{   padding: .3em;   }
+menupopup{ 
+  border: 0px solid #DFDFDF;
+  /* color: #505050;  */
+ } 
+
+menulist{ 
+  border: 0px solid #DFDFDF;
+  box-shadow: inset 0px 1px 2px #555;
+  background-color: #F0F0F0;
+  border-radius:3px;
+  min-height: 2em;      
+ }
+
+ groupbox row textbox{ 
+        width: 6em; 
+ }
+
+#busquedaDetallesCompra row description,
+#busquedaDetallesCompra row textbox{ 
+padding-top:5px;
+ }
+
+listitem { 
+           /* background-color:#BCBBBA; */
+           padding-top:0.22em;   
+           padding-bottom:0.17em;   
+           }
+
+listitem.parrow{ 
+         /* background-color:#BCBBBA; */
+          /*  padding-top:0.2em; */   
+          /*  padding-bottom:0.2em; */   
+         }
+listitem.imparrow{ 
+           /* background-color:transparent; */
+           /* padding-top:0.2em; */   
+           /* padding-bottom:0.2em; */   
+                   }
+
+
+/**
+listitem[selected="true"] {
+        background-color:#282828;
+}
+**/
+
+#xboxprecios hbox groupbox grid rows row description{
+    border: 0px solid #000;
+    padding:0.3em;
+    padding-top:0.5em;
+}
+
+#xboxprecios hbox groupbox grid rows row textbox{
+    border: 0px solid #000;
+    padding:0.1em;
+}
+
+menu toolbarbutton {
+                padding-top: 0.05em;
+                padding-bottom: 0.05em;
+                padding-left: 2em;
+                padding-right: 2em;
+}
+textbox#cambioPassUsuario{  
+                    min-height: 2.4em;
+               }
+hbox toolbarbutton.media{  
+                    padding: 0.05em;
+               }
+.cjafaltante{
+    color:#C91918; 
+}
+.cjacierre,
+.cjasobrante{
+    color:#000;
+}
+
+.cjasobrante,
+.cjafaltante,
+.cjacierre{
+    font-size: 120%;
+    font-weight: bold;
+    text-align:center;
+
+}
+
+.arqueoaling{
+    text-align:right;
+    width:10em;
+}
+
+.cjagralabierta{
+    background-color:#FFA500;
+    border:0px;
+}
+
+.cjagralcerrada{
+    background-color:#C91918;
+    border:0px;
+    color:#FFF;
+}

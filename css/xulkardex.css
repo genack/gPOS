@@ -1,0 +1,36 @@
+.parrowkardex{ 
+               background-color:#BCBBBA;
+               padding-top:2.5px;   
+               }
+.imparrowkardex{ 
+                 background-color:transparent;
+                 padding-top:2.5px;   
+                 }
+.parselrowkardex,
+.imparselrowkardex,
+.parrowkardex:hover,
+.imparrowkardex:hover{ 
+                       background-color:#2A2A2A;
+                       color:#E7E7E7;
+                       padding-top:2.5px;   
+                       }
+.parselrowkardex,
+.imparselrowkardex{
+                    color: #00AAF6;
+                    /**font-weight:bold;**/
+                    }
+.parselrowkardex:hover,
+.imparselrowkardex:hover{
+                          color:#E7E7E7;
+                          /**font-weight:bold;**/
+                          }
+#boxmovimientos{ 
+                 overflow: auto;
+                 border:1px solid #8E8E8E;
+                 background-color:#AAAAAA;
+                 margin:0.1em 1em 1.5em
+                 }
+#boxmovimientosbuscar{ 
+                       background-color: #d7d7d7;padding:3px;
+                       padding-top:0.6em;
+ }

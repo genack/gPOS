@@ -1,0 +1,171 @@
+
+
+
+treecol,treechildren {
+	  /*font-size: 100%*/ 	
+	  /*font-size: 110%;*/  
+	  };
+
+
+treechildren::-moz-tree-row(selected) { 
+	/*background-color: #FFFFAA;*/ 
+	/*color: black;*/
+	}
+treechildren::-moz-tree-row(odd) { 
+	/*background-color: #EEEEEE;*/
+	/*border:1px solid green;*/ 
+}
+
+treechildren::-moz-tree-row(odd, selected) { 
+	/*background-color: #FFFFAA;*/
+	/*border:1px solid yellow;*/
+}
+
+treechildren::-moz-tree-cell-text(selected) { 
+	/*color: #000000;*/
+	 /*border:1px solid blue;
+	 color: white;*/
+	 font-weight: bold;
+}
+
+treechildren::-moz-tree-cell-text(odd, selected) { 
+	/*color: #000000;*/
+	/*border:1px solid red;*/ 
+}
+
+
+treechildren:-moz-tree-cell(colum_0) {
+  
+  /*background-color: #ccc;*/
+/*  background-color: Window;*/  
+  /*  -moz-appearance: menuitem;
+	-moz-appearance: toolbarbutton;*/
+}
+
+treechildren:-moz-tree-cell(separador) {
+  /*background-color: Window;*/  
+}
+
+
+
+
+treechildren:-moz-tree-cell(colum_1) {
+    /*background-color: Window;*/
+	/*background-color: #ccc;
+	background-color: Window;*/
+}
+treechildren:-moz-tree-cell(celda) {  
+   border-right: 1px solid #ccc;
+}
+treechildren:-moz-tree-cell(separador) {  
+    /*background-color: Window;
+	text-align: center;*/
+}
+
+
+treechildren:-moz-tree-cell(firstLine) {  
+    /*background-color: red;*/	
+	border-top: 2px solid #ccc;
+}
+
+
+.listado {
+	font-size: 13px;
+}
+
+.listado listhead {
+	font-size: 14px;
+}
+
+menu#onlistTicket{ 
+	font-size: 13px;
+        font-weight: bold;
+ }
+
+radiogroup#rgModosTicket{ 
+	font-size: 14px;
+
+ }
+
+radiogroup#rgModosTicket radio[selected="true"] {
+	font-size: 14px;
+        font-weight: bold;
+}
+
+.compacta {
+	font-size: 14px;
+}
+
+.sencilla {
+	font-size: 13px;
+}
+
+.nro {
+       font-size: 12px;
+       width : 100px;   
+       text-align: center;
+       }
+
+.media {
+	font-size: 18px;
+}
+#SubsidiarioListaServicios .media{ font-size: 11px; }
+.xnormal {
+	font-size: 15px;
+}
+
+.xmedia {
+          font-size: 30px;
+          margin-top: 30px;
+}
+
+.grande {
+	font-size: 30px
+}
+
+.xgrande {
+           font-size: 40px;
+           width : 230px;   
+           text-align: center;
+           margin-top: 5px;
+}
+
+
+.xnombre {
+           font-size: 13px;
+           width : 320px;   
+           text-align: left;
+           margin-top: 2px;
+}
+
+.xdireccion {
+           font-size: 13px;
+           width : 320px;   
+           text-align: left;
+           margin-top: 2px;
+}
+
+.xnif {
+           font-size: 14px;
+           width : 320px;   
+           text-align: left;
+           margin-top: 2px;
+}
+
+.xmail {
+           font-size: 13px;
+           width : 320px;   
+           text-align: left;
+           margin-top: 2px;
+}
+
+.ygrande {
+           font-size: 40px;
+           text-align: center;
+           width : 90px;   
+           margin-top: 5px;
+}
+
+.salir {
+	font-size: 18px
+}

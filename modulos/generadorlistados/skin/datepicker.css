@@ -1,0 +1,156 @@
+
+#oe-date-picker-overlay-box
+{
+   background-color        : #F8F8F8;
+   font-size               : 8px;
+}
+
+ 
+#oe-date-picker-year-controls-box
+{
+   border              : 2px solid #626262; 
+   -moz-box-align       : center;
+   -moz-box-pack        : center;
+   background-color    : #626262
+   
+}
+
+#oe-date-picker-year-title-text
+{
+	color: #FFFFFF;
+	font-weight: bold;
+}
+
+
+#oe-date-picker-year-previous-button
+{
+   list-style-image        : url("chrome://datepicker/content/skin/left_arrow.png");
+   
+}
+
+
+#oe-date-picker-year-next-button
+{
+   list-style-image        : url("chrome://datepicker/content/skin/right_arrow.png");
+}
+
+#oe-date-picker-year-next-button-box
+{
+   -moz-box-pack           : end;
+}
+
+#oe-date-picker-year-grid
+{
+   border-top         : 1px solid #2085c4; 
+   border-left        : 1px solid #2085c4; 
+   margin-top         : 1px;
+   margin-right       : 1px;
+}
+
+.oe-date-picker-year-month-box-class
+{
+   -moz-box-align       : center;
+   border-right         : 1px solid #2085c4; 
+   border-bottom        : 1px solid #2085c4;
+   background-color     : #E9E9E9;
+}
+
+
+.oe-date-picker-year-month-box-class:hover
+{
+   background-color     : #C9E8F1;
+}
+
+.oe-date-picker-year-month-box-class[selected="true"]
+{
+   background-color       : #6699CC;
+}
+
+
+.oe-date-picker-month-day-number-class
+{
+   margin                  : 1px;
+}
+
+.oe-date-picker-month-day-number-class[selected="true"]
+{
+
+   background-color       : #6699CC;
+}
+
+/*
+#oe-date-picker-month-grid-box
+{
+   background-image        : url("chrome://calendar/skin/datepicker/day_grid.png");
+   background-repeat       : no-repeat;
+}
+*/
+
+#oe-date-picker-month-grid
+{
+   margin-right          : 0px;
+   margin-bottom         : 0px;
+}
+
+#start-date-button
+{
+	border: 0px;
+	list-style-image        : url("chrome://datepicker/content/skin/gpos_calendario.png");
+	margin: 0px;
+	padding: 0px;
+	max-width: 36px;
+}
+
+#start-date-button:hover
+{
+	margin: 0px;
+	padding: 0px;
+	list-style-image        : url("chrome://datepicker/content/skin/gpos_calendario.png");
+}
+
+.oe-date-picker-month-day-box-class
+{
+   min-width            : 25px;
+   min-height           : 15px;
+   background-color     : #FFFFFF;
+}
+
+.oe-date-picker-month-day-box-class[selected="true"]
+{
+   background-color       : #6699CC;
+}
+
+.oe-date-picker-month-day-box-class:hover
+{
+   background-color     : #FFFF99;
+}
+
+.oe-date-picker-month-day-box-class
+{
+  -moz-box-align       : center;
+   border-right         : 1px solid #E2E2E2; 
+   border-bottom        : 1px solid #E2E2E2;
+   border-top           : 1px solid #E2E2E2; 
+   border-left          : 1px solid #E2E2E2;
+}
+
+.oe-date-picker-month-days-header-class
+{
+	margin					: 0px;
+	padding					: 0px;
+}
+
+.oe-date-picker-month-days-header-class-red
+{
+	color                   : #FF0000;
+}
+
+#oe-date-picker-month-days-header-box
+{
+	margin					: 0px 0px;
+}
+
+.oe-date-picker-month-days-box-header-class
+{
+	-moz-box-align			: center;
+}
