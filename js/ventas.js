@@ -11,6 +11,8 @@ var cMontoComprobanteVenta     = 0;
 var cPendienteComprobanteVenta = 0;
 var cIdLocalVenta              = 0;
 
+var RevDet = 0;
+
 // Busqueda abanzada
 var vFormaVenta    = true;
 var vMoneda        = true;
@@ -53,11 +55,7 @@ function VaciarDetallesCobros(){
 }
 
 function RevisarVentaSeleccionada(){
-
-    VaciarDetallesVentas();
-    VaciarDetallesCobros();
     var idex = id("busquedaVentas").selectedItem;
-
     if(!idex) return;
 
     cIdComprobanteVenta        = idex.childNodes[2].attributes.getNamedItem('label').nodeValue;
@@ -76,9 +74,17 @@ function RevisarVentaSeleccionada(){
     seriefac              = cadena.substring(0,posicion-1);
     menuContextualVentasRealizadas(cIdComprobanteVenta);
 
-    (esFinanzas)? BuscarDetallesCobro(idex.value):BuscarDetallesVenta(idex.value);
+    if(RevDet == 0 || RevDet != idex.value)
+        setTimeout("loadDetallesVentas('"+idex.value+"')",100);
+
+    RevDet = idex.value;
 }
  
+function loadDetallesVentas(xid){
+    (esFinanzas)? VaciarDetallesCobros()   : VaciarDetallesVentas();
+    (esFinanzas)? BuscarDetallesCobro(xid) : BuscarDetallesVenta(xid);
+} 
+
 function RevisarDetalleVentaSeleccionada(){
 
     var idex      = id("busquedaDetallesVenta").selectedItem;
@@ -521,38 +527,35 @@ function BuscarVentas(){
     
     if ((!hasta || hasta == "DD-MM-AAAA") &&  (!desde || desde == "DD-MM-AAAA") && (!nombre))return;
     
-    var modo = 	(id("modoConsultaVentas").checked)?"pendientes":"todos";
+    var modo      = (id("modoConsultaVentas").checked)?"pendientes":"todos";
     var modoserie = (id("modoConsultaVentasSerie").checked)?"cedidos":"todos";
-    //alert(id("modoConsultaFactura").checked);
-    //var modofactura = (id("modoConsultaFactura").checked)?"factura":"todos";
-    //var modoboleta = (id("modoConsultaBoleta").checked)?"boleta":"todos";
-    //var modoticket = (id("modoConsultaTicket").checked)?"ticket":"todos";
-    //var mododevolucion = (id("modoConsultaDevolucion").checked)?"devolucion":"todos";
 
+    var filtrocodigo   = id("busquedaCodigoSerie").value;
     var filtroventa    = id("FiltroVenta").value;
     var filtrolocal    = id("FiltroVentaLocal").value;
-    var modofactura    = (filtroventa =="factura")?"factura":"todos";
-    var modoboleta     = (filtroventa =="boleta")?"boleta":"todos";
+    var modofactura    = (filtroventa == "factura")?"factura":"todos";
+    var modoboleta     = (filtroventa == "boleta")?"boleta":"todos";
     var modoticket     = (filtroventa == "ticket" )?"ticket":"todos";
-    var mododevolucion = (filtroventa =="devolucion")?"devolucion":"todos";
-    var modoalbaran    = (filtroventa =="albaran")?"albaran":"todos";
-    var modoalbaranint = (filtroventa =="albaranint")?"albaranint":"todos";
+    var mododevolucion = (filtroventa == "devolucion")?"devolucion":"todos";
+    var modoalbaran    = (filtroventa == "albaran")?"albaran":"todos";
+    var modoalbaranint = (filtroventa == "albaranint")?"albaranint":"todos";
+    var forzarid        = (filtrocodigo != '' )? filtrocodigo:false;
 
     RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modofactura,modoboleta,mododevolucion,
-		    modoalbaran,modoalbaranint,modoticket,false,false,filtrolocal,
+		    modoalbaran,modoalbaranint,modoticket,false,false,filtrolocal,forzarid,
 		    AddLineaVentas);
 
     var elemento = id("busquedaCodigoSerie").value;
 
-    if( elemento != '' ){
-	     buscarPorCodSerie(elemento);
-    }
+    //if( elemento != '' ) //buscarPorCodSerie(elemento);
+    
 }
 
 
 function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modofactura,modoboleta,
 			 mododevolucion,modoalbaran,modoalbaranint,modoticket,
-			 IdComprobanteVenta,reimprimir,filtrolocal,FuncionProcesaLinea){
+			 IdComprobanteVenta,reimprimir,filtrolocal,forzarid,
+			 FuncionProcesaLinea){
 
     var url = "services.php?modo=mostrarVentas&desde=" + escape(desde) 
         + "&modoconsulta=" + escape(modo) 
@@ -568,7 +571,8 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modofactura,modobolet
         + "&filtrolocal=" + escape(filtrolocal)
         + "&esventas=on"
         + "&modoventa=notpv" 
-        + "&forzarfactura=" + IdComprobanteVenta;
+        + "&forzarfactura=" + IdComprobanteVenta
+        + "&forzarid=" + forzarid;
 
     var obj = new XMLHttpRequest();
     obj.open("GET",url,false);

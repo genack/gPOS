@@ -41,11 +41,12 @@ function OpcionesBusqueda($retorno) {
 
 function GeneraXul($retorno) {
 
- $esBTCA     = ( getSesionDato("GlobalGiroNegocio") == "BTCA" );
+ $txtMoDet   = getModeloDetalle2txt();
+ $esBTCA     = (  $txtMoDet[0]  == "BTCA" );
  $btca       = ( $esBTCA )?'':'collapsed="true"';
- $txtalias   = ( $esBTCA )?'Principio activo':'Etiqueta ';
- $txtModelo  = ( $esBTCA )?'Presentación':'Modelo';
- $txtDetalle = ( $esBTCA )?'Concentración':'Detalle';	    
+ $txtalias   = $txtMoDet[3];
+ $txtModelo  = $txtMoDet[1];
+ $txtDetalle = $txtMoDet[2];
 
 ?>	
 <grid> 
@@ -92,6 +93,15 @@ function GeneraXul($retorno) {
     </menulist>
   </row>
   <row>
+    <caption label="<?php echo _("Sub Familia") ?>"/>
+    <menulist  id="idsubfamilia">
+      <menupopup id="elementosSubFamilias">
+	<menuitem label="Elije Sub Familia" style="font-weight: bold"/>
+        <?php echo genXulComboSubFamilias(false,1,"menuitem") ?>
+      </menupopup>
+    </menulist>
+  </row>
+  <row>
     <caption label="<?php echo $txtModelo ?>"/>
     <menulist  id="idcolor" >
       <menupopup id="elementosColores">
@@ -129,6 +139,7 @@ function GeneraXul($retorno) {
 
 <script><![CDATA[
 function id(nombre) { return document.getElementById(nombre) };
+
 function buscar()
 {
   var tc;
@@ -141,40 +152,97 @@ function buscar()
   var idtalla = id("idtalla").value;
   var idfam   = id("idfamilia").value;
   var nombre  = id("p_Nombre").value;
+  var idsubfam= id("idsubfamilia").value;
 
-  window.parent.Productos_buscarextra(idprov,idcolor,idmarca,idtalla,idfam,idlab,idalias,tc,nombre);
+  window.parent.Productos_buscarextra(idprov,idcolor,idmarca,idtalla,idfam,idlab,idalias,tc,nombre,idsubfam);
      
 }
 
-var icolores = 0;//Indice de color llenada
-var itallas  = 0;//Indice de talla llenada
-var ialias  = 0;//Indice de talla llenada
+var isubfamilias = 0;
+var icolores     = 0;//Indice de color llenada
+var itallas      = 0;//Indice de talla llenada
+var ialias       = 0;//Indice de talla llenada
 
 function changeFam(){
+        setTimeout("RegenSubFamilias()",50);
     	setTimeout("RegenColores()",50);
     	setTimeout("RegenTallajes()",50);
     	setTimeout("RegenAlias()",50);
 }
 
+
+function RegenSubFamilias() {
+	 VaciarSubFamilias();
+
+	 var idfam = id("idfamilia").value;
+	 var xrequest = new XMLHttpRequest();
+	 var url = "selcb.php?modo=subfamilia&IdFamilia="+idfam;
+
+	 xrequest.open("GET",url,false);
+	 xrequest.send(null);
+	 var res = xrequest.responseText;
+	 
+	 var lines = res.split("\n");
+	 var actual;
+	 var ln = lines.length-1;
+	 for(var t=0;t<ln;t++){
+	    actual = lines[t];
+	    actual = actual.split("=");
+	    AddSubFamiliaLine(actual[0],actual[1]);		
+	 }				
+}
+
+function AddSubFamiliaLine(nombre, valor) {
+	var xlistitem = id("elementosSubFamilias");	
+	
+	var xsubfamilia = document.createElement("menuitem");
+	xsubfamilia.setAttribute("id","subfamilia_def_" + isubfamilias);
+			
+	xsubfamilia.setAttribute("value",valor);
+	xsubfamilia.setAttribute("label",nombre);
+	
+	xlistitem.appendChild( xsubfamilia);var xlistitem = id("elementosSubFamilias");	
+	isubfamilias++;
+}
+
+function VaciarSubFamilias(){
+
+	var xlistitem = id("elementosSubFamilias");
+	var iditem;
+	var t = 0;
+	while( el = id("subfamilia_def_"+ t ) ) 
+	{
+		if (el) {
+			//alert('gPOS: \n\n '+ el.id );
+			xlistitem.removeChild( el ) ;	
+		}
+		t = t + 1;
+	}
+
+	isubfamilias = 0;
+
+	id("idsubfamilia").setAttribute("label","");	
+}
+
 function RegenColores() {
-		VaciarColores();
+	VaciarColores();
 
-		var idfam = id("idfamilia").value;
-		var xrequest = new XMLHttpRequest();
-		var url = "selcb.php?modo=colores&IdFamilia="+idfam;
+	var idfam = id("idfamilia").value;
+	var xrequest = new XMLHttpRequest();
+	var url = "selcb.php?modo=colores&IdFamilia="+idfam;
+	
+	xrequest.open("GET",url,false);
+	xrequest.send(null);
+	var res = xrequest.responseText;
 
-		xrequest.open("GET",url,false);
-		xrequest.send(null);
-		var res = xrequest.responseText;
-
-		var lines = res.split("\n");
-		var actual;
-                var ln = lines.length-1;
-		for(var t=0;t<ln;t++){
-			actual = lines[t];
-			actual = actual.split("=");
-			AddColorLine(actual[0],actual[1]);		
-		}				
+	var lines = res.split("\n");
+	var actual;
+	var ln = lines.length-1;
+	for(var t=0;t<ln;t++){
+	   actual = lines[t];
+	   actual = actual.split("=");
+	   AddColorLine(actual[0],actual[1]);		
+	}				
 }
 
 function AddColorLine(nombre, valor) {
@@ -210,24 +278,24 @@ function VaciarColores(){
 }
 
 function RegenTallajes() {
-		VaciarTallas();
+	VaciarTallas();
 		
-		var mitallaje = 5;
-		var idfam = id("idfamilia").value;			
-		var xrequest = new XMLHttpRequest();
-		var url = "selcb.php?modo=tallas&IdTallaje="+mitallaje+'&IdFamilia='+idfam;
-		xrequest.open("GET",url,false);
-		xrequest.send(null);
-		var res = xrequest.responseText;
+	var mitallaje = 5;
+	var idfam = id("idfamilia").value;			
+	var xrequest = new XMLHttpRequest();
+	var url = "selcb.php?modo=tallas&IdTallaje="+mitallaje+'&IdFamilia='+idfam;
+	xrequest.open("GET",url,false);
+	xrequest.send(null);
+	var res = xrequest.responseText;
 	
-		var lines = res.split("\n");
-		var actual;
-                var ln = lines.length-1;	
-		for(var t=0;t<ln;t++){
-			actual = lines[t];
-			actual = actual.split("=");
-			AddTallaLine(actual[0],actual[1]);		
-		}				
+	var lines = res.split("\n");
+	var actual;
+	var ln = lines.length-1;	
+	for(var t=0;t<ln;t++){
+	   actual = lines[t];
+	   actual = actual.split("=");
+	   AddTallaLine(actual[0],actual[1]);		
+	}				
 }
 
 
@@ -264,23 +332,23 @@ function AddTallaLine(nombre, valor) {
 
 
 function RegenAlias() {
-		VaciarAlias();
-		var idfam = id("idfamilia").value;			
-		var xrequest = new XMLHttpRequest();
-		var url = "selcb.php?modo=alias&IdFamilia="+idfam;
-
-		xrequest.open("GET",url,false);
-		xrequest.send(null);
-		var res = xrequest.responseText;
-
-		var lines = res.split("\n");
-		var actual;
-                var ln = lines.length-1;	
-		for(var t=0;t<ln;t++){
-			actual = lines[t];
-			actual = actual.split("=");
-			AddAliasLine(actual[0],actual[1]);		
-		}				
+	VaciarAlias();
+	var idfam = id("idfamilia").value;			
+	var xrequest = new XMLHttpRequest();
+	var url = "selcb.php?modo=alias&IdFamilia="+idfam;
+	
+	xrequest.open("GET",url,false);
+	xrequest.send(null);
+	var res = xrequest.responseText;
+	
+	var lines = res.split("\n");
+	var actual;
+	var ln = lines.length-1;	
+	for(var t=0;t<ln;t++){
+	   actual = lines[t];
+	   actual = actual.split("=");
+	   AddAliasLine(actual[0],actual[1]);		
+	}				
 }
 
 

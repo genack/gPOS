@@ -12,7 +12,7 @@ $NombreTiendaDefecto   = getNombreComercialLocal(getSesionDato("IdTienda"));
 $esCarritoAlmacen      = getSesionDato("ModoCarritoAlmacen");
 $esAgrupar             = ($esCarritoAlmacen == 'g')? 'true':'false';
 $esTraslado            = ($esCarritoAlmacen == 't')? 'true':'false';
-
+$lanzarTPV             = ( isset($_GET["t"]) == 'on');
 //TODO: hacer esto XUL seguro
 StartXul(_("gPOS".$NombreEmpresa));
 
@@ -72,7 +72,7 @@ if (isUsuarioAdministradorWeb()){
 <command id="altaFamilia"  oncommand="solapa('modfamilias.php?modo=alta','<?php echo _("Familia: Alta") ?>')" 
   <?php gulAdmite("Administracion") ?>  label="<?php echo _("Alta familia") ?>"/>
   
-<command id="cmdLogout"  oncommand="document.location.href='logout.php'"  label="<?php echo _(" Salir") ?>"/>
+<command id="cmdLogout"  oncommand="if ( tpvWindow ) if ( tpvWindow.close ) tpvWindow.close(); document.location.href='logout.php'"  label="<?php echo _(" Salir") ?>"/>
 
 <command id="procesarCompra" oncommand="solapa('modcompras.php?modo=continuarCompra','<?php echo _("Compras") ?>')"
      <?php gulAdmite("Compras") ?> label="<?php echo _("Continuar compra") ?>"/>
@@ -97,6 +97,9 @@ if (isUsuarioAdministradorWeb()){
 <!-- ====== MENU ALMACEN - ITEM ====== -->
 <command id="verAlmacen"   oncommand="solapa('xulalmacen.php?modo=entra','<?php echo _("Almacén - Stock") ?>','almacen')" accesskey="S"
   <?php gulAdmite("VerStocks") ?> label="<?php echo _("Stock") ?>"/>
+
+<command id="verKardex"   oncommand="solapa('selkardex.php?modo=verKardex','<?php echo _("Almacén - Kardex") ?>','framelist')" accesskey="K"
+  <?php gulAdmite("Kardex") ?> label="<?php echo _("Kardex") ?>"/>
 
 <command id="verInventario"   oncommand="solapa('modalmacenborrador.php?modo=verInventario','<?php echo _("Almacén - Inventario") ?>','framelist')" accesskey="A"
   <?php gulAdmite("VerAjustes") ?> label="<?php echo _("Ajustes") ?>"/>
@@ -232,7 +235,7 @@ if (isUsuarioAdministradorWeb()){
 <command id="buzonNotaImportante" oncommand="solapa('modulos/mensajeria/modbuzon.php?modo=notaimportante','<?php echo _("Nota importante") ?>','buzon')" 
  <?php gulAdmite("Administracion","mensajeria") ?>  label="<?php echo _("Enviar nota importante") ?>"/> 
 
-<command id="lanzarTPV" oncommand="lanzarTPV(rd)" <?php gulAdmite("TPV") ?>  label="<?php echo _("TPV") ?>"/> 
+<!-- command id="lanzarTPV" oncommand="lanzarTPV(rd)" <?php gulAdmite("TPV") ?>  label="<?php echo _("TPV") ?>"/ --> 
    
 <groupbox flex="1" class="frameExtraXX">
   <caption label="gPOS<?php echo $NombreEmpresa?>"/>
@@ -296,6 +299,7 @@ if (isUsuarioAdministradorWeb()){
 		    <?php
  		       $menuConfiguracion = array(
 
+		       _("Kardex") =>  "verKardex",	
 		       _("Inventario") =>  "verInventario"
 		    );  
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
@@ -673,7 +677,13 @@ if (isUsuarioAdministradorWeb()){
 		   <textbox id="c_Nombre" flex="1" onfocus="select()" 
 			    onkeypress="if (event.which == 13) { Compras_buscar() }"/>
 		 </row>			
-		 <row><box/><checkbox id="c_Obsoletos" label="<?php echo _("Ver obsoletos"); ?>" checked="false"/></row>
+		 <row>
+		   <caption label="<?php echo _("Solo"); ?>"/>
+		 </row>
+
+		 <row><box/><checkbox id="c_StockMinimo" label="<?php echo _("Stock Minimo"); ?>" checked="false"/></row>
+		 <row><box/><checkbox id="c_PorProveedor" label="<?php echo _("Por Proveedor"); ?>" checked="false"/></row>
+		 <row><box/><checkbox id="c_Obsoletos" label="<?php echo _("Obsoletos"); ?>" checked="false"/></row>
 	       </rows>
 	     </grid>
 	     <button id='btnbuscar' image='img/gpos_buscar.png' label='Buscar' oncommand="Compras_buscar()"/>
@@ -753,7 +763,8 @@ if (isUsuarioAdministradorWeb()){
     		 <row><caption label="<?php echo _("CB"); ?>"/><textbox id="p_CB" onkeypress="if (event.which == 13) { Productos_buscar() }"/></row>
     		 <row><caption label="<?php echo _("Ref"); ?>"/><textbox id="p_Referencia" onkeypress="if (event.which == 13) { Productos_buscar() }"/></row>
 		 <row><caption label="<?php echo _("Nombre"); ?>"/><textbox id="p_Nombre" onkeypress="if (event.which == 13) { Productos_buscar() }" onfocus="select()"/></row>
-		 <row><box/><checkbox id="p_Obsoletos" label="<?php echo _("Ver obsoletos"); ?>" checked="false"/></row>
+		 <row><box/>
+		 <checkbox id="p_Obsoletos" label="<?php echo _("Ver obsoletos"); ?>" checked="false"/></row>
 	       </rows>
 	     </grid>
 	     <button  image="img/gpos_buscar.png" label='<?php echo _("Buscar") ?>' oncommand="Productos_buscar()"/>
@@ -875,7 +886,8 @@ var id2nombreProveedores = new Array();
 		echo "id2nombreAlmacenes[$key] = '".addslashes($value). "';\n";			
 	}
 
-        
+        //Lanzar TPV 
+        if( $lanzarTPV && Admite("TPV") ){ echo "lanzarTPV('rd');"; }
 ?>;	
 
 var myBrowser = false;
@@ -1441,14 +1453,10 @@ function almacen_buscar(xclean)
   subweb.setAttribute("src","about:blank");
   xwebCollapsed(false,true); 
 
-  var nombre = document.getElementById("a_Nombre").value;
-  nombre     = ( !(nombre.length>2) )? '...':nombre ;
-  nombre     = ( xclean == 1)? '...':nombre ;
-
-  var extra  = "&CodigoBarras=" + document.getElementById("a_CB").value;  
-  extra = extra +  "&IdLocal=" + document.getElementById("a_idlocal").value;
-  extra = extra +  "&Referencia=" + document.getElementById("a_Referencia").value;
-  extra = extra +  "&Nombre=" + nombre;
+  var extra = "&CodigoBarras=" + document.getElementById("a_CB").value;  
+      extra = extra +  "&IdLocal=" + document.getElementById("a_idlocal").value;
+      extra = extra +  "&Referencia=" + document.getElementById("a_Referencia").value;
+      extra = extra +  "&Nombre=" + document.getElementById("a_Nombre").value;
   var solollenos = (document.getElementById("a_Stock").checked)?1:0;
   var soloNS     = (document.getElementById("a_NS").checked)?1:0;
   var sololote   = (document.getElementById("a_Lote").checked)?1:0;
@@ -1600,19 +1608,23 @@ function Compras_altaRapida() {
 
 function Compras_buscar()
 {  
-  var xnombre = document.getElementById("c_Nombre").value; 
-  xnombre = ( !(xnombre.length>2) )? '...':xnombre ;
+  var xnombre     = document.getElementById("c_Nombre").value; 
+  var codigo      = document.getElementById("c_CB").value;
+  var referencia  = document.getElementById("c_Referencia").value;
+  var obsoletos   = ( document.getElementById("c_Obsoletos").checked )?1:0;
+  var porproveedor= ( document.getElementById("c_PorProveedor").checked )?1:0;
+  var stockminimo = ( document.getElementById("c_StockMinimo").checked )?1:0;
 
-  var extra  = "&CodigoBarras=" + document.getElementById("c_CB").value;  
-  //extra = extra +  "&IdLocal=" + document.getElementById("c_idlocal").value;
-  extra = extra +  "&Referencia=" + document.getElementById("c_Referencia").value;
-  extra = extra +  "&Nombre=" + xnombre;   
-
-  var obsoletos  = (document.getElementById("c_Obsoletos").checked)?1:0;
+  var extra ="";
+	extra = extra + "&CodigoBarras="+codigo;
+	extra = extra + "&Nombre="+xnombre;
+	extra = extra + "&Referencia="+referencia;
 	extra = extra + "&Obsoletos="+obsoletos;
-
+	extra = extra + "&PorProveedor="+porproveedor;
+	extra = extra + "&StockMinimo="+stockminimo;
   
   url = "modcompras.php?modo=buscarproductos" + extra; 
+
   subweb.setAttribute("src", url);
   document.getElementById("c_Nombre").focus();
 }
@@ -1630,7 +1642,7 @@ function Productos_ModoAlta() {
 
 
 
-function Productos_buscarextra(idprov,idcolor,idmarca,idtalla,idfam,idlab,idalias,tc,nombre) {
+function Productos_buscarextra(idprov,idcolor,idmarca,idtalla,idfam,idlab,idalias,tc,nombre,idsubfam) {
         
    if (tc)  tc="on"; else tc="";
    
@@ -1642,6 +1654,7 @@ function Productos_buscarextra(idprov,idcolor,idmarca,idtalla,idfam,idlab,idalia
   extra = extra + "&IdLaboratorio=" + idlab;
   extra = extra + "&IdAlias=" + idalias;
   extra = extra + "&Nombre=" + nombre;
+  extra = extra + "&IdSubFamilia=" + idsubfam;
 
   var url = "modproductos.php?modo=mostrar" + extra + "&verCompletas=" + tc;
   subweb.setAttribute("src", url);
@@ -1672,16 +1685,14 @@ function Productos_loadAvanzado(){
 
 function Productos_buscar()
 {  
-  var nombre = document.getElementById("p_Nombre").value;
-  nombre     = ( !(nombre.length>2) )? '...':nombre ;
-
-  var codigo = document.getElementById("p_CB").value;
-
+  var xnombre    = document.getElementById("p_Nombre").value;
+  var codigo     = document.getElementById("p_CB").value;
   var referencia = document.getElementById("p_Referencia").value;
+
   var extra ="";
 	
 	extra = extra + "&CodigoBarras="+codigo;
-	extra = extra + "&Nombre="+nombre;
+	extra = extra + "&Nombre="+xnombre;
 	extra = extra + "&Referencia="+referencia;
  
   var obsoletos  = (document.getElementById("p_Obsoletos").checked)?1:0;

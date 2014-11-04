@@ -41,6 +41,8 @@ $sql="SELECT
                 ges_comprobantesprov.TotalImporte,
                 ges_comprobantesprov.ImportePendiente,
                 ges_comprobantesprov.ImportePercepcion,
+                ges_comprobantesprov.ImportePago,
+                ges_comprobantesprov.ImporteFlete,
                 ges_comprobantesprov.ModoPago,
                 ges_comprobantesprov.EstadoDocumento,
                 ges_comprobantesprov.EstadoPago,
@@ -79,7 +81,9 @@ $Pago      = utf8_decode($row["Pago"]);
 $Moneda    = utf8_decode($row["Moneda"]);
 $Monedadet = utf8_decode($row["MonedaDet"]);
 $ModoPago  = utf8_decode($row["ModoPago"]);
-$Importe   = utf8_decode($row["TotalImporte"]);
+$ImportePago  = utf8_decode($row["ImportePago"]);
+$ImporteFlete = utf8_decode($row["ImporteFlete"]);
+$TotalImporte = utf8_decode($row["TotalImporte"]);
 $ImporteImp   = utf8_decode($row["ImporteImpuesto"]);
 $ImporteBase  = utf8_decode($row["ImporteBase"]);
 $ImportePdte  = utf8_decode($row["ImportePendiente"]);
@@ -192,19 +196,42 @@ $pdf->Cell(120,4,utf8_decode('Fecha Vencimiento:'));
 $pdf->SetX($fila+21+121+36); 
 $pdf->SetFont('Courier','',9);	
 $pdf->Cell(120,4,$Pago);
+$pdf->Ln(2);
 
-
-if($Percepcion > 0 && $ImportePerc > 0.0 ){
-
+// resumen importe
 $pdf->Ln(4);
 $pdf->SetX($fila); 
 $pdf->SetFont('Courier','B',9);	
-$pdf->Cell(120,4,utf8_decode('Percepción:'));
-
-$pdf->SetX($fila+21); 
+$pdf->Cell(120,4,utf8_decode('Importe Neto: '));
+  
+$pdf->SetX($fila+27); 
 $pdf->SetFont('Courier','',9);
-$pdf->Cell(120,4,$Moneda.$ImportePerc);
+$pdf->Cell(120,4,$Moneda.number_format($TotalImporte,2));
+
+if($ImportePerc > 0.0 ){
+
+  //$pdf->Ln(4);
+  $pdf->SetX($fila+21+46); 
+  $pdf->SetFont('Courier','B',9);	
+  $pdf->Cell(120,4,utf8_decode('Percepción:'));
+  
+  $pdf->SetX($fila+21+46+24); 
+  $pdf->SetFont('Courier','',9);
+  $pdf->Cell(120,4,$Moneda.number_format($ImportePerc,2));
 }
+
+if($ImporteFlete > 0 ){
+
+  //$pdf->Ln(4);
+  $pdf->SetX($fila+21+121); 
+  $pdf->SetFont('Courier','B',9);	
+  $pdf->Cell(120,4,utf8_decode('Flete: '));
+  
+  $pdf->SetX($fila+21+121+14); 
+  $pdf->SetFont('Courier','',9);
+  $pdf->Cell(120,4,$Moneda.number_format($ImporteFlete,2));
+}
+
 
 $pdf->Ln(6);
 $pdf->SetX($fila); 
@@ -213,7 +240,7 @@ $pdf->Cell(18,4,utf8_decode('IMPORTE  : '));
 
 $pdf->SetX($fila+21); 
 $pdf->SetFont('Courier','B',9);
-$pdf->Cell(120,4,$Moneda.number_format($Importe,2));
+$pdf->Cell(120,4,$Moneda.number_format($ImportePago,2));
 
 $pdf->SetX($fila+58); 
 $pdf->SetFont('Courier','B',9);
@@ -358,7 +385,7 @@ $contador=1;
 	  $pdf->SetFont('Courier','B',9);
 	  $pdf->Cell(20,4,$foperacion,'LR',0,'R');
 	  $pdf->SetFont('Courier','B',9);
-	  $pdf->Cell(30,4,$Moneda.$importe,'LR',0,'R');
+	  $pdf->Cell(30,4,$simbolo.$importe,'LR',0,'R');
 	  $pdf->SetFont('Courier','B',9);
 	  $pdf->Cell(20,4,$mora,'LR',0,'R');
 	  $pdf->SetFont('Courier','B',9);

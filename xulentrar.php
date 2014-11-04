@@ -47,11 +47,17 @@ switch($modo){
 		    if($modo == "login-admin") {
 		      AddLog("Se redirigie a xulmenu...");
 		      session_write_close();
-		      header("Location: xulgpos.php");
+ 		      header("Location: xulgpos.php");
 		      exit;
+
 		    } else {
 		      session_write_close();
-		      header("Location: tpvload.php?t=rd&espopup=off&r=" . rand(900000,999999) );
+
+		      if (Admite("TPV") )
+			header("Location: xulgpos.php?t=on&r=" . rand(900000,999999));
+		      else 
+			header("Location: xulgpos.php");
+
 		      exit;
 		    }
 		    exit();	

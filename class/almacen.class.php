@@ -191,7 +191,6 @@ function getProductosSyncAlmacen($aprod=array(),$IdLocalActivo,$filtro=false,$es
 	 $filtroProducto  = ( $esSync         )? '':$filtroProducto;
 	 $filtroProducto .= ( count($aprod)>0 )?" AND ges_almacenes.IdProducto IN (".$allprod.") ":"";
 	 $filtroProducto  = ( $esExtra        )? $filtro:$filtroProducto;
-	 //$esBTCA          = ( getSesionDato("GlobalGiroNegocio") == "BTCA" )? true:false;
 
 	 $sql = 
 	   "SELECT ges_almacenes.IdProducto, ".
@@ -232,7 +231,8 @@ function getProductosSyncAlmacen($aprod=array(),$IdLocalActivo,$filtro=false,$es
 	   "       ges_almacenes.PVDDescontado AS PVDD, ".
 	   "       ges_almacenes.PrecioVentaCorporativo AS PVC,".
 	   "       ges_almacenes.PVCDescontado AS PVCD, ".
-	   "       ges_almacenes.Disponible ".
+	   "       ges_almacenes.Disponible, ".
+	   "       ges_productos.Imagen ".
 	   "FROM   (((((((ges_almacenes   ".
 	   "INNER  JOIN ges_productos        ON ".
 	   "       ges_almacenes.IdProducto   = ges_productos.IdProducto) ".
@@ -275,11 +275,8 @@ function getProductosSyncAlmacen($aprod=array(),$IdLocalActivo,$filtro=false,$es
 	     $Oferta       = $row["Oferta"];
 	     $OfertaUnid   = $row["OfertaUnidades"];
 	     $PVO          = $row["PrecioVentaOferta"];
-	     //$esOferta     = ( $Oferta )? true:false;
 	     $Disponible   = $row["Disponible"];
 
-	     //$esServicio  = ($row["Servicio"])? true:false;
-	     //$esMProducto = ($row["MetaProducto"])? true:false;
 	     $rkdx        = $row["ResumenKardex"];
 	     $Dosis       = getfichatecnica2Producto($xproducto);
 	     $Serie       = ($row["Serie"] )? getPedidoDet2Kardex('Serie',$rkdx,$xproducto,$xlocal):"";
@@ -290,9 +287,10 @@ function getProductosSyncAlmacen($aprod=array(),$IdLocalActivo,$filtro=false,$es
 
 	     //Descripcion...
 	     $lexNombre   = $jsLex->add($row["Descripcion"], getParametro("ProductosLatin1") );
+	     $qmnImagen   = ($row["Imagen"])? qminimal($row["Imagen"]):"0";
 	     $lexTalla    = $jsLex->add($row["Talla"]);
 	     $lexColor    = $jsLex->add($row["Color"]);
-	     $lexMarca    = qminimal($row["Marca"]);
+	     $lexMarca    = $jsLex->add($row["Marca"]);
 	     $lexLab      = $jsLex->add($row["Laboratorio"], getParametro("ProductosLatin1"));
 	     $lexAlias1   = $jsLex->add($alias1, getParametro("ProductosLatin1"));
 	     $lexAlias2   = $jsLex->add($alias2, getParametro("ProductosLatin1"));
@@ -305,17 +303,12 @@ function getProductosSyncAlmacen($aprod=array(),$IdLocalActivo,$filtro=false,$es
 	     //Stock...
 	     $Stock       = qminimal($row["Unidades"]);
 	     $xStock      = ( $UnidDisp > 0 && $Stock >= $UnidDisp )? $UnidDisp  :$Stock;//Reservado
-	     //$qmnStock    = ( $esOferta && $Stock >= $OfertaUnid   )? $OfertaUnid:$xStock;//Ofertado
 	     $qmnStock    = ( $Disponible )? $xStock:0;//Disponible
 	     $qmnOfertaUnid = $OfertaUnid;
 	     $qmnKardex   = qminimal($rkdx);
 	     $qmnIlimitado= qminimal($row["StockIlimitado"]);
 
 	     //Precios...
-	     //$PVD         = ( $esOferta )? $OfertaPrecio:$PVD;
-	     //$PVDD        = ( $esOferta )? $OfertaPrecio:$PVDD;
-	     //$PVC         = ( $esOferta )? $OfertaPrecio:$PVC;
-	     //$PVCD        = ( $esOferta )? $OfertaPrecio:$PVCD;
 	     $qmnPVD      = qminimal($PVD*100);
 	     $qmnPVDD     = qminimal($PVDD);
 	     $qmnPVC      = qminimal($PVC*100);
@@ -343,6 +336,7 @@ function getProductosSyncAlmacen($aprod=array(),$IdLocalActivo,$filtro=false,$es
 	       $qmnID.",".
 	       $qmnCB.",".
 	       $lexNombre.",".
+	       $qmnImagen.",".
 	       $qmnRef.",".
 	       $qmnPVD.",".
 	       $qmnPVC.",".
@@ -584,13 +578,8 @@ class articulo extends Cursor {
 
 		$Idioma = getSesionDato("IdLenguajeDefecto");
 		
-		$restriccion_local = "";
-		if ($IdLocal)				
-			$restriccion_local = "ges_almacenes.IdLocal = '$IdLocal' AND ";
-		
-		$and_producto = "";
-		if ($IdProducto)
-			$and_producto = "AND ges_almacenes.IdProducto = '$IdProducto'";
+		$restriccion_local = ($IdLocal)? "ges_almacenes.IdLocal = '$IdLocal' AND ":"";
+		$and_producto  = ($IdProducto)? "AND ges_almacenes.IdProducto = '$IdProducto'":"";
 
 		if ($idalias)
 		  $and_producto .= "AND (IdProductoAlias0 = '".$idalias."' OR IdProductoAlias1 ='".$idalias."')";
@@ -642,8 +631,8 @@ class articulo extends Cursor {
 			ges_locales.Identificacion,
 			ges_productos.IdTalla,
 			ges_productos.IdColor,
-            ges_contenedores.Contenedor,
-            ges_productos.UnidadesPorContenedor,
+                        ges_contenedores.Contenedor,
+                        ges_productos.UnidadesPorContenedor,
 			ges_productos.IdFamilia,
 			ges_productos.IdMarca,
 			ges_productos.IdSubFamilia,		
@@ -671,7 +660,7 @@ class articulo extends Cursor {
 			" ges_locales.NombreComercial ASC \n\n";
 
 		
-		$res = $this->queryPagina($sql, $indice, $tamPagina+1);
+		$res = $this->queryPagina($sql, $indice, $tamPagina);
 		if (!$res) {
 			$this->Error(__FILE__ . __LINE__ ,"Info: fallo el listado");
 			return;		
@@ -717,6 +706,7 @@ class articulo extends Cursor {
 			WHERE
 			ges_almacenes.Id = '$idArticulo'
 			AND ges_productos_idioma.IdIdioma = '$Idioma'
+                        AND ges_productos.Servicio = 0
 			AND ges_productos.Eliminado = 0";
 		$row = queryrow($sql);
 		if (!$row){
@@ -1411,7 +1401,7 @@ function obtenerKardexMovimientosProducto($idproducto,$idlocal,$desde,
 	   "AND    ges_productos.IdProducto = ges_kardex.IdProducto ".
 	   "AND    ges_contenedores.IdContenedor = ges_productos.IdContenedor ".
 	   "AND    ges_kardex.IdKardexOperacion = ges_kardexoperacion.IdKardexOperacion ".
-	   "AND    IdLocal='$idlocal' ".
+	   "AND    ges_kardex.IdLocal='$idlocal' ".
 	   "AND    FechaMovimiento>= '$desde'  ".
 	   "AND    FechaMovimiento<= ADDDATE('$hasta',1) ".
 	   "AND    ges_kardex.Eliminado=0 ".
@@ -1679,7 +1669,8 @@ function obtenerKardexInventarioAlmacen($idlocal,$xfamilia,$xmarca,$xstock,
 	 $extra .= ( $xfamilia != "0" )? " AND ges_familias.IdFamilia = '".$xfamilia."' ":"";
 	 $extra .= ( $xstock   == "1" )? " AND ges_almacenes.Unidades > 0 ":"";
 	 $extra .= ( $xstock   == "2" )? " AND ges_almacenes.Unidades = 0 ":"";
-	 $extra .= ( $esInvent)? " AND ges_almacenes.EstadoInventario = 0 ":"";
+	 $extra .= ( $xstock   == "3" )? " AND ges_almacenes.EstadoInventario = 1 ":"";
+	 $extra .= ( ( $xstock != "3" ) && $esInvent )? " AND ges_almacenes.EstadoInventario = 0 ":"";
 	 $extra .= ( $xnombre )? " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre."%' ":"";
 	 $extra  = ( $xcodigo )? " AND ges_productos.CodigoBarras LIKE '".$xcodigo."' ":$extra;
 	 $extra .= ( $idlocal  != "0" )? " AND ges_almacenes.IdLocal = '".$idlocal."' ":"";

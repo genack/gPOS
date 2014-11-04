@@ -196,7 +196,7 @@ switch($modo){
       $filehandle = fopen($path, "w");	
  		
       webAssert($filehandle,"Se abre config","E: no se puede abrir para escritura: $path");
- 		
+
       $result = false;
    
       if ($filehandle) {  			
@@ -206,6 +206,29 @@ switch($modo){
       }				
 
       webAssert($result,"Guardados los datos de configuración","E: no se puede guardar la configuración");				
+      $path = dirname(__FILE__) . "/baseurl.template";		
+      $phpConfiguration = file_get_contents($path);	
+   
+      webAssert($phpConfiguration,"Cargada template dirección absoluta","E: no abre template baseurl");
+				
+      $phpConfiguration = str_replace("%BASEURL%",$baseurlDato,$phpConfiguration);
+      $phpConfiguration = "<?php \n". $phpConfiguration . "\n?>";
+				
+      $path = dirname(__FILE__) . '/../config/baseurl.php'; 		
+   
+      $filehandle = fopen($path, "w");	
+ 		
+      webAssert($filehandle,"Se abre dirección absoluta","E: no se puede abrir para escritura: $path");
+ 		
+      $result = false;
+   
+      if ($filehandle) {  			
+	$result = fwrite($filehandle,$phpConfiguration);
+	$numFatal += ($result?0:1);
+	fclose($filehandle); 			 			
+      }				
+
+      webAssert($result,"Guardados los datos de dirección absoluta","E: no se puede guardar la direccion absoluta");				
 						
       if ($numFatal<1){							
 	if ($numErrores>0){

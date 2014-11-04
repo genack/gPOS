@@ -22,7 +22,7 @@ switch($modo){
 		break;
 	
 	case "getListaUltimosDiez":
-		error(__FILE__,"Info: modo: $modo");
+	  //error(__FILE__,"Info: modo: $modo");
 		
 		$IdLocal = intval($_REQUEST["IdLocal"]);
 		$ultimosDiez = getUltimasDiezAsArray($IdLocal);		
@@ -269,7 +269,7 @@ function CalcularUltimoArqueo($IdLocal,$IdArqueo=false){
 
 	$datos["TeoricoFinal"]= $datos["Ingreso"]+$datos["Aportacion"]-$datos["Gasto"]-$datos["Sustraccion"];
 	
-	error(__FILE__ . __LINE__ , "If: final:". $datos["TeoricoFinal"]);
+	//error(__FILE__ . __LINE__ , "If: final:". $datos["TeoricoFinal"]);
 	
 	return $datos;				
 }
@@ -311,9 +311,9 @@ function getMovimientosArqueo($IdArqueo){
 	$TipoVenta = getSesionDato("TipoVentaTPV");
 	$datos = array();
 	$sql =
-	  " SELECT IdOperacionCaja, Identificacion, (IF(ges_dinero_movimientos.IdPartidaCaja <>0,(SELECT ges_partidascaja.PartidaCaja FROM ges_partidascaja WHERE ges_partidascaja.IdPartidaCaja = ges_dinero_movimientos.IdPartidaCaja),'Venta')) as PartidaCaja, IdArqueoCaja, ".
+	  " SELECT IdOperacionCaja, Identificacion, (IF(ges_dinero_movimientos.IdPartidaCaja <>0,(SELECT ges_partidascaja.PartidaCaja FROM ges_partidascaja WHERE ges_partidascaja.IdPartidaCaja = ges_dinero_movimientos.IdPartidaCaja AND ges_partidascaja.Eliminado = 0),'Venta')) as PartidaCaja, IdArqueoCaja, ".
           " ges_dinero_movimientos.TipoOperacion, ".
-	  " TipoVentaOperacion, FechaCaja, IF(IdComprobante = 0,Concepto,(SELECT CONCAT('Metalico: ',ges_comprobantestipo.TipoComprobante,': ',ges_comprobantestipo.Serie,' - ',ges_comprobantesnum.NumeroComprobante) FROM ges_comprobantesnum INNER JOIN ges_comprobantestipo ON ges_comprobantesnum.IdTipoComprobante = ges_comprobantestipo.IdTipoComprobante WHERE ges_comprobantesnum.IdComprobante = ges_dinero_movimientos.IdComprobante AND ges_comprobantesnum.Status <>'Anulado')) as Concepto, Importe, ".
+	  " TipoVentaOperacion, FechaCaja, IF(IdComprobante = 0,Concepto,(SELECT CONCAT('Metalico: ',ges_comprobantestipo.TipoComprobante,': ',ges_comprobantestipo.Serie,' - ',ges_comprobantesnum.NumeroComprobante) FROM ges_comprobantesnum INNER JOIN ges_comprobantestipo ON ges_comprobantesnum.IdTipoComprobante = ges_comprobantestipo.IdTipoComprobante WHERE ges_comprobantesnum.IdComprobante = ges_dinero_movimientos.IdComprobante AND ges_comprobantesnum.Status <>'Anulado' AND ges_comprobantesnum.Eliminado = 0)) as Concepto, Importe, ".
 	  " IdModalidadPago, FechaInsercion ".
 	  " FROM   ges_dinero_movimientos ".
 	  " INNER JOIN ges_usuarios ON ".

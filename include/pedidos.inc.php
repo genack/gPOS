@@ -180,6 +180,7 @@ function registrarImportesTraslado($totalimporte,$IdComprobante,$IdPedido,$Motiv
 	   $KeysValues  = " ImporteNeto      = $baseimporte,"; 
 	   $KeysValues .= " ImporteImpuesto  = $impuesto,";
 	   $KeysValues .= " TotalImporte     = $totalimporte,";
+	   $KeysValues .= " ImportePago      = $totalimporte,";
 	   $KeysValues .= " Status           = $status,";
 	   $KeysValues .= " ImportePendiente = $pendiente";
 	   $sql         = " update ges_comprobantes set ".$KeysValues.
@@ -471,6 +472,8 @@ function ResetearCarritoCompras(){
         $detadoc[10]=false;
         $detadoc[11]=false;
         $detadoc[12]=false;
+        $detadoc[13]=0;
+        $detadoc[14]=0;
         setSesionDato("detadoc",$detadoc);
         setSesionDato("aCredito",false);
 	setSesionDato('incImpuestoDet',false);
@@ -698,10 +701,15 @@ function registraImportes($IdPedido){
   $TotalImporte    = round($tImporte,2);
   $ImporteBase     = round(($tImporte*100/($IGV+100)),2);
   $ImporteImpuesto = $TotalImporte-$ImporteBase;
+  $ImportePago     = $TotalImporte+$detadoc[13]+$detadoc[14];
+
   $listacpKeysVal  = " ImporteImpuesto  ='".$ImporteImpuesto."'";
   $listacpKeysVal .= ",ImporteBase      ='".$ImporteBase."'";
-  $listacpKeysVal .= ",ImportePendiente ='".$TotalImporte."'";
+  $listacpKeysVal .= ",ImportePendiente ='".$ImportePago."'";
   $listacpKeysVal .= ",TotalImporte     ='".$TotalImporte."'";
+  $listacpKeysVal .= ",ImporteFlete     ='".$detadoc[13]."'";
+  $listacpKeysVal .= ",ImportePercepcion ='".$detadoc[14]."'";
+  $listacpKeysVal .= ",ImportePago      ='".$ImportePago."'";
   $sql = "update ges_comprobantesprov set ".$listacpKeysVal.
          "where  IdPedido  = '".$IdPedido."' ".
          "and    Eliminado = '0'";
@@ -805,19 +813,18 @@ function obtenerDocumentoComprobanteDet($idx,$kdxop){
 	  "       ges_comprobantestipo.IdTipoComprobante = ges_comprobantesnum.IdTipoComprobante ".
 	  $extra." = ges_comprobantes.IdCliente ".
 	  "where  ges_comprobantesdet.IdComprobanteDet = ".$idx;
-	//echo "kkkk--><br>".$sql;
+
 	$res = query($sql);
 	return Row($res);
 	
 }
 
 function obtenerDocumentoPedidoDet($idx,$kdxop){
-  //echo "<br>======".$kdxop."=======";
 	$esProv  = ($kdxop == "Compra");
 	$esLocal = ($kdxop == "Traslado Interno" || $kdxop == "Ajuste" || $kdxop == 'Inventario');
 	$extra   = ($esLocal)?"inner join ges_locales on ges_locales.IdLocal ":"";
         $extra   = ($esProv)?"inner join ges_proveedores on ges_proveedores.IdProveedor ":$extra;
-	//	echo "<br>:::::".$extra."::::";
+
 	$sql =
 	   "select concat( TipoComprobante,' Nro ',Codigo,'  ',NombreComercial) as Documento,".
 	   "       FechaVencimiento as fv,".
@@ -916,7 +923,8 @@ function DetallesOrdenCompra($IdOrdenCompra){
 	return $ordencompra;
 }
 
-function DetallesCompra($IdPedido){	
+function DetallesCompra($IdPedido,$esSoloMoneda){ 
+  $extraMoneda  = ($esSoloMoneda=='todo1')? "ges_pedidos.CambioMoneda":"1";
   $sql = 
 	  "SELECT ges_productos.Referencia,".
 	  "       ges_productos.IdProducto,".
@@ -927,10 +935,10 @@ function DetallesCompra($IdPedido){
 	  "       ges_tallas.Talla,' ',".
 	  "       ges_laboratorios.NombreComercial) as Producto,".
 	  "       ges_pedidosdet.Unidades as Cantidad,".
-	  "       ges_pedidosdet.CostoUnidad as Costo, ".
-	  "       ges_pedidosdet.PrecioUnidad as Precio, ".
-	  "       ges_pedidosdet.Descuento, ".
-	  "       ges_pedidosdet.Importe, ".
+	  "       (ges_pedidosdet.CostoUnidad*$extraMoneda) as Costo, ".
+	  "       (ges_pedidosdet.PrecioUnidad*$extraMoneda) as Precio, ".
+	  "       (ges_pedidosdet.Descuento*$extraMoneda) as Descuento, ".
+	  "       (ges_pedidosdet.Importe*$extraMoneda) as Importe, ".
 	  "       IF ( ges_pedidosdet.Lote like '', ' ',ges_pedidosdet.Lote) as LT, ". 
           "       IF ( DATE_FORMAT(ges_pedidosdet.FechaVencimiento, '%e %b %Y') IS NULL, 
                     ' ',
@@ -951,6 +959,7 @@ function DetallesCompra($IdPedido){
 	  "INNER JOIN ges_laboratorios ON ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
 	  "INNER JOIN ges_marcas       ON ges_productos.IdMarca  = ges_marcas.IdMarca ".
 	  "INNER JOIN ges_contenedores ON ges_productos.IdContenedor = ges_contenedores.IdContenedor ".
+          "INNER JOIN ges_pedidos    ON ges_pedidosdet.IdPedido = ges_pedidos.IdPedido ".
 	  "WHERE ges_pedidosdet.IdPedido IN (".$IdPedido.") ".
 	  "AND   ges_productos_idioma.IdIdioma = 1 ".
 	  "AND   ges_tallas.IdIdioma           = 1 ".
@@ -1044,7 +1053,7 @@ function OrdenCompraPeriodo($local,$desde,$hasta,$nombre=false,$esSoloContado=fa
 	 /* Proveedor */
 	 $extraNombre  = ($nombre and $nombre != '')?" AND ges_proveedores.nombreComercial LIKE '%$nombre%' ":"";
 	 /*Fechas: Desde,Hasta */
-	 $extraFecha   = ($forzaid>0)?" AND ges_ordencompra.IdOrdenCompra = '$forzaid' ":" AND date(ges_ordencompra.FechaRegistro) >= '$desde' AND date(ges_ordencompra.FechaRegistro) <= '$hasta' ";
+	 $extraFecha   = ($forzaid != '')?" AND ges_ordencompra.CodOrdenCompra = '$forzaid' ":" AND date(ges_ordencompra.FechaRegistro) >= '$desde' AND date(ges_ordencompra.FechaRegistro) <= '$hasta' ";
 
 	 $extraFecha   = ($entrega=='true')? " AND date(ges_ordencompra.FechaPrevista) >= '$desde' AND date(ges_ordencompra.FechaPrevista) <= '$hasta' ":$extraFecha;
 
@@ -1228,7 +1237,9 @@ function CompraPeriodo($local,$desde,$hasta,$emision=false,$nombre=false,
 	        ges_pedidos.IdAlmacenRecepcion,
                 ges_comprobantesprov.IdProveedor,
                 ges_comprobantesprov.EstadoPago,
-                ges_comprobantesprov.IdMotivoAlbaran
+                ges_comprobantesprov.IdMotivoAlbaran,
+                (ges_comprobantesprov.ImporteFlete*$extraMoneda) as ImporteFlete,
+                (ges_comprobantesprov.ImportePago*$extraMoneda)  as ImportePago
          FROM  ges_comprobantesprov
          LEFT JOIN ges_proveedores ON ges_comprobantesprov.IdProveedor = ges_proveedores.IdProveedor
          INNER JOIN ges_pedidos    ON ges_comprobantesprov.IdPedido = ges_pedidos.IdPedido
@@ -1255,12 +1266,18 @@ function CompraPeriodo($local,$desde,$hasta,$emision=false,$nombre=false,
 	if (!$res) return false;
 	$Compra = array();
 	$t = 0;
+
 	while($row = Row($res)){
 	  $row["TipoDoc"]   = $row["Documento"];
 	  $row["Proveedor"] = obtenerProveedorDocumento($row); 
 	  $row["Documento"] = obtenerMotivoDocumento($row);
+	  $row["EstadoPago"] = ($row["ModoPago"] == "Credito")? checkFechaPago($row):$row["EstadoPago"];
+
 	  $nombre           = "Orden_" . $t++;
 	  $Compra[$nombre]  = $row; 	
+
+	  if( $row["EstadoDocumento"] == "Pendiente" && $row["TotalImporte"] == 0) 
+	    setImporteCero2Estado($row);
 	}	
 	return $Compra;
 }
@@ -1329,19 +1346,17 @@ function sModificarPedido($xid,$campoxdato){
 	 return query($sql); 
 }
 
-function EditarOrdenCompra($xid,$tdoc){
+function EditarOrdenCompra($xid,$tdoc,$esclon){
 
          //Inicio
          ResetearCarritoCompras();
- 
+	 
 	 //Header Orden Compra
 	 $estado      = ($tdoc=='O')?'Borrador':'Pedido';
 	 $detadoc     = getSesionDato('detadoc');  
 	 $datos       = OrdenCompraPeriodo('','','',false,true,true,false,false,$estado,$xid,'');
 	 $datostrj    = getTrabajosSubsidiario($xid);
 	 $Moneda      = getSesionDato("Moneda");
-	 //print_r($datostrj);
-	 //print_r($datos);
 	 $detadoc[0]  = $tdoc;//Documento Orden Compra
 	 $detadoc[1]  = $datos["Orden_0"]["IdProveedor"];
 	 $detadoc[2]  = $datos["Orden_0"]["Proveedor"];
@@ -1353,8 +1368,8 @@ function EditarOrdenCompra($xid,$tdoc){
 	 $detadoc[8]  = $datos["Orden_0"]["FechaPago"];
 	 $detadoc[9]  = $datostrj["IdSubsidiario"];
 	 $detadoc[10] = $datostrj["NombreComercial"];
-	 $detadoc[11] = $datos["Orden_0"]["IdOrdenCompra"];
-	 $detadoc[12] = ($datos["Orden_0"]["Observaciones"]==' ')?'':$datos[Orden_0][Observaciones];
+	 $detadoc[11] = ( !$esclon )? $datos["Orden_0"]["IdOrdenCompra"]:0;
+	 $detadoc[12] = ( $datos["Orden_0"]["Observaciones"]==' ')?'':$datos["Orden_0"]["Observaciones"];
 	 $aCredito    = ($datos["Orden_0"]["ModoPago"]=='Credito')?true:false;
 
 	 //Carga datos

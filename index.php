@@ -3,6 +3,7 @@
 if (!file_exists('config/configuration.php'))
     header("Location: install/instalar.php");
 
+include('config/baseurl.php');
 include('include/browser.inc.php');
 $broswer = new browser();
 $htmlOut = '<html>
@@ -136,7 +137,7 @@ if ($broswer->isFirefox()){
         }
 
         function checkDominio(){ 
-           location= (esDominio.value)? 'xulentrar.php':'xulremoto/'; 
+           location= (esDominio.value)? '".$_BasePath."xulentrar.php':'xulremoto/'; 
         }
        //]]></script>
 ";

@@ -302,10 +302,11 @@ class pedido extends Cursor {
 		}			
 
 		//COSTE PRODUCTO
+		$idprov  = ( $detadoc[1] > 0 )? $detadoc[1]: 1;
 		$sql = 
-		  "update ges_productos ".
-		  "set    Costo ='".$costeunidad."' ".
-		  "where  (IdProducto = '".$id."')";	
+		  " update ges_productos ".
+		  " set    Costo ='".$costeunidad."', IdProvHab = ".$idprov.
+		  " where  (IdProducto = '".$id."')";	
 		query($sql,"Actualizando el coste");		
 	}
 	
@@ -609,9 +610,9 @@ function AgnadirCarritoCompras($id,$unidades=1) {
 	$actual         = getSesionDato("CarritoCompras");
 	$costes         = getSesionDato("CarroCostesCompra");
 	$dsctos         = getSesionDato("descuentos");
-	$actual[$id]    = $actual[$id] + $unidades;	
-	$costes[$id]    = ($costes[$id])? $costes[$id]:getCosteDefectoProducto($id);
-	$descuento      = (isset( $dsctos[$id][0]) )? $dsctos[$id][0]:0;
+	$actual[$id]    = ( isset( $actual[$id] ))? $actual[$id] + $unidades:$unidades;	
+	$costes[$id]    = ( isset( $costes[$id] ))? $costes[$id]:getCosteDefectoProducto($id);
+	$descuento      = ( isset( $dsctos[$id][0]) )? $dsctos[$id][0]:0;
 	$dsctos[$id][1] = $actual[$id]*$costes[$id]-$descuento;
 
 	setSesionDato("CarritoCompras",$actual);

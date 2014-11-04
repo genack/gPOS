@@ -541,7 +541,7 @@ function soloAlfaNumerico(e){
 function soloNumericoCodigoSerie(e){
     key = e.keyCode || e.which;
     tecla = String.fromCharCode(key).toLowerCase();
-    letras = "-0123456789";
+    letras = "-0123456789abcdefghijklmnopqrstuvwxyz";
     especiales = [8, 13, 9];
     tecla_especial = false
     for(var i in especiales){

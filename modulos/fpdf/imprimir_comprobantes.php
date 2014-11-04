@@ -37,6 +37,8 @@ $sql="SELECT
                 ges_comprobantesprov.TotalImporte,
                 ges_comprobantesprov.ImportePendiente,
                 ges_comprobantesprov.ImportePercepcion,
+                ges_comprobantesprov.ImportePago,
+                ges_comprobantesprov.ImporteFlete,
                 ges_comprobantesprov.ModoPago,
                 ges_comprobantesprov.EstadoDocumento,
                 ges_comprobantesprov.EstadoPago,
@@ -88,7 +90,9 @@ $IGV          = utf8_decode($row["Impuesto"]."%");
 $EstadoDoc    = utf8_decode($row["EstadoDocumento"]);
 $EstadoPago   = utf8_decode($row["EstadoPago"]);
 $Usuario      = utf8_decode($row["Usuario"]);
-$Observaciones   = utf8_decode($row["Observaciones"]);
+$Observaciones= utf8_decode($row["Observaciones"]);
+$ImportePago  = $row["ImportePago"];
+$ImporteFlete = $row["ImporteFlete"];
 
 //PDF ESTRUCTURA
 $pdf=new PDF();
@@ -175,18 +179,6 @@ $pdf->SetX(168);
 $pdf->SetFont('Courier','',9);	
 $pdf->Cell(120,4,$Pago);
 
-
-if($Percepcion > 0 && $ImportePerc > 0.0 ){
-
-$pdf->Ln(4);
-$pdf->SetX(18); 
-$pdf->SetFont('Courier','B',9);	
-$pdf->Cell(120,4,utf8_decode('Percepción:'));
-
-$pdf->SetX(40); 
-$pdf->SetFont('Courier','',9);
-$pdf->Cell(120,4,$Moneda.$ImportePerc);
-}
 
 //Detalle
 $pdf->Ln(6);
@@ -420,6 +412,7 @@ $pdf->Cell(300,4,$mensaje);
 $ImporteBase = number_format($ImporteBase,2);
 $ImporteImp  = number_format($ImporteImp,2);
 $Importe     = number_format($Importe,2);
+
 // HALLAMOS TOTALES
 $pdf->SetFillColor(255,255,255);
 $pdf->SetTextColor(0);
@@ -440,6 +433,29 @@ $pdf->SetX(150);
 $pdf->Cell(1);
 $pdf->Cell(20,4,"Total Neto",1,0,'R',1);
 $pdf->Cell(25,4,$Importe,1,0,'R',1);
+
+if($ImportePerc > 0){
+  $pdf->Ln(4);
+  $pdf->SetX(150);		
+  $pdf->Cell(1);
+  $pdf->Cell(20,4,utf8_decode("Percepción"),1,0,'R',1);
+  $pdf->Cell(25,4,number_format($ImportePerc,2),1,0,'R',1);
+}
+
+if($ImporteFlete > 0){
+  $pdf->Ln(4);
+  $pdf->SetX(150);		
+  $pdf->Cell(1);
+  $pdf->Cell(20,4,"Flete",1,0,'R',1);
+  $pdf->Cell(25,4,number_format($ImporteFlete,2),1,0,'R',1);
+}
+
+$pdf->Ln(4);
+$pdf->SetX(150);		
+$pdf->Cell(1);
+$pdf->Cell(20,4,"Total Pago",1,0,'R',1);
+$pdf->Cell(25,4,number_format($ImportePago,2),1,0,'R',1);
+
 $pdf->Ln(6);
 
 
@@ -488,7 +504,7 @@ $pdf->Ln(4);
 if($Percepcion > 0 && $ImportePerc > 0.0 ){
 $pdf->SetX(17); 
 $pdf->Cell(1);
-$pdf->Cell(300,4,utf8_decode("- ".$Documento." sujeto a percepción (".$Percepcion.")"));
+$pdf->Cell(300,4,utf8_decode("- ".$Documento." sujeto a percepción"));
 $pdf->Ln(4);
 }
 

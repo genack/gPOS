@@ -1018,7 +1018,8 @@ class producto extends Cursor {
 
     function ListadoFlexible($idprov,$idmarca,$idcolor,$idtalla,$lang,
 			     $min=0,$base=false,$idprod=false,$idfamilia=false,$tamPag=10,
-			     $ref,$cb,$nombre,$obsoletos=false,$idalias=false,$idlab=false){
+			     $ref,$cb,$nombre,$obsoletos=false,$idalias=false,$idlab=false,
+			     $idsubfamilia=false){
 		
 	//	error(__FILE__ . __LINE__ ,"($cb)($ref)($nombre)$idprov,$idmarca,$idcolor,$idtalla,$lang,$min=0,$base=false,$idprod=false,$idfamilia=false,$tamPag=10");
 			
@@ -1041,6 +1042,8 @@ class producto extends Cursor {
     		$extra .= "AND ges_productos.IdProducto  = '$idprod' ";
     	if ($idfamilia)
     		$extra .= "AND ges_productos.IdFamilia  = '$idfamilia' ";
+    	if ($idsubfamilia)
+    		$extra .= "AND ges_productos.IdSubFamilia  = '$idsubfamilia' ";
     	if ($ref)
     		$extra .= "AND ges_productos.Referencia  = '$ref' ";
     	if ($cb)
@@ -1083,17 +1086,19 @@ class producto extends Cursor {
 				
 		return $res;				
 	}	
-	function ListadoFlexible2($idprov,$idmarca,$idcolor,$idtalla,$lang,$min=0,
-				  $base=false,$idprod=false,$idfamilia=false,$tamPag=10,
-				  $ref,$cb,$nombre,$obsoletos=false,$idalias=false,$idlab=false){
+	function ListadoFlexibleCompras($idprov,$idmarca,$idcolor,$idtalla,$lang,$min=0,
+					$base=false,$idprod=false,$idfamilia=false,$tamPag,
+					$ref,$cb,$nombre,$obsoletos=false,$idalias=false,
+					$idlab=false,$porproveedor,$stockminimo){
 	//	error(__FILE__ . __LINE__ ,"($cb)($ref)($nombre)$idprov,$idmarca,$idcolor,$idtalla,$lang,$min=0,$base=false,$idprod=false,$idfamilia=false,$tamPag=10");
 
-	  $extra = "";
+	  $extra     = "";
+	  $extrafrom = "";
 
 	  if (!$lang)
 	    $lang = getSesionDato("IdLenguajeDefecto");
-	  if ($idprov)
-	    $extra .= "AND ges_productos.IdProvHab  = '$idprov' ";
+	  if ($idprov and $porproveedor)
+	     $extra .= "AND ges_productos.IdProvHab  = '$idprov' ";
 	  if ($idlab)
 	    $extra .= "AND ges_productos.IdProvHab  = '$idlab' ";
 	  if ($idmarca)
@@ -1117,7 +1122,15 @@ class producto extends Cursor {
 	  else{
 	    if ($nombre)
 	      $extra .= "AND ges_productos_idioma.Descripcion  LIKE '%".$nombre."%' ";
-	  }    		
+	  }    	
+	
+	  if($stockminimo){
+
+	    $idlocal   = getSesionDato("IdTienda");
+	    $extra    .= " AND ges_almacenes.IdLocal = $idlocal AND ges_productos.Servicio = 0 AND ges_almacenes.StockMin > 0 AND ges_almacenes.StockMin >= ges_almacenes.Unidades ";
+	    $extrafrom = " INNER JOIN ges_almacenes ON ges_almacenes.IdProducto = ges_productos.IdProducto ";
+	  }
+
 	  if (!$obsoletos)
 	    $extra .= "AND ges_productos.Obsoleto=0 ";
 
@@ -1126,10 +1139,10 @@ class producto extends Cursor {
 		ges_productos_idioma.IdProdIdioma,
 		ges_productos_idioma.Descripcion
 
-		FROM
-		ges_productos INNER JOIN ges_productos_idioma ON
+		FROM  ges_productos 
+                INNER JOIN ges_productos_idioma ON
 		ges_productos.IdProdBase = ges_productos_idioma.IdProdBase
-
+                $extrafrom
 		WHERE
 		ges_productos_idioma.IdIdioma = '$lang'
 		AND ges_productos.Eliminado = 0
@@ -1336,19 +1349,21 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
                 $ListadoCombinado = genListadoCruzado($this->getId(),$this->get("IdTallaje"));
         }
 
-	$esBTCA     = ( getSesionDato("GlobalGiroNegocio") == "BTCA" );
+
+
 	$incluido   = ($this->get("Serie")==1)? "checked":"";
 	$incluido4  = ($this->get("Lote")==1)? "checked":"";
 	$incluido3  = ($this->get("FechaVencimiento")==1)? "checked":"";
 	$incluido2  = ($this->get("VentaMenudeo")==1)? "checked":"";
-	$txtalias   = ( $esBTCA )?'Principio activo':'Etiqueta';
-	$txtModelo  = ( $esBTCA )?'Presentación/Modelo':'Modelo';
-	$txtDetalle = ( $esBTCA )?'Concentración/Detalle':'Detalle';
-	$txtref     = ( $esBTCA )?'Registro Sanitario':'Referencia Fabr.';
-	$btca       = ( $esBTCA )?false:"style='display:none;'";
+	$txtMoDet   = getModeloDetalle2txt();
+	$txtModelo  = $txtMoDet[1];
+	$txtDetalle = $txtMoDet[2];
+	$txtalias   = $txtMoDet[3];
+	$txtref     = $txtMoDet[4];
+	$btca       = ( $txtMoDet[0]  == "BTCA" )?false:"style='display:none;'";
 	$ismtposerv = ( $this->get("Servicio") || $this->get("MetaProducto") )?"style='display:none;'":false;
         $cambios = array(
-            "tNuevaTallaOColor" => _("Nuevo $txtModelo o $txtDetalle"),
+            "tNuevaTallaOColor" => _("Nuevo $txtModelo / $txtDetalle"),
             "ListadoCombinado" => $ListadoCombinado,
             "vIdProducto" => $this->getId(),
             "onClose" => $onClose,
@@ -1481,19 +1496,21 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
 	  case 'CRMR': $ocrmr = "selected"; break;
 	  }
 
-	$esBTCA     = ( getSesionDato("GlobalGiroNegocio") == "BTCA" );
+	$txtMoDet   = getModeloDetalle2txt();
+	$esBTCA     = (  $txtMoDet[0]  == "BTCA" );
 	$hidden     = "style='display:none;'";
 	$btca       = ( $esBTCA )?false:$hidden;
-	$txtref     = ( $esBTCA )?'Registro Sanitario':'Referencia Fabr.';
+
 	$ismtposerv = ( $this->get("Servicio") || $this->get("MetaProducto") )?$hidden:false;
 	$isserie    = ( $this->get("Serie"))?$hidden:false;
-	$txtalias   = ( $esBTCA )?'Principio activo':'Etiqueta';
-	$txtModelo  = ( $esBTCA )?'Presentación/Modelo':'Modelo';
-	$txtDetalle = ( $esBTCA )?'Concentración/Detalle':'Detalle';
+	$txtalias   =  $txtMoDet[3];
+	$txtref     =  $txtMoDet[4];
+	$txtModelo  =  $txtMoDet[1];
+	$txtDetalle =  $txtMoDet[2];
 	$editTalla  = ( esEditable2Producto( $this->get("IdTalla"), 'Talla' ) )? "onfocus='setchangeid(1);this.select()'":"readonly='true'";
 	$editColor  = ( esEditable2Producto( $this->get("IdColor"), 'Color' ) )? "onfocus='setchangeid(0);this.select()'":"readonly='true'";
         $cambios    = array(
-            "tNuevaTallaOColor" => _("Nuevo $txtModelo o $txtDetalle"),
+            "tNuevaTallaOColor" => _("Nuevo $txtModelo / $txtDetalle"),
             "ListadoCombinado" => $ListadoCombinado,
             "vIdProducto" => $this->getId(),
             "onClose" => $onClose,
@@ -1626,18 +1643,18 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
 		  case 'CRM' : $ocrm = "selected";  break;
 		  case 'CRMR': $ocrmr = "selected"; break;
 		  }
-
-		$esBTCA     = ( getSesionDato("GlobalGiroNegocio") == "BTCA" );
+		$txtMoDet   = getModeloDetalle2txt();
+		$esBTCA     = (  $txtMoDet[0]  == "BTCA" );
 		$hidden     = "style='display:none;'";
 		$btca       = ( $esBTCA )?false:$hidden;
-		$txtref     = ( $esBTCA )?'Registro Sanitario':'Referencia Fabr.';
+		$txtref     = $txtMoDet[4];
 		$ismtposerv = ( $this->get("Servicio") || $this->get("MetaProducto") )?$hidden:false;
 		$isserie    = ( $this->get("Serie"))?$hidden:false;
-		$txtalias   = ( $esBTCA )?'Principio activo':'Etiqueta';
-		$txtModelo  = ( $esBTCA )?'Presentación/Modelo':'Modelo';
-		$txtDetalle = ( $esBTCA )?'Concentración/Detalle':'Detalle';
+		$txtalias   = $txtMoDet[3];
+		$txtModelo  = $txtMoDet[1];
+		$txtDetalle = $txtMoDet[2];
 		$txtTitulo  = ( $esBTCA )?'Nueva':'Nuevo';
-		$titulo     = _("$txtTitulo $txtModelo &  $txtDetalle");
+		$titulo     = _("$txtTitulo $txtModelo / $txtDetalle");
 					
 		$cambios = array(
 			"tPrecioVenta" => _("Previo venta"),

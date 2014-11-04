@@ -22,12 +22,15 @@ var cEmision              = "";
 var cObservacion          = "";
 var cPercepcion           = "";
 var clPercepcion          = "";
+var clFlete               = "";
 var cPago                 = "";
 var cIdPedido             = 0;
 var cObs                  = "";
 var ilineabuscacompra     = 0;
 var Vistas = new Object(); 
 Vistas.ventas = 7;
+
+var RevDet = 0;
 
 // Opciones Busqueda avanzada
 var vEstado        = true;
@@ -39,8 +42,7 @@ var vUsuario       = true;
 var vObservaciones = true;
 var vFechaRegistro = true;
 var vPercepcion    = true;
-
-
+var vFlete         = true;
 
 var id = function(name) { return document.getElementById(name); }
 
@@ -71,7 +73,6 @@ function VaciarDetallesCompra(){
     }
     idetallesCompra = 0;
 }
-
 
 //Busqueda 
 function BuscarCompra(){
@@ -110,7 +111,7 @@ function buscarPorPedido(elemento){
 	x=i+1;
         var texto2  = lista.getItemAtIndex(i);
         var celdas = texto2.getElementsByTagName('listcell');
-        var cadena = celdas[14].getAttribute('value');
+        var cadena = celdas[16].getAttribute('value');
 
 	if( busca == cadena )
 	{
@@ -146,7 +147,7 @@ function RawBuscarCompra(desde,hasta,emision,nombre,modocontado,modocredito,filt
 
     var tex = "";
     var cr = "\n";
-    var item,Almacen,Proveedor,Codigo,Documento,Registro,Emision,Pago,Impuesto,Percepcion,Simbolo,ImporteBase,ImporteImpuesto,TotalImporte,ImportePendiente,ImportePercepcion,ModoPago,Estado,Usuario,CambioMoneda,FechaCambioMoneda,IdPedidoDetalle,IdPedido,IdComprobanteProv,IdMoneda,IdOrdenCompra,IdLocal,ImpuestoVenta;
+    var item,Almacen,Proveedor,Codigo,Documento,Registro,Emision,Pago,Impuesto,Percepcion,Simbolo,ImporteBase,ImporteImpuesto,TotalImporte,ImportePendiente,ImportePercepcion,ModoPago,Estado,Usuario,CambioMoneda,FechaCambioMoneda,IdPedidoDetalle,IdPedido,IdComprobanteProv,IdMoneda,IdOrdenCompra,IdLocal,ImpuestoVenta,ImporteFlete,IdAlmacenRecepcion,IdProveedor,EstadoPago,IdMotivoAlbaran,ImpuestoVenta,TipoDocumento;
     var node,t,i,codcompra; 
     var totalCompra    = 0;
     var totalCompraPendiente = 0;
@@ -208,6 +209,14 @@ function RawBuscarCompra(desde,hasta,emision,nombre,modocontado,modocredito,filt
             IdLocal          = node.childNodes[t++].firstChild.nodeValue;
             ImpuestoVenta    = node.childNodes[t++].firstChild.nodeValue;
 
+            IdAlmacenRecepcion    = node.childNodes[t++].firstChild.nodeValue;
+	    IdProveedor      = node.childNodes[t++].firstChild.nodeValue;
+            EstadoPago       = node.childNodes[t++].firstChild.nodeValue;
+	    IdMotivoAlbaran  = node.childNodes[t++].firstChild.nodeValue;
+            ImporteFlete     = node.childNodes[t++].firstChild.nodeValue;
+            ImportePago      = node.childNodes[t++].firstChild.nodeValue;
+	    TipoDocumento    = node.childNodes[t++].firstChild.nodeValue;
+	    
 	    if (Documento == 'Albaran')    nroAlbaran++; 
  	    if (Documento == 'AlbaranInt') nroAlbaranInt++; 
 	
@@ -221,14 +230,14 @@ function RawBuscarCompra(desde,hasta,emision,nombre,modocontado,modocredito,filt
  		if (Estado == 'Borrador'  ) nroBorrador++; 
  		if (Estado == 'Pendiente' ) nroPendiente++; 
 		if (Estado == 'Confirmado') nroConfirmado++; 
-		if (IdMoneda == 1)
+		if (IdMoneda == 1 || filtromoneda == 'todo1')
 		{
 		    totalImporte = parseFloat(totalImporte)+parseFloat(TotalImporte);
 		    timpuImporte = parseFloat(timpuImporte)+parseFloat(ImporteImpuesto);
 		    tpendImporte = parseFloat(tpendImporte)+parseFloat(ImportePendiente);
 		    tpercImporte = parseFloat(tpercImporte)+parseFloat(ImportePercepcion);
 		}
-		if (IdMoneda == 2)
+		if (IdMoneda != 1 && filtromoneda != 'todo1')
 		{
 		    totalImporte = parseFloat(totalImporte)+parseFloat(TotalImporte*CambioMoneda);
 		    timpuImporte = parseFloat(timpuImporte)+parseFloat(ImporteImpuesto*CambioMoneda);
@@ -237,7 +246,7 @@ function RawBuscarCompra(desde,hasta,emision,nombre,modocontado,modocredito,filt
 		}
 	    }
 
-            FuncionProcesaLinea(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision,Pago,Impuesto,Percepcion,Simbolo,ImporteBase,ImporteImpuesto,TotalImporte,ImportePendiente,ImportePercepcion,ModoPago,Estado,Usuario,CambioMoneda,FechaCambioMoneda,IdPedidosDetalle,IdPedido,IdComprobanteProv,IdMoneda,IdOrdenCompra,Observaciones,IdLocal,ImpuestoVenta);		
+            FuncionProcesaLinea(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision,Pago,Impuesto,Percepcion,Simbolo,ImporteBase,ImporteImpuesto,TotalImporte,ImportePendiente,ImportePercepcion,ModoPago,Estado,Usuario,CambioMoneda,FechaCambioMoneda,IdPedidosDetalle,IdPedido,IdComprobanteProv,IdMoneda,IdOrdenCompra,Observaciones,IdLocal,ImpuestoVenta,ImporteFlete,ImportePago);		
 	    item--;
         }
     }
@@ -251,21 +260,19 @@ function RawBuscarCompra(desde,hasta,emision,nombre,modocontado,modocredito,filt
     id("TotalPercepcion").value        = cMoneda[1]['S']+' '+formatDinero(tpercImporte);
 }
 
-function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision,Pago,Impuesto,Percepcion,Simbolo,ImporteBase,ImporteImpuesto,TotalImporte,ImportePendiente,ImportePercepcion,ModoPago,Estado,Usuario,CambioMoneda,FechaCambioMoneda,IdPedidosDetalle,IdPedido,IdComprobanteProv,IdMoneda,IdOrdenCompra,Observaciones,IdLocal,ImpuestoVenta){
+function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision,Pago,Impuesto,Percepcion,Simbolo,ImporteBase,ImporteImpuesto,TotalImporte,ImportePendiente,ImportePercepcion,ModoPago,Estado,Usuario,CambioMoneda,FechaCambioMoneda,IdPedidosDetalle,IdPedido,IdComprobanteProv,IdMoneda,IdOrdenCompra,Observaciones,IdLocal,ImpuestoVenta,ImporteFlete,ImportePago){
 
     var lista = id("busquedaCompra");
-    var xitem,xnumitem,xAlmacen,xCodigo,XDocumento,xProveedor,xRegistro,xEmision,xPago,xModoPago,xBase,xImpuesto,xTotal,xPercepcion,xEstado,xUsuario,xObservaciones,xIdPedido,xIdLocal,xImpuestoVenta;
+    var xitem,xnumitem,xAlmacen,xCodigo,XDocumento,xProveedor,xRegistro,xEmision,xPago,xModoPago,xBase,xImpuesto,xTotal,xPercepcion,xFlete,xEstado,xUsuario,xObservaciones,xIdPedido,xIdLocal,xImpuestoVenta,xTotalPagar;
     var lobs = (Observaciones ==' ')?'':'...';
 
     var vPago   = (Pago)? Pago.split("~"):'';
     var xlPago  = (Pago)? vPago[0]:'';
     var xvPago  = (Pago)? vPago[1]:'';
-
-
+    var TotalPagarImporte = 0;
     var vEmision  = (Emision)? Emision.split("~"):'';
     var xlEmision = (Emision)? vEmision[0]:'';
     var xvEmision = (Emision)? vEmision[1]:'';
-
     var vDocumento = Documento.split(" - ");
 
     xclass        = (item%2)?'parrow':'imparrow';      
@@ -373,6 +380,12 @@ function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision
     xTotal.setAttribute("value",TotalImporte);
     xTotal.setAttribute("id","importe_"+IdPedido);
 
+    xTotalPagar = document.createElement("listcell");
+    xTotalPagar.setAttribute("label", Simbolo+' '+formatDinero(ImportePago));
+    xTotalPagar.setAttribute("style","text-align:right;font-weight:bold; ");
+    xTotalPagar.setAttribute("value",ImportePago);
+    xTotalPagar.setAttribute("id","importepago_"+IdPedido);
+
     xPendiente = document.createElement("listcell");
     xPendiente.setAttribute("label", Simbolo+' '+formatDinero(ImportePendiente));
     xPendiente.setAttribute("style","text-align:right;font-weight:bold; ");
@@ -385,6 +398,13 @@ function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision
     xPercepcion.setAttribute("style","text-align:right");
     xPercepcion.setAttribute("value",Percepcion);
     xPercepcion.setAttribute("id","percepcion_"+IdPedido);
+
+    xFlete = document.createElement("listcell");
+    xFlete.setAttribute("label", Simbolo+' '+formatDinero(ImporteFlete));
+    xFlete.setAttribute("collapsed",vFlete);
+    xFlete.setAttribute("style","text-align:right");
+    xFlete.setAttribute("value",ImporteFlete);
+    xFlete.setAttribute("id","flete_"+IdPedido);
 
     xEstado = document.createElement("listcell");
     xEstado.setAttribute("label", Estado);
@@ -413,7 +433,9 @@ function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision
     xitem.appendChild( xEstado );
     xitem.appendChild( xModoPago );	
     xitem.appendChild( xPercepcion );
+    xitem.appendChild( xFlete );
     xitem.appendChild( xTotal );
+    xitem.appendChild( xTotalPagar );
     xitem.appendChild( xEmision );
     xitem.appendChild( xPago );
     xitem.appendChild( xRegistro );
@@ -430,8 +452,6 @@ function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision
 }
 
 function RevisarCompraSeleccionada(){
-
-    VaciarDetallesCompra();
 
     var idex      = id("busquedaCompra").selectedItem;
     if(!idex) return;
@@ -450,23 +470,33 @@ function RevisarCompraSeleccionada(){
     cEmision      = id("emision_"+idex.value).getAttribute("value");
     cPercepcion   = id("percepcion_"+idex.value).getAttribute("value");
     clPercepcion  = id("percepcion_"+idex.value).getAttribute("label");
+    clFlete       = id("flete_"+idex.value).getAttribute("label");
     cObs          = id("obs_"+idex.value).getAttribute("value");
     clPercepcion  = clPercepcion.replace(cMoneda[1]['S'],'');
+    clFlete       = clFlete.replace(cMoneda[1]['S'],'');
     cIdPedido     = idex.value;
 
     var IdPedidos = id("idpedidosdetalle_"+idex.value).getAttribute("value");
 
-    BuscarDetallesCompra(IdPedidos);
-
     idfacturaseleccionada = idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
-    var nrodocumento =  idex.childNodes[3].attributes.getNamedItem('label').nodeValue;
-    nrodocumentodevol = nrodocumento;
-    var seriedocumento =  idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
+    var nrodocumento    =  idex.childNodes[3].attributes.getNamedItem('label').nodeValue;
+    nrodocumentodevol   = nrodocumento;
+    var seriedocumento  =  idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
     seriedocumentodevol = seriedocumento;
-    var cadena    =  idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
+    var cadena          =  idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
     //ExtraBuscarEnServidor("");
+
+    if(RevDet == 0 || RevDet != idex.value)
+        setTimeout("loadDetallesCompras('"+IdPedidos+"')",100);
+
+    RevDet = idex.value;
     xmenuCompraBorrador();
 }
+
+function loadDetallesCompras(xid){
+    VaciarDetallesCompra();
+    BuscarDetallesCompra(xid);
+} 
 
 function BuscarDetallesCompra(IdPedido ){
 
@@ -477,8 +507,9 @@ function BuscarDetallesCompra(IdPedido ){
 function RawBuscarDetallesCompra(IdPedido,FuncionRecogerDetalles){
 
     var obj = new XMLHttpRequest();
-
-    var url = "services.php?modo=mostrarDetallesCompra&IdPedido="+IdPedido;
+    var filtromoneda    = id("FiltroCompraMoneda").value;
+    var url = "services.php?modo=mostrarDetallesCompra&IdPedido="+IdPedido+
+              "&filtromoneda="+filtromoneda;
     obj.open("GET",url,false);
     obj.send(null);	
 
@@ -677,7 +708,7 @@ function o_PrintCompra(idoc,tp){
 	break;
     case 'pdf':
 	//imprime pdf
-	var importe = id("importe_"+idoc).getAttribute("value");
+	var importe = id("importepago_"+idoc).getAttribute("value");
 	var moneda = id("idmoneda_"+idoc).getAttribute("value");
 	var importeletras = convertirNumLetras(importe,moneda);
 	importeletras     = importeletras.toUpperCase();
@@ -985,8 +1016,11 @@ function ModificarCompra(xocs,xdet){
 	//Percepcion
 	xdato = id("xPercepcion").value;
 	xdato = trim(xdato);
- 	if(!xdato || xdato == '' ) id("xPercepcion").value = clPercepcion;
- 	if(!xdato || xdato == '' ) return;
+
+ 	if(!xdato || xdato == '' ) {
+	    id("xPercepcion").value = clPercepcion;
+ 	    return;
+	}
 
 	id("percepcion_"+cIdPedido).getAttribute("value",xdato);
         id("percepcion_"+cIdPedido).setAttribute("label",cMoneda[1]['S']+" "+xdato);
@@ -1307,6 +1341,33 @@ function ModificarCompra(xocs,xdet){
 	reloadet        = false;
 	break;
 
+    case 19:
+ 	//Importe Flete
+	xrest = (cEstado=='Borrador' || cEstado=='Pendiente')?false:true;
+	if(xrest) return alert(amsj+cCodigo+' -'+cEstado+'-,'+
+			       ' debe tener estado -Borrador- ó -Pendiente-');
+	//Flete
+	xdato = id("xFlete").value;
+	xdato = trim(xdato);
+ 	if(!xdato || xdato == '' ) {
+	    id("xFlete").value = clFlete;
+ 	    return;
+	}
+
+	id("flete_"+cIdPedido).getAttribute("value",xdato);
+        id("flete_"+cIdPedido).setAttribute("label",cMoneda[1]['S']+" "+xdato);
+
+	reloadet = false;
+	reloadpd = true;
+	volverComprobantes(0);
+
+	//Carga mesaje 
+	msj    = ' Modificar '+cDocumento+' Nro.'+cCodigo+
+	         ' '+cProveedor+' -'+cEstado+'-\n\n '+
+	         '- Nuevo Importe Flete '+cMoneda[1]['S']+" "+xdato+' ';
+
+	break;
+
     }
 
     //Control Brutal
@@ -1389,9 +1450,12 @@ function ModificarComprobante(){
     id("xCodigo").value           = cCodigo;
     id("ProvHab").value           = cProveedor;
     id("xPercepcion").value       = clPercepcion;
+    id("xFlete").value            = clFlete;
     id("xFormaPago").value        = cModopago;
 
     id("tPercepcion").setAttribute("label",'Percepción ( '+cMoneda[1]['S']+" "+cPercepcion+' )');
+    id("tFlete").setAttribute("label",'Flete ( '+cMoneda[1]['S']+' )');
+
     if (cEmision  != 'undefined') id("xEmision").value = cEmision;
     if (cPago != 'undefined')	  id("xPago").value = cPago;
 
@@ -1626,6 +1690,9 @@ function mostrarBusquedaAvanzada(xthis){
 	break;
     case "Percepcion" : 
 	vPercepcion     = xchecked;
+	break;
+    case "Flete" : 
+	vFlete          = xchecked;
 	break;
     }
 

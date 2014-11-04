@@ -126,9 +126,10 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <description>Existencias:</description>
       <menulist  id="idstock" oncommand="BuscarAlmacen()">
        <menupopup>
- 	 <menuitem value="0" label="Todos" />
- 	 <menuitem value="1" label="Stock" />
+ 	 <menuitem value="0" label="C/S Stock" />
+ 	 <menuitem value="1" label="Con Stock" />
  	 <menuitem value="2" label="Sin Stock"/>
+ 	 <menuitem value="3" label="Inventariado"/>
        </menupopup>
       </menulist>
     </vbox>
@@ -140,7 +141,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                onkeypress="return soloNumeros(event,this.value);"/>
     </vbox>
 
-      <vbox style="margin-top:1.2em">
+      <vbox style="margin-top:1.5em">
         <menu>
           <toolbarbutton image="img/gpos_busqueda_avanzada.png" />
           <menupopup >
@@ -167,9 +168,10 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	      oncommand="BuscarMovimiento()"/>
     </vbox>
     <vbox id="btnAltaRapida"  collapsed="true" style="margin-top:.9em">
-      <button  image="img/gpos_altarapida.png" label=" Alta Rápida..." 
+      <button  image="img/gpos_altarapida.png" label=" Alta Rápida..." style="height:3.5em"
 	      oncommand="altarapidaArticulo()" <?php gulAdmite("Productos") ?> />
     </vbox>
+
     <vbox style="margin-top:.9em">
       <button id="btnImprimirInventarioPDF" image="img/gpos_pdf_ico.png" label=""
 	      oncommand="exportarInventario('pdf');" collapsed="false" />

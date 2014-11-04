@@ -17,6 +17,14 @@ switch($modo) {
 	case "cb":
 		echo $primerCB;
 		break;		
+	case "subfamilia":
+		$IdFamilia  = CleanID($_GET["IdFamilia"]);
+		$SubFamilia = genArraySubFamilias($IdFamilia);
+		
+		foreach ($SubFamilia as $key=>$value) {
+			echo "$value=$key\n";
+		}		
+		break;	
 	case "tallas":
 		$IdTallaje = CleanID($_GET["IdTallaje"]);
 		$IdFamilia = CleanID($_GET["IdFamilia"]);

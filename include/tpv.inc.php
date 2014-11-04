@@ -70,7 +70,8 @@
 	  }
 
         $numDependientes = 0;
-        error(__LINE__ , "Info: salio  $sql");
+
+        //error(__LINE__ , "Info: salio  $sql");
 
         $NombreDependienteDefecto = false;
         $IdDependienteDefecto     = false;

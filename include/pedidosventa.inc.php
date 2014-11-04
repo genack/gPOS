@@ -5,6 +5,7 @@ function PedidosVentaPeriodo($desde,$hasta,$cliente,$presupuesto,$tipoventa,
   $desde        = CleanRealMysql($desde);
   $hasta        = CleanRealMysql($hasta);
   $cliente      = CleanRealMysql($cliente);
+  $cod          = ($codigo != '')? explode("-",$codigo):"";
 
   $extraFecha   = " AND date(ges_presupuestos.FechaPresupuesto) >= '$desde' AND date(ges_presupuestos.FechaPresupuesto) <= '$hasta' ";
 
@@ -15,7 +16,7 @@ function PedidosVentaPeriodo($desde,$hasta,$cliente,$presupuesto,$tipoventa,
   $extraEstado  = ($estado != 'Todos')? " AND ges_presupuestos.Status = '$estado' ":"";
   $extraLocal   = ($local)?" AND ges_presupuestos.IdLocal = '$local' ":"";
 
-  $extraCodigo  = ($codigo !='')? " AND ges_presupuestos.NPresupuesto = '$codigo' ":$extraFecha;
+  $extraCodigo  = ($codigo != '')? " AND ges_presupuestos.Serie like '%$cod[0]%' AND ges_presupuestos.NPresupuesto like '%$cod[1]%' ":$extraFecha;
 
   $sql=
     " SELECT ges_presupuestos.IdCliente, IdPresupuesto as Id, Npresupuesto as Codigo,".

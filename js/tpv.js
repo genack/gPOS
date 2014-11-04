@@ -399,17 +399,17 @@
     /*+++++++++++++++++ Productos ++++++++++++++++*/
 
     //Funcion compacta para crear articulo
-    function tA(idproducto,codigo,Lnombre,referencia,centimopvd,centimopvc,impuesto,LTalla, LColor, 
-		Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,Lalias1,Lalias2,
-		refprovhab,unidades,serie,marca,costo,ventamenudeo,unidxcontenedor,unidmedida,
+    function tA(idproducto,codigo,Lnombre,imagen,referencia,centimopvd,centimopvc,impuesto,LTalla, 
+		LColor,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,Lalias1,Lalias2,
+		refprovhab,unidades,serie,LMarca,costo,ventamenudeo,unidxcontenedor,unidmedida,
 		Llaboratorio,contenedor,pvdd,pvcd,vence,lote,servicio,mproducto,
 		ilimitado,dosis){
-
+	
         //Traduce desde lex a normal.
         var talla       = (LTalla)?L[LTalla]:"";		
         var color       = (LColor)?L[LColor]:"";
+        var marca       = (LMarca)?L[LMarca]:"";
         var nombre      = (Lnombre)?L[Lnombre]:"";
-        //var descripcion = (Ldescripcion)?L[Ldescripcion]:"";
         var laboratorio = (Llaboratorio)?L[Llaboratorio]:"";
         var alias1      = (Lalias1)?L[Lalias1]:"";
         var alias2      = (Lalias2)?L[Lalias2]:"";
@@ -420,15 +420,15 @@
         contenedor      = ( contenedor!="..." )? contenedor:"";
 
         //Funcion "larga" que no acepta el uso de lexers
-        tAL(idproducto,codigo,nombre,referencia,centimopvd,centimopvc,impuesto,talla, color, 
+        tAL(idproducto,codigo,nombre,imagen,referencia,centimopvd,centimopvc,impuesto,talla, color, 
 	    Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,alias1,alias2,refprovhab,
 	    unidades,serie,marca,costo,ventamenudeo,unidxcontenedor,unidmedida,
 	    laboratorio,contenedor,pvdd,pvcd,vence,lote,servicio,mproducto,
 	    ilimitado,dosis);
     }
 
-    function tAL(idproducto,codigo,Nombre,referencia,centimopvd,centimopvc,impuesto,Talla, Color, 
-		 Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,alias1,alias2,
+    function tAL(idproducto,codigo,Nombre,imagen,referencia,centimopvd,centimopvc,impuesto,Talla,
+		 Color,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,alias1,alias2,
 		 refprovhab,unidades,serie,marca,costo,ventamenudeo,unidxcontenedor,unidmedida,
 		 laboratorio,contenedor,pvdd,pvcd,vence,lote,servicio,mproducto,
 		 ilimitado,dosis){
@@ -438,13 +438,12 @@
         codigo   = new String(codigo);	
 
 	//Ya tenemos este producto listado
-	//alert("tAL ->"+codigo );
         if (pool.Existe( codigo.toUpperCase() ))
-            return stAL(idproducto,codigo,Nombre,referencia,centimopvd,centimopvc,impuesto,Talla,Color,
-			Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,alias1,alias2,
-			refprovhab,unidades,serie,marca,costo,ventamenudeo,unidxcontenedor,unidmedida,
-			laboratorio,contenedor,pvdd,pvcd,vence,lote,servicio,mproducto,
-			ilimitado,dosis);
+            return stAL(idproducto,codigo,Nombre,imagen,referencia,centimopvd,centimopvc,impuesto,
+			Talla,Color,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,
+			alias1,alias2,refprovhab,unidades,serie,marca,costo,ventamenudeo,
+			unidxcontenedor,unidmedida,laboratorio,contenedor,pvdd,pvcd,vence,lote,
+			servicio,mproducto,ilimitado,dosis);
 
         var alote       = ( lote  )? lote.split("~")    :false;
         var adosis      = ( dosis )? dosis.split("&")   :false;
@@ -479,13 +478,15 @@
         a.pvo           = pvo;
 	//Descripcion
         a.producto      = unescapeHTML(xproduct);
+        a.imagen        = imagen;
         a.talla         = Talla;		
         a.color         = Color;
+        a.marca         = marca;
         a.nombre        = Nombre
         a.nombre        = unescapeHTML(a.nombre);
         a.color         = unescapeHTML(a.color);
         a.talla         = unescapeHTML(a.talla);	
-        a.marca         = marca;
+        a.marca         = unescapeHTML(a.marca);	
         a.laboratorio   = laboratorio;
         a.alias1        = alias1;
         a.alias2        = alias2;
@@ -518,8 +519,8 @@
         }		
     }
 
-    function stAL(idproducto,codigo,Nombre,referencia,centimopvd,centimopvc,impuesto,Talla, Color, 
-		  Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,alias1,alias2,
+    function stAL(idproducto,codigo,Nombre,imagen,referencia,centimopvd,centimopvc,impuesto,Talla,
+		  Color,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,alias1,alias2,
 		  refprovhab,unidades,serie,marca,costo,ventamenudeo,unidxcontenedor,unidmedida,
 		  laboratorio,contenedor,pvdd,pvcd,vence,lote,servicio,mproducto,
 		  ilimitado,dosis){
@@ -553,13 +554,15 @@
             xsyn.pvo           = pvo;
 	    //Descripcion
             xsyn.producto      = unescapeHTML(xproduct);
+            xsyn.imagen        = imagen;
             xsyn.talla         = Talla;		
             xsyn.color         = Color;
+            xsyn.marca         = marca;
             xsyn.nombre        = Nombre
             xsyn.nombre        = unescapeHTML(xsyn.nombre);
             xsyn.color         = unescapeHTML(xsyn.color);
             xsyn.talla         = unescapeHTML(xsyn.talla);	
-            xsyn.marca         = marca;
+            xsyn.marca         = unescapeHTML(xsyn.marca);	
             xsyn.laboratorio   = laboratorio;
             xsyn.alias1        = alias1;
             xsyn.alias2        = alias2;
@@ -597,6 +600,7 @@
     document.onkeydown = function(event) {   
 
 	//alert(event.ctrlKey+' '+event.keyCode); 
+	//alert(event.shiftKey+' '+event.keyCode);
 	//alert(event.keyCode); 
 
 	switch (event.keyCode) { 
@@ -636,11 +640,34 @@
 	    VerVentas();
 	    break;
 
-        case 123 : 
+        case 121 : 
 	    VerCaja();
 	    break;
 
 	}
+
+	if(event.shiftKey) 
+
+	    switch (event.keyCode) { 
+
+            case 122 : 
+		//Shift + F11  
+		break;
+
+            case 123 : 
+		VerServicios();
+		break;
+	    } 
+
+	if(event.ctrlKey) 
+
+	    switch (event.keyCode) { 
+
+            case 114 : 
+		//Shift + F3 
+		break;
+
+	    } 
     }
 
 
@@ -828,7 +855,6 @@
  	    //Stock
             if (!unidades) { unidades = 1;}
             unidades = ConvertirSignoApropiado( unidades );
-            setImagenProducto( cod );
 
             //Stock Almacen
             unidadesalmacen = productos[cod].unidades;
@@ -1031,8 +1057,6 @@
             encontrado = tpv.AddCarrito( vcb ,ConvertirSignoApropiado(1) );
 	    //NOTA: debe añadirse al listado para que lo puedan consultar.
 	    CEEP(vcb);
-	    //Actulaliza el consolidado carrito productos
-            //RecalculoTotal();***
             //Si lo ha encontrado, sera una buena idea mostrar el cb y su foto,si la hay..
 	    setImagenProducto( vcb );
             //NOTA: no se añade entrada en productos
@@ -2005,14 +2029,19 @@
 		return;
             }
 
-            if(Imageview.cb == CodigoBarras) return;
+            if(Imageview.oldcb == CodigoBarras) return;
 
             Imageview.cb = CodigoBarras;
 
-            if (pool.Existe(CodigoBarras)){ 
-		pool.select(CodigoBarras);  
-		Imageview.nombre = pool.get().nombre+' '+pool.get().marca;
-            }
+	    if( productos[ CodigoBarras ].imagen == '0') {
+
+		id("muestraProductoCB").setAttribute("value",Imageview.cb);
+		id("muestraProductoIcon").setAttribute("collapsed","false");
+		id("muestraProducto").setAttribute("src", "img/gpos_imgdefault.png" );
+		Imageview.oldcb = Imageview.cb;
+		return;
+	    }
+
             setTimeout("UpdateImageview()",50);
 
             //Resetea el ultimo cambio, de modo que de forma efectiva retrasa el siguiente
@@ -2572,6 +2601,12 @@
 	    if ( productos[cod].menudeo ) id("preventaMayoreo").removeAttribute("disabled")
 	    if ( productos[cod].mproducto ) id("preventaDetalleMProducto").removeAttribute("disabled");
 	    if ( productos[cod].dosis ) id("preventaFichaTecnica").removeAttribute("disabled");
+
+            //Si lo ha encontrado, sera una buena idea mostrar el cb y su foto,si la hay..
+	    //setImagenProducto( cod );
+            //setTimeout("UpdateImageview()",50);
+            setTimeout("setImagenProducto("+cod+")",200);
+
         }
 
 /*+++++++++++++++++++++++++++++ SERVICES ++++++++++++++++++++++++++++++++++*/
@@ -3870,10 +3905,8 @@
 	     if(difftime>50){	
 		 if (Imageview.oldcb != Imageview.cb){	
 		     id("muestraProductoCB").setAttribute("value",Imageview.cb);
-		     //id("nombreProducto").setAttribute("value",Imageview.nombre);
 		     id("muestraProductoIcon").setAttribute("collapsed","false");
-		     
-		     id("muestraProducto").setAttribute("src", "imagenproducto.php?cb="+ escape( Imageview.cb ) );
+		     id("muestraProducto").setAttribute("src", "productos/" + escape( productos[ Imageview.cb ].imagen ) );
 		     Imageview.oldcb = Imageview.cb;
 		 }
 	     } else {
@@ -5483,7 +5516,6 @@ function convertirNumLetras(number){
 	    var vprecio   = ( modo == "mproducto")? costo:precio;
 
             prodlist_cb[codigo] = 1;
-            setImagenProducto( codigo );
 
 	    //Detalle
 	    var xvence     = ( vence  )? vence[0].split(":") :false;
@@ -6208,8 +6240,8 @@ function convertirNumLetras(number){
 		  '     [ F7   ] -> Proforma / Buscar \n'+
 		  '     [ F8   ] -> Preventa / Buscar \n\n'+
 		  '     [ F9   ] -> Ventas / Buscar \n'+
-		  '     [ F12 ] -> Caja \n'+
-		  '                     Regresa Stock / Buscar \n\n'+
+		  '     [ F10  ] -> Caja  \n\n'+
+		  '     [ Shift + F12  ] -> Servicios \n\n'+
 		  '     [ Insert ] -> Sincroniza TPV\n'+
 		  '     [ Supr   ] -> Limpia Ticket ');
 	}
@@ -6278,7 +6310,6 @@ function convertirNumLetras(number){
 		    ntAL++;
 		}
 	    }
-	    //alert(ntAL);
 	    id("txt-productoprogress").label = 'Cargando '+ntAL+' productos...'   
 	}
 
@@ -8859,7 +8890,7 @@ function convertirNumLetras(number){
 
         //Creamos producto imaginario 
         if (!pool.Existe(codigo))
-	    tA(idproducto,codigo,servicio,referencia,precio*100,precio*100,impuesto,talla,color,
+	    tA(idproducto,codigo,servicio,"",referencia,precio*100,precio*100,impuesto,talla,color,
 	       0,0,0,0,idsubsidiario,nombre,"","","","",0,0,marca,0,0,0,"unid","","",0,0,0,0,0,0,0,"" )
 
         pool.select(codigo); 	
@@ -9568,6 +9599,7 @@ var vUsuario       = true;
 var vOP            = true;
 var vCodigo        = true;
 
+var RevDet = 0;
 
 function VaciarDetallesVentas(){
     var lista = id("busquedaDetallesVenta");
@@ -9591,12 +9623,9 @@ function VaciarBusquedaVentas(){
 
 function RevisarVentaSeleccionada(){
     
-    VaciarDetallesVentas();
     var idex = id("busquedaVentas").selectedItem;
 
     if(!idex) return;
-
-    BuscarDetallesVenta(idex.value);
 
     cIdComprobante        = idex.childNodes[2].attributes.getNamedItem('label').nodeValue;
     cComprobante          = idex.childNodes[3].attributes.getNamedItem('value').nodeValue;
@@ -9618,8 +9647,18 @@ function RevisarVentaSeleccionada(){
     seriecomprobantedevol = trim(seriefac);
 
     menuContextualVentasRealizadas(cIdComprobante,false);
+
+    if(RevDet == 0 || RevDet != idex.value)
+        setTimeout("loadDetallesVentas("+idex.value+")",100);
+
+    RevDet = idex.value;
 }
- 
+
+function loadDetallesVentas(xid){
+    VaciarDetallesVentas();
+    BuscarDetallesVenta(xid);
+} 
+
 function RevisarDetalleVentaSeleccionada(){
     
     var idex      = id("busquedaDetallesVenta").selectedItem;
@@ -9926,9 +9965,7 @@ function RealizarAbono(){
 var serialNum = (Math.random()*9000).toFixed();
 
 function BuscarDetallesVenta(IdComprobante ){
-    
     RawBuscarDetallesVenta(IdComprobante, AddLineaDetallesVenta);
-    
 }
 
 function RawBuscarDetallesVenta(IdComprobante,FuncionRecogerDetalles){
@@ -10714,20 +10751,14 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,IdC
 
 function BuscarVentas(){
     VaciarBusquedaVentas();
-    var desde = id("FechaBuscaVentas").value;
-    var hasta = id("FechaBuscaVentasHasta").value;
+    var desde  = id("FechaBuscaVentas").value;
+    var hasta  = id("FechaBuscaVentasHasta").value;
     var nombre = id("NombreClienteBusqueda").value;	
     
-    if ((!hasta || hasta == "DD-MM-AAAA") &&  (!desde || desde == "DD-MM-AAAA") && (!nombre))return;
-    
-    var modo = 	(id("modoConsultaVentas").checked)?"pendientes":"todos";
+    var modo      = (id("modoConsultaVentas").checked)?"pendientes":"todos";
     var modoserie = (id("modoConsultaVentasSerie").checked)?"cedidos":"todos";
-    //alert(id("modoConsultaFactura").checked);
-    //var modofactura = (id("modoConsultaFactura").checked)?"factura":"todos";
-    //var modoboleta = (id("modoConsultaBoleta").checked)?"boleta":"todos";
-    //var modoticket = (id("modoConsultaTicket").checked)?"ticket":"todos";
-    //var mododevolucion = (id("modoConsultaDevolucion").checked)?"devolucion":"todos";
-    
+
+    var filtrocodigo   = id("busquedaCodigoSerie").value;
     var filtroventa    = id("FiltroVenta").value;
     var modofactura    = (filtroventa =="factura")?"factura":"todos";
     var modoboleta     = (filtroventa =="boleta")?"boleta":"todos";
@@ -10735,20 +10766,22 @@ function BuscarVentas(){
     var mododevolucion = (filtroventa =="devolucion")?"devolucion":"todos";
     var modoalbaran    = (filtroventa =="albaran")?"albaran":"todos";
     var modoalbaranint = (filtroventa =="albaranint")?"albaranint":"todos";
+    var forzarid        = (filtrocodigo != '' )? filtrocodigo:false;
     
     RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modofactura,modoboleta,mododevolucion,
-		    modoalbaran,modoalbaranint,modoticket,false,false,AddLineaVentas);
+		    modoalbaran,modoalbaranint,modoticket,false,false,forzarid,
+		    AddLineaVentas);
     
     var elemento = id("busquedaCodigoSerie").value;
     if( elemento != '' ){
-	     buscarPorCodSerie(elemento);
+	     //buscarPorCodSerie(elemento);
     }
 }
 
 
 function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modofactura,modoboleta,
 			 mododevolucion,modoalbaran,modoalbaranint,modoticket,
-			 IdComprobante,reimprimir,FuncionProcesaLinea){
+			 IdComprobante,reimprimir,forzarid,FuncionProcesaLinea){
 
     var url = "services.php?modo=mostrarVentas&desde=" + escape(desde) 
         + "&modoconsulta=" + escape(modo) 
@@ -10763,7 +10796,8 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modofactura,modobolet
         + "&modofactura=" + escape(modofactura)
         + "&esventas=off"
         + "&modoventa=tpv" 
-        + "&forzarfactura=" + IdComprobante;
+        + "&forzarfactura=" + IdComprobante
+        + "&forzarid=" + forzarid;
 
     var obj = new XMLHttpRequest();
     obj.open("GET",url,false);

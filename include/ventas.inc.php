@@ -144,13 +144,15 @@ function DetallesServicios($idsubsidiario,$status,$ticket,$desde,$hasta){
 function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFactura=false,
 		       $esSoloBoleta=false,$esSoloDevolucion=false,$esSoloAlbaran=false,
 		       $esSoloAlbaranInt=false,$esSoloTicket=false,$nombre=false,
-		       $esSoloCesion=false,$forzarfacturaid=false,$TipoVenta){
+		       $esSoloCesion=false,$forzarfacturaid=false,$TipoVenta,$forzarid){
 	
         $xnombre       = CleanRealMysql($nombre);
+	$cod          = ($forzarid != 'false')? explode("-",$forzarid) : "";
 	$extraNombre  = ($nombre and $nombre != "")?true:false;
 	$extraID      = ($forzarfacturaid>0)? " AND ges_comprobantes.IdComprobante = '$forzarfacturaid' ":"";
 	$extraFechas  = ($extraID =="")? " AND ges_comprobantes.FechaComprobante >= '$desde'".
 	                                " AND ges_comprobantes.FechaComprobante <= '$hasta' ":"";
+	$extraFechas  = ($forzarid != 'false')? " AND ges_comprobantes.SerieComprobante like '%$cod[0]%' AND ges_comprobantes.NComprobante like '%$cod[1]%'" : $extraFechas;
 	$extraStatus  = ($esSoloPendientes)?" AND ges_comprobantes.Status = 1 ":"";
 	$extraCesion  = ($esSoloCesion)?" AND ges_comprobantes.SerieComprobante LIKE 'CS%' ":"";
 	$extraBoleta  = ($esSoloBoleta)?" AND ges_comprobantestipo.TipoComprobante = 'Boleta' ":"";

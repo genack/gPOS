@@ -4,8 +4,8 @@ include("tool.php");
 
 SimpleAutentificacionAutomatica("visual-iframe");
 
-$tamPagina = 20;
-$tamPaginaSel = 10;
+global $tamPagina;
+$tamPagina = 10;
 
 function AutoOpen(){
 
@@ -18,7 +18,10 @@ function AutoOpen(){
 }
 
 function genOpcionesBusqueda(){
-	global $action;	if (!Admite("Stocks"))	return false;
+	global $action;	
+
+	if (!Admite("Stocks"))	return false;
+
 	$ot = getTemplate("FormBusquedaAlmacenProducto");
 			
 	if (!$ot){	
@@ -65,15 +68,13 @@ function genOpcionesBusqueda(){
 }
 
 function BusquedaBasica(){
- //	echo genOpcionesBusqueda();
+  //	echo genOpcionesBusqueda();
 }
 
 function ListarAlmacen($referencia,$donde,$marcadotrans=false,$cb=false,$idbase=false,$soloLlenos=false,$obsoletos=false,$soloNS=false,$soloLote=false,$soloOferta=false,$reservados=false){	
-  global $action;
+  global $action,$tamPagina;
 
   $base = getSesionDato("BusquedaProdBase");
-  
-  //Creamos template
   $ot   = getTemplate("ListadoMonoProductoMultiAlmacen");
   
   if (!$ot){	
@@ -81,27 +82,15 @@ function ListarAlmacen($referencia,$donde,$marcadotrans=false,$cb=false,$idbase=
     return false; }
   
   //Extraemos datos
-  $almacen = getSesionDato("Articulos");
-  
-  $IdLocal = "";
-  if ($donde){
-    $IdLocal = $donde;
-    if ($IdLocal){
-      //	echo gas("nota",_("Listando por local"));	
-    }			
-  }
-  
-  $IdProducto = "";
+  $almacen    = getSesionDato("Articulos");
+  $IdLocal    = ($donde)? $donde:"";
+
   
   if ($referencia){
-    $id = genReferencia2IdProducto($referencia);
+    $id     = genReferencia2IdProducto($referencia);
     $idbase = getProdBaseFromId($id); 
   }		
-
-  if (!$IdProducto and !$base){
-    //echo gas("aviso","Debug: cb $cb");
-    $IdProducto = getIdFromCodigoBarras($cb);	
-  }
+  $IdProducto = (!$base)? getIdFromCodigoBarras($cb):"";	
    
   
   if (!$IdLocal and !$IdProducto) {
@@ -117,18 +106,13 @@ function ListarAlmacen($referencia,$donde,$marcadotrans=false,$cb=false,$idbase=
     return false;	
   }
 
-  $indice = getSesionDato("PaginadorAlmacen");
-  //$tamPagina = $ot->getPagina();
-  $tamPagina = 1000;
- 
-  //if (!$base)
-  //	$res = $almacen->ListadoBase($IdLocal,$IdProducto,$indice,$tamPagina);
-  //else
+  $indice  = getSesionDato("PaginadorAlmacen");
   $idalias = "";
   $nombre  = "";
 
   if (isset($_SESSION["BusquedaNombre"]) and $_SESSION["BusquedaNombre"])
     $nombre = $_SESSION["BusquedaNombre"];
+
   if($nombre)  
     $idalias = getLikeProductoAlias2Id($nombre, $IdIdioma=false);
 
@@ -196,6 +180,7 @@ function ListarAlmacen($referencia,$donde,$marcadotrans=false,$cb=false,$idbase=
   
   $jsOut     = $jsLex->jsDump() . $jsOut;
   $jsOut    .= AutoOpen();	
+
   $paginador = $ot->jsPaginador($indice,$tamPagina,$num);
   $jsOut    .= $paginador;	
   $jsOut    .= "cListAlmacen();";	
@@ -248,6 +233,7 @@ function OperacionesConSeleccion(){
 
 function ListarSeleccion($marcadotrans){
 
+ 	global $action;
         echo '<center> 
               <table class="listado" border="0">
                 <tbody>
@@ -259,8 +245,6 @@ function ListarSeleccion($marcadotrans){
                 </tbody>
               </table> 
               </center>';
-
-	global $action;
 	
 	//Creamos template
 	$ot       = getTemplate("ListadoMultiAlmacenSeleccion");
@@ -437,11 +421,11 @@ function FormularioEditarArticulo($id){
 	    $empaques       = ($esMenudeo)? ($existencias-$resto)/$unidxemp:0;
 	    $existencias    = ($esMenudeo)? $empaques." ".$empaque." + ".$resto:$existencias;
 	    $disponibleunid = ($disponibleunid>0)? $disponibleunid:$stockunidades;
-	    $esBTCA         = ( getSesionDato("GlobalGiroNegocio") == "BTCA" );
-	    $txtModelo      = ( $esBTCA )?'Presentación/Modelo':'Modelo';
-	    $txtDetalle     = ( $esBTCA )?'Concentración/Detalle':'Detalle';	    
-	    $txtalias       = ( $esBTCA )?'Principio activo':'Etiqueta';
-	    $txtref         = ( $esBTCA )?'Registro Sanitario':'Referencia Fabr.';
+	    $txtMoDet       = getModeloDetalle2txt();
+	    $txtModelo      = $txtMoDet[1];
+	    $txtDetalle     = $txtMoDet[2];
+	    $txtalias       = $txtMoDet[3];
+	    $txtref         = $txtMoDet[4];
 
 
             $ot->fijar("tTituloAux",_("Otras tiendas"));
@@ -567,13 +551,13 @@ switch($modo) {
 		break;
 	case "selpagmas":
 		$index = getSesionDato("PaginadorSeleccionAlmacen");		
-		$index = $index + $tamPaginaSel;		
+		$index = $index + $tamPagina;		
 		setSesionDato("PaginadorSeleccionAlmacen",$index);
 		break;		
 	case "selpagmenos":	
 		$index = getSesionDato("PaginadorSeleccionAlmacen");
 		
-		$index = $index - $tamPaginaSel;
+		$index = $index - $tamPagina;
 		if ($index<0)
 			$index = 0;				
 		setSesionDato("PaginadorSeleccionAlmacen",$index);
@@ -864,7 +848,7 @@ switch($modo){
 	case "selpagmas": //navegando en la seleccion
 	case "selpagmenos":		
 		$marcadotrans = getSesionDato("CarritoTrans");
-		OperacionesConSeleccion();		 		
+	        //OperacionesConSeleccion();		 		
 		ListarSeleccion($marcadotrans);	
 		break;
 	case "seleccion": //operar seleccion
@@ -905,16 +889,27 @@ switch($modo){
 
 	case "pagmas": //navegando en el listado almacen
 	case "pagmenos":
-		//BusquedaBasica();
+	        //BusquedaBasica();
 		$ref = $_SESSION["BusquedaReferencia"];
 		$local = $_SESSION["BusquedaLocal"];
 		$cb = $_SESSION["BusquedaCB"];
-		
+		$soloLlenos   = $_SESSION["BusquedaSoloConStock"];
+		$nombre       = $_SESSION["BusquedaNombre"];
+		$soloNS       = $_SESSION["BusquedaSoloNS"];
+		$soloLote     = $_SESSION["BusquedaSoloLote"];
+		$soloOferta   = $_SESSION["BusquedaSoloOferta"];
+		$obsoletos    = $_SESSION["BusquedaObsoletos"];
+		$reservados   = $_SESSION["BusquedaReservados"];
+		$soloLlenos   = $_SESSION["BusquedaSoloConStock"];
+		$marcadotrans = getSesionDato("CarritoTrans");  
+
 		if (!$local)
 			$local = getSesionDato("IdTienda");		
 							
 		if (($local or $ref) or $cb)
-			ListarAlmacen($ref,$local,getSesionDato("CarritoTrans"),$cb);
+		  ListarAlmacen($ref,$local,$marcadotrans,$cb,false,$soloLlenos,
+				$obsoletos,$soloNS,$soloLote,$soloOferta,$reservados);
+
 					
 		break;	
 	case "hacercompra":

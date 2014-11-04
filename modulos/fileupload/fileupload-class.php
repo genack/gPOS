@@ -217,6 +217,7 @@ class uploader {
 			AddError(__FILE__.__LINE__, "Info: con $log");
 
 			$copy = '';  
+			$n    = 0;
 			switch ($overwrite_mode) {
 				case 1 : // overwrite mode
 					$aok = copy($this->file["tmp_name"], $this->path.$this->file["name"]);

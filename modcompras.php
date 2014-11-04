@@ -3,27 +3,29 @@ include("config/configuration.php");
 include("tool.php");
 SimpleAutentificacionAutomatica("visual-iframe");
 
-$tamPagina  = 200;
-$tamPagina2 = 180;
+global $tamPagina;
+$tamPagina  = 10;
 
 function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
 			 $seleccion,$idprod,$idbase,$nombre=false,$ref=false,
-			 $cb=false,$obsoletos=false,$idlab=false,$idalias=false){	
-    global $action;
+			 $cb=false,$obsoletos=false,$idlab=false,$idalias=false,
+			 $porproveedor=false,$stockminimo=false){	
+    global $action,$tamPagina;
     $oProducto    = new producto;
     $idalias      = ($nombre)? getLikeProductoAlias2Id($nombre, $IdIdioma=false):$idalias;
     $base         = $idbase;
     //$idprod???	
     $indice       = getSesionDato("PaginadorCompras");
     $Moneda       = getSesionDato("Moneda");
-    $tamPagina    = 300;
-    $esBTCA       = ( getSesionDato("GlobalGiroNegocio") == "BTCA" );
-    $txtModelo    = ( $esBTCA )?'Presentación/Modelo':'Modelo';
-    $txtDetalle   = ( $esBTCA )?'Concentración/Detalle':'Detalle';
+
+    $txtMoDet     = getModeloDetalle2txt();
+    $txtModelo    = $txtMoDet[1];
+    $txtDetalle   = $txtMoDet[2];
     
-    $hayProductos = $oProducto->ListadoFlexible2($idprov,$idmarca,$idcolor,$idtalla,false,$indice,
-						 $base,false,false,$tamPagina,$ref,$cb,$nombre,
-						 $obsoletos=false,$idalias,$idlab);
+    $hayProductos = $oProducto->ListadoFlexibleCompras($idprov,$idmarca,$idcolor,$idtalla,false,
+						       $indice,$base,false,false,$tamPagina,$ref,$cb,
+						       $nombre,$obsoletos=false,$idalias,$idlab,
+						       $porproveedor,$stockminimo);
     $num   = 0;
     $jsOut = "";
     $jsLex = new jsLextable;
@@ -53,8 +55,10 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
         $color = getIdColor2Texto( $oProducto->get("IdColor"));
 
         $manejaserie = $oProducto->get("Serie");
-        $manejalote = $oProducto->get("Lote");
-        $manejafv = $oProducto->get("FechaVencimiento");
+        $manejalote  = $oProducto->get("Lote");
+        $manejafv    = $oProducto->get("FechaVencimiento");
+	$eservicio   = ( $oProducto->get("Servicio") > 0 )? 1:0;//Servicio
+	$eservicio   = ( $oProducto->get("MetaProducto") )? 1:$eservicio;//MetaProducto
 
         $lextalla = $jsLex->add($talla);
         $lexcolor = $jsLex->add($color);
@@ -72,13 +76,13 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
             $nombre = addslashes($nombre);
             $jsOut .= "cLH($id,'$nombre','$ref',$lexfam,$lexsub,'$descripcion','$marca','$lab','$idBase');\n";
         }
-        $jsOut .= "cL($id,$cb,$lextalla,$lexcolor,$manejaserie,$manejalote,$manejafv);\n";
+        $jsOut .= "cL($id,$cb,$lextalla,$lexcolor,$manejaserie,$manejalote,$manejafv,$eservicio);\n";
         $oldId = $idBase;							
     }	
 
     $jsOut = $jsLex->jsDump() . $jsOut;
 
-    $paginador = jsPaginador($indice,100,$num);
+    $paginador = jsPaginador($indice,$tamPagina,$num);
     $jsOut .= $paginador;	
     $jsOut .= "cListProductos();";	
     $jsOut .= $paginador;
@@ -102,7 +106,7 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
     $tipomoneda   = $detadoc[5];
     $tpfecha      = 'Fecha Emisión : ';
     $checkigv     = (getSesionDato("incImpuestoDet")=='true')?'CHECKED':'';
-    $checkipc     = (getSesionDato("incPercepcionDet")=='true')?'CHECKED':'';
+    $checkipc     = (getSesionDato("incPercepcion")=='true')?'CHECKED':'';
     $checkcredt   = (getSesionDato("aCredito")=='true')?'CHECKED':'';
     $admiteCompra = ( selAdmite('Compras') )? " disabled='true' ":"";
     $tipodoc      = ( selAdmite('Compras') )? "O":$tipodoc;
@@ -121,7 +125,7 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
 	"apareceCapa('acred');".
 	"apareceCapa('pgdoc');".
 	"cambiodoc('F');";
-      $checkF = 'CHECKED';
+      $checkF = 'selected';
       
       break;
     case "O":
@@ -134,9 +138,9 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
 	"cambiodoc('O');".
 	"CambiaTextDoc(1);";
 
-      $checkigv = 'CHECKED';
+      $checkigv = 'selected';
       setSesionDato("incImpuestoDet",'true');
-      $checkO   = 'CHECKED';
+      $checkO   = 'selected';
       break;
     case "R":
       $habilita=
@@ -146,7 +150,7 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
 	"apareceCapa('pgdoc');".
 	"apareceCapa('fdoc');".
 	"cambiodoc('R'); ";
-      $checkR = 'CHECKED';
+      $checkR = 'selected';
       break;
     case "G":
       $habilita=
@@ -156,17 +160,17 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
 	"apareceCapa('acred');".
 	"apareceCapa('pgdoc');".
 	"cambiodoc('G'); ";
-      $checkG = 'CHECKED';
+      $checkG = 'selected';
       break;
     case "SD":
       $habilita = 
-	"desapareceCapa('prov');".
+	"apareceCapa('prov');".
 	"desapareceCapa('ndoc');".
 	"desapareceCapa('acred');".
 	"desapareceCapa('fdoc');".
 	"desapareceCapa('pgdoc');".
 	"cambiodoc('SD'); ";
-      $checkSD = 'CHECKED';
+      $checkSD = 'selected';
     }
     $tnrodoc          = ( $nrodoc )?'Nro '.$nrodoc:'';
     $titulo           = ( selAdmite('Compras') )? 'Pedido':$documento.' '.$tnrodoc; 
@@ -191,53 +195,47 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
       <div id='t_comprov' class='formaTitulo'>$titulo</div>
     </td>
   </tr>
-  <tr>
-  <td class='lh' colspan='3'>
-    <input type=radio id='Factura' name='grupo1' value='1' $admiteCompra
-      onclick=".'"'."s_radioComprobante('F');".'"'."  $checkF> Factura
-
-    <input type=radio id='Resibo' name='grupo1' value='1' $admiteCompra
-      onclick=".'"'."s_radioComprobante('R');".'"'."  $checkR> Boleta
-
-    <input type=radio id='Guia' name='grupo1' value='0' $admiteCompra
-     onclick=".'"'."s_radioComprobante('G');".'"'."  $checkG > Albarán
-
-    <input type=radio id='SD' name='grupo1' value='2' $admiteCompra
-     onclick=".'"'."s_radioComprobante('SD');".'"'."  $checkSD> Ticket
-
-   </td>
-  </tr>
   <tr>   
-   <td>
-
+   <td  class='lh' colspan='3' style='padding: 0em 1em 0.3em 0.6em'>
     <div id=prov style='display: none;color:#000000;'> 
-      Proveedor : 
+      <b>Proveedor :</b>
       <input type=hidden id=IdProvHab name=IdProvHab value='$idprov' > 
       <input type=hidden id=modopagina name=modopagina value='Compras'>
       <input class=btn onclick='auxAltaProv();' type='button' value='+'> 
-      <!-- input class=btn onclick='auxAlt();' type='button' value='++' --> 
       <input class=btn onclick='auxProveedorHab();' type='button' value='...'> 
-      <input style='border:0px;' name=TextoProvHab id=TextoProvHab value='$nombreprov' readonly/>
+      <input class=xbtlh name=TextoProvHab id=TextoProvHab value='$nombreprov' readonly/>
     </div>
 
-   </td>   
-   <td>
-     <div id=ndoc style='display: none;color:#000000;'>
-       *Serie :
-     <input style='border:0px;' id='SDoc' name='SDoc' value='$sdoc' class='cajaPequena' type='text'
-      size='3' maxlength='3' onkeypress='return soloNumerosEnterosBase(event,this.value);' onblur='setndoc(this.value);'>
-       *Nro :
-     <input style='border:0px;' id='NDoc' name='NDoc' value='$ndoc' class='cajaPequena' type='text' 
-      size='7' maxlength='7' onkeypress='return soloNumerosEnterosBase(event,this.value);' onblur='setndoc(this.value);'>
-
-     </div>
+    &nbsp;&nbsp;&nbsp;&nbsp; 
+      <b>Presupuesto :</b>
+	<select>
+		<option onclick=".'"'."s_radioComprobante('O');".'"'."  $checkO>Pedido</option>
+		<option $admiteCompra onclick=".'"'."s_radioComprobante('F');".'"'."  $checkF >Factura</option>
+		<option $admiteCompra onclick=".'"'."s_radioComprobante('R');".'"'."  $checkR>Boleta</option>
+		<option $admiteCompra onclick=".'"'."s_radioComprobante('G');".'"'."  $checkG>Albarán</option>
+		<option $admiteCompra onclick=".'"'."s_radioComprobante('SD');".'"'."  $checkSD>Ticket</option>
+	</select>
    </td>
-   <td> 
+  </tr>
+  <tr>   
+   <td colspan='3' style='' Align='center'>
+
+     <div id=ndoc style='display: none;color:#000000;'>
+       <b>Serie :</b> 
+     <input class=cbt id='SDoc' name='SDoc' value='$sdoc' class='cajaPequena' type='text'
+      size='4' maxlength='4' onkeypress='return soloAlfaNumericoSerieBase(event);' onblur='setndoc(this.value);' onkeyup='this.value=this.value.toUpperCase()'>
+       <b>Nro :</b> 
+     <input class=cbt id='NDoc' name='NDoc' value='$ndoc' class='cajaPequena' type='text' 
+      size='7' maxlength='7' onkeypress='return soloNumerosEnterosBase(event,this.value);' onblur='setndoc(this.value);'>
+     </div>
+
+
+
      <div id=fdoc style='display: none;color:#000000;'>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <b><span id='fecha_op'>$tpfecha</span></b> 
 
-      *<span id='fecha_op'>$tpfecha</span>
-
-      <input style='border:0px;' name='FechaDoc' type='text' id='FechaDoc' class='cajaPequena'
+      <input class=cbt name='FechaDoc' type='text' id='FechaDoc' class='cajaPequena'
        size='8' maxlength='10' value='$fdoc' readonly> 
 
       <img  style='margin-top:-6px' src='img/gpos_calendario.png' name='Image1' id='Image11' 
@@ -248,13 +246,10 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
 
     </div>
 
-   </td>
-  </tr> 
-  <tr>
-    <td class='lh' colspan='3'>
-      <div id=pgdoc style='display: none;color:#000000;'>
-       Fecha Pago :
-        <input style='border:0px;' NAME='FechaPago' type='text' id='FechaPago' class='cajaPequena' 
+    <div id=pgdoc style='display: none;color:#000000;'>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <b> Fecha Pago :</b>
+        <input class=cbt NAME='FechaPago' type='text' id='FechaPago' class='cajaPequena' 
          size='8' maxlength='10' value='$fechapago' readonly> 
          <img src='img/gpos_calendario.png' name='Image2' id='Image22' 
          border='0'  onMouseOver=".'"'."this.style.cursor='pointer'".'"'." >
@@ -263,34 +258,41 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
          onUpdate : setfechapagodoc });
         </script>
       </div>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      Moneda :
+
+   </td>
+  </tr> 
+  <tr>
+    <td  class='lh'  colspan='3' style='padding: 0em 1em 0.2em 1em' Align='center'>
+     
       <input type=radio id ='tipoSoles' name='grupo2' value='0' 
       onclick=".'"'."desapareceCapa('cambiomoneda'); cambiomoneda(1);".'"'." $checkTS >
       ".$Moneda[1]['T']."
       <input type=radio id='tipoDolar' name='grupo2' value='1' 
       onclick=".'"'."apareceCapa('cambiomoneda'); cambiomoneda(2);".'"'." $checkTD >
       ".$Moneda[2]['T']."
+
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <div id=acred style='display: none;color:#000000;'>
+
+        <div id=acred style='display: none;color:#000000; '>
         <input type=checkbox  onclick=aCredito(this.checked); $checkcredt >
         Crédito
-      </div> 
+        <input type=checkbox  onclick=incluirPercepcion(this.checked); $checkipc >
+        Percepción
+        </div> 
         <input type=checkbox  onclick=incluirIGV(this.checked); $checkigv >
         Impuesto
+
+
     </td>
   </tr>
   <tr>
    <td colspan='3' Align='center'>
      <div id=cambiomoneda style='display: none; color:#000000'> 
 
-      *Tipo Cambio : 
-       <input style='border:0px;' name='TipoCambio' class='InputPrecio'  value='$tipocambio' 
-        onblur='settipocambio(this.value);' onkeypress='return soloNumerosBase(event,this.value);' size='5'>  &nbsp;&nbsp;&nbsp;&nbsp; 
-
-      *Fecha Cambio :  
-      <input style='border:0px;' NAME='FechaCambio' type='text' id='FechaCambio' class='cajaPequena' 
+      <b>Cambio : </b>  
+       <input class=cbt name='TipoCambio' class='InputPrecio'  value='$tipocambio' 
+        onblur='settipocambio(this.value);' onkeypress='return soloNumerosBase(event,this.value);' size='5'>  
+      <input class=cbt NAME='FechaCambio' type='text' id='FechaCambio' class='cajaPequena' 
        value='$fcambio'  size='8' maxlength='10' value='' readonly> 
 
       <img src='img/gpos_calendario.png' name='Image' id='Image'
@@ -331,6 +333,8 @@ function PaginaBasica(){
 	$idbase    = getSesionDato("FiltraBase");	
 	$nombre    = getSesionDato("FiltraNombre");
 	$obsoletos = getSesionDato("FiltraObsoletos");
+	$porproveedor = getSesionDato("FiltraPorProveedor");
+	$stockminimo  = getSesionDato("FiltraStockMinimo");
 	$ref       = getSesionDato("FiltraReferencia");
 	$cb        = getSesionDato("FiltraCB");
 	
@@ -338,7 +342,8 @@ function PaginaBasica(){
 
 	ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
 			$actual,$idprod,$idbase,$nombre,$ref,
-			$cb,$obsoletos,$idlab,$idalias);
+			$cb,$obsoletos,$idlab,$idalias,
+			$porproveedor,$stockminimo);
 	//OperacionesConProductos();	
 }
 
@@ -369,7 +374,7 @@ function ListaFormaDeUnidades() {
 
     //Se usa esto aqui?
     //FormaListaCompraCantidades	
-    global $action;
+  global $action,$tamPagina;
     $oProducto = new producto; 
 
     $ot = getTemplate("FormaListaCompraCantidades");
@@ -380,7 +385,7 @@ function ListaFormaDeUnidades() {
         $ot->resetSeries(array("IdProducto","Referencia","Nombre",
             "tBorrar","tEditar","tSeleccion","vUnidades"));
 
-        $tamPagina      = $ot->getPagina();
+        //$tamPagina      = $ot->getPagina();
         $detadoc        = getSesionDato("detadoc");
 	$documento      = getNombreDocumentoCompra($detadoc);
         $indice         = getSesionDato("PaginadorSeleccionCompras2");			
@@ -607,21 +612,30 @@ switch($modo){
 			setSesionDato("FiltraReferencia",false);
 			setSesionDato("FiltraNombre",false);
 			setSesionDato("FiltraObsoletos",false);
-			
+			setSesionDato("FiltraStockMinimo",false);
+			setSesionDato("FiltraPorProveedor",false);
+			setSesionDato("FiltraProv",false);
+
 			setSesionDato("PaginadorCompras",0);
 	
 			$referencia  = ( isset($_GET["Referencia"]))? CleanReferencia($_GET["Referencia"]):'';		
-			//$donde     = CleanID($_GET["IdLocal"]);
 			$cb 	     = ( isset($_GET["CodigoBarras"]))? CleanCB($_GET["CodigoBarras"]):'';		
-			$nombre      = ( isset($_GET["Nombre"]))? CleanText($_GET["Nombre"]):'';
-			$obsoletos   = ( isset($_GET["Obsoletos"]))? CleanID($_GET["Obsoletos"]):'';
-		
+			$nombre       = ( isset($_GET["Nombre"]))? CleanText($_GET["Nombre"]):'';
+			$obsoletos    = ( isset($_GET["Obsoletos"]))? CleanID($_GET["Obsoletos"]):'';
+			$porproveedor = ( isset($_GET["PorProveedor"]))? CleanID($_GET["PorProveedor"]):'';
+			$stockminimo  = ( isset($_GET["StockMinimo"]))? CleanID($_GET["StockMinimo"]):'';
+			$detadoc      = getSesionDato("detadoc");
+			$idprov       = (!$detadoc[1])?1:$detadoc[1];
+
 			if (strlen($referencia)<1) $referencia = false;		
 			if (strlen($cb)<1) $cb = false;	
 			if ($cb) setSesionDato("FiltraCB",$cb);	
 			setSesionDato("FiltraReferencia",$referencia);			
 			setSesionDato("FiltraNombre",$nombre);
 			setSesionDato("FiltraObsoletos",$obsoletos);
+			setSesionDato("FiltraPorProveedor",$porproveedor);
+			setSesionDato("FiltraProv",$idprov);
+			setSesionDato("FiltraStockMinimo",$stockminimo);
 			
 			PaginaBasica();
 			break;
@@ -701,22 +715,6 @@ switch($modo){
 			$indice = 0;
 		setSesionDato("PaginadorSeleccionCompras",$indice);
 		PaginaBasica();
-		break;	
-
-	case "s2pagmas":
-	        $indice = getSesionDato("PaginadorSeleccionCompras2");
-		$indice = $indice + $tamPagina2;
-		setSesionDato("PaginadorSeleccionCompras2",$indice);
-		ListaFormaDeUnidades();
-		break;			
-
-	case "s2pagmenos":
-		$indice = getSesionDato("PaginadorSeleccionCompras2");
-		$indice = $indice - $tamPagina2;
-		if ($indice<0)
-			$indice = 0;
-		setSesionDato("PaginadorSeleccionCompras2",$indice);
-		ListaFormaDeUnidades();
 		break;	
 
 	case "spagmas":

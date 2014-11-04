@@ -1,9 +1,10 @@
 <?php
 
 include("tool.php");
-$txtalias        = ( getSesionDato("GlobalGiroNegocio") == "BTCA" )?'Principio activo':'Etiqueta ';
-$idfamilia       = $_GET['idfamilia'];
-$id              = $_GET['id'];
+$txtMoDet    = getModeloDetalle2txt();
+$txtalias    = $txtMoDet[3];
+$idfamilia   = $_GET['idfamilia'];
+$id          = $_GET['id'];
 
 SimpleAutentificacionAutomatica("visual-xulframe");
 

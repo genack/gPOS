@@ -242,6 +242,8 @@ function getSesionDato($nombre){
 				$detadoc[10]=false;
 				$detadoc[11]=false;
 				$detadoc[12]=false;
+				$detadoc[13]=0;
+				$detadoc[14]=0;
 				$_SESSION[$nombre]=$detadoc;
 			}
 			return $_SESSION[$nombre];
@@ -320,5 +322,36 @@ function setSesionDato($dato,$valor) {
 	$_SESSION[$dato] = $valor;
 }
 
+function getModeloDetalle2txt(){
+
+   $atxt = array();
+
+   switch( getSesionDato("GlobalGiroNegocio") ){
+   case "BTCA": 
+     array_push($atxt, 'BTCA');
+     array_push($atxt, 'Presentación ó Modelo');
+     array_push($atxt, 'Concentración ó Detalle');
+     array_push($atxt, 'Principio activo');
+     array_push($atxt, 'Registro Sanitario');
+     break;
+
+   case "BTQE": 
+     array_push($atxt, 'BTQE');
+     array_push($atxt, 'Color ó Modelo');
+     array_push($atxt, 'Talla ó Detalle');
+     array_push($atxt, 'Etiqueta');
+     array_push($atxt, 'Referencia Fabr.');
+     break;
+
+   default:
+     array_push($atxt, 'PINF');
+     array_push($atxt, 'Modelo');
+     array_push($atxt, 'Detalle');
+     array_push($atxt, 'Etiqueta');
+     array_push($atxt, 'Referencia Fabr.');
+     break;
+   }
+   return $atxt;
+}
 
 ?>

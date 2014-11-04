@@ -4,7 +4,9 @@ include("tool.php");
 
 SimpleAutentificacionAutomatica("visual-iframe");
 
-$tamPagina = 25;
+global $tamPagina,$txtMoDet;
+$tamPagina = 11;
+$txtMoDet  = getModeloDetalle2txt();
 
 function UploadFoto() {        
         require ("modulos/fileupload/fileupload-class.php");
@@ -64,7 +66,7 @@ function AccionesSeleccion(){
 }
 
 function ListarProductosExtra(){	
-	global $action;
+  global $action,$tamPagina,$txtMoDet;
 	$oProducto = new producto;
 
 	$idprov 	= getSesionDato("FiltraProv");
@@ -75,20 +77,20 @@ function ListarProductosExtra(){
 	$idtalla 	= getSesionDato("FiltraTalla");
 	$base 		= getSesionDato("FiltraBase");
 	$idfamilia 	= getSesionDato("FiltraFamilia");
+	$idsubfamilia 	= getSesionDato("FiltraSubFamilia");
 	$ref 		= getSesionDato("FiltraReferencia");
 	$cb 		= getSesionDato("FiltraCB");
 	$nombre 	= getSesionDato("FiltraNombre");
 	$idalias        = ($nombre) ? getLikeProductoAlias2Id($nombre, $IdIdioma=false):$idalias;
 	$obsoletos      = getSesionDato("FiltraObsoletos");
 	$indice 	= getSesionDato("PaginadorListaProd");
-	$tamPagina 	= 1000;
-	$esBTCA         = ( getSesionDato("GlobalGiroNegocio") == "BTCA" );
-	$txtModelo      = ( $esBTCA )?'Presentación/Modelo':'Modelo';
-	$txtDetalle     = ( $esBTCA )?'Concentración/Detalle':'Detalle';
+	$txtModelo      = $txtMoDet[1];
+	$txtDetalle     = $txtMoDet[2];
 
 	$hayProductos = $oProducto->ListadoFlexible($idprov,$idmarca,$idcolor,$idtalla,false,
 						    $indice,$base,false,$idfamilia,$tamPagina,
-						    $ref,$cb,$nombre,$obsoletos,$idalias,$idlab);
+						    $ref,$cb,$nombre,$obsoletos,$idalias,
+						    $idlab,$idsubfamilia);
 
 	$num = 0;
 	
@@ -97,12 +99,11 @@ function ListarProductosExtra(){
 
 	$jsOut .= jsLabel("color", $txtModelo);	
 	$jsOut .= jsLabel("talla", $txtDetalle);
-	//$jsOut .= jsLabel("comprar",_("Comprar"));
 	$jsOut .= jsLabel("modificar",_("Modificar"));
 	$jsOut .= jsLabel("referencia",_("Referencia"));
 	$jsOut .= jsLabel("unid",_("Unid"));
 	$jsOut .= jsLabel("pv",_("PV"));
-	$jsOut .= jsLabel("nuevatallacolor",_("Nuevo $txtModelo o $txtDetalle"));
+	$jsOut .= jsLabel("nuevatallacolor",_("Nuevo $txtModelo / $txtDetalle"));
 	
 	$oldId = -1;
 	$num =0;		
@@ -123,26 +124,22 @@ function ListarProductosExtra(){
 	  $fam = getIdFamilia2Texto( $oProducto->get("IdFamilia"));
 	  $sub = getIdSubFamilia2Texto($oProducto->get("IdFamilia"), $oProducto->get("IdSubFamilia"));
 	  
-	  //$fam =  $oProducto->get("Familia");
-	  //$sub =  $oProducto->get("SubFamilia");
-
 	  $manejaserie = $oProducto->get("Serie");
 	  $manejalote  = $oProducto->get("Lote");
 	  $manejafv    = $oProducto->get("FechaVencimiento");
-
-	  $lexfam = $jsLex->add($fam);
-	  $lexsub = $jsLex->add($sub);
-	  
-	  $idBase = $oProducto->get("IdProdBase");
-	  
+	  $eservicio   = ( $oProducto->get("Servicio") > 0 )? 1:0;//Servicio
+	  $eservicio   = ( $oProducto->get("MetaProducto") > 0 )? 1:$eservicio;//MetaProducto
+	  $lexfam      = $jsLex->add($fam);
+	  $lexsub      = $jsLex->add($sub);
+	  $idBase      = $oProducto->get("IdProdBase");
 	  
 	  if ($idBase != $oldId) {
 	    $nombre = addslashes($nombre);
 	    $ref    = addslashes($ref);
 
-	    $jsOut .= "cPH($id,'$nombre','$ref',$lexfam,$lexsub,'$descripcion','$marca','$lab','$idBase');\n";
+	    $jsOut .= "cPH($id,'$nombre','$ref',$lexfam,$lexsub,'$descripcion','$marca','$lab','$eservicio','$idBase');\n";
 	  }
-	  $jsOut .= "cP($id,$cb,$lextalla,$lexcolor,$idBase,$manejaserie,$manejalote,$manejafv);\n";
+	  $jsOut .= "cP($id,$cb,$lextalla,$lexcolor,$idBase,$manejaserie,$manejalote,$manejafv,$eservicio);\n";
 	  $oldId = $idBase;							
 	}	
 	
@@ -163,7 +160,7 @@ function ListarProductosExtra(){
 
 function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,$base,$idfamilia) {
 		//Creamos template
-	global $action;
+  global $action,$txtMoDet,$tamPagina;
 	
 	$ot = getTemplate("ListadoProductos");
 	if (!$ot){	
@@ -174,14 +171,13 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,$base,$idfamilia) {
 	
 	//echo "ser: " . serialize($marcado). "<br>";
 	
-	$tamPagina = $ot->getPagina();
+	//$tamPagina  = $ot->getPagina();
 	
 	$oProducto  = new producto;
 	$indice     = getSesionDato("PaginadorListaProd");
-	$esBTCA     = ( getSesionDato("GlobalGiroNegocio") == "BTCA" );
-	$txtModelo  = ( $esBTCA )?'Presentación/Modelo':'Modelo';
-	$txtDetalle = ( $esBTCA )?'Concentración/Detalle':'Detalle';
-		
+	$txtModelo  = $txtMoDet[1];
+	$txtDetalle = $txtMoDet[2];
+	
 	$hayProductos = $oProducto->ListadoFlexible($idprov,$idmarca,$idcolor,$idtalla,false,$indice,$base,false,$idfamilia,$tamPagina);
 			
 	
@@ -205,7 +201,7 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,$base,$idfamilia) {
 
 	$jsOut .= jsLabel("eliminar",_("Eliminar"));
 	$jsOut .= jsLabel("modificar",_("Modificar"));
-	$jsOut .= jsLabel("nuevatallacolor",_("$txtModelo o $txtDetalle"));
+	$jsOut .= jsLabel("nuevatallacolor",_("$txtModelo / $txtDetalle"));
 	
 	$jsOut .= jsLabel("local",_("Local"));
 	$jsOut .= jsLabel("nombre",_("Nombre"));
@@ -335,64 +331,36 @@ function ModificarProducto($id,$nombre,$referencia,$descripcion, $precioventa,
 			   $precioonline, $idfamilia,$idsubfamilia,$coste,
 			   $idprovhab,$idcolor,$idtalla,$codigobarras,$idmarca,
 			   $refprovhab,$idalias0,$idalias1,$ns,$fv,$idlabhab,$mlote){
-	$oProducto = new producto;
-	if (!$oProducto->Load($id)){
-		error(__FILE__ . __LINE__ ,"W: no pudo mostrareditar '$id'");
-		return false;	
-	}
-	
-	//error( __FILE__ . __LINE__ ,"Info: s1 ". serialize($oProducto));
-	
-	$oProducto->setNombre($nombre);
-	$oProducto->setReferencia($referencia);
-	$oProducto->setDescripcion($descripcion);
-	$oProducto->set("Costo",$coste,FORCE);
-	$oProducto->set("Serie",$ns);
-	$oProducto->set("Lote",$mlote);
-	$oProducto->set("FechaVencimiento",$fv);
-	
-	if($idprovhab)	
-		$oProducto->set("IdProvHab",$idprovhab,FORCE);
 
-	if($idprovhab)	
-		$oProducto->set("IdLabHab",$idlabhab,FORCE);
-		
-	if ($idcolor)
-		$oProducto->set("IdColor",$idcolor,FORCE);
-		
-	if ($idtalla)	
-		$oProducto->set("IdTalla",$idtalla,FORCE);
-		
-	$oProducto->set("CodigoBarras",$codigobarras,FORCE);
-	$oProducto->set("RefProvHab",$refprovhab,FORCE);	
-	
-	if($idmarca)
-		$oProducto->set("IdMarca",$idmarca,FORCE);
-	
-	if ($idfamilia)
-		$oProducto->set("IdFamilia",$idfamilia,FORCE);
-		
-	if ($idsubfamilia)
-		$oProducto->set("IdSubFamilia",$idsubfamilia,FORCE);
+         $oProducto = new producto;
+	 if (!$oProducto->Load($id)){
+	   error(__FILE__ . __LINE__ ,"W: no pudo mostrareditar '$id'");
+	   return false;	
+	 }
+	 $oProducto->setDescripcion($descripcion);	 
+	 $IdProdBase = $oProducto->get("IdProdBase");
 
-	$oProducto->set("IdProductoAlias0",$idalias0,FORCE);
-	$oProducto->set("IdProductoAlias1",$idalias1,FORCE);
 
-	if (!$oProducto->AutoIntegridad()){
-		$error = $oProducto->getFallo();
-		
-		echo gas("aviso",_("[$error], intentelo de nuevo<!-- id:$id, color:$idcolor, talla:$idtalla -->"));
-		
-		return false;
-	}
-	
-	if ($oProducto->Modificacion() ){
-	  	echo gas("aviso",_(" $referencia - $descripcion modificado"));	
-		return true;
-	} else {
-		echo gas("problema",_("No se puedo cambiar datos de [$referencia]"));
-		return false;	
-	}	
+	 if ($oProducto->Modificacion()){
+	   echo gas("aviso",_(" $referencia - $descripcion modificado"));	
+
+	   $xdato  = "IdProvHab     = ".$idprovhab;
+	   $xdato .= ",IdLabHab     = ".$idlabhab;
+	   $xdato .= ",IdMarca      = ".$idmarca;
+	   $xdato .= ",IdFamilia    = ".$idfamilia;
+	   $xdato .= ",IdSubFamilia = ".$idsubfamilia;
+	   
+	   $sql = 
+	     " update ges_productos ".
+	     " set   ".$xdato.
+	     " where IdProdBase = ".$IdProdBase;
+	   query($sql);
+	   return true;	   
+
+	 } else {
+	   echo gas("problema",_("No se puedo cambiar datos de [$referencia]"));
+	   return false;	
+	 }	
 }
 
 function OperacionesConProductos(){
@@ -703,6 +671,12 @@ switch($modo){
 			setSesionDato("FiltraFamilia",$id);
 			$reset = true;			
 		}				
+
+		$id =  CleanID($_GET["IdSubFamilia"]);
+		if ($id != getSesionDato("FiltraSubFamilia")) {
+			setSesionDato("FiltraSubFamilia",$id);
+			$reset = true;			
+		}				
 				
 		setSesionDato("FiltraBase",false);				
 				
@@ -754,9 +728,8 @@ switch($modo){
 		$ventamenudeo  = (isset($_POST["VentaMenudeo"]))?CleanID($_POST["VentaMenudeo"]=='on'):false;
 		$unidxcont     = CleanID($_POST["UnidadesPorContenedor"]);
 		$unidadmedida  = CleanText($_POST["UnidadMedida"]);
-		$esBTCA        = ( getSesionDato("GlobalGiroNegocio") == "BTCA" );
-		$txtModelo     = ( $esBTCA )?'Presentación/Modelo':'Modelo';
-		$txtDetalle    = ( $esBTCA )?'Concentración/Detalle':'Detalle';
+		$txtModelo    = $txtMoDet[1];
+		$txtDetalle   = $txtMoDet[2];
 
 		if (ClonarProducto($id,$idcolor,$idtalla,false,$codigobarras,
 				   $refprovhab,$coste,$ventamenudeo,
@@ -913,12 +886,11 @@ switch($modo){
 		$codigobarras = CleanCB($_POST["CodigoBarras"]);
 		$idmarca      = CleanID($_POST["IdMarca"]);
 		$refprovhab   = CleanText($_POST["RefProvHab"]);
-		//$_SESSION["IdUltimoCambioProductos"] = $id;
-		$nuevaFoto    = UploadFoto();
+		$_SESSION["IdUltimoCambioProductos"] = $id;
+		//$nuevaFoto    = UploadFoto();
+		//if ($nuevaFoto)
+		//ModificarProductoFoto(false,$nuevaFoto,$referencia);	
 
-		if ($nuevaFoto){
-			ModificarProductoFoto(false,$nuevaFoto,$referencia);	
-		}	
 		
 		if (ModificarProducto($id,$nombre,$referencia,$descripcion,$precioventa,
 				      $precioonline, $idfamilia,$idsubfamilia,$coste,$idprovhab,

@@ -1,7 +1,7 @@
 <groupbox id="panelDerecho"> 
 <groupbox align="center" pack="center" flex="1" style="height: 100px;max-height: 100px">
 	<spacer flex="1"/>
-	<image src="imagenproducto.php?cp=" id="muestraProducto" style="width:90px;height:90px"/>
+	<image src="img/gpos_imgdefault.png" id="muestraProducto" style="width:90px;height:90px"/>
 	<spacer flex="1"/>
 </groupbox>
 <groupbox align="center" pack="center" >

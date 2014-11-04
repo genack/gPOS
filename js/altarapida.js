@@ -500,7 +500,7 @@ function changeFamYSub(idsubfamilia,idfamilia,texsubfamilia, texfamilia ){
 
 function CogeFamilia(){
     var vfamilia = enviar["IdFamilia"];
-    popup('selfamilia2.php?modo=familia&IdFamilia='+vfamilia,'familiaplus');
+    popup('selsubfamilia.php?modo=familia&IdFamilia='+vfamilia,'familiaplus');
 }
 
 //-----------------------------------------------

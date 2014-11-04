@@ -22,11 +22,12 @@ $IdFamiliaDefecto    = getFirstNotNull("ges_familias","IdFamilia");
 $IdSubFamiliaDefecto = getSubFamiliaAleatoria($IdFamiliaDefecto );
 $FamDefecto          = getIdFamilia2Texto($IdFamiliaDefecto ) . " - " .getIdSubFamilia2Texto( $IdFamiliaDefecto,$IdSubFamiliaDefecto );
 $Nombre      = '';
-$esBTCA      = ( getSesionDato("GlobalGiroNegocio") == "BTCA" );
-$txtModelo   = ( $esBTCA )?'Presentación/Modelo':'Modelo';
-$txtDetalle  = ( $esBTCA )?'Concentración/Detalle':'Detalle';	    
-$txtalias    = ( $esBTCA )?'Principio activo':'Etiqueta ';
-$txtref      = ( $esBTCA )?'Registro Sanitario':'Referencia Fabr.';
+$txtMoDet    = getModeloDetalle2txt();
+$esBTCA      = ( $txtMoDet[0] == "BTCA" );
+$txtModelo   = $txtMoDet[1];
+$txtDetalle  = $txtMoDet[2];
+$txtalias    = $txtMoDet[3];
+$txtref      = $txtMoDet[4];
 $btca        = ( $esBTCA )?'false':'true';
 
 $esInvent    = ( $modo=='altainventario')? true:false;
@@ -262,8 +263,7 @@ $ibtnVaciar  = ($esInvent)? "img/gpos_volver.png":"img/gpos_vaciarcompras.png";
 
 	      <row id="rowDatoFechaVencimiento" collapsed="true">
 		<caption class="media" label="Fecha Venc."/>
-                <datepicker id="vFechaVencimiento" type="popup"
-			 onchange="validaDato(this,'nFV')"/>
+                <datepicker id="vFechaVencimiento" type="popup"/>
 	      </row>
 	      <row id="rowDatoLote" collapsed="true">
 		<caption class="media" label="Lote de Prod."/>

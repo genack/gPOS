@@ -11,15 +11,15 @@ StartXul(_("Progress"));
 <?php 
    switch ($modo) {
    case "cAltaRapida" :
-     echo 'setTimeout("reloadAltaRapida()",300);';//MENSAJES
+     echo 'setTimeout("reloadAltaRapida()",100);';//MENSAJES
      break;
    case "aCarritoCompras" :
    case "aAltaRapida" :
-     echo 'setTimeout("loadPresupuesto()",50);';//MENSAJES
+     echo 'setTimeout("loadPresupuesto()",10);';//MENSAJES
      break;
 
    case "hWebForm" :
-     echo 'setTimeout("hWebForm()",350);';//MENSAJES
+     echo 'setTimeout("hWebForm()",250);';//MENSAJES
 
      echo 'if( parent.document.getElementById("c_Nombre") )
        parent.document.getElementById("c_Nombre").focus()';
@@ -27,23 +27,23 @@ StartXul(_("Progress"));
      break;
 
    case "lWebFormCartBuy" :
-     echo 'setTimeout("lWebFormCartBuy()",300);';//MENSAJES
+     echo 'setTimeout("lWebFormCartBuy()",200);';//MENSAJES
      break;
 
    case "lWebFormCartMod" :
-     echo 'setTimeout("lWebFormCartMod()",300);';//MENSAJES
+     echo 'setTimeout("lWebFormCartMod()",200);';//MENSAJES
      break;
 
    case "lWebFormCartSerieMod" :
-     echo 'setTimeout("lWebFormCartSerieMod()",300);';//MENSAJES
+     echo 'setTimeout("lWebFormCartSerieMod()",200);';//MENSAJES
      break;
 
    case "lWebFormAlmacen" :
-     echo 'setTimeout("lWebFormAlmacen()",300);';//MENSAJES
+     echo 'setTimeout("lWebFormAlmacen()",200);';//MENSAJES
      break;
 
    case "lWebFormAltaRapida" :
-     echo 'setTimeout("lWebFormAltaRapida()",300);';//MENSAJES
+     echo 'setTimeout("lWebFormAltaRapida()",200);';//MENSAJES
      break;
 
    }
@@ -120,7 +120,7 @@ function postloadPresupuesto(){
      var subweb = parent.document.getElementById("web");
      if(subweb)
          subweb.setAttribute("src","vercarrito.php?modo=check");
-     setTimeout("postViewPresupuesto()",400);
+     setTimeout("postViewPresupuesto()",280);
 }
 
 function postViewPresupuesto(){ parent.xwebCollapsed(false);}

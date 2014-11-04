@@ -4,9 +4,9 @@ include("tool.php");
 
 SimpleAutentificacionAutomatica("visual-xulframe");
 $idfamilia  = CleanID($_GET['idfamilia']);
-$esBTCA     = ( getSesionDato("GlobalGiroNegocio") == "BTCA" )? true:false;
-$txtModelo  = ( $esBTCA )?'Presentación/Modelo':'Modelo';
-$txtDetalle = ( $esBTCA )?'Concentración/Detalle':'Detalle';
+$txtMoDet   = getModeloDetalle2txt();
+$txtModelo  = $txtMoDet[1];
+$txtDetalle = $txtMoDet[2];
 
 StartXul(_("Elije Propiedades del Producto"));
  

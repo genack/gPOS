@@ -2,9 +2,9 @@
 include("../tool.php");
 header("Content-Type: text/javascript; charset=UTF-8");
 
-$esBTCA     = ( getSesionDato("GlobalGiroNegocio") == "BTCA" );
-$txtModelo  = ( $esBTCA )?'Presentación/Modelo':'Modelo';
-$txtDetalle = ( $esBTCA )?'Concentración/Detalle':'Detalle';	    
+$txtMoDet   = getModeloDetalle2txt();
+$txtModelo  = $txtMoDet[1];
+$txtDetalle = $txtMoDet[2];
 
 $cadenas = array(	
         "po_numtic"=> _("Código :"),

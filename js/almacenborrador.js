@@ -24,6 +24,8 @@ var ilineabuscacompra     = 0;
 var Vistas = new Object(); 
 Vistas.ventas = 7;
 
+var RevDet = 0;
+
 var id = function(name) { return document.getElementById(name); }
 
 function VerCompra(){
@@ -190,19 +192,14 @@ function RawBuscarCompraRecibir(desde,hasta,emision,nombre,modocontado,modocredi
 
 	    if (Documento == 'Albaran')    nroAlbaran++; 
  	    if (Documento == 'AlbaranInt') nroAlbaranInt++; 
-	
+
 	    //Consolidado basico
 	    sldoc = ( Documento == 'Albaran'   )?true:false;
 	    sldoc = ( Documento == 'AlbaranInt')?true:sldoc;
 	    sldoc = ( Estado    == 'Cancelada' )?true:sldoc;
 	    if ( Estado == 'Cancelada') nroCancelado++;
 	    if (!sldoc)
-	    {
-		if (IdMoneda == 1)
-		    totalImporte = parseFloat(totalImporte)+parseFloat(TotalImporte);
-		if (IdMoneda == 2)
-		    totalImporte = parseFloat(totalImporte)+parseFloat(TotalImporte*CambioMoneda);
-	    }
+		totalImporte = parseFloat(totalImporte)+parseFloat(TotalImporte);
 
             FuncionProcesaLinea(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision,Pago,
 				Impuesto,Percepcion,Simbolo,ImporteBase,ImporteImpuesto,
@@ -313,27 +310,27 @@ function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision
     xModoPago.setAttribute("id","modopago_"+IdPedido);
 
     xBase = document.createElement("listcell");
-    xBase.setAttribute("label", Simbolo+' '+ImporteBase);	
+    xBase.setAttribute("label", Simbolo+' '+formatDinero(ImporteBase));	
     xBase.setAttribute("style","text-align:right");
 
     xImpuesto = document.createElement("listcell");
-    xImpuesto.setAttribute("label", Simbolo+' '+ImporteImpuesto);	
+    xImpuesto.setAttribute("label", Simbolo+' '+formatDinero(ImporteImpuesto));	
     xImpuesto.setAttribute("style","text-align:right;");
 
     xTotal = document.createElement("listcell");
-    xTotal.setAttribute("label", Simbolo+' '+TotalImporte);
+    xTotal.setAttribute("label", Simbolo+' '+formatDinero(TotalImporte));
     xTotal.setAttribute("style","text-align:right;font-weight:bold; ");
     xTotal.setAttribute("value",TotalImporte);
     xTotal.setAttribute("id","importe_"+IdPedido);
 
     xPendiente = document.createElement("listcell");
-    xPendiente.setAttribute("label", Simbolo+' '+ImportePendiente);
+    xPendiente.setAttribute("label", Simbolo+' '+formatDinero(ImportePendiente));
     xPendiente.setAttribute("style","text-align:right;font-weight:bold; ");
     xPendiente.setAttribute("value",ImportePendiente);
     xPendiente.setAttribute("id","pendiente_"+IdPedido);
 
     xPercepcion = document.createElement("listcell");
-    xPercepcion.setAttribute("label", Simbolo+' '+ImportePercepcion);
+    xPercepcion.setAttribute("label", Simbolo+' '+formatDinero(ImportePercepcion));
     xPercepcion.setAttribute("style","text-align:right");
     xPercepcion.setAttribute("value",Percepcion);
     xPercepcion.setAttribute("id","percepcion_"+IdPedido);
@@ -379,8 +376,6 @@ function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision
 
 function RevisarCompraSeleccionada(){
 
-    VaciarDetallesCompra();
-
     var idex       = id("busquedaCompra").selectedItem;
     var xdockdx    = '';
     var xOperacion = '';    
@@ -407,8 +402,6 @@ function RevisarCompraSeleccionada(){
     aOperacion    = xOperacion.split("-");
     cDocumentokdx = aOperacion[0];
     
-    BuscarDetallesCompra(IdPedidos,cIdAlmacen);
-
     idfacturaseleccionada = idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
     var nrodocumento =  idex.childNodes[3].attributes.getNamedItem('label').nodeValue;
     nrodocumentodevol = nrodocumento;
@@ -419,7 +412,17 @@ function RevisarCompraSeleccionada(){
     id("actualizarLPV").setAttribute("collapsed","false");
     id("recibirProductos").setAttribute("collapsed","false");
     //ExtraBuscarEnServidor("");  	  		
+
+    if(RevDet == 0 || RevDet != idex.value)
+        setTimeout("loadDetalleCompra("+IdPedidos+","+cIdAlmacen+")",100);
+
+    RevDet = idex.value;
 }
+
+function loadDetalleCompra(xid,yid){
+    VaciarDetallesCompra();
+    BuscarDetallesCompra(xid,yid);
+} 
 
 function BuscarDetallesCompra(IdPedido,IdAlmacen){
 

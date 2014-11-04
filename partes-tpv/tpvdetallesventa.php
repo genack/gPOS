@@ -26,7 +26,7 @@
     <vbox>
       <description>Código</description>
       <textbox onfocus="select()" id="busquedaCodigoSerie" 
-	       onkeyup="if (event.which == 13) buscarPorCodSerie(this.value)" 
+	       onkeyup="if (event.which == 13) BuscarVentas()" 
 	       style="width: 11em"
 	       onkeypress="return soloAlfaNumerico(event);"/>
     </vbox>

@@ -64,7 +64,7 @@ switch($modo){
 		
 		$num = 0;
 		$nuevos = 0;
-		foreach (split("\n",$listacompra) as $cb ){
+		foreach (explode("\n",$listacompra) as $cb ){
 			$cb = CleanCB($cb);	
 			$id = getIdFromCodigoBarras($cb);
 			$num ++;

@@ -15,7 +15,7 @@ function ListarProveedores() {
 		error(__FILE__.__LINE__, "Info: template no encontrado");
 		return false;
 	}
-
+	echo gas("cabecera", _("Gestión de Laboratorios"));
 	$marcado = getSesionDato("CarritoProv");
 
 	//echo "ser: " . serialize($marcado). "<br>";
@@ -300,7 +300,6 @@ function ModificarProveedor($id,$comercial, $legal, $direccion, $poblacion, $cp,
 
 PageStart();
 
-echo gas("cabecera", _("Gestión de Laboratorios"));
 $esPopup = false;
 
 switch ($modo) {

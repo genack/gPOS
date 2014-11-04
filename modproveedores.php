@@ -10,6 +10,7 @@ function ListarProveedores() {
 	//Creamos template
 	global $action, $tamPagina;
 
+       echo gas("cabecera", _("Gestion de Proveedores"));
 	$ot = getTemplate("ListadoProveedores");
 	if (!$ot) {
 		error(__FILE__.__LINE__, "Info: template no encontrado");
@@ -125,6 +126,8 @@ function FormularioAlta($esPopup=false) {
 
 	$oProveedor->Crea();
 
+	if(!$esPopup)
+	    echo gas("cabecera", _("Gestion de Proveedores"));
 	$ot = getTemplate("FormAltaProveedor");
 	if (!$ot) {
 		error(__FILE__.__LINE__, "Info: template no encontrado");
@@ -300,7 +303,6 @@ function ModificarProveedor($id,$comercial, $legal, $direccion, $poblacion, $cp,
 
 PageStart();
 
-echo gas("cabecera", _("Gestion de Proveedores"));
 
 $esPopup = false;
 

@@ -380,9 +380,11 @@ input {
 }
 
 textarea , input {
-                   background-color: #ddeffb;
+                   background-color: transparent;
                    border:0px;
-                   border-bottom:1px dotted;
+                   color:#000;
+                   border-bottom:1px dotted #000;
+                   padding: 0.3em;
 }
 
 /* Selecciones en formularios */
@@ -394,6 +396,7 @@ input[type=image]{
   box-shadow: 0px 1px 3px #666;
   border-radius:3px;
 }
+
 input[type=image]:focus{ 
   box-shadow: 0px 1px 2px #999;
 }
@@ -433,9 +436,11 @@ input.btn {
     border-bottom-left-radius:2px;
  */
 }
+input[type=button]:hover,
 input.btn:hover{ 
                  box-shadow: 0px 2px 3px #888888;
                  }
+input[type=button]:active,
 input.btn:active{ 
                   box-shadow: 0px 0px 0px #888888;
                   }
@@ -452,6 +457,7 @@ input.btn, input.sbtn,select.btn {
 */
 
 /* Enlaces butonizados */
+input[type=button],
 .tb ,input.btn, input.sbtn,select.btn {
   background-color: #C0C0C0;
   padding: .2em;      
@@ -464,6 +470,7 @@ input.btn, input.sbtn,select.btn {
 }
 
 /* Hover de Enlaces butonizados y Botones reales */
+input[type=button]:hover,
 .tb:hover, input.btn:hover, input.sbtn:hover {
   box-shadow: 0px 1px 2px #888;
 }
@@ -605,3 +612,47 @@ td.precio input{
                  width: 8em;
                  color: #222;
  }
+input.cbt,
+input.cbtlh,
+input.xbt,
+input.xbtlh{ 
+               border:0;
+               border-bottom: 1px;
+               border-style:dotted;
+               color:#000;
+            }
+
+input.cbtlh,
+input.xbtlh{ 
+               background-color:#DFDFDF;
+           }
+input.cbt,
+input.xbt{ 
+               background-color:#FBFBFB;
+           }
+
+input.xbtlh,
+input.xbt{ 
+           text-align:left;
+           }
+input.cbtlh,
+input.cbt{ 
+           text-align:center;
+           }
+
+select{
+        color : #000;
+	background-color: #EFEFEF;
+	background-position: 280px center;
+        background-repeat: no-repeat;
+   	padding: .2em;
+        margin-top: .2em;
+   	font-size: 100%;
+   	border-radius: 3px;
+        -moz-transition: all 0.4s;
+        transition: all 0.4s;
+        border:0;
+        }
+select:hover{
+	background-color: #ddd;
+}

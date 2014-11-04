@@ -3,6 +3,7 @@
 *.swo
 #*#
 configuration.php
+baseurl.php
 update_table.php
 gpos-installer.xpi
 productos/

@@ -47,9 +47,14 @@ function ListaFormaDeUnidades() {
 	$num   = 0;
 	$detadoc        = getSesionDato("detadoc");
 	$incImpuestoDet = getSesionDato("incImpuestoDet");
+	$incPercepcion  = getSesionDato("incPercepcion");
 	$igv            = getSesionDato("IGV");
+	$ipc            = getSesionDato("IPC");
 	$TotalNeto      = 0;
 	$TotalBruto     = 0;
+	$ImporteFlete   = $detadoc[13];
+	$ImportePercepcion = $detadoc[14];
+	$ImportePago    = 0;
 	$TotalDescuento = 0;
 	$BrutoNeto      = 0;
 	$TotalImpuesto  = 0;
@@ -71,7 +76,10 @@ function ListaFormaDeUnidades() {
 	  $TotalImpuesto  = $BrutoNeto * $igv/100; 
 	  $TotalImpuesto  = round($TotalImpuesto * 100) / 100; 
 	  $TotalDescuento = $TotalBruto - $BrutoNeto;
-	  
+
+	  $ImportePercepcion = ( $incPercepcion == "true" && $ImportePercepcion == 0 )? round(( ($TotalNeto*$ipc/100) )*100)/100:$ImportePercepcion; 
+	  $ImportePago    = $TotalNeto + $ImporteFlete + $ImportePercepcion;
+   
 	  foreach ( $carrito as $key=>$value)
 	    {		
 	      $salta ++;
@@ -170,8 +178,11 @@ function ListaFormaDeUnidades() {
 	$idsubsid    = $detadoc[9];
 	$nomsubsid   = $detadoc[10];
 	$incluyeigv  = (getSesionDato("incImpuestoDet")=='true')?true:false;
+	$incluyeipc  = (getSesionDato("incPercepcion")=='true')?true:false;
+	$checkipc    = ($incluyeipc)?'CHECKED':'';
 	$checkigv    = ($incluyeigv)?'CHECKED':'';
 	$tpv         = 'PC';
+	$xipc         = ($incluyeipc)?'':'display:none';
 	$tvv         = ($incluyeigv)? $tpv:'VC';
 	$tcp         = ($incluyeigv)?'Precio/Unid.':'Costo/Unid.';
 	$pv          = ($incluyeigv)?'hidden':'text';
@@ -182,6 +193,8 @@ function ListaFormaDeUnidades() {
 	$ot->fijar("vTDoc",$tipodoc);
 	$ot->fijar("vTxFecha",$tpfecha);
 	$ot->fijar("vCheckIGV",$checkigv);
+	$ot->fijar("vCheckPercepcion",$checkipc);
+	$ot->fijar("vxPercepcion",$xipc);
 	$ot->fijar("vMoneda1",$Moneda[1]['T']);
 	$ot->fijar("vMoneda2",$Moneda[2]['T']);
 	$ot->fijar("vSimboloMoneda1",$Moneda[1]['S']);
@@ -216,6 +229,9 @@ function ListaFormaDeUnidades() {
 	$ot->fijar("vTotalImpuesto",dosdecimales($TotalImpuesto));
 	$ot->fijar("vTotalBruto",dosdecimales($TotalBruto));
 	$ot->fijar("vBrutoNeto",dosdecimales($BrutoNeto));
+	$ot->fijar("vImporteFlete",dosdecimales($ImporteFlete));
+	$ot->fijar("vImportePercepcion",dosdecimales($ImportePercepcion));
+	$ot->fijar("vImportePago",dosdecimales($ImportePago));
 	$jsOut .= jsPaginador($indice,$ot->getPagina(),$num);
 	
 	$ot->fijar("CLIST",$jsOut );

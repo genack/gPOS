@@ -137,6 +137,8 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                       oncommand = "mostrarBusquedaAvanzada(this);"/>
 	    <menuitem type="checkbox" label="Percepcion" checked="false"
                       oncommand = "mostrarBusquedaAvanzada(this);"/>
+	    <menuitem type="checkbox" label="Flete" checked="false"
+                      oncommand = "mostrarBusquedaAvanzada(this);"/>
 
           </menupopup>
         </menu>
@@ -187,6 +189,10 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <splitter class="tree-splitter" />
       <listcol flex="1" id="vlistcolPercepcion" collapsed="true"/>
       <splitter class="tree-splitter" />
+      <listcol flex="1" id="vlistcolFlete" collapsed="true"/>
+      <splitter class="tree-splitter" />
+      <listcol flex="1"/>
+      <splitter class="tree-splitter" />
       <listcol flex="1"/>
       <splitter class="tree-splitter" />
       <listcol flex="1"/>
@@ -207,10 +213,12 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <listheader label="Proveedor"/>
       <listheader label="Estado"/>
       <listheader label="Forma de Pago" id="vlistForma_Pago" collapsed="true"/>
-      <listheader label="Percepción" id="vlistPercepcion" collapsed="true"/>
-      <listheader label="Total Neto"/>
-      <listheader label="Facturación"/>
-      <listheader label="Fecha de Pago"/>
+      <listheader label="Percepción" id="vlistPercepcion" collapsed="true" style="text-align:center"/>
+      <listheader label="Flete" id="vlistFlete" collapsed="true" style="text-align:center"/>
+      <listheader label="Total Neto" style="text-align:center"/>
+      <listheader label="Total a Pagar" style="text-align:center"/>
+      <listheader label="Facturación"  style="text-align:center"/>
+      <listheader label="Fecha de Pago" style="text-align:center"/>
       <listheader label="Fecha de Registro" id="vlistFecha_Registro" collapsed="true"/>
       <listheader label="Usuario" id="vlistUsuario" collapsed="true"/>
       <listheader label="Obs." id="vlistObservacion" collapsed="true"/>
@@ -325,6 +333,12 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	      <textbox id="xPercepcion"  size="20" onfocus="this.select()"
 		       onkeypress="return soloNumeros(event,this.value)" 
 		       onchange="ModificarCompra(7)"/>
+	    </row>
+	    <row>
+	      <caption id="tFlete" label="" />
+	      <textbox id="xFlete"  size="20" onfocus="this.select()"
+		       onkeypress="return soloNumeros(event,this.value)" 
+		       onchange="ModificarCompra(19)"/>
 	    </row>
 	    <row>
 	      <caption label="Fecha Facturación" />

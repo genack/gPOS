@@ -140,9 +140,11 @@ switch($modo) {
 		break;
 
 	case "mostrarDetallesCompra":
-		$IdPedido = CleanText($_GET["IdPedido"]);
-		$datos    = DetallesCompra($IdPedido);
-		VolcandoXML( Traducir2XML($datos),"detalles");				
+		$IdPedido     = CleanText($_GET["IdPedido"]);
+		$filtromoneda = CleanText($_GET["filtromoneda"]);
+		$esSoloMoneda = trim($filtromoneda);
+		$datos        = DetallesCompra($IdPedido,$filtromoneda);
+		VolcandoXML( Traducir2XML($datos),"detalles");			
 		exit();				
 		break;
 
@@ -172,7 +174,8 @@ switch($modo) {
 		$modoalbaranint   = CleanText($_GET["modoalbaranint"]);
 		$modoconsulta     = CleanText($_GET["modoconsulta"]);		
 		$modoventa        = CleanText($_GET["modoventa"]);		
-		$forzarfacturaid  = CleanID($_GET["forzarfactura"]);		
+		$forzarfacturaid  = CleanID($_GET["forzarfactura"]);
+		$forzarid         = CleanText($_GET["forzarid"]);		
 		
 		$esSoloFactura    = ($modofactura == "factura");
 		$esSoloBoleta     = ($modoboleta == "boleta");
@@ -196,7 +199,7 @@ switch($modo) {
 		$datos = VentasPeriodo($local,$desde,$hasta,$esSoloPendientes,$esSoloFactura,
 				       $esSoloBoleta,$esSoloDevolucion,$esSoloAlbaran,
 				       $esSoloAlbaranInt,$esSoloTicket,$nombre,$esSoloCesion,
-				       $forzarfacturaid,$TipoVenta);
+				       $forzarfacturaid,$TipoVenta,$forzarid);
 		VolcandoXML( Traducir2XML($datos),"ventas");
 		exit();
 		break;
@@ -206,7 +209,7 @@ switch($modo) {
 		$modocredito   = CleanText($_GET["modocredito"]);
 		$filtrocompra  = CleanText($_GET["filtrocompra"]);
 		$filtromoneda  = CleanText($_GET["filtromoneda"]);
-		$forzaid       = CleanID($_GET["IdOrdenCompra"]);
+		$forzaid       = CleanText($_GET["filtrocodigo"]);
 		$filtrolocal   = (getSesionDato("esAlmacenCentral"))?CleanID($_GET["filtrolocal"]):getSesionDato("IdTienda");
 		$desde         = date("Y-m-d", strtotime( CleanFechaES($_GET["desde"]) ));
 		$hasta         = date("Y-m-d", strtotime( CleanFechaES($_GET["hasta"]) ));
@@ -383,19 +386,22 @@ switch($modo) {
 		  echo sConsolidarOrdenesCompra($xid,$xdato);
 		  break;
 		case 10:
-		  echo EditarOrdenCompra($xid,'O');
+		  echo EditarOrdenCompra($xid,'O',false);
 		  break;
 		case 11:
-		  echo EditarOrdenCompra($xid,'F');
+		  echo EditarOrdenCompra($xid,'F',false);
 		  break;
 		case 12:
-		  echo EditarOrdenCompra($xid,'R');
+		  echo EditarOrdenCompra($xid,'R',false);
 		  break;
 		case 13:
-		  echo EditarOrdenCompra($xid,'G');
+		  echo EditarOrdenCompra($xid,'G',false);
 		  break;
 		case 14:
-		  echo EditarOrdenCompra($xid,'SD');
+		  echo EditarOrdenCompra($xid,'SD',false);
+		  break;
+		case 20:
+		  echo EditarOrdenCompra($xid,'O',true);
 		  break;
 		case 15:
 		  $campoxdato = "Observaciones = concat(Observaciones,'- ','".$xdato."')";
@@ -844,6 +850,24 @@ switch($modo) {
 	      exit();	
 	      break;
 
+        case "setfleteCompra":
+	      $flete      = CleanDinero($_GET["flete"]);
+	      $detadoc    = getSesionDato('detadoc');
+	      $detadoc[13] = $flete;
+
+	      setSesionDato('detadoc',$detadoc);
+	      exit();	
+	      break;
+
+        case "setpercepcionCompra":
+	      $percepcion = CleanDinero($_GET["percepcion"]);
+	      $detadoc    = getSesionDato('detadoc');
+	      $detadoc[14] = $percepcion;
+
+	      setSesionDato('detadoc',$detadoc);
+	      exit();	
+	      break;
+
         case "setfpdocCompra":
 	      $fpdoc      = CleanCadena($_GET["fpdoc"]);
 	      $detadoc    = getSesionDato('detadoc');
@@ -859,6 +883,11 @@ switch($modo) {
 
         case "setincImpuestoDetCompra":
 	      setSesionDato("incImpuestoDet",CleanText($_GET["opcion"]));
+	      exit();
+	      break;
+
+        case "setincPercepcionCompra":
+	      setSesionDato("incPercepcion",CleanText($_GET["opcion"]));
 	      exit();
 	      break;
 
@@ -879,6 +908,8 @@ switch($modo) {
 		$detadoc[10]==false;
 		$detadoc[11]==false;
 		$detadoc[12]==false;
+		$detadoc[13]==0;
+		$detadoc[14]==0;
 	      }
 	      setSesionDato('detadoc',$detadoc);
 	      exit();	
@@ -952,7 +983,7 @@ switch($modo) {
 	      $moneda  = ($detadoc[5] == 2)? true:false; 
 	      $andoc   = explode("-", $ndoc);
 	      $hmsgerr = "gPOS: Carrito de Compra \n\n ".
-		"      Los campos con (*) son obligatorios ";
+		"      Los campos con negrita son obligatorios ";
 	      $msgerr  = "";
 	      switch($tdoc){
 	      case "F":
@@ -1052,7 +1083,15 @@ switch($modo) {
  		  echo sModificarCompra($xid,$campoxdato,false,false);
 		  break;
 		case 7:
-		  $campoxdato = "ImportePercepcion = '".$xdato."'";
+		  $campoxdato  = " ImportePercepcion = '".$xdato."'";
+		  $campoxdato .= ",ImportePago = TotalImporte+ImporteFlete+ '".$xdato."' ";
+		  $campoxdato .= ",ImportePendiente = TotalImporte+ImporteFlete+ '".$xdato."' ";
+		  echo sModificarCompra($xid,$campoxdato,false,false);
+		  break;
+		case 19:
+		  $campoxdato  = " ImporteFlete = '".$xdato."'";
+		  $campoxdato .= ",ImportePago = TotalImporte+ImportePercepcion+ '".$xdato."' ";
+		  $campoxdato .= ",ImportePendiente = TotalImporte+ImportePercepcion+ '".$xdato."' ";
 		  echo sModificarCompra($xid,$campoxdato,false,false);
 		  break;
 		case 8:

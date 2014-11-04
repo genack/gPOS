@@ -4,9 +4,11 @@ require("../tool.php");
 $idlocal=getSesionDato("IdTienda");
 $margen=getSesionDato("MargenUtilidad");
 
-$Moneda = getSesionDato("Moneda");
+$Moneda  = getSesionDato("Moneda");
+$IPC     = getSesionDato("IPC");
 $cMoneda = json_encode($Moneda);
 echo "var cMoneda = ".$cMoneda,";\n";
+echo "var cIPC = parseFloat(".$IPC,");\n";
 
 header("Content-Type: text/javascript");
 
@@ -127,6 +129,28 @@ function incluirIGV(aux){
     var xrequest = new XMLHttpRequest();
     xrequest.open("GET",url,false);
     xrequest.send(null);
+    //xrequest.responseText;
+}
+
+function incluirPercepcion(aux){
+    var	url = "services.php?modo=setincPercepcionCompra&opcion="+aux;
+    var xrequest = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+    if(!document.getElementById("tpercepcion") ) return;
+    if(!aux){
+     document.getElementById("tpercepcion").setAttribute("style","display:none");  
+     document.getElementById("ipercepcion").setAttribute("style","display:none");  
+     document.getElementById("ImportePercepcion").value = 0;
+    }
+
+    if(aux){
+     var xtotalneto  = parseFloat(document.getElementById("TotalNeto").value);
+     document.getElementById("tpercepcion").setAttribute("style","");  
+     document.getElementById("ipercepcion").setAttribute("style","");  
+     document.getElementById("ImportePercepcion").value = (( cIPC * xtotalneto )/100).toFixed(2);
+    }
+     actualizaImportePago();
     //xrequest.responseText;
 }
 
@@ -308,15 +332,7 @@ function setndoc(xvl){
     var idprov = document.getElementById('IdProvHab');
     var ndoc   = document.getElementById("NDoc");
     var sdoc   = document.getElementById("SDoc");
-    var patron = /^\d*$/;    
 
-    if( !patron .test(xvl) )
-    {
-      ndoc.value = '';
-      sdoc.value = '';
-      alert("gPOS:\n\n Ingrese el número de documento correctamente");//Termina
-      return sdoc.focus();
-    }
     if( ndoc.value == ''  ) return ndoc.focus();
     if( sdoc.value == ''  ) return sdoc.focus();
     var codigo   = sdoc.value+'-'+ndoc.value;
@@ -350,6 +366,42 @@ function settipocambio(value){
      var xrequest = new XMLHttpRequest();
      xrequest.open("GET",url,false);
      xrequest.send(null);
+}
+
+function setflete(xvalue){
+    xvalue =new String(xvalue);
+    if(isNaN(xvalue) || xvalue=="" || xvalue.lastIndexOf(' ')>-1){
+        alert("gPOS:\n\n Ingrese el flete correctamente");
+	document.getElementById("ImporteFlete").value=0;
+	xvalue = 0;
+     }
+     var url = "services.php?modo=setfleteCompra&flete="+xvalue;
+     var xrequest = new XMLHttpRequest();
+     xrequest.open("GET",url,false);
+     xrequest.send(null);
+     actualizaImportePago();
+}
+
+function setpercepcion(xvalue){
+    xvalue =new String(xvalue);
+    if(isNaN(xvalue) || xvalue=="" || xvalue.lastIndexOf(' ')>-1){
+        alert("gPOS:\n\n Ingrese la percepción correctamente");
+	document.getElementById("ImportePercepcion").value=0;
+	xvalue = 0;
+     }
+     var url = "services.php?modo=setpercepcionCompra&percepcion="+xvalue;
+     var xrequest = new XMLHttpRequest();
+     xrequest.open("GET",url,false);
+     xrequest.send(null);
+     actualizaImportePago();
+}
+function actualizaImportePago(){
+
+   var xpercepcion = parseFloat(document.getElementById("ImportePercepcion").value);
+   var xflete      = parseFloat(document.getElementById("ImporteFlete").value);
+   var xtotalneto  = parseFloat(document.getElementById("TotalNeto").value);
+   document.getElementById("ImportePago").value = (xtotalneto+xflete+xpercepcion).toFixed(2);
+    
 }
 
 function formatCurrency(num) {
@@ -470,12 +522,13 @@ function Producto(id){
   "<td class=referencia>"+this.referencia+"</td>"+
   "<td class=nombre>"+this.nombre+"</td>"+
   "<td class=boton><input class=sbtn type=button "+
-  "onclick='AgnadirProductoCompra("+this.id+",0,0,0,0)'value='"+po_comprar+"'></td></tr>");
+  "onclick='AgnadirProductoCompra("+this.id+",0,0,0,0,0)'value='"+po_comprar+"'></td></tr>");
  }
 
 
 function genProductoLinea() {
-  var sel = "";
+  var sel    = "";
+  var xinput = (this.servicio)? " style='display:none' ":""; 
 
  echo("<tr class='f'>"+
   "<td width='16' class='codigobarras'>"+this.cb+"</td>"+
@@ -484,7 +537,7 @@ function genProductoLinea() {
   "<td class='boton' width='10%'><nobr>"+
   "<input class='tb' type='image' src='img/gpos_imprimircb.png' title='Imprimir CB' onclick=\"selImpresion('codigobarrasProducto','"+this.id+"');return 0;\">"+" "+
   "<input class='tb' type='image' src='img/gpos_modproducto.png' title='Modificar Producto' onclick='"+'javascript:location.href="modproductos.php?modo=editarbar&id='+this.id+'&idBase='+this.idBase+'"'+"' >"+" "+
-"<input class='sbtn' type='image' title='Comprar Producto' src='img/gpos_prodcompras.png' onclick='AgnadirProductoCompra("+this.id+","+this.serie+","+ this.lote +","+ this.fv+",0)' value=''>"+" "+
+"<input class='sbtn' "+ xinput +" type='image' title='Comprar Producto' src='img/gpos_prodcompras.png' onclick='AgnadirProductoCompra("+this.id+","+this.serie+","+ this.lote +","+ this.fv+","+ this.servicio+",0)' value=''>"+" "+
   "<input  class='tb' type='image' src='img/gpos_eliminarproducto.png' title='Eliminar Producto' onclick='ifConfirmGo(\"gPOS: "+po_avisoborrar+"\",\"modproductos.php?modo=borrar&id="+this.id+"&idBase="+this.idBase+"\")'></nobr>"+
   "</td>"+
   "</tr>\n"
@@ -586,21 +639,22 @@ function genCompraLineaCompras() {
   "<td class='talla' width='60%'>"+this.talla+"</td>"+
   "<td class=boton><nobr>"+
   "<input class='sbtn' type='image' title='Comprar Producto' src='img/gpos_prodcompras.png' "+
-  "onclick='AgnadirProductoCompra("+this.id+","+this.serie+","+ this.lote +","+ this.fv+",0)'value=' "+po_comprar+"'></nobr></td>"+
+  "onclick='AgnadirProductoCompra("+this.id+","+this.serie+","+ this.lote +","+ this.fv+","+ this.servicio+",0)'value=' "+po_comprar+"'></nobr></td>"+
   "</tr>\n"
    );      
 }
 
 
-function cL(id,cb,L_talla,L_color,manejaserie,manejalote,manejafv){ //Aparece en compras
-  var o = new Producto(id);
-  o.id = id;
-  o.cb = cb;
-  o.talla = L[L_talla];
-  o.color = L[L_color];
-  o.serie = manejaserie;
-  o.lote = manejalote;
-  o.fv = manejafv;
+function cL(id,cb,L_talla,L_color,manejaserie,manejalote,manejafv,eservicio){ //Aparece en compras
+  var o      = new Producto(id);
+  o.id       = id;
+  o.cb       = cb;
+  o.talla    = L[L_talla];
+  o.color    = L[L_color];
+  o.serie    = manejaserie;
+  o.lote     = manejalote;
+  o.fv       = manejafv;
+  o.servicio = eservicio;
   o.genLinea = genCompraLineaCompras;
   o.genResumen = genProductoResumenCompras;
   o.tipo = TIPO_NORMAL;
@@ -608,25 +662,29 @@ function cL(id,cb,L_talla,L_color,manejaserie,manejalote,manejafv){ //Aparece en
 }
 
 
-function cP(id,cb,L_talla,L_color,idBase,manejaserie,manejalote,manejafv){ //Aparece en productos
-  var o    = new Producto(id);
-  o.id     = id;
-  o.idBase = idBase;
-  o.cb     = cb;
-  o.talla  = L[L_talla];
-  o.color  = L[L_color];
-  o.serie  = manejaserie;
-  o.lote   = manejalote;
-  o.fv     = manejafv;
-  o.genLinea = genProductoLinea;
-  o.tipo   = TIPO_NORMAL;
+function cP(id,cb,L_talla,L_color,idBase,manejaserie,manejalote,manejafv,eservicio){ //Aparece en productos
+  var o        = new Producto(id);
+  o.id         = id;
+  o.idBase     = idBase;
+  o.cb         = cb;
+  o.talla      = L[L_talla];
+  o.color      = L[L_color];
+  o.serie      = manejaserie;
+  o.lote       = manejalote;
+  o.fv         = manejafv;
+  o.servicio   = eservicio;
+  o.genLinea   = genProductoLinea;
+  o.tipo       = TIPO_NORMAL;
   o.genResumen = genProductoResumen;
-  p[K++]   = o;
+  p[K++]       = o;
 }
 
 function genProductoLineaHead() { //Head de Listados de Productos
+
+ var xicon = (this.servicio > 0)? icon_servicios:icon_productos;
+
  echo("</table></div></td></tr>\n\n<tr class='t f'>"+
-  "<td width='16' class='iconproducto'>"+icon_productos+"</td>\n"+
+  "<td width='16' class='iconproducto'>"+xicon+"</td>\n"+
   "<td class='referencia'>"+this.referencia+"</td>\n"+
   "<td class='nombre'>"+this.descripcion+" "+this.marca+" "+this.lab+"</td>\n"+
  "<td class='familia'>"+this.familia+" - " +this.subfamilia+"</td>\n"+ 
@@ -666,7 +724,7 @@ function genProductoLineaHeadCompras() {//Head de listados de productos
 
 }
 
-function cPH(id, nombre,ref, L_familia, L_subfamilia, descripcion,marca,lab,idBase){
+function cPH(id, nombre,ref, L_familia, L_subfamilia, descripcion,marca,lab,eservicio,idBase){
   var o = new Producto(id);
   o.id = id;
   o.idBase = idBase;
@@ -674,6 +732,7 @@ function cPH(id, nombre,ref, L_familia, L_subfamilia, descripcion,marca,lab,idBa
   o.descripcion = descripcion;
   o.marca = marca;
   o.lab = lab;
+  o.servicio = eservicio;
   o.referencia = ref;
   o.familia = L[L_familia];
   o.subfamilia = L[L_subfamilia];
@@ -1084,7 +1143,7 @@ function getDatosProductoExtra(idproducto){
     return xrequest.responseText.split(",");
 
 }
-function AgnadirProductoCompra(idproducto,manejaserie,manejalote,manejafv,trasAlta){
+function AgnadirProductoCompra(idproducto,manejaserie,manejalote,manejafv,eservicio,trasAlta){
 
     var main       = parent.getWebForm();
     var menudeo    = getDatosProductoExtra(idproducto);
@@ -1283,7 +1342,6 @@ function s_radioComprobante(aux){
 	break;
 	
         case 'SD':
-	desapareceCapa('prov');
 	desapareceCapa('ndoc');
 	desapareceCapa('fdoc');
 	desapareceCapa('acred');
@@ -1444,6 +1502,25 @@ function soloAlfaNumericoBase(e){
     }
 }
 
+function soloAlfaNumericoSerieBase(e){
+
+    key = e.keyCode || e.which;
+    tecla = String.fromCharCode(key).toLowerCase();
+    letras = "abcdefghijklmnopqrstuvwxyz0123456789";
+    especiales = [8, 13, 9, 39, 46];
+    tecla_especial = false
+    for(var i in especiales){
+        if(key == especiales[i]){
+            tecla_especial = true;
+            break;
+        }
+    }
+    
+    if(letras.indexOf(tecla)==-1 && !tecla_especial){
+        return false;
+    }
+}
+
 function soloAlfaNumericoCodigoBase(e){
     key = e.keyCode || e.which;
     tecla = String.fromCharCode(key).toLowerCase();
@@ -1579,7 +1656,7 @@ function auxFamilia(){
     //ResetSubfamilia();
     var vfamilia = getMe("IdFamilia").value;
 //    popup('selfamilia.php?modo=familia','familia');
-    popup('selfamilia2.php?modo=familia&IdFamilia='+vfamilia,'familiaplus');
+    popup('selsubfamilia.php?modo=familia&IdFamilia='+vfamilia,'familiaplus');
 }
 
 function auxSubFamilia(){
@@ -1989,6 +2066,7 @@ function gI2I(cad){
 var icon_stock 		= "<img src='img/gpos_cajavacia.png'>";
 var icon_stockfull 	= "<img src='img/gpos_cajallena.png'>";
 var icon_productos 	= "<img src='img/gpos_productos.png'>";
+var icon_servicios 	= "<img src='img/gpos_servicio.png'>";
 var icon_bar 		= "<img src='img/gpos_barcode.png'>";
 
 function iconStockMark(idmark)

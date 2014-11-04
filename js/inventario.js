@@ -1654,8 +1654,6 @@ function verKardexInventario(){
     id("resumenMovimiento").setAttribute("collapsed","false");  
     id("busquedaMovimiento").setAttribute("collapsed","false");  
     id("boxkardex").setAttribute("collapsed","true");  
-
-
 }
 
 function totalAjusteExistencias(xval){

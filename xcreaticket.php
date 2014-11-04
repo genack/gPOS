@@ -80,7 +80,8 @@ $vigencia = ($vigencia == 0)? getSesionDato("VigenciaPresupuesto") :$vigencia;
 $nsmprod        = CleanText($_POST["nsmprod"]);
 $IdPresupuesto  = $_POST["IdPresupuesto"];
 $cambio		= CleanFloat($_POST["cambio"]);//dinero devuelto al cliente
-$entregado 	= ($cambio>0)? $entregado - $cambio: CleanFloat($_POST["entrega"]);
+$entregado      = CleanFloat($_POST["entrega"]);
+$entregado 	= ($cambio>0)? $entregado - $cambio: $entregado;
 
 # Sacamos dependiente
 $dependiente 	= CleanTo($_POST["dependiente"]," ");
@@ -92,10 +93,11 @@ $idClienteSeleccionado = CleanID($_POST["UsuarioSeleccionado"]);
 #Promociones
 $idPromocion    = CleanID($_POST["promocion_id"]);
 $bonoPromocion  = CleanFloat($_POST["promocion_bono"]);
+$entregaEfectivo = CleanFloat($_POST["entrega_efectivo"]);
 
 # Dinero entregado en metalico
 //No se llega a entregar la totalidad, sino solo la diferencia con el cambio
-$entregaEfectivo = ($cambio>0)? $entregaEfectivo - $cambio : CleanFloat($_POST["entrega_efectivo"]);
+$entregaEfectivo = ($cambio>0)? $entregaEfectivo - $cambio : $entregaEfectivo;
 
 # Dinero entregado mediante bono o tarjeta
 $entregaBono 	= CleanFloat($_POST["entrega_bono"]);

@@ -221,6 +221,7 @@ switch($modo){
 
  	      $id         = CleanID($_GET["xproducto"]);
 	      $donde      = CleanID($_GET["xlocal"]);
+	      $idalmacen  = $donde;
 	      $inventario = CleanText($_GET["xinventario"]);
 
 	      $oProducto  = getDatosProductosExtra($id,'nombretodos');
@@ -232,12 +233,12 @@ switch($modo){
 	      $serie      = $oProducto["Serie"];
 	      $lote       = $oProducto["Lote"];
 	      $fv         = $oProducto["Vence"];
-
+	      $igv        = getSesionDato("IGV");
 	      $esserie    = ($serie)? 'false':'true';
 	      $eslote     = ($lote)?  'false':'true';
 	      $esfv       = ($fv)?    'false':'true';
 	      $esCarrito  = 'true';
-
+	      $cCantidad  = "";//Aqui falta cargar lo que hay en carrito
 	      $costototal = 0;
 	      $existencias= 0;
 	      $btnrtn     = "false";
@@ -252,6 +253,7 @@ switch($modo){
 	      $tkardex    = "true";
 	      $tmoviv     = "true";
 	      $texist     = "true";
+	      $xajuste    = "";
 	      $selmval    = ($mval=="false")? 'selected="true"':'';
 	      $seleval    = ($eval=="false")? 'selected="true"':'';
 	      $detalle     = ($menudeo)? "(".$unidxemp." ".$unidades." x ".$empaque.")":""; 
@@ -388,13 +390,13 @@ switch($modo){
 		$PVDD          = CleanDinero($_GET["xpvdd"]);
 		$PVC           = CleanDinero($_GET["xpvc"]);
 		$PVCD          = CleanDinero($_GET["xpvcd"]);
-		$SerieVence    = CleanCadena($_GET["serievence"]);
-		$Series        = CleanCadena($_POST["numerosdeserie"]);
+		$SerieVence    = (isset($_GET["serievence"]))? CleanCadena($_GET["serievence"]):'';
+		$Series        = (isset($_POST["numerosdeserie"]))?CleanCadena($_POST["numerosdeserie"]):'';
 		$xIdInvent     = CleanID($_GET["xidinventario"]);//>IdInventario
 		$tipInvent     = CleanText($_GET["xtipoinventario"]);//TipoInventario(inicial,final,etc)
 		$esInvent      = ( $_GET["xinventario"] == "Inventario" )? true:false;
 		$esPendInvent  = ( $_GET["xestinvent"] == "Pendiente" )? true:false;//EstadoInventario
-
+		$IdComprobante = 0;
 		//Control si Inventario es Pendiente => IdInventrario != 0
 		if ( $esPendInvent && $xIdInvent == 0 )  return;
 
@@ -632,6 +634,13 @@ switch($modo){
 	      echo implode("~",$arr);
 	      exit();
 	      break;
+
+             case "verKardex":
+	       $IdLocal = getSesionDato("IdTienda");
+	       $locales = getLocalesPrecios($IdLocal);
+	       include("xulkardex.php"); 
+	       exit();
+	       break;
 
              case "setPrecioCarritoAlmacen":
 

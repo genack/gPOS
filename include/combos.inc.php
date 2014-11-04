@@ -646,6 +646,7 @@ function genXulComboStatusTrabajo($selected=false,$xul="listitem"){
 	$estados = array('Pdte Envio', 'Enviado', 'Recibido', 'Entregado');
 
 	$key = 0;
+	$out = "";
 	foreach ($estados as $value){		
 		$value = CleanXulLabel($value);
 		if ($key!=$selected)
@@ -661,6 +662,7 @@ function genXulComboStatusTrabajo($selected=false,$xul="listitem"){
 function genXulComboSubFamilias($selected=false, $IdFamilia=0,$xul="listitem"){
 	$sql = "SELECT IdSubFamilia,SubFamilia  FROM ges_subfamilias  WHERE Eliminado=0 AND IdFamilia = '$IdFamilia' ORDER BY SubFamilia ASC";
 	$res = query($sql);
+	$out = "";
 	if (!$res)
 		return "";	
 	while($row=Row($res)){

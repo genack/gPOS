@@ -1,0 +1,5 @@
+$_BasePath = "%BASEURL%";
+// Direccion absoluta donde esta la aplicacion instalada
+// Debe modificarla para apuntar al directorio donde tiene instalada
+// la aplicacion.
+
