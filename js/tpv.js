@@ -9691,11 +9691,11 @@ function DevolverVentaSeleccionada(){
 			 "  ESTADO CAJA : CERRADO \n\n"+
 			 "  Debe -Abrir Caja- para continuar.")
 	//Ususario...
-	if( cClienteComprobante == 'Interno : Cliente Contado' ) 
-	    return alert("gPOS VENTAS DEVOLUCION:\n"+
-			 "\n  COMPROBANTE : "+ cComprobante +" "+ cSerieNroComprobante +
-			 "\n  CLIENTE            : "+ cClienteComprobante +
-			 "\n\n  Debe tener un cliente diferente al - "+tcliente+" -");
+	//if( cClienteComprobante == 'Interno : Cliente Contado' ) 
+	//    return alert("gPOS VENTAS DEVOLUCION:\n"+
+	//		 "\n  COMPROBANTE : "+ cComprobante +" "+ cSerieNroComprobante +
+	//		 "\n  CLIENTE            : "+ cClienteComprobante +
+	//		 "\n\n  Debe tener un cliente diferente al - "+tcliente+" -");
 	//Confirmar...
 	if(!confirm("gPOS VENTAS DEVOLUCION:"+
 		    "\n\n  COMPROBANTE : "+ cComprobante +" "+ cSerieNroComprobante +
@@ -10960,7 +10960,7 @@ function menuContextualVentasRealizadas(xval,xvaldet){
     case 'Boleta' : 
     case 'Factura':
 	esCambioNro     = ( cComprobante =='Ticket' )? false: true;
-	esDevolver      = ( cClienteComprobante == 'Interno : Cliente Contado' )? false:true;
+	esDevolver      = true;
 	esCambioCliente = true;
 	break;
     }
