@@ -16,13 +16,15 @@ Instalación
 
     chmod 777 install/
 
+    chmod 777 productos_img/
+
     chmod 777 xulremote/
 
 2. En su navegador firefox ingrese a `http://tudominio/gpos/`.
 
 3. Borre la carpeta install por seguridad.
 
-4. Modifique las contraseñas por defecto del local `Local:demo, Contraseña:demo` y del usuario `Usuario : administrador, Contraseña : administrador9121`.
+4. Modifique las contraseñas por defecto del local `Local:almacen, Contraseña:almacen`, del usuario `Usuario : admin, Contraseña : admin`, de mantenimiento `Usuario:soporte, Contraseña: soporte`. Otros locales registrados `local:localuno, contraseña:localuno, local:localdos, contraseña:localdos`.
 
 Documentación
 -------------
