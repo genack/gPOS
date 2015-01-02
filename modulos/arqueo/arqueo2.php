@@ -52,7 +52,7 @@ $TipoVenta = CleanText(getSesionDato("TipoVentaTPV"));
 	<splitter class="tree-splitter" />
 	<listcol flex="2" />
 	<splitter class="tree-splitter" />
-	<listcol flex="1" />
+	<listcol flex="2" />
 	<splitter class="tree-splitter" />
 	<listcol flex="1" />
 	<splitter class="tree-splitter" />
@@ -178,9 +178,7 @@ $TipoVenta = CleanText(getSesionDato("TipoVentaTPV"));
             </hbox>
 	    <hbox align="center">
 	      <description style="font-weight: zbold;width:6em;"><?php echo _("Concepto:") ?></description>
-	      <textbox id='conceptoText' value="" flex="1" onpaste="return false"
-           	       onkeyup="convertToUpperCase(this);"
-                       onkeypress="return soloAlfaNumerico(event);"/>
+	      <textbox id='conceptoText' value="" flex="1" onpaste="return false"/>
 	      <spacer style="width: 16px"/>
 	      <description style="font-weight: zbold;"><?php echo _("Importe:") ?></description>
 	      <textbox id='importeText' value="" onkeypress="return soloNumeros(event,this.value)"/>
@@ -200,9 +198,7 @@ $TipoVenta = CleanText(getSesionDato("TipoVentaTPV"));
             </hbox>
 	    <hbox align="center">
 	      <description style="font-weight: zbold;width:6em"><?php echo _("Concepto:") ?></description>
-	      <textbox  id='conceptoTextSubs' value="" flex="1" onpaste="return false"
-		        onkeyup="convertToUpperCase(this);"
-                        onkeypress="return soloAlfaNumerico(event);"/>
+	      <textbox  id='conceptoTextSubs' value="" flex="1" onpaste="return false"/>
 	      <spacer style="width: 16px"/>		
 	      <description style="font-weight: zbold;"><?php echo _("Importe:") ?></description>
 	      <textbox  id='importeTextSubs' value="" onkeypress="return soloNumeros(event,this.value)"/>
@@ -222,9 +218,7 @@ $TipoVenta = CleanText(getSesionDato("TipoVentaTPV"));
             </hbox>
 	    <hbox align="center">
 	      <description style="font-weight: zbold;width:6em"><?php echo _("Concepto:") ?></description>
-	      <textbox id='conceptoTextIngreso' value="" flex="1" onpaste="return false"
-		       onkeyup="convertToUpperCase(this);"
-                       onkeypress="return soloAlfaNumerico(event);"/>
+	      <textbox id='conceptoTextIngreso' value="" flex="1" onpaste="return false"/>
 	      <spacer style="width: 16px"/>		
 	      <description style="font-weight: zbold;"><?php echo _("Importe:") ?></description>
 	      <textbox id='importeTextIngreso' value="" onkeypress="return soloNumeros(event,this.value)"/>
@@ -267,9 +261,7 @@ $TipoVenta = CleanText(getSesionDato("TipoVentaTPV"));
             </hbox>
 	    <hbox align="center">
 	      <description style="font-weight: zbold; width:6em"><?php echo _("Concepto:") ?></description>
-	      <textbox id='conceptoTextGasto' value="" flex="1" onpaste="return false"
-		       onkeyup="convertToUpperCase(this);"
-                       onkeypress="return soloAlfaNumerico(event);"/>
+	      <textbox id='conceptoTextGasto' value="" flex="1" onpaste="return false"/>
 	      <spacer style="width: 16px"/>		
 	      <description style="font-weight: zbold;"><?php echo _("Importe:") ?></description>
 	      <textbox id='importeTextGasto' value="" onkeypress="return soloNumeros(event,this.value)"/>

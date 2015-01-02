@@ -4,7 +4,7 @@ include("tool.php");
 SimpleAutentificacionAutomatica("visual-iframe");
 
 global $tamPagina;
-$tamPagina  = 10;
+$tamPagina  = 100;
 
 function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
 			 $seleccion,$idprod,$idbase,$nombre=false,$ref=false,
@@ -167,8 +167,8 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
 	"apareceCapa('prov');".
 	"desapareceCapa('ndoc');".
 	"desapareceCapa('acred');".
-	"desapareceCapa('fdoc');".
-	"desapareceCapa('pgdoc');".
+	"apareceCapa('fdoc');".
+	"apareceCapa('pgdoc');".
 	"cambiodoc('SD'); ";
       $checkSD = 'selected';
     }
@@ -209,7 +209,6 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
     &nbsp;&nbsp;&nbsp;&nbsp; 
       <b>Presupuesto :</b>
 	<select>
-		<option onclick=".'"'."s_radioComprobante('O');".'"'."  $checkO>Pedido</option>
 		<option $admiteCompra onclick=".'"'."s_radioComprobante('F');".'"'."  $checkF >Factura</option>
 		<option $admiteCompra onclick=".'"'."s_radioComprobante('R');".'"'."  $checkR>Boleta</option>
 		<option $admiteCompra onclick=".'"'."s_radioComprobante('G');".'"'."  $checkG>Albarán</option>

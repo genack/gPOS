@@ -18,7 +18,7 @@
 
 </hbox>
 <hbox align="center" pack="center" flex="1" style="font-size: 1.2em;" >
-   <caption   id="txt-productoprogress" label="Cargando ..." collapsed="false"/>
+   <caption   id="txt-productoprogress" label="Cargando ..." collapsed="false" style="font-style: italic; "/>
    <progressmeter id="bar-productoprogress" mode="undetermined"  value="0"  collapsed="false"/>
 </hbox>
 <toolbarbutton id="NombreLocalActivo" label="<?php echo "TPV".$TipoVentaText; ?>" class="media" />

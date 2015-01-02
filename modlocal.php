@@ -102,7 +102,8 @@ function ModificarLocal($id,$nombre,
 	$oLocal->set("Email",$email,FORCE);
 	$oLocal->set("PaginaWeb",$paginaweb,FORCE);
 	$oLocal->set("CuentaBancaria",$cuentabancaria,FORCE);
-	$oLocal->set("Password",$pass,FORCE);
+	if($pass != 'locales')
+	  $oLocal->set("Password",md5($pass),FORCE);
 	$oLocal->set("Identificacion",$identificacion,FORCE);
 	$oLocal->set("IdTipoNumeracionFactura",$IdTipoNumeracionFactura,FORCE);
 	$oLocal->set("ImpuestoIncluido",$ImpuestoIncluido,FORCE);
@@ -190,7 +191,7 @@ function CrearLocal($nombre,
 	$oLocal->set("Email",$email,FORCE);
 	$oLocal->set("PaginaWeb",$paginaweb,FORCE);
 	$oLocal->set("CuentaBancaria",$cuentabancaria,FORCE);
-	$oLocal->set("Password",$pass,FORCE);
+	$oLocal->set("Password",md5($pass),FORCE);
 	$oLocal->set("Identificacion",$identificacion,FORCE);
 	$oLocal->set("IdPais",$idpais,FORCE);
 	$oLocal->set("IdIdioma",getIdFromLang("es"),FORCE);

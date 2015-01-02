@@ -19,6 +19,9 @@ $srt        = 0;
 for($j=0;$j<$numvalida;$j++)
   {
     $firma      = "line_".$j."_";
+
+    if( !isset( $_POST[$firma . "cod"]) ) continue;
+
     $codigo     = CleanCB($_POST[$firma . "cod"]);
     $idproducto = CleanText($_POST[$firma . "idproducto"]);
     $pedidodet  = CleanText($_POST[$firma . "pedidodet"]);
@@ -69,7 +72,6 @@ $trabajos 	= array(); //acumularemos aqui los trabajos a enviar al subsidiario
 $serie 	        = CleanText($_POST["serieticket"]);
 $numticket      = CleanInt($_POST["numticket"]);
 $documentoventa = CleanText($_POST["DocumentoVenta"]);
-//$nseries      = $_POST["nseries"];
 $mensaje        = CleanText($_POST["mensaje"]);
 
 #Vigencia Presupuestos
@@ -78,7 +80,7 @@ $vigencia = ($vigencia == 0)? getSesionDato("VigenciaPresupuesto") :$vigencia;
 
 #CB Meta productos
 $nsmprod        = CleanText($_POST["nsmprod"]);
-$IdPresupuesto  = $_POST["IdPresupuesto"];
+$idPresupuesto  = ( CleanID($_POST["IdPresupuesto"]) != '0')? CleanID($_POST["IdPresupuesto"]): 0;
 $cambio		= CleanFloat($_POST["cambio"]);//dinero devuelto al cliente
 $entregado      = CleanFloat($_POST["entrega"]);
 $entregado 	= ($cambio>0)? $entregado - $cambio: $entregado;
@@ -154,6 +156,9 @@ $numlines = CleanInt($_POST["numlines"]);
 for($t=0;$t<$numlines;$t++) 
   {
     $firma  = "line_".$t."_";
+
+    if( !isset( $_POST[$firma . "cod"]) ) continue;
+
     $codigo = $_POST[$firma . "cod"];
 
     if ($codigo) 
@@ -186,16 +191,16 @@ for($t=0;$t<$numlines;$t++)
 
 /* OPERAMOS SOBRE LOS DATOS QUE HEMOS COLECCIONADO */
 
-$IdComprobante = EjecutarTicket( $idDependiente, $entregado, $local, $numticket,
+$idComprobante = EjecutarTicket( $idDependiente, $entregado, $local, $numticket,
 				 $serie,$idClienteSeleccionado,$modoTicket,$entregaEfectivo,
 				 $entregaBono,$entregaTarjeta,$cambio,$nroDocumento,
-				 $idDocumento,$documentoventa,$IdPresupuesto,
+				 $idDocumento,$documentoventa,$idPresupuesto,
 				 $mensaje,$vigencia,$nsmprod,$sreDocumento,
 				 $idPromocion,$bonoPromocion);
 
 /* SALIMOS DEL PROCESO */
 //echo 1;
-echo $IdComprobante;
+echo $idComprobante;
 
 
 ////////////////////////////////////////////////////////////////////////////////7
@@ -254,7 +259,7 @@ function AgrupaJob( &$arreglo ){
 function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num, 
 			 $Serie,$IdCliente,$modoTicket ,$entregaEfectivo, 
 			 $entregaBono, $entregaTarjeta, $cambio,$nroDocumento,
-			 $idDocumento,$documentoventa,$IdPresupuesto,
+			 $idDocumento,$documentoventa,$idPresupuesto,
 			 $mensaje,$vigencia,$nsmprod,$sreDocumento,
 			 $idPromocion,$bonoPromocion){
     global $TotalImporte;
@@ -307,17 +312,17 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
 	"IdLocal, IdUsuario, SerieComprobante,".
 	"NComprobante,TipoVentaOperacion,FechaComprobante,".
 	"ImporteNeto, ImporteImpuesto, Impuesto, TotalImporte,".
-	"ImportePendiente, Status,IdCliente,IdPromocion";
+	"ImportePendiente, Status,IdCliente,IdPromocion,IdPresupuesto";
 
       $datos = 
 	"'$IdLocal','$idDependiente','$Serie',".
 	"'$Num','$TipoVenta',NOW(),".
 	"'$ImporteNeto','$IvaImporte','$IGV','$TotalImporte',".
-	"'$ImportePendiente','$Status','$IdCliente','$idPromocion'";
+	"'$ImportePendiente','$Status','$IdCliente','$idPromocion','$idPresupuesto'";
 
       $sql = "INSERT INTO ges_comprobantes (".$esquema.") VALUES (".$datos.")";
       $res = query($sql,"Creando Ticket ($modoTicket)");
-      $IdComprobante = $UltimaInsercion;
+      $idComprobante = $UltimaInsercion;
 
       //Bono && Historial Venta...
       $xbono = ( $entregaBono > 0 )? ' Bono = 0 ':false;
@@ -343,7 +348,7 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
       $sql = "INSERT INTO ges_presupuestos (".$esquema.") VALUES (".$datos.")";
       $res = query($sql,"Creando Ticket ($modoTicket)");
   
-      $IdComprobante = $UltimaInsercion;
+      $idComprobante = $UltimaInsercion;
       setVigenciaMProductos($nsmprod,$vigencia);//VIgencia meta Productos
     }
 
@@ -355,19 +360,19 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
 
     //NumeroComprobante...
     if($esVenta)
-      if(RegistrarNumeroComprobante($nroDocumento,$IdComprobante,$textDoc,$sreDocumento,false,false))
+      if(RegistrarNumeroComprobante($nroDocumento,$idComprobante,$textDoc,$sreDocumento,false,false))
 	return;
 
     //Dinero...
     if($esVenta)
       EntregarCantidades($textticket,$IdLocal,$entregaEfectivo,$entregaBono,$entregaTarjeta,
-			 $IdComprobante,$TipoOperacion);
+			 $idComprobante,$TipoOperacion);
 
     //Procesar Lineas...
     foreach ($carrito as $fila) 
       {
-	if( $esVenta  ) $fila->Alta( $IdComprobante, $SerialNum, $IdLocal, $documentoventa);
-	if( $esPedido ) $fila->AltaPedidos( $IdComprobante, $SerialNum, $modoTicket);
+	if( $esVenta  ) $fila->Alta( $idComprobante, $SerialNum, $IdLocal, $documentoventa);
+	if( $esPedido ) $fila->AltaPedidos( $idComprobante, $SerialNum, $modoTicket);
 	AgrupaJob( $fila );		
       }		
     
@@ -396,31 +401,25 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
 	  } 		
       }
     
-    if($IdPresupuesto != '0') 
-      setIdCPPresupuesto($IdPresupuesto,$IdComprobante,$modoTicket);//Presupuestos
-    
-    return $IdComprobante;//IdComprobante
+    //Preventa
+    if($idPresupuesto != '0'){ 
+
+      //Presupuestos
+      setIdCPPresupuesto($idPresupuesto,$idComprobante,$modoTicket);
+
+    }
+    return $idComprobante;//IdComprobante
 }
 
-function EjecutarRetiradaDeAlmacen( $IdLocal ){
-
-	global $carrito, $UltimaInsercion;
-		
-	foreach ($carrito as $fila) 
-	  {
-	    if (!$fila->esServicio())
-	      $fila->RetiradaDeAlmacen($IdLocal);		
-	  }		
-}
-
-function setIdCPPresupuesto($IdPresupuesto,$IdComprobante,$modoTicket){
+function setIdCPPresupuesto($idPresupuesto,$idComprobante,$modoTicket){
 
   $sStatus = ($modoTicket=="pedidos")? ", Status ='Modificado'": '';
 
   $sql     = 
     " UPDATE ges_presupuestos ".
-    " SET    IdCP            = '".$IdComprobante."'".$sStatus.",FechaAtencion = NOW() ".
-    " WHERE  IdPresupuesto   = '".$IdPresupuesto."'";
+    " SET    IdCP            = '".$idComprobante."'".$sStatus.",".
+    "        FechaAtencion = NOW() ".
+    " WHERE  IdPresupuesto   = '".$idPresupuesto."'";
 
   query($sql);	
 

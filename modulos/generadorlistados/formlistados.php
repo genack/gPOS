@@ -211,6 +211,36 @@ function DetectaActivos($cod){
 	if(strpos($cod,'%CONDICIONVENTA%') > 0){
 	        $a .= "CondicionVenta,";
 	}	
+	if(strpos($cod,'%ESTADOOS%') > 0){
+	        $a .= "EstadoOS,";
+	}	
+	if(strpos($cod,'%PRIORIDAD%') > 0){
+	        $a .= "Prioridad,";
+	}	
+	if(strpos($cod,'%FACTURACION%') > 0){
+	        $a .= "Facturacion,";
+	}	
+	if(strpos($cod,'%ESTADOSUSCRIPCION%') > 0){
+	        $a .= "EstadoSuscripcion,";
+	}	
+	if(strpos($cod,'%TIPOSUSCRIPCION%') > 0){
+	        $a .= "TipoSuscripcion,";
+	}	
+	if(strpos($cod,'%TIPOPAGOSUSCRIPCION%') > 0){
+	        $a .= "TipoPagoSuscripcion,";
+	}	
+	if(strpos($cod,'%PROLONGACION%') > 0){
+	        $a .= "Prolongacion,";
+	}	
+	if(strpos($cod,'%IDCLIENTE%') > 0){
+	        $a .= "IdCliente,";
+	}	
+	if(strpos($cod,'%CODIGO%') > 0){
+	        $a .= "Codigo,";
+	}	
+	if(strpos($cod,'%IMPORTE%') > 0){
+	        $a .= "EstadoPagoVenta,";
+	}	
 
 	return $a;
 }
@@ -219,387 +249,525 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 ?>
 <window id="listados-gPOS" title="listados"
         xmlns:html="http://www.w3.org/1999/xhtml"        
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">       		
-<groupbox>	
-	<hbox align="center" pack="center" style="background-color: #d7d7d7;padding:3px">
-        <label id="CategoriaListado" value="" pack="center"/>
-	<menulist    id="esListas" label="Listados" class="media">
-          <menupopup>
-	    <menuitem style="width: 300px;font-weight:bold;" label="ELIJA LISTADO"/>
-	    <?php echo $outItems; ?>
-	  </menupopup>
-	</menulist>
-	<button image="../../img/gpos_listados.png" label="Listar" oncommand="CambiaListado()"/>
-	</hbox>	
-	
-	<hbox align="start" pack="center" style="background-color: #d7d7d7;padding:3px">
-		
-	<hbox id="getDesde" collapsed="true" align="center">
-        <vbox>
-	<label value="Desde:"/>
-        <datepicker id="Desde" type="popup"/>
-        </vbox>
-	</hbox>
-	
-	<hbox id="getHasta" collapsed="true" align="center">
-	<spacer style="width: 5px"/>
-        <vbox>
-	<label value="Hasta:"/>
-        <datepicker id="Hasta" type="popup"/>
-        </vbox>
-	</hbox>
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<hbox id="getIdTienda" collapsed="true" align="center">
+  <groupbox>	
+    <hbox align="center" pack="center" style="background-color: #d7d7d7;padding:3px">
+      <label id="CategoriaListado" value="" pack="center"/>
+      <menulist    id="esListas" label="Listados" class="media">
+	<menupopup>
+	  <menuitem style="width: 300px;font-weight:bold;" label="ELIJA LISTADO"/>
+	  <?php echo $outItems; ?>
+	</menupopup>
+      </menulist>
+      <button image="../../img/gpos_listados.png" label="Listar" oncommand="CambiaListado()"/>
+    </hbox>
+
+    <hbox align="start" pack="center" style="background-color: #d7d7d7;padding:3px">
+      <hbox id="getDesde" collapsed="true" align="center">
+	<vbox>
+	  <label value="Desde:"/>
+	  <datepicker id="Desde" type="popup"/>
+	</vbox>
+      </hbox>
+
+      <hbox id="getHasta" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
 	<vbox>
-        <label value="Local:"/>
-	<menulist  id="Local">						
-	  <menupopup>
-	    <menuitem label="Todos" value="%%" selected="true"/>
-	    <?php echo genXulComboAlmacenes(false,"menuitem") ?>
-	  </menupopup>
-	</menulist>	
-        </vbox>
-	</hbox>	
+	  <label value="Hasta:"/>
+	  <datepicker id="Hasta" type="popup"/>
+	</vbox>
+      </hbox>
 
+      <hbox id="getIdTienda" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Local:"/>
+	  <menulist  id="Local">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%" selected="true"/>
+	      <?php echo genXulComboAlmacenes(false,"menuitem") ?>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
 
-	<hbox id="getPartida" collapsed="true" align="center">
+      <hbox id="getPartida" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Partida:"/>
+	  <menulist  id="Partida">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%" selected="true"/>
+	      <?php echo genXulComboPartidaCaja(false,"menuitem",$IdLocal,false,$TipoCaja) ?>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getIdProveedor" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-        <label value="Partida:"/>
-	<menulist  id="Partida">						
-	<menupopup>
-	 <menuitem label="Todos" value="%%" selected="true"/>
-         <?php echo genXulComboPartidaCaja(false,"menuitem",$IdLocal,false,$TipoCaja) ?>
-	 </menupopup>
-	</menulist> 
+          <label value="Proveedor:"/>
+	  <menulist  id="Proveedor">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <?php echo genXulComboProveedores(false,"menuitem") ?>
+	    </menupopup>
+	  </menulist>
         </vbox>
-	</hbox>		
+      </hbox>	
 
-	<hbox id="getIdProveedor" collapsed="true" align="center">
+      <hbox id="getTipoVentaOP" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-        <label value="Proveedor:"/>
-	<menulist  id="Proveedor">						
-	<menupopup>
-	<menuitem label="Todos" value="%%"/>
-	<?php echo genXulComboProveedores(false,"menuitem") ?>
-	</menupopup>
-	</menulist>
-        </vbox>
-	</hbox>	
-
-	<hbox id="getTipoVentaOP" collapsed="true" align="center">
-	<spacer style="width: 5px"/>
-        <vbox>
-        <label value="Tipo Venta:"/>
-	<menulist  id="TipoVentaOP">						
-	<menupopup>
-	 <menuitem label="Todos" value="%%"/>
-	 <menuitem value="VD" label="B2C"/>
-	 <menuitem value="VC" label="B2B"/>
-	 </menupopup>
-	</menulist>
+          <label value="Tipo Venta:"/>
+	  <menulist  id="TipoVentaOP">						
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem value="VD" label="B2C"/>
+	      <menuitem value="VC" label="B2B"/>
+	    </menupopup>
+	  </menulist>
         </vbox>	
-	</hbox>		
+      </hbox>		
 	
-	<hbox id="getIdFamilia" collapsed="true" align="center">
+      <hbox id="getIdFamilia" collapsed="true" align="center">
         <vbox>
-        <label value="Familia:"/>
-	<menulist  id="IdFamilia">						
-	<menupopup>
-	 <menuitem label="Todos" value="%%"/>
-	<?php echo genXulComboFamilias(false,"menuitem") ?>
-	 </menupopup>
-	</menulist>
+          <label value="Familia:"/>
+	  <menulist  id="IdFamilia">						
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <?php echo genXulComboFamilias(false,"menuitem") ?>
+	    </menupopup>
+	  </menulist>
         </vbox>
-	</hbox>	
+      </hbox>	
 
-	<hbox id="getIdMarca" collapsed="true" align="center">
+      <hbox id="getIdMarca" collapsed="true" align="center">
         <vbox>
-        <label value="Marca:"/>
-	<menulist  id="IdMarca">						
-	<menupopup>
-	 <menuitem label="Todos" value="%%"/>
-	<?php echo genXulComboMarcas(false,"menuitem") ?>
-	 </menupopup>
-	</menulist>
+          <label value="Marca:"/>
+	  <menulist  id="IdMarca">						
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <?php echo genXulComboMarcas(false,"menuitem") ?>
+	    </menupopup>
+	  </menulist>
         </vbox>
-	</hbox>	
+      </hbox>	
 
-
-	<hbox id="getIdSubsidiario" collapsed="true" align="center">
+      <hbox id="getIdSubsidiario" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-        <label value="Subsidiario:"/>
-	<menulist  id="Subsidiario">						
-	<menupopup>
-	 <menuitem label="Elije Subsidiario"/>
-	<?php echo genXulComboSubsidiarios(false,"menuitem") ?>
-	 </menupopup>
-	</menulist>
+          <label value="Subsidiario:"/>
+	  <menulist  id="Subsidiario">						
+	    <menupopup>
+	      <menuitem label="Elije Subsidiario"/>
+	      <?php echo genXulComboSubsidiarios(false,"menuitem") ?>
+	    </menupopup>
+	  </menulist>
         </vbox>
-	</hbox>		
+      </hbox>		
 
-	<hbox id="getStatusTrabajo" collapsed="true" align="center">
+      <hbox id="getStatusTrabajo" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-        <label value="Estado Trabajo:"/>
-	<menulist  id="StatusTrabajo">						
-	<menupopup>
-	 <menuitem label="Elije estado"/>
-	<?php echo genXulComboStatusTrabajo(false,"menuitem") ?>
-	 </menupopup>
-	</menulist>
+          <label value="Estado Trabajo:"/>
+	  <menulist  id="StatusTrabajo">						
+	    <menupopup>
+	      <menuitem label="Elije estado"/>
+	      <?php echo genXulComboStatusTrabajo(false,"menuitem") ?>
+	    </menupopup>
+	  </menulist>
         </vbox>
-	</hbox>		
+      </hbox>		
 	
-	<hbox id="getIdUsuario" collapsed="true" align="center">
+      <hbox id="getIdUsuario" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-        <label value="Usuario:"/>
-	<menulist  id="IdUsuario">						
-	<menupopup>
-	 <menuitem label="Todos" value="true" selected="true"/>
-	<?php echo genXulComboUsuarios(false,"menuitem") ?>
-	 </menupopup>
-	</menulist>	
+          <label value="Usuario:"/>
+	  <menulist  id="IdUsuario">						
+	    <menupopup>
+	      <menuitem label="Todos" value="%%" selected="true"/>
+	      <?php echo genXulComboUsuarios(false,"menuitem") ?>
+	    </menupopup>
+	  </menulist>	
         </vbox>
-	</hbox>			
+      </hbox>			
 
-	<hbox id="getTipoComprobante" collapsed="true" align="center">
+      <hbox id="getTipoComprobante" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-        <label value="Tipo Comprobante:"/>
-	<menulist  id="TipoComprobante">						
-	<menupopup>
-	 <menuitem label="Todos" value="%%"/>
-	 <menuitem label="Factura" value="Factura"/>
-	 <menuitem label="Boleta" value="Boleta"/>
-	 <menuitem label="Ticket" value="Ticket"/>
-	 <menuitem label="Albaran" value="Albaran"/>
-	 </menupopup>
-	</menulist>	
+          <label value="Tipo Comprobante:"/>
+	  <menulist  id="TipoComprobante">						
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Factura" value="Factura"/>
+	      <menuitem label="Boleta" value="Boleta"/>
+	      <menuitem label="Ticket" value="Ticket"/>
+	      <menuitem label="Albaran" value="Albaran"/>
+	    </menupopup>
+	  </menulist>	
         </vbox>
-	</hbox>			
+      </hbox>			
 
-	<hbox id="getSerieComprobante" collapsed="true" align="center">
+      <hbox id="getSerieComprobante" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-        <label value="Serie Comprobante:"/>
-	<textbox class="media" id="SerieComprobante" value=""/>
+          <label value="Serie Comprobante:"/>
+	  <textbox class="media" id="SerieComprobante" value=""/>
         </vbox>
-	</hbox>
+      </hbox>
 
-	<hbox id="getTipoCliente" collapsed="true" align="center">
+      <hbox id="getTipoCliente" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-	<label value="Tipo Cliente:"/>
-	<menulist  id="TipoCliente">						
-	<menupopup>
-	 <menuitem label="Todos" value="%%"/>
-	 <menuitem label="Particular" value="Particular"/>
-	 <menuitem label="Independiente" value="Independiente"/>
-	 <menuitem label="Empresa" value="Empresa"/>
-	 <menuitem label="Gobierno" value="Gobierno"/>
-	 </menupopup>
-	</menulist>
+	  <label value="Tipo Cliente:"/>
+	  <menulist  id="TipoCliente">						
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Particular" value="Particular"/>
+	      <menuitem label="Independiente" value="Independiente"/>
+	      <menuitem label="Empresa" value="Empresa"/>
+	      <menuitem label="Gobierno" value="Gobierno"/>
+	    </menupopup>
+	  </menulist>
         </vbox>
-	</hbox>			
+      </hbox>			
 	
-	<hbox id="getDNICliente" collapsed="true" align="center">
+      <hbox id="getReferencia" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-	<label value="DNI:"/>
-	<textbox class="media" id="DNICliente" value=""/>
+	  <label value="Referencia:"/>
+	  <textbox class="media" id="Referencia" value=""/>
         </vbox>
-	</hbox>			
+      </hbox>			
+
+      <hbox id="getCB" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+        <vbox>
+	  <label value="Codigo barras:"/>
+	  <textbox class="media" id="CB" value=""/>
+        </vbox>
+      </hbox>
+
+      <hbox id="getNumeroSerie" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+        <vbox>
+	  <label value="Numero Serie:"/>
+	  <textbox class="media" id="NumeroSerie" value=""/>
+        </vbox>
+      </hbox>				
 	
-	<hbox id="getReferencia" collapsed="true" align="center">
+      <hbox id="getLote" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-	<label value="Referencia:"/>
-	<textbox class="media" id="Referencia" value=""/>
+	  <label value="Lote:"/>
+	  <textbox class="media" id="Lote" value=""/>
         </vbox>
-	</hbox>			
+      </hbox>	
 
-	<hbox id="getCB" collapsed="true" align="center">
+      <hbox id="getEstadoComprobante" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-	<label value="Codigo barras:"/>
-	<textbox class="media" id="CB" value=""/>
-        </vbox>
-	</hbox>
+	  <label value="Estado Comprobante:"/>
+	  <menulist  id="EstadoComprobante">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Confirmado" value="Confirmado"/>
+	      <menuitem label="Pendiente" value="Pendiente"/>
+	      <menuitem label="Cancelado" value="Cancelado"/>
+	      <menuitem label="Borrador" value="Borrador"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
 
-	<hbox id="getNumeroSerie" collapsed="true" align="center">
+      <hbox id="getEstadoPago" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
-        <vbox>
-	<label value="Numero Serie:"/>
-	<textbox class="media" id="NumeroSerie" value=""/>
-        </vbox>
-	</hbox>				
-	
-	<hbox id="getLote" collapsed="true" align="center">
-	<spacer style="width: 5px"/>
-        <vbox>
-	<label value="Lote:"/>
-	<textbox class="media" id="Lote" value=""/>
-        </vbox>
-	</hbox>	
+	<vbox>
+	  <label value="Estado Pago:"/>
+	  <menulist  id="EstadoPago">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Pagada" value="Pagada"/>
+	      <menuitem label="Empezada" value="Empezada"/>
+	      <menuitem label="Pendiente" value="Pendiente"/>
+	      <menuitem label="Vencida" value="Vencida"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
 
-	<hbox id="getEstadoComprobante" collapsed="true" align="center">
+      <hbox id="getModalidad" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
-        <vbox>
-	<label value="Estado Comprobante:"/>
-	<menulist  id="EstadoComprobante">						
-	<menupopup>
-	 <menuitem label="Todos" value="%%"/>
-	 <menuitem label="Confirmado" value="Confirmado"/>
-	 <menuitem label="Pendiente" value="Pendiente"/>
-	 <menuitem label="Cancelado" value="Cancelado"/>
-	 <menuitem label="Borrador" value="Borrador"/>
+	<vbox>
+	  <label value="Modalidad:"/>
+	  <menulist  id="Modalidad">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Monto Compra" value="MontoCompra"/>
+	      <menuitem label="Historial Compra" value="HistorialCompra"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getEstadoPromo" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Estado:"/>
+	  <menulist  id="EstadoPromo">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Borrador" value="Borrador"/>
+	      <menuitem label="Ejecución" value="Ejecucion"/>
+	      <menuitem label="Finalizado" value="Finalizado"/>
+	      <menuitem label="Suspendido" value="Suspendido"/>
+	      <menuitem label="Cancelado" value="Cancelado"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getTipoPromo" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Tipo:"/>
+	  <menulist  id="TipoPromo">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Descuento" value="Descuento"/>
+	      <menuitem label="Producto" value="Producto"/>
+	      <menuitem label="Bono" value="Bono"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getTipoOperacion" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Tipo Operación:"/>
+	  <menulist  id="TipoOperacion">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Ingreso" value="Ingreso"/>
+	      <menuitem label="Gasto" value="Gasto"/>
+	      <menuitem label="Aportacion" value="Aportacion"/>
+	      <menuitem label="Sustraccion" value="Sustraccion"/>  
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getTipoOpCjaGral" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Tipo Operación:"/>
+	  <menulist  id="TipoOpCjaGral">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Ingreso" value="Ingreso"/>
+	      <menuitem label="Egreso" value="Egreso"/>
+	      <menuitem label="Gasto" value="Gasto"/>
+	      <menuitem label="Aportacion" value="Aportacion"/>
+	      <menuitem label="Sustraccion" value="Sustraccion"/>  
 	 </menupopup>
-	</menulist>
-        </vbox>
-	</hbox>			
-			
-	<hbox id="getEstadoPago" collapsed="true" align="center">
-	<spacer style="width: 5px"/>
-        <vbox>
-	<label value="Estado Pago:"/>
-	<menulist  id="EstadoPago">						
-	<menupopup>
-	 <menuitem label="Todos" value="%%"/>
-	 <menuitem label="Pagada" value="Pagada"/>
-	 <menuitem label="Empezada" value="Empezada"/>
-	 <menuitem label="Pendiente" value="Pendiente"/>
-	 <menuitem label="Vencida" value="Vencida"/>
-	 </menupopup>
-	</menulist>	
-        </vbox>
-	</hbox>
+	  </menulist>
+	</vbox>
+      </hbox>
 
-	<hbox id="getModalidad" collapsed="true" align="center">
+      <hbox id="getPeriodoVenta" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
-        <vbox>
-	<label value="Modalidad:"/>
-	<menulist  id="Modalidad">						
-	<menupopup>
-	<menuitem label="Todos" value="%%"/>
-	<menuitem label="Monto Compra" value="MontoCompra"/>
-	<menuitem label="Historial Compra" value="HistorialCompra"/>
-	</menupopup>
-	</menulist>	
-        </vbox>
-	</hbox>			
+	<vbox>
+	  <label value="Periodo Venta:"/>
+	  <menulist  id="PeriodoVenta">
+	    <menupopup>
+	      <menuitem label="Días" value="DAY" selected="true"/>
+	      <menuitem label="Semanal" value="WEEK"/>
+	      <menuitem label="Mensual" value="MONTH"/>
+	      <menuitem label="Anual" value="YEAR"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
 
-	<hbox id="getEstadoPromo" collapsed="true" align="center">
+      <hbox id="getCondicionVenta" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
-        <vbox>
-	<label value="Estado:"/>
-	<menulist  id="EstadoPromo">						
-	<menupopup>
-	 <menuitem label="Todos" value="%%"/>
-	 <menuitem label="Borrador" value="Borrador"/>
-	 <menuitem label="Ejecución" value="Ejecucion"/>
-	 <menuitem label="Finalizado" value="Finalizado"/>
-	 <menuitem label="Suspendido" value="Suspendido"/>
-	 <menuitem label="Cancelado" value="Cancelado"/>
-	 </menupopup>
-	</menulist>
-        </vbox>
-	</hbox>			
-			
-	<hbox id="getTipoPromo" collapsed="true" align="center">
-	<spacer style="width: 5px"/>
-        <vbox>
-	<label value="Tipo:"/>
-	<menulist  id="TipoPromo">						
-	<menupopup>
-	 <menuitem label="Todos" value="%%"/>
-	 <menuitem label="Descuento" value="Descuento"/>
-	 <menuitem label="Producto" value="Producto"/>
-	 <menuitem label="Bono" value="Bono"/>
-	 </menupopup>
-	</menulist>	
-        </vbox>
-	</hbox>			
+	<vbox>
+	  <label value="Condición Venta:"/>
+	  <menulist  id="CondicionVenta">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Sin Receta" value="0" />
+	      <menuitem label="Con Receta" value="CRM"/>
+	      <menuitem label="Con Receta Retenida" value="CRMR"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
 
-	<hbox id="getTipoOperacion" collapsed="true" align="center">
+      <hbox id="getEstadoOS" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
-        <vbox>
-	<label value="Tipo Operación:"/>
-	<menulist  id="TipoOperacion">						
-	<menupopup>
-	 <menuitem label="Todos" value="%%"/>
-	 <menuitem label="Ingreso" value="Ingreso"/>
-	 <menuitem label="Gasto" value="Gasto"/>
-	 <menuitem label="Aportacion" value="Aportacion"/>
-	 <menuitem label="Sustraccion" value="Sustraccion"/>  
-	 </menupopup>
-	</menulist>
-        </vbox>
-	</hbox>			
+	<vbox>
+	  <label value="Estado:"/>
+	  <menulist  id="EstadoOS">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Pendiente" value="Pendiente" />
+	      <menuitem label="Ejecucion" value="Ejecucion"/>
+	      <menuitem label="Finalizado" value="Finalizado"/>
+	      <menuitem label="Cancelado" value="Cancelado"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
 
-	<hbox id="getTipoOpCjaGral" collapsed="true" align="center">
+      <hbox id="getPrioridad" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
-        <vbox>
-	<label value="Tipo Operación:"/>
-	<menulist  id="TipoOpCjaGral">						
-	<menupopup>
-	 <menuitem label="Todos" value="%%"/>
-	 <menuitem label="Ingreso" value="Ingreso"/>
-	 <menuitem label="Egreso" value="Egreso"/>
-	 <menuitem label="Gasto" value="Gasto"/>
-	 <menuitem label="Aportacion" value="Aportacion"/>
-	 <menuitem label="Sustraccion" value="Sustraccion"/>  
-	 </menupopup>
-	</menulist>
-        </vbox>
-	</hbox>			
+	<vbox>
+	  <label value="Prioridad:"/>
+	  <menulist  id="Prioridad">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Normal" value="1" />
+	      <menuitem label="Alta" value="2"/>
+	      <menuitem label="Muy Alta" value="3"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
 
-	<hbox id="getPeriodoVenta" collapsed="true" align="center">
+      <hbox id="getFacturacion" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
-        <vbox>
-	<label value="Periodo Venta:"/>
-	<menulist  id="PeriodoVenta">
-	<menupopup>
-	 <menuitem label="Días" value="DAY" selected="true"/>
-	 <menuitem label="Semanal" value="WEEK"/>
-	 <menuitem label="Mensual" value="MONTH"/>
-	 <menuitem label="Anual" value="YEAR"/>
-	 </menupopup>
-	</menulist>
-        </vbox>
-	</hbox>	
+	<vbox>
+	  <label value="Facturación:"/>
+	  <menulist  id="Facturacion">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Pendiente" value="0"/>
+	      <menuitem label="Facturado" value="1"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
 
-	<hbox id="getNombreCliente" collapsed="true" align="center">
+      <hbox id="getEstadoSuscripcion" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
-        <vbox>
-	<label value="Nombre:"/>
-	<textbox class="media" id="NombreCliente" value=""/>
-        </vbox>
-	</hbox>	
+	<vbox>
+	  <label value="Estado:"/>
+	  <menulist  id="EstadoSuscripcion">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Pendiente" value="Pendiente" />
+	      <menuitem label="Ejecucion" value="Ejecucion"/>
+	      <menuitem label="Suspendido" value="Suspendido"/>
+	      <menuitem label="Finalizado" value="Finalizado"/>
+	      <menuitem label="Cancelado" value="Cancelado"/>
+	      <menuitem label="Corte" value="Corte"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
 
-	<hbox id="getCondicionVenta" collapsed="true" align="center">
+      <hbox id="getTipoSuscripcion" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Suscripción:"/>
+	  <menulist  id="TipoSuscripcion">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <?php echo genXulComboTipoSuscripcion(false,"menuitem",false) ?>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getTipoPagoSuscripcion" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Tipo Pago:"/>
+	  <menulist  id="TipoPagoSuscripcion">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Pre-Pago" value="Prepago"/>
+	      <menuitem label="Post-Pago" value="Postpago"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getProlongacion" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Prolongación:"/>
+	  <menulist  id="Prolongacion">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Plazo Limitado" value="Limitado"/>
+	      <menuitem label="Plazo Ilimitado" value="Ilimitado"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getEstadoPagoVenta" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Estado Pago:"/>
+	  <menulist  id="EstadoPagoVenta">
+	    <menupopup>
+	      <menuitem label="Todos" value="like '%%'"/>
+	      <menuitem label="Pendiente" value="> 0"/>
+	      <menuitem label="Pagado" value="= 0"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getIdCliente" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Cliente:"/>
+	  <menulist  id="IdCliente">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%" selected="true"/>
+	      <?php echo genXulComboClientes(false,"menuitem",false) ?>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getDNICliente" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-	<label value="Condición Venta:"/>
-	<menulist  id="CondicionVenta">
-	<menupopup>
-	 <menuitem label="Todos" value="%%"/>
-	 <menuitem label="Sin Receta" value="0" />
-	 <menuitem label="Con Receta" value="CRM"/>
-	 <menuitem label="Con Receta Retenida" value="CRMR"/>
-	 </menupopup>
-	</menulist>
+	  <label value="DNI/RUC:"/>
+	  <textbox class="media" id="DNICliente" value=""/>
         </vbox>
-	</hbox>	
-</hbox>
-	
-</groupbox>
-<iframe id="webarea" src="about:blank" flex='1'/>
-<script><![CDATA[
+      </hbox>			
+
+      <hbox id="getNombreCliente" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Cliente:"/>
+	  <textbox class="media" id="NombreCliente" value=""/>
+	</vbox>
+      </hbox>
+
+      <hbox id="getCodigo" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Código:"/>
+	  <textbox class="media" id="Codigo" value=""/>
+	</vbox>
+      </hbox>
+
+    </hbox>
+  </groupbox>
+
+  <iframe id="webarea" src="about:blank" flex='1'/>
+  <script><![CDATA[
 
 var esTPV = <?php echo intval($esTPV); ?>;
 var IdLocalActual = <?php echo intval(getSesionDato("IdTienda")); ?>;
@@ -616,10 +784,12 @@ function CambiaListado() {
 	var SerieComprobante = id("SerieComprobante").value;
 	var NombreCliente    = id("NombreCliente").value;
 	var DNICliente       = id("DNICliente").value;
+        var Codigo           = id("Codigo").value;
 
 	SerieComprobante = (SerieComprobante == "")? "%%":SerieComprobante;
 	NombreCliente    = (NombreCliente == "")? "%%":NombreCliente;
 	DNICliente       = (DNICliente == "")? "%%":DNICliente;
+        Codigo           = (Codigo == "")? "%%":Codigo;
 
 	var url = "listado.php?id="+idlista+
 		"&Desde="+id("Desde").value +
@@ -650,6 +820,16 @@ function CambiaListado() {
 	        "&tipocliente="+escape(id("TipoCliente").value)+
 	        "&idmarca="+escape(id("IdMarca").value)+
 	        "&condicionventa="+escape(id("CondicionVenta").value)+
+	        "&estadoos="+escape(id("EstadoOS").value)+
+	        "&prioridad="+escape(id("Prioridad").value)+
+	        "&facturacion="+escape(id("Facturacion").value)+
+	        "&estadosucripcion="+escape(id("EstadoSuscripcion").value)+
+	        "&tiposuscripcion="+escape(id("TipoSuscripcion").value)+
+	        "&tipopagosuscripcion="+escape(id("TipoPagoSuscripcion").value)+
+	        "&prolongacion="+escape(id("Prolongacion").value)+
+	        "&idcliente="+escape(id("IdCliente").value)+
+	        "&codigo="+escape(Codigo)+
+	        "&estadopagoventa="+escape(id("EstadoPagoVenta").value)+
 	        "&estpvop="+escape(esTPVOP)+
 		"&r=" + Math.random();
 
@@ -705,6 +885,16 @@ function SetActive( val, Categoria ){
 	id("getTipoCliente").setAttribute("collapsed","true");
 	id("getIdMarca").setAttribute("collapsed","true");
 	id("getCondicionVenta").setAttribute("collapsed","true");
+	id("getEstadoOS").setAttribute("collapsed","true");
+	id("getPrioridad").setAttribute("collapsed","true");
+	id("getFacturacion").setAttribute("collapsed","true");
+	id("getEstadoSuscripcion").setAttribute("collapsed","true");
+	id("getTipoSuscripcion").setAttribute("collapsed","true");
+	id("getTipoPagoSuscripcion").setAttribute("collapsed","true");
+	id("getProlongacion").setAttribute("collapsed","true");
+	id("getIdCliente").setAttribute("collapsed","true");
+	id("getCodigo").setAttribute("collapsed","true");
+	id("getEstadoPagoVenta").setAttribute("collapsed","true");
 
 	for( t=0;t<dinterface.length;t++){
 	        dinterface[t] = dinterface[t].replace(/^\s+/,'').replace(/\s+$/,'');

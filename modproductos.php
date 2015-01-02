@@ -5,14 +5,14 @@ include("tool.php");
 SimpleAutentificacionAutomatica("visual-iframe");
 
 global $tamPagina,$txtMoDet;
-$tamPagina = 11;
+$tamPagina = 100;
 $txtMoDet  = getModeloDetalle2txt();
 
 function UploadFoto() {        
         require ("modulos/fileupload/fileupload-class.php");
 
-        $full = "productos/";
-        //$mini = "productos/";
+        $full = "productos_img/";
+        //$mini = "productos_img/";
 
         $my_uploader = new uploader;
         $success = $my_uploader->upload("file", "", ".jpg");
@@ -128,6 +128,7 @@ function ListarProductosExtra(){
 	  $manejalote  = $oProducto->get("Lote");
 	  $manejafv    = $oProducto->get("FechaVencimiento");
 	  $eservicio   = ( $oProducto->get("Servicio") > 0 )? 1:0;//Servicio
+	  $esimagen    = "'".$oProducto->get("Imagen")."'";
 	  $eservicio   = ( $oProducto->get("MetaProducto") > 0 )? 1:$eservicio;//MetaProducto
 	  $lexfam      = $jsLex->add($fam);
 	  $lexsub      = $jsLex->add($sub);
@@ -139,7 +140,7 @@ function ListarProductosExtra(){
 
 	    $jsOut .= "cPH($id,'$nombre','$ref',$lexfam,$lexsub,'$descripcion','$marca','$lab','$eservicio','$idBase');\n";
 	  }
-	  $jsOut .= "cP($id,$cb,$lextalla,$lexcolor,$idBase,$manejaserie,$manejalote,$manejafv,$eservicio);\n";
+	  $jsOut .= "cP($id,$cb,$lextalla,$lexcolor,$idBase,$manejaserie,$manejalote,$manejafv,$eservicio,$esimagen);\n";
 	  $oldId = $idBase;							
 	}	
 	

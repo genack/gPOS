@@ -40,9 +40,10 @@ include("include/producto.inc.php");
 include("include/auth.inc.php");
 include("include/pedidos.inc.php");
 include("include/js.ini.php");
-include("include/pedidosventa.inc.php");
 include("include/series.inc.php");
 
+//INCLUDE OTHER MODULES
+include("modulos/pedidosventa/pedidosventa.inc.php");
 
 //CLASES
 include ("class/cursor.class.php");
@@ -50,18 +51,27 @@ include ("class/template.class.php");
 include ("class/local.class.php");
 include ("class/perfil.class.php");
 include ("class/usuario.class.php");
-include ("class/producto.class.php");
-include ("class/almacen.class.php");
-include ("class/familia.class.php");
 include ("class/proveedor.class.php");
 include ("class/laboratorio.class.php");
 include ("class/pedidos.class.php");
-include ("class/cliente.class.php");
 include ("class/subsidiario.class.php");
 include ("class/movimiento.class.php");
 include ("class/albaran.class.php");
-include ("class/productosinfo.class.php");
-include ("class/promociones.class.php");
+//include ("class/movimientogral.class.php");
+
+//CLASS OTHER MODULES
+include ("modulos/promociones/promociones.class.php");
+//include ("modulos/pagoscobros/pagodoc.class.php");
+//include ("modulos/pagoscobros/pago.class.php");
+//include ("modulos/ordenservicio/ordenservicio.class.php");
+//include ("modulos/ordenservicio/productosat.class.php");
+include ("modulos/clientes/cliente.class.php");
+include ("modulos/productos/productosinfo.class.php");
+include ("modulos/productos/familia.class.php");
+include ("modulos/productos/producto.class.php");
+include ("modulos/almacen/almacen.class.php");
+//include ("modulos/suscripciones/suscripciones.class.php");
+
 
 //TOOLS
 include ("tools/toolkit.php");

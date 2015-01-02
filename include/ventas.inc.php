@@ -4,8 +4,8 @@ function DetallesVenta($IdComprobante,$IdLocal){
   $sql = 
     "SELECT ges_comprobantesdet.Referencia,".
     "       ges_productos_idioma.Descripcion as Nombre,".
-    "       ges_tallas.Talla as Talla, ".
-    "       ges_colores.Color as Color, " .
+    "       ges_detalles.Talla as Talla, ".
+    "       ges_modelos.Color as Color, " .
     "       ges_comprobantesdet.Cantidad as Cantidad,".
     "       ges_comprobantesdet.Precio as Precio,".
     "       ges_comprobantesdet.Descuento as Descuento,".
@@ -31,16 +31,16 @@ function DetallesVenta($IdComprobante,$IdLocal){
     "FROM   ges_comprobantesdet ".
     "INNER JOIN ges_productos ON ges_comprobantesdet.IdProducto = ges_productos.IdProducto ".
     "INNER JOIN ges_productos_idioma ON ges_productos.IdProdBase= ges_productos_idioma.IdProdBase ".
-    "INNER JOIN ges_tallas ON ges_productos.IdTalla = ges_tallas.IdTalla ".
-    "INNER JOIN ges_colores ON ges_productos.IdColor = ges_colores.IdColor ".
+    "INNER JOIN ges_detalles ON ges_productos.IdTalla = ges_detalles.IdTalla ".
+    "INNER JOIN ges_modelos ON ges_productos.IdColor = ges_modelos.IdColor ".
     "INNER JOIN ges_laboratorios ON ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
     "INNER JOIN ges_marcas ON  ges_productos.IdMarca = ges_marcas.IdMarca ".
     "INNER JOIN ges_contenedores     ON ".
     "       ges_productos.IdContenedor = ges_contenedores.IdContenedor ".
     "WHERE  ges_comprobantesdet.IdComprobante = '$IdComprobante' ".
     "AND    ges_productos_idioma.IdIdioma = 1 ".
-    "AND    ges_tallas.IdIdioma = 1 ".
-    "AND    ges_colores.IdIdioma = 1 ".
+    "AND    ges_detalles.IdIdioma = 1 ".
+    "AND    ges_modelos.IdIdioma = 1 ".
     "AND    ges_comprobantesdet.Eliminado = 0 ".
     "ORDER BY    ges_comprobantesdet.IdComprobanteDet ASC ";
 	
@@ -92,8 +92,8 @@ function DetallesServicios($idsubsidiario,$status,$ticket,$desde,$hasta){
 	  "SELECT ges_subsidiarios.NombreComercial AS NombreSubsidiario,".
 	  "       CONCAT(ges_productos_idioma.Descripcion,' ',".
 	  "       ges_marcas.Marca,' ',".
-	  "       ges_colores.Color,' ',".
-	  "       ges_tallas.Talla,' ',".
+	  "       ges_modelos.Color,' ',".
+	  "       ges_detalles.Talla,' ',".
 	  "       ges_laboratorios.NombreComercial) as DescripcionProducto,".
  	  "	  ges_subsidiariosserv.Servicio As Servicios, ges_subsidiariostbjos.NTicket, ".
 	  " 	  ges_subsidiariostbjos.Status, ".
@@ -116,10 +116,10 @@ function DetallesServicios($idsubsidiario,$status,$ticket,$desde,$hasta){
 	  "       ges_subsidiariostbjos.IdProducto = ges_productos.IdProducto ".
 	  "INNER  JOIN ges_productos_idioma ON ".
 	  "       ges_productos.IdProdBase =ges_productos_idioma.IdProdBase ".
-	  "INNER  JOIN ges_tallas ON ".
-	  "       ges_productos.IdTalla = ges_tallas.IdTalla ".
-	  "INNER  JOIN ges_colores ON ".
-	  "       ges_productos.IdColor = ges_colores.IdColor ".
+	  "INNER  JOIN ges_detalles ON ".
+	  "       ges_productos.IdTalla = ges_detalles.IdTalla ".
+	  "INNER  JOIN ges_modelos ON ".
+	  "       ges_productos.IdColor = ges_modelos.IdColor ".
 	  "INNER  JOIN ges_laboratorios ON ".
 	  "       ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
 	  "INNER  JOIN ges_marcas ON ".
@@ -144,7 +144,8 @@ function DetallesServicios($idsubsidiario,$status,$ticket,$desde,$hasta){
 function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFactura=false,
 		       $esSoloBoleta=false,$esSoloDevolucion=false,$esSoloAlbaran=false,
 		       $esSoloAlbaranInt=false,$esSoloTicket=false,$nombre=false,
-		       $esSoloCesion=false,$forzarfacturaid=false,$TipoVenta,$forzarid){
+		       $esSoloCesion=false,$esSoloSuscripcion=false,$forzarfacturaid=false,
+		       $TipoVenta,$forzarid,$forzaridsuscripcion){
 	
         $xnombre       = CleanRealMysql($nombre);
 	$cod          = ($forzarid != 'false')? explode("-",$forzarid) : "";
@@ -155,6 +156,8 @@ function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFactu
 	$extraFechas  = ($forzarid != 'false')? " AND ges_comprobantes.SerieComprobante like '%$cod[0]%' AND ges_comprobantes.NComprobante like '%$cod[1]%'" : $extraFechas;
 	$extraStatus  = ($esSoloPendientes)?" AND ges_comprobantes.Status = 1 ":"";
 	$extraCesion  = ($esSoloCesion)?" AND ges_comprobantes.SerieComprobante LIKE 'CS%' ":"";
+	$extraSuscripcion = ($esSoloSuscripcion )? " AND ges_comprobantes.IdSuscripcion <> 0 ":"";
+	$extraSuscripcion = ($forzaridsuscripcion != 0 )? " AND ges_comprobantes.IdSuscripcion = '$forzaridsuscripcion' ":$extraSuscripcion;
 	$extraBoleta  = ($esSoloBoleta)?" AND ges_comprobantestipo.TipoComprobante = 'Boleta' ":"";
 	$extraFactura = ($esSoloFactura)?" AND ges_comprobantestipo.TipoComprobante = 'Factura' ":"";
 	$extraAlbaran = ($esSoloAlbaran)?" AND ges_comprobantestipo.TipoComprobante = 'Albaran' ":"";
@@ -180,7 +183,9 @@ function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFactu
                 ges_comprobantestipo.TipoComprobante as TipoDocumento,
                 IF(Destinatario = 'Cliente',(SELECT CONCAT(ges_clientes.TipoCliente,' : ',ges_clientes.nombreComercial ) FROM ges_clientes WHERE ges_clientes.IdCliente = ges_comprobantes.IdCliente),(IF(Destinatario='Local',(SELECT CONCAT('Interno : ',ges_locales.nombreComercial) FROM ges_locales WHERE ges_locales.IdLocal = ges_comprobantes.IdCliente),  (SELECT CONCAT('Externo : ',ges_proveedores.NombreComercial) FROM ges_proveedores WHERE ges_proveedores.IdProveedor = ges_comprobantes.IdCliente)))) as Cliente, ges_comprobantes.IdCliente,
                 ges_locales.NombreComercial as Local, ges_comprobantes.IdLocal,
-                IF(ges_comprobantesnum.IdMotivoAlbaran = 0,' ',(SELECT ges_motivoalbaran.MotivoAlbaran FROM ges_motivoalbaran WHERE ges_motivoalbaran.IdMotivoAlbaran = ges_comprobantesnum.IdMotivoAlbaran)) as MotivoAlbaran
+                IF(ges_comprobantesnum.IdMotivoAlbaran = 0,' ',(SELECT ges_motivoalbaran.MotivoAlbaran FROM ges_motivoalbaran WHERE ges_motivoalbaran.IdMotivoAlbaran = ges_comprobantesnum.IdMotivoAlbaran)) as MotivoAlbaran,
+                ges_comprobantes.IdSuscripcion,
+                DATE_FORMAT(ges_comprobantes.FechaComprobante,'%d/%m/%Y') as FechaEmision
     		FROM ges_comprobantes " .
     		"LEFT JOIN ges_clientes ON ges_comprobantes.IdCliente = ges_clientes.IdCliente
                 INNER JOIN ges_comprobantesstatus ON ges_comprobantes.Status = ges_comprobantesstatus.IdStatus
@@ -202,6 +207,7 @@ function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFactu
                 $extraTicket
                 $extraAlbaran 
                 $extraAlbaranInt 
+                $extraSuscripcion
                 $extraCesion" .
 	        " ORDER BY ges_comprobantes.IdComprobante DESC ";  
 	$res = query($sql);
@@ -404,6 +410,14 @@ function obtenerCostePendiente($xid){
          "WHERE  IdTbjoSubsidiario      = '$xid' ";
   $row = queryrow($sql);
   return $row["CostePendiente"];
+}
+
+function ModificarFechaEmicionComprobante($Fecha,$TipoComprobante,$IdComprobante,$accion){
+  $sql   =
+    " update ges_comprobantes ".
+    " set    FechaComprobante = '$Fecha'".
+    " where  IdComprobante = '$IdComprobante'";	
+  echo query($sql);
 }
 
 ?>

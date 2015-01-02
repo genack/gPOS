@@ -361,7 +361,7 @@ function RegenerarCuadroDeMovimientos(){
 		xrow.appendChild(xcell);
 		
 		xcell = document.createElement("listcell"); xcell.setAttribute("esMov",true);
-		xcell.setAttribute("label",mov.TipoOperacion+' - '+mov.PartidaCaja );
+	    xcell.setAttribute("label",mov.TipoOperacion.toUpperCase()+' - '+mov.PartidaCaja.toUpperCase() );
 
 		xrow.appendChild(xcell);
 
@@ -858,7 +858,7 @@ function auxAltaSubsidiario(){
 }
 
 function auxSubsidiarioHab(){
-    var url   = '../../selsubsidiario.php?modo=subsidiariopost';
+    var url   = '../subsidiarios/selsubsidiario.php?modo=subsidiariopost';
     var tipo  = 'proveedorhab';
     var extra = "dialogWidth:" + "350" + "px;dialogHeight:" + "350" + "px";
     window.showModalDialog(url,tipo,extra);

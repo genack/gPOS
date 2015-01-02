@@ -256,7 +256,8 @@ function ModificarCliente($parametros,$IdLocal2=false) {
 		return false;	
 	}
 			
-	
+	$comercial = str_replace('&','&#038;',$comercial);
+        $legal     = str_replace('&','&#038;',$legal);
 	$oCliente->set("NombreComercial", $comercial, FORCE);
 	$oCliente->set("NombreLegal", $legal, FORCE);
 	$oCliente->set("Direccion", $direccion, FORCE);

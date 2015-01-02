@@ -14,7 +14,7 @@ $resprod = query($sql);
 while( $row = Row($resprod) ){		
 	$IdProducto = $row["IdProducto"]; 
 	$IdTalla = $row["IdTalla"];
-	$sql = "SELECT IdTallaje FROM ges_tallas WHERE IdTalla = '$IdTalla'";
+	$sql = "SELECT IdTallaje FROM ges_detalles WHERE IdTalla = '$IdTalla'";
 	$restalla = query($sql);
 	if ($restalla){
 		if ($rowtallaje = Row($restalla) ){

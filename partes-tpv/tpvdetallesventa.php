@@ -11,11 +11,11 @@
   <hbox align="start" pack="center" style="background-color: #d7d7d7;padding:3px;">
     <vbox>
       <description>Desde:</description>
-      <datepicker id="FechaBuscaVentas" type="popup" onblur="BuscarVentas()"/>
+      <datepicker id="FechaBuscaVentas" type="popup"/>
     </vbox>
     <vbox>
       <description>Hasta:</description>
-      <datepicker id="FechaBuscaVentasHasta" type="popup" onblur="BuscarVentas()"/>
+      <datepicker id="FechaBuscaVentasHasta" type="popup"/>
     </vbox>
     <vbox>
       <description>Cliente:</description>
@@ -49,8 +49,15 @@
       </menulist>
     </vbox>
     <vbox id="vboxForma_Venta" collapsed="true">
-      <checkbox id="modoConsultaVentasSerie" label="Cedidos"/>
-      <checkbox id="modoConsultaVentas" label="Pendientes"/>
+      <hbox>
+	<vbox>
+	  <checkbox id="modoConsultaVentas" label="Pendientes"/>
+	  <checkbox id="modoConsultaVentasSerie" label="Cedidos"/>
+	</vbox>
+	<vbox>
+	  <checkbox id="modoConsultaVentasSuscripcion" label="Suscripción"/>
+	</vbox>
+      </hbox>
     </vbox>
     <vbox style="margin-top:1.2em">
       <menu>
@@ -118,6 +125,8 @@
 	<splitter class="tree-splitter" />
 	<listcol flex="1"/>
 	<splitter class="tree-splitter" />
+	<listcol flex="1"/>
+	<splitter class="tree-splitter" />
 	<listcol flex="1"/>		
 	<splitter class="tree-splitter" />
 	<listcol flex="1"/>				
@@ -134,7 +143,8 @@
 	<listheader label="Numero"  collapsed="true" />
 	<listheader label="Serie-Nro"/>
 	<listheader label="Cliente"/>		
-	<listheader label="Fecha"/>
+	<listheader label="Fecha Registro"/>
+	<listheader label="Fecha Emisión"/>
 	<listheader label="Total Importe"/>
 	<listheader label="Importe Pendiente"/>
 	<listheader label="Estado Documento"/>

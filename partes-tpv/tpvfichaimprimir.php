@@ -103,12 +103,12 @@
 		    <radiogroup id="comprobante" collapsed="false">
 		      <radio id="radioproforma" class="media" label="Proforma"
 			     oncommand="tipocomprobante(5);"/>
+		      <radio id="radioticket" class="media" label="Ticket" selected="true" 
+			     oncommand="tipocomprobante(0);" accesskey="T"/>
 		      <radio id="radiofactura" class="media" label="Factura"
 			     oncommand="tipocomprobante(2);" accesskey="F"/>
-		      <radio id="radioboleta" class="media" label="Boleta" selected="true" 
+		      <radio id="radioboleta" class="media" label="Boleta"  
 			     oncommand="tipocomprobante(1);" accesskey="B"/>
-		      <radio id="radioticket" class="media" label="Ticket"  
-			     oncommand="tipocomprobante(0);" accesskey="T"/>
 		      <radio id="radioalbaran" class="media" label="Albaran"
 			     oncommand="tipocomprobante(4);" accesskey="A"/>
 		    </radiogroup>

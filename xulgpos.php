@@ -6,7 +6,7 @@ include("tool.php");
 SimpleAutentificacionAutomatica("visual-xul","xulentrar.php");
 
 $NombreEmpresa         = $_SESSION["GlobalNombreNegocio"];  
-$NombreEmpresa         = ($NombreEmpresa =='gPOS')?'':' // '.$NombreEmpresa;
+$NombreEmpresa         = ($NombreEmpresa =='gPOS')?'': $NombreEmpresa;
 $NombreUsuarioDefecto  = $_SESSION["NombreUsuario"];
 $NombreTiendaDefecto   = getNombreComercialLocal(getSesionDato("IdTienda"));
 $esCarritoAlmacen      = getSesionDato("ModoCarritoAlmacen");
@@ -14,7 +14,7 @@ $esAgrupar             = ($esCarritoAlmacen == 'g')? 'true':'false';
 $esTraslado            = ($esCarritoAlmacen == 't')? 'true':'false';
 $lanzarTPV             = ( isset($_GET["t"]) == 'on');
 //TODO: hacer esto XUL seguro
-StartXul(_("gPOS".$NombreEmpresa));
+StartXul(_("gPOS ".$NombreEmpresa.' // Admin'));
 
 if (isUsuarioAdministradorWeb()){
 
@@ -77,7 +77,7 @@ if (isUsuarioAdministradorWeb()){
 <command id="procesarCompra" oncommand="solapa('modcompras.php?modo=continuarCompra','<?php echo _("Compras") ?>')"
      <?php gulAdmite("Compras") ?> label="<?php echo _("Continuar compra") ?>"/>
   
-<command id="seleccionRapida"   oncommand="popup('selalmacen.php?modo=empieza','dependent=yes,width=210,height=530,screenX=100,screenY=100,titlebar=yes')" 
+<command id="seleccionRapida"   oncommand="popup('modulos/almacen/selalmacen.php?modo=empieza','dependent=yes,width=210,height=530,screenX=100,screenY=100,titlebar=yes')" 
     <?php gulAdmite("VerStocks") ?> label="<?php echo _("Captura CB") ?>"/>
 
 
@@ -95,29 +95,29 @@ if (isUsuarioAdministradorWeb()){
 
  
 <!-- ====== MENU ALMACEN - ITEM ====== -->
-<command id="verAlmacen"   oncommand="solapa('xulalmacen.php?modo=entra','<?php echo _("Almacén - Stock") ?>','almacen')" accesskey="S"
+<command id="verAlmacen"   oncommand="solapa('modulos/almacen/xulalmacen.php?modo=entra','<?php echo _("Almacén - Stock") ?>','almacen')" accesskey="S"
   <?php gulAdmite("VerStocks") ?> label="<?php echo _("Stock") ?>"/>
 
-<command id="verKardex"   oncommand="solapa('selkardex.php?modo=verKardex','<?php echo _("Almacén - Kardex") ?>','framelist')" accesskey="K"
+<command id="verKardex"   oncommand="solapa('modulos/kardex/selkardex.php?modo=verKardex','<?php echo _("Almacén - Kardex") ?>','framelist')" accesskey="K"
   <?php gulAdmite("Kardex") ?> label="<?php echo _("Kardex") ?>"/>
 
-<command id="verInventario"   oncommand="solapa('modalmacenborrador.php?modo=verInventario','<?php echo _("Almacén - Inventario") ?>','framelist')" accesskey="A"
-  <?php gulAdmite("VerAjustes") ?> label="<?php echo _("Ajustes") ?>"/>
+<command id="verInventario"   oncommand="solapa('modulos/inventario/modinventario.php?modo=verInventario','<?php echo _("Almacén - Inventario") ?>','framelist')" accesskey="I"
+  <?php gulAdmite("VerAjustes") ?> label="<?php echo _("Inventario") ?>"/>
 
 
 <!-- ====== MENU ALMACEN - ITEM  ====== -->
 
 <!-- ====== MENU COMPRAS - ITEM  ====== -->
-<command id="verPresupuesto" oncommand="solapa('xulcompras.php?modo=entra','<?php echo _("Compras - Presupuestos ") ?>','compras');" accesskey="r"
+<command id="verPresupuesto" oncommand="solapa('modulos/compras/xulcompras.php?modo=entra','<?php echo _("Compras - Presupuestos ") ?>','compras');" accesskey="r"
   <?php gulAdmite("Presupuestos") ?> label="<?php echo _("Presupuestos") ?>"/>
 
 <command id="verProveedores" oncommand="solapa('modproveedores.php?modo=lista','<?php echo _("Proveedores - Gestión de Proveedores") ?>','proveedores')" accesskey="v"
   <?php gulAdmite("Proveedores") ?>  label="<?php echo _("Proveedores") ?>"/>
 
-<command id="verProductos"  oncommand="solapa('xulproductos.php?modo=lista','<?php echo _("Productos - Gestión de Productos") ?>','productos')" accesskey="d"
+<command id="verProductos"  oncommand="solapa('modulos/productos/xulproductos.php?modo=lista','<?php echo _("Productos - Gestión de Productos") ?>','productos')" accesskey="d"
   <?php gulAdmite("Productos") ?>    label="<?php echo _("Productos") ?>"/>
 
-  <command id="verComprasBorrador"  oncommand="solapa('modcomprasborrador.php?modo=listarTodoCompra','<?php echo _("Compras - Comprobantes") ?>','framelist')" accesskey="o"
+  <command id="verComprasBorrador"  oncommand="solapa('modulos/comprobantecompra/modcomprasborrador.php?modo=listarTodoCompra','<?php echo _("Compras - Comprobantes") ?>','framelist')" accesskey="o"
   <?php gulAdmite("ComprobantesCompra") ?>    label="<?php echo _("Comprobantes") ?>"/>
 
 
@@ -134,8 +134,11 @@ if (isUsuarioAdministradorWeb()){
 <!--  ====== MENU VENTAS - ITEM   ======  -->
 <command id="lanzarTPV" oncommand="lanzarTPV('rd')" <?php gulAdmite("TPV") ?>  label="<?php echo _("TPV B2C") ?>"/> 
 
-<command id="VerComprobantesVentas" oncommand="solapa('modventas.php?modo=mostrarComprobantes','<?php echo _("Ventas - Comprobantes") ?>','framelist')" 
+<command id="VerComprobantesVentas" oncommand="solapa('modulos/comprobanteventa/modventas.php?modo=mostrarComprobantes','<?php echo _("Ventas - Comprobantes") ?>','framelist')" 
    <?php gulAdmite("ComprobantesVenta") ?> label="<?php echo _("Comprobantes") ?>"/>
+
+<command id="VerPromociones" oncommand="solapa('modulos/promociones/modpromociones.php?modo=mostrarPromociones','<?php echo _("Ventas - Promociones") ?>','framelist')" 
+   <?php gulAdmite("Promociones") ?> label="<?php echo _("Promociones") ?>"/>
 
 <command id="verClientes"  oncommand="solapa('modclientes.php?modo=lista','<?php echo _("Clientes") ?>','clientes')" 
   <?php gulAdmite("Clientes") ?>  label="<?php echo _("Clientes") ?>"/>
@@ -145,10 +148,10 @@ if (isUsuarioAdministradorWeb()){
 
 <!--  ====== MENU FINAZAS - ITEM   ====== -->
 
-<command id="verEstablecerPrecioPedido" oncommand="solapa('modalmacenborrador.php?modo=recibirProductosAlmacen','<?php echo _("Almacén - Recibir Pedidos ") ?>','framelist')" accesskey="R"
+<command id="verEstablecerPrecioPedido" oncommand="solapa('modulos/recepcionpedido/modalmacenborrador.php?modo=recibirProductosAlmacen','<?php echo _("Almacén - Recibir Pedidos ") ?>','framelist')" accesskey="R"
    <?php gulAdmite("VerStocks") ?> label="<?php echo _("Recibir Pedidos") ?>"/>
 
-<command id="verEstablecerPrecioAlmacen" oncommand="solapa('selprecios.php?modo=mostrarProductosPrecios','<?php echo _("Ventas - Precios") ?>','framelist')" 
+<command id="verEstablecerPrecioAlmacen" oncommand="solapa('modulos/precios/selprecios.php?modo=mostrarProductosPrecios','<?php echo _("Ventas - Precios") ?>','framelist')" 
    <?php gulAdmite("Precios") ?> label="<?php echo _("Precios") ?>"/>
 
 <!-- ====== MENU FINAZAS - ITEM  ====== -->
@@ -164,8 +167,8 @@ if (isUsuarioAdministradorWeb()){
 <command id="verTiendas" oncommand="solapa('modlocal.php?modo=lista','<?php echo _("Locales") ?>','varios')"
   <?php gulAdmite("Administracion") ?>  label="<?php echo _("Locales") ?>"/>
 
-<command id="verSubsidiarios" oncommand="solapa('modsubsidiarios.php?modo=lista','<?php echo _("Tercerización") ?>','varios')"
-  <?php gulAdmite("Administracion") ?>  label="<?php echo _("Tercerización") ?>"/>
+<command id="verSubsidiarios" oncommand="solapa('modsubsidiarios.php?modo=lista','<?php echo _("Outsourcing") ?>','varios')"
+  <?php gulAdmite("Administracion") ?>  label="<?php echo _("Outsourcing") ?>"/>
   
 <command id="verClientes"  oncommand="solapa('modclientes.php?modo=lista','<?php echo _("Clientes") ?>','clientes')" 
   <?php gulAdmite("Administracion") ?>  label="<?php echo _("Clientes") ?>"/>
@@ -238,7 +241,7 @@ if (isUsuarioAdministradorWeb()){
 <!-- command id="lanzarTPV" oncommand="lanzarTPV(rd)" <?php gulAdmite("TPV") ?>  label="<?php echo _("TPV") ?>"/ --> 
    
 <groupbox flex="1" class="frameExtraXX">
-  <caption label="gPOS<?php echo $NombreEmpresa?>"/>
+  <caption label="<?php echo $NombreEmpresa?>"/>
 
 <vbox id="gpostoolbox" >
 <hbox flex="1">
@@ -324,7 +327,8 @@ if (isUsuarioAdministradorWeb()){
 
 		    <?php
  		       $menuConfiguracion = array(		
-		       _("Precios de Venta") =>  "verEstablecerPrecioAlmacen"
+  		       _("Precios de Venta") =>  "verEstablecerPrecioAlmacen",
+		       _("Promociones") =>  "VerPromociones"
 		    );  
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
 		    ?>
@@ -635,7 +639,7 @@ if (isUsuarioAdministradorWeb()){
 	 <caption label="<?php echo _("Recursos:"); ?>" class="frameNormal"/>
 	 <hbox  equalsize="always">
 	   <button image="img/gpos_productos.png" label="<?php echo _(' Productos'); ?>" 
-	   oncommand="solapa('xulproductos.php?modo=lista','<?php echo _("Productos") ?>','productos')" flex="1" <?php gulAdmite("Productos") ?>/>     
+	   oncommand="solapa('modulos/productos/xulproductos.php?modo=lista','<?php echo _("Productos") ?>','productos')" flex="1" <?php gulAdmite("Productos") ?>/>     
 
 	   <button  image="img/gpos_altarapida.png" flex="1" label="<?php echo _(" Alta Rápida..."); ?>" oncommand="Compras_altaRapida()" <?php gulAdmite("Productos") ?> />
 	 </hbox>
@@ -730,7 +734,7 @@ if (isUsuarioAdministradorWeb()){
 	 <vbox>
 	   <button  image="img/gpos_productos.png"  label="<?php echo _(" Nuevo producto"); ?>" oncommand="Productos_ModoAlta();"/>
            <spacer style="height:10px"/>
-           <button  image="img/gpos_fichatecnica.png"  label="<?php echo _("  Ficha Técnica"); ?>" oncommand="solapa('modproductoextra.php?modo=verProductoInformacion','<?php echo _("Productos - Ficha Técnica") ?>','framelist');" flex="1"/>
+           <button  image="img/gpos_fichatecnica.png"  label="<?php echo _("  Ficha Técnica"); ?>" oncommand="solapa('modulos/productos/modproductoextra.php?modo=verProductoInformacion','<?php echo _("Productos - Ficha Técnica") ?>','framelist');" flex="1"/>
 	 </vbox>
        </groupbox>
      </box>
@@ -739,7 +743,7 @@ if (isUsuarioAdministradorWeb()){
 	 <caption label="<?php echo _("Recursos:"); ?>" class="frameNormal"/>
 	 <hbox  equalsize="always">
 	 <button  image="img/gpos_presupuesto.png"  label="<?php echo _(" Presupuestos"); ?>" 
-	          oncommand="solapa('xulcompras.php?modo=entra','<?php echo _("Compras - Presupuestos") ?>','compras');" <?php gulAdmite("Presupuestos") ?> flex="1"/>
+	          oncommand="solapa('modulos/compras/xulcompras.php?modo=entra','<?php echo _("Compras - Presupuestos") ?>','compras');" <?php gulAdmite("Presupuestos") ?> flex="1"/>
 
 	 </hbox>
        </groupbox>
@@ -914,11 +918,18 @@ function getBrowser()  {
 }
 
 var myWebForm = false;
+var myWebList = false;
 
 function getWebForm(){
     myWebForm = document.getElementById("webform");
     if(myWebForm)
         return myWebForm
+}
+
+function getWebList(){
+    myWebList = document.getElementById("weblist");
+    if(myWebList)
+        return myWebList
 }
 
 function xwebCollapsed(xval,clean=false){
@@ -933,9 +944,21 @@ function xwebCollapsed(xval,clean=false){
     var main = getWebForm();
     if(clean)
        main.setAttribute("src","about:blank");
-
 }
 
+function xwebcoreCollapsed(xval,clean=false){
+    var yval = (xval)?false:true;
+    var obox = document.getElementById("WebNormal");	
+    var xbox = document.getElementById("WebLista");	
+
+    obox.setAttribute("collapsed",xval);  
+    xbox.setAttribute("collapsed",yval);
+    
+    //Clean box Form
+    var main = getWebList();
+    if(clean)
+       main.setAttribute("src","about:blank");
+}
 
 function ifConfirmExec( mensaje, command){
   if (confirm(mensaje)){
@@ -1089,7 +1112,7 @@ function lanzarTPV(rt){
 }
 
 function lanzarVentasGeneral(){
-   	    var url="modventas.php?modo=mostrarComprobantes"
+   	    var url="modulos/comprobanteventa/modventas.php?modo=mostrarComprobantes"
 	    solapa(url,'<?php echo _("Ventas - Comprobantes") ?>','framelist')
 }
 
@@ -1129,7 +1152,7 @@ function Almacen_selrapidaCompra() {
 
 	var cc  = document.getElementById("a_CapturaCB");		
 		
-	var url="selalmacen.php?modo=agnademudo_almacen";
+	var url="modulos/almacen/selalmacen.php?modo=agnademudo_almacen";
 
 
 	var xrequest = new XMLHttpRequest();
@@ -1179,7 +1202,7 @@ function almacen_SinOfertaCarrito(xop){
 	var main  = getWebForm();
 	var aviso = 'Cargando Carrito Almacén...';
 	var url   = 'modalmacenes.php?modo=nosonoferta';
-	var lurl  = 'partes-compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
+	var lurl  = 'modulos/compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
 
 	main.setAttribute("src",lurl);  
 	xwebCollapsed(true);
@@ -1193,7 +1216,7 @@ function almacen_EnOfertaCarrito(xop){
 	var main   = getWebForm();
 	var aviso  = 'Cargando Carrito Almacén...';
 	var url    = 'modalmacenes.php?modo='+modo;
-	var lurl   = 'partes-compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
+	var lurl   = 'modulos/compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
 
 
 	hiddenbtntraslado(xmodo,'almacen_EnOfertaCarrito(1)');
@@ -1201,7 +1224,7 @@ function almacen_EnOfertaCarrito(xop){
 	main.setAttribute("src",lurl);  
 	xwebCollapsed(true);
 
-	//var xurl   = "selkardex.php"+"?modo=setModoCarritoAlmacen"+"&xmodo=t";
+	//var xurl   = "modulos/kardex/selkardex.php"+"?modo=setModoCarritoAlmacen"+"&xmodo=t";
         //xWebMensaje (xurl);
 }
 
@@ -1210,7 +1233,7 @@ function almacen_disponiblesCarrito(){
 	var main  = getWebForm();
 	var aviso = 'Cargando Carrito Almacén...';
 	var url   = 'modalmacenes.php?modo=sondisponibles';
-	var lurl  = 'partes-compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
+	var lurl  = 'modulos/compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
 
 	main.setAttribute("src",lurl);  
 	xwebCollapsed(true);
@@ -1221,7 +1244,7 @@ function almacen_nosondisponiblesCarrito(){
 	var main  = getWebForm();
 	var aviso = 'Cargando Carrito Almacén...';
 	var url   = 'modalmacenes.php?modo=nosondisponibles';
-	var lurl  = 'partes-compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
+	var lurl  = 'modulos/compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
 
 	main.setAttribute("src",lurl);  
 	xwebCollapsed(true);
@@ -1232,7 +1255,7 @@ function almacen_EsObsoletoCarrito(){
 	var main  = getWebForm();
 	var aviso = 'Cargando Carrito Almacén...';
 	var url   = 'modalmacenes.php?modo=esobsoleto';
-	var lurl  = 'partes-compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
+	var lurl  = 'modulos/compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
 
 	main.setAttribute("src",lurl);  
 	xwebCollapsed(true);
@@ -1243,7 +1266,7 @@ function almacen_NoEsObsoletoCarrito(){
 	var main  = getWebForm();
 	var aviso = 'Cargando Carrito Almacén...';
 	var url   = 'modalmacenes.php?modo=noobsoleto';
-	var lurl  = 'partes-compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
+	var lurl  = 'modulos/compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
 
 	main.setAttribute("src",lurl);  
 	xwebCollapsed(true);
@@ -1311,7 +1334,11 @@ function almacen_Traslado() {
     if (!confirm( po_moviendoa +" " +Destino + 
                   ".\n\nMotivo: "+tmotivo+".\n\n                     " +
 		  po_confirmatraslado))  return;
-    
+
+    document.getElementById("accionesCarrito").setAttribute("selected",false);
+    document.getElementById("buscarAlmacen").setAttribute("selected",true);
+    document.getElementById("tabpanelAlmacen").setAttribute("selectedIndex",0);
+
     var url   = "modalmacenes.php?"+
                 "modo=albaran"+
                 "%IdLocalDestino="+localtraslado+
@@ -1320,12 +1347,13 @@ function almacen_Traslado() {
 		"%motivo="+motivo; 
     var main  = getWebForm();
     var aviso = 'Cargando Carrito Almacén...';
-    var lurl  = 'partes-compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
+    var lurl  = 'modulos/compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
     local     = 0;
     
     main.setAttribute("src",lurl);  
     xwebCollapsed(true);
-    
+
+
 }
 
 function almacen_EliminarProductos(){
@@ -1336,7 +1364,7 @@ function almacen_selrapidaalmacen() {
     if (local==0)
     	return;
 
-	var url = "selalmacen.php?modo=empieza&IdLocal=" +local;
+	var url = "modulos/almacen/selalmacen.php?modo=empieza&IdLocal=" +local;
 	subweb.setAttribute("src",url);
 	local = 0;
 }
@@ -1353,7 +1381,7 @@ function almacen_MuestraCarrito() {
 	var main  = getWebForm();
 	var aviso = 'Cargando Carrito Almacén...';
 	var url   = 'modalmacenes.php?modo=seleccion';
-	var lurl  = 'partes-compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
+	var lurl  = 'modulos/compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
 
 	main.setAttribute("src",lurl);  
 	xwebCollapsed(true);
@@ -1383,7 +1411,7 @@ function selCarritoAlmacen(xval){
   straslado.setAttribute("collapsed",vtraslado);
   sagrupar.setAttribute("collapsed",vagrupar);  
 
-  var url = "selkardex.php"+
+  var url = "modulos/kardex/selkardex.php"+
             "?modo=setModoCarritoAlmacen"+
             "&xmodo="+xval;
   xWebMensaje (url);
@@ -1526,8 +1554,8 @@ function Compras_verCarrito(modo=false) {
     var main  = parent.getWebForm();
     var aviso = 'Cargando Carrito Compras...';
 
-    main.setAttribute("src",'partes-compras/progress.php?modo=aCarritoCompras&aviso='+aviso);
-    xwebCollapsed(true);    
+    main.setAttribute("src",'modulos/compras/progress.php?modo=aCarritoCompras&aviso='+aviso);
+    xwebCollapsed(true);
 }
 
 function Compras_cambiaBtnCarrito(modo) { 
@@ -1570,7 +1598,7 @@ function Compras_cambiaBtnCarrito(modo) {
 }
 
 function Compras_loadCarrito(){
-  solapa("xulcompras.php?modo=entra"," Compras - Presupuestos ","compras");
+  solapa("modulos/compras/xulcompras.php?modo=entra"," Compras - Presupuestos ","compras");
 }
 
 function Compras_CBCompra() {  Compras_selrapidaCompra(true); }
@@ -1580,7 +1608,7 @@ function Compras_selrapidaCompra(cb=false) {
 	var idcc  = (cb)? "c_CompraCB":"c_CapturaCB";
 	var cc    = document.getElementById(idcc);		
 
-	var url="selalmacen.php?modo=agnademudo_compras";
+	var url="modulos/almacen/selalmacen.php?modo=agnademudo_compras";
 
 	var xrequest = new XMLHttpRequest();
 	var data = "listacompra=" + escape(cc.value);       
@@ -1595,12 +1623,11 @@ function Compras_selrapidaCompra(cb=false) {
 	Compras_verCarrito(true);
 }
 
-
 function Compras_altaRapida() {
-	var url   = "xulaltarapida.php?modo=alta";
+	var url   = "modulos/altarapida/xulaltarapida.php?modo=alta";
 	var aviso = 'Cargando Carrito Alta Rapida...';
 	var main  = parent.getWebForm();
-	var lurl  = 'partes-compras/progress.php?modo=lWebFormAltaRapida&aviso='+aviso+'&url='+url;
+	var lurl  = 'modulos/compras/progress.php?modo=lWebFormAltaRapida&aviso='+aviso+'&url='+url;
 
 	main.setAttribute("src",lurl);
 	xwebCollapsed(true);
@@ -1676,7 +1703,7 @@ function Productos_loadAvanzado(){
  	return;
  
  subframe = document.getElementById("subframe");
- subframe.setAttribute("src","xulavanzado.php?modo=productos&rnd="+Math.random());
+ subframe.setAttribute("src","modulos/productos/xulavanzado.php?modo=productos&rnd="+Math.random());
  subframe.setAttribute("opener",document.getElementById("web"));
   
  avanzadoCargado = 1;

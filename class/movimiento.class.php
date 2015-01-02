@@ -1217,10 +1217,10 @@ function getDescripcionFromCBMetaProducto($codigo){
     "FROM   ges_metaproductos ".
     "INNER  JOIN ges_productos  ON ".
     "       ges_metaproductos.IdProducto  = ges_productos.IdProducto ".
-    "INNER  JOIN ges_colores ON ".
-    "       ges_productos.IdColor = ges_colores.IdColor ".
-    "INNER  JOIN ges_tallas ON ".
-    "       ges_productos.IdTalla = ges_tallas.IdTalla ".
+    "INNER  JOIN ges_modelos ON ".
+    "       ges_productos.IdColor = ges_modelos.IdColor ".
+    "INNER  JOIN ges_detalles ON ".
+    "       ges_productos.IdTalla = ges_detalles.IdTalla ".
     "INNER  JOIN ges_marcas ON ".
     "       ges_productos.IdMarca = ges_marcas.IdMarca ".
     "INNER  JOIN ges_productos_idioma ON ".

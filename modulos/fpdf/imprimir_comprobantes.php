@@ -234,8 +234,8 @@ $pdf->Ln(2);
 	  "       ges_productos.CodigoBarras,".
 	  "       CONCAT(ges_productos_idioma.Descripcion,' ',".
 	  "       if(ges_marcas.Marca='...','',ges_marcas.Marca),' ',".
-	  "       if(ges_colores.Color='...','',ges_colores.Color),' ',".
-	  "       if(ges_tallas.Talla='...','',ges_tallas.Talla),' ',".
+	  "       if(ges_modelos.Color='...','',ges_modelos.Color),' ',".
+	  "       if(ges_detalles.Talla='...','',ges_detalles.Talla),' ',".
 	  "       if(ges_laboratorios.NombreComercial='.','',ges_laboratorios.NombreComercial)) as Producto,".
 	  "       ges_pedidosdet.Unidades,".
 	  "       ges_pedidosdet.CostoUnidad as Costo, ".
@@ -260,16 +260,16 @@ $pdf->Ln(2);
 	  "FROM   ges_pedidosdet ".
 	  "LEFT  JOIN ges_productos ON ges_pedidosdet.IdProducto = ges_productos.IdProducto ".
 	  "INNER JOIN ges_productos_idioma ON ges_productos.IdProdBase = ges_productos_idioma.IdProdBase ".
-	  "INNER JOIN ges_tallas       ON ges_productos.IdTalla  = ges_tallas.IdTalla ".
-	  "INNER JOIN ges_colores      ON ges_productos.IdColor  = ges_colores.IdColor ".
+	  "INNER JOIN ges_detalles       ON ges_productos.IdTalla  = ges_detalles.IdTalla ".
+	  "INNER JOIN ges_modelos      ON ges_productos.IdColor  = ges_modelos.IdColor ".
 	  "INNER JOIN ges_laboratorios ON ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
 	  "INNER JOIN ges_marcas       ON ges_productos.IdMarca  = ges_marcas.IdMarca ".
 	  "INNER JOIN ges_contenedores ON ges_productos.IdContenedor = ges_contenedores.IdContenedor ".
           "INNER JOIN ges_pedidos       ON ges_pedidosdet.IdPedido  = ges_pedidos.IdPedido ".
 	  "WHERE ges_pedidosdet.IdPedido IN (".$idcod.") ".
 	  "AND   ges_productos_idioma.IdIdioma = 1 ".
-	  "AND   ges_tallas.IdIdioma           = 1 ".
-	  "AND   ges_colores.IdIdioma          = 1 ".
+	  "AND   ges_detalles.IdIdioma           = 1 ".
+	  "AND   ges_modelos.IdIdioma          = 1 ".
 	  "AND   ges_pedidosdet.Eliminado      = 0 ";
 
         $res = query($sql);

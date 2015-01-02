@@ -5,7 +5,7 @@ include("tool.php");
 SimpleAutentificacionAutomatica("visual-iframe");
 
 global $tamPagina;
-$tamPagina = 10;
+$tamPagina = 100;
 
 function AutoOpen(){
 

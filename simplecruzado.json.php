@@ -39,17 +39,17 @@ function genListadoCruzadoAsArray($IdProducto,$IdTallaje = false,$IdLang=false){
 	if(!$IdTallaje)	$IdTallaje = $row["IdTallaje"];
 	if(!$IdTallaje) $IdTallaje = 2;//gracefull degradation
 	
-	$sql = "SELECT  ges_locales.NombreComercial,ges_colores.Color,
-		ges_tallas.Talla, ges_tallas.SizeOrden, SUM(ges_almacenes.Unidades) as TotalUnidades
+	$sql = "SELECT  ges_locales.NombreComercial,ges_modelos.Color,
+		ges_detalles.Talla, ges_detalles.SizeOrden, SUM(ges_almacenes.Unidades) as TotalUnidades
                 FROM ges_almacenes INNER
 		JOIN ges_locales ON ges_almacenes.IdLocal = ges_locales.IdLocal INNER
 		JOIN ges_productos ON ges_almacenes.IdProducto =
-		ges_productos.IdProducto INNER JOIN ges_colores ON
-		ges_productos.IdColor = ges_colores.IdColor INNER JOIN ges_tallas ON
-		ges_productos.IdTalla = ges_tallas.IdTalla
+		ges_productos.IdProducto INNER JOIN ges_modelos ON
+		ges_productos.IdColor = ges_modelos.IdColor INNER JOIN ges_detalles ON
+		ges_productos.IdTalla = ges_detalles.IdTalla
 		WHERE
 		ges_productos.Referencia = '$tReferencia'
-		AND	ges_colores.IdIdioma = 1
+		AND	ges_modelos.IdIdioma = 1
 		AND ges_locales.Eliminado = 0 
                 AND ges_almacenes.Unidades > 0 
 		GROUP BY ges_almacenes.IdLocal, ges_productos.IdColor, ges_productos.IdTalla
@@ -88,7 +88,7 @@ function genListadoCruzadoAsArray($IdProducto,$IdTallaje = false,$IdLang=false){
 		
 	}
 		
-	/* $sql = "SELECT Talla,SizeOrden FROM ges_tallas WHERE IdTallaje= '$IdTallaje' AND IdIdioma='$IdLang' AND Eliminado='0'" . */
+	/* $sql = "SELECT Talla,SizeOrden FROM ges_detalles WHERE IdTallaje= '$IdTallaje' AND IdIdioma='$IdLang' AND Eliminado='0'" . */
 	/* 		"	 ORDER BY SizeOrden ASC, Talla + 0 ASC"; */
 	/* $res = query($sql); */
 

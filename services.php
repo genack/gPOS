@@ -132,12 +132,6 @@ switch($modo) {
 		exit();				
 		break;
 
-	case "mostrarDetallesOrdenCompra":
-		$IdOrdenCompra = CleanID($_GET["IdOrdenCompra"]);
-		$datos = DetallesOrdenCompra($IdOrdenCompra);
-		VolcandoXML( Traducir2XML($datos),"detalles");				
-		exit();				
-		break;
 
 	case "mostrarDetallesCompra":
 		$IdPedido     = CleanText($_GET["IdPedido"]);
@@ -157,8 +151,6 @@ switch($modo) {
 		break;
 					
 	case "mostrarVentas":
-
-
 		$localtpv         = getSesionDato("IdTiendaDependiente");
 		$localventa       = (isset($_GET["filtrolocal"]))? CleanID($_GET["filtrolocal"]):$localtpv;
 	        $local            = ($_GET["esventas"] == 'on')? $localventa:$localtpv;
@@ -166,6 +158,8 @@ switch($modo) {
 		$hasta            = date("Y-m-d", strtotime( CleanFechaES($_GET["hasta"]) ));
 		$nombre           = CleanText($_GET["nombre"]);
 		$modoserie        = CleanText($_GET["modoserie"]);
+		$modosuscripcion  = CleanText($_GET["modosuscripcion"]);
+		$idsuscripcion    = (isset($_GET["idsuscripcion"]))? CleanText($_GET["idsuscripcion"]):0;
 		$modofactura      = CleanText($_GET["modofactura"]);
 		$modoboleta       = CleanText($_GET["modoboleta"]);
 		$modoticket       = CleanText($_GET["modoticket"]);
@@ -185,7 +179,9 @@ switch($modo) {
 		$esSoloAlbaranInt = ($modoalbaranint == "albaranint");
 		$esSoloPendientes = ($modoconsulta == "pendientes");
 		$esSoloCesion     = ($modoserie == "cedidos");	
+		$esSoloSuscripcion = ($modosuscripcion == "suscripcion");	
 		$TipoVenta        = ($modoventa == "tpv")? getSesionDato("TipoVentaTPV"):false;
+		$forzaridsuscripcion = ($idsuscripcion != 0 )? $idsuscripcion:0;
 		 		
 		if (!$hasta or $hasta == ""){
 			$mm    = intval(date("m"));
@@ -199,90 +195,14 @@ switch($modo) {
 		$datos = VentasPeriodo($local,$desde,$hasta,$esSoloPendientes,$esSoloFactura,
 				       $esSoloBoleta,$esSoloDevolucion,$esSoloAlbaran,
 				       $esSoloAlbaranInt,$esSoloTicket,$nombre,$esSoloCesion,
-				       $forzarfacturaid,$TipoVenta,$forzarid);
+				       $esSoloSuscripcion,$forzarfacturaid,$TipoVenta,$forzarid,
+				       $forzaridsuscripcion);
 		VolcandoXML( Traducir2XML($datos),"ventas");
 		exit();
 		break;
 
-	case "mostrarOrdenCompra":
-		$modocontado   = CleanText($_GET["modocontado"]);
-		$modocredito   = CleanText($_GET["modocredito"]);
-		$filtrocompra  = CleanText($_GET["filtrocompra"]);
-		$filtromoneda  = CleanText($_GET["filtromoneda"]);
-		$forzaid       = CleanText($_GET["filtrocodigo"]);
-		$filtrolocal   = (getSesionDato("esAlmacenCentral"))?CleanID($_GET["filtrolocal"]):getSesionDato("IdTienda");
-		$desde         = date("Y-m-d", strtotime( CleanFechaES($_GET["desde"]) ));
-		$hasta         = date("Y-m-d", strtotime( CleanFechaES($_GET["hasta"]) ));
-		$entrega       = CleanText($_GET["entrega"]);
-		$nombre        = CleanText($_GET["nombre"]);
-		$esSoloContado = ($modocontado == "contado");
-		$esSoloCredito = ($modocredito == "credito");
-		$esSoloMoneda  = trim($filtromoneda);
-		$esSoloLocal   = trim($filtrolocal);  
-		$esSoloCompra  = trim($filtrocompra);  
-		$mm            = intval(date("m"));
-		$dd            = intval(date("d"));
-		$aaaa          = intval(date("Y"));		
-		if (!$hasta or $hasta == "") $hasta = "$aaaa-$mm-$dd";
-		if (!$desde or $desde == "") $desde = "1900-01-01";
-
-		$datos = OrdenCompraPeriodo($filtrolocal,$desde,$hasta,$nombre,$esSoloContado,
-					    $esSoloCredito,$esSoloMoneda,$esSoloLocal,
-					    $esSoloCompra,$forzaid,$entrega);
-		VolcandoXML( Traducir2XML($datos),"PedidosCompra");
-		exit();
-		break;
 
 	// SERVICIO - ACTUALIZAR PRECIOS
-
-	case "mostrarMargenUtilidad":
-	        echo getSesionDato("MargenUtilidad");		
-		exit(); 		
-		break;	
-
-	case "guardarPreciosVenta":
-		$listalocal = $_GET["listalocal"];	
-		$IdLocal    = getSesionDato("IdTienda");
-		if($listalocal!=0)
-		  $IdLocal = $listalocal;
-		$PV  = $_GET["PV"];
-		$PVD = $_GET["PVD"];
-		$MDS = $_GET["MDS"];
-		$idproducto = $_GET["idproducto"];
-		echo guardarPreciosVentaAlmacen($PV,$PVD,$MDS,$idproducto,$IdLocal);
-		exit(); 		
-		break;
-
-	case "eliminarCambiosPV":
-		$listalocal = $_GET["listalocal"];	
-		$IdLocal    = getSesionDato("IdTienda");
- 		if($listalocal!=0)
-		  $IdLocal = $listalocal;
-		$PV = $_GET["PV"];
-		$PVD = $_GET["PVD"];
-		$MDS = $_GET["MDS"];
-		$idproducto = $_GET["idproducto"];
-		echo eliminarCambiosPreciosVentaAlmacen($PV,$PVD,$MDS,$idproducto,$IdLocal);
-		exit(); 		
-		break;
-
-	case "eliminarNuevosPV":
-	        $listalocal = (isset($_GET["listalocal"]))? $_GET["listalocal"]:'';	
-		$IdLocal    = getSesionDato("IdTienda");
- 		if($listalocal!=0)
-		  $IdLocal = $listalocal;
-		echo eliminarNuevosPVAlmacen($IdLocal);
-		exit(); 		
-		break;
-
-	case "listarNuevosPV":
-		$listalocal = $_GET["listalocal"];	
-		$IdLocal    = getSesionDato("IdTienda");
- 		if($listalocal!=0)
-		  $IdLocal = $listalocal;
-		echo listarNuevosPVAlmacen($IdLocal);
-		exit(); 		
-		break;
 
 	case "actualizarNuevosPV":
 	        $listalocal = CleanID($_GET["listalocal"]);	
@@ -297,38 +217,6 @@ switch($modo) {
 		exit(); 		
 		break;
 
-	case "actualizarStockMinimo":
-	        $listalocal = CleanID($_GET["listalocal"]);	
-		$IdLocal    = getSesionDato("IdTienda");
-		$IdLocal    = ($listalocal!=0)? $listalocal:$IdLocal;
-		$SM         = $_GET["SM"];
-		$idproducto = CleanID($_GET["idproducto"]);
-		echo actualizarStockMinimoAlmacen($SM,$idproducto,$IdLocal);
-		exit(); 		
-		break;
-
-	case "mostrarIGV":
-	        echo getSesionDato("IGV");
-		exit(); 		
-		break;	
-
-	case "mostrarProductosAlmacen":
-
-		$IdLocal     = getSesionDato("IdTienda");
-		$idfamilia   = CleanID($_GET["idfamilia"]);
-		$idmarca     = CleanID($_GET["idmarca"]);
-		$idlistarPV  = CleanText($_GET["idlistarPV"]);
-		$descripcion = CleanText($_GET["descripcion"]);
-		$codigo      = CleanText($_GET["codigo"]);
-		$listarTodo  = CleanText($_GET["listarTodo"]);
-		$listalocal  = CleanText($_GET["listalocal"]);
-		$datos       = DetalleProductosAlmacen($codigo,$descripcion,$idmarca,
-						       $idfamilia,$IdLocal,$idlistarPV,
-						       $listarTodo,$listalocal);
-		VolcandoXML( Traducir2XML($datos),"productosAlmacen");
-		exit();
-		break;
-		
 	case "setStatusTrabajoSubsidiario":
 		$idtrabajo 	= CleanID($_GET["idtrabajo"]);
 		$status 	= CleanText($_GET["status"]);
@@ -338,94 +226,6 @@ switch($modo) {
 		exit();
 		break;
 
-	case "ModificarOrdenCompra":
-		$xid   = CleanID($_GET["xid"]);
-		$xidet = CleanID($_GET["xidet"]);
-		$xocs  = CleanID($_GET["xocs"]);
-		$xdato = CleanText($_GET["xdato"]);
-
-		switch($xocs) {
-		case 1:
-		  $campoxdato = "FechaPrevista='".$xdato."'";
-		  echo sModificarOrdenCompra($xid,$campoxdato,false,false);
-		  break;
-		case 2:
-		  $campoxdato = "FechaPago='".$xdato."'";
-		  echo sModificarOrdenCompra($xid,$campoxdato,false,false);
-		  break;
-		case 3:
-		  $campoxdato = "Estado='Pendiente'";
-		  echo sModificarOrdenCompra($xid,$campoxdato,false,false);
-		  break;
-		case 4:
-		  $campoxdato = "FechaPedido=NOW()";
-		  sModificarOrdenCompra($xid,$campoxdato,false,false);
-		  $campoxdato = "Estado='Pedido'";
-		  echo sModificarOrdenCompra($xid,$campoxdato,false,false);
-		  break;
- 		case 5:
-		  $campoxdato = "Estado='Cancelado'";
-		  echo sModificarOrdenCompra($xid,$campoxdato,false,false);
-		  break;
-		case 6:
-		  $campoxdato = "Costo='".$xdato."'";
-		  echo sModificarOrdenCompra($xidet,$campoxdato,true,true);
-		  echo ConsolidaDetalleOrdenCompra($xid);
-		  break;
-		case 7:
-		  $campoxdato = "Unidades='".$xdato."'";
-		  echo sModificarOrdenCompra($xidet,$campoxdato,true,true);
-		  echo ConsolidaDetalleOrdenCompra($xid);
-		  break;
-		case 8:
-		  $campoxdato = "Eliminado='1'";
-		  echo sModificarOrdenCompra($xidet,$campoxdato,true,true);
-		  echo ConsolidaDetalleOrdenCompra($xid);
-		  break;
-		case 9:
-		  echo sConsolidarOrdenesCompra($xid,$xdato);
-		  break;
-		case 10:
-		  echo EditarOrdenCompra($xid,'O',false);
-		  break;
-		case 11:
-		  echo EditarOrdenCompra($xid,'F',false);
-		  break;
-		case 12:
-		  echo EditarOrdenCompra($xid,'R',false);
-		  break;
-		case 13:
-		  echo EditarOrdenCompra($xid,'G',false);
-		  break;
-		case 14:
-		  echo EditarOrdenCompra($xid,'SD',false);
-		  break;
-		case 20:
-		  echo EditarOrdenCompra($xid,'O',true);
-		  break;
-		case 15:
-		  $campoxdato = "Observaciones = concat(Observaciones,'- ','".$xdato."')";
- 		  echo sModificarOrdenCompra($xid,$campoxdato,false,false);
-		  break;
-		case 16:
-		  $campoxdato = "Estado='Borrador'";
-		  echo sModificarOrdenCompra($xid,$campoxdato,false,false);
-		  break;
- 		case 17:
-		  $campoxdato = "IdProveedor=".$xdato;
-		  echo sModificarOrdenCompra($xid,$campoxdato,false,false);
-		  break;
- 		case 18:
-		  $campoxdato = "ModoPago='".$xdato."'";
-		  echo sModificarOrdenCompra($xid,$campoxdato,false,false);
-		  break;
- 		case 19:
-		  $campoxdato = "IdLocal=".$xdato;
-		  echo sModificarOrdenCompra($xid,$campoxdato,false,false);
-		  break;
-		}
-		exit();
-		break;
 
         case "syncStockAlmacen":
 	       $IdLocal = getSesionDato("IdTiendaDependiente");
@@ -896,10 +696,10 @@ switch($modo) {
 	      $detadoc     = getSesionDato('detadoc');
 	      $detadoc[0]  = $tipodoc;
 	      if($tipodoc=='SD'){
-		$detadoc[1]='1';
-		$detadoc[2]='CASAS VARIAS';
-		$detadoc[3]=false;
-		$detadoc[4]=false;
+		//$detadoc[1]='1';
+		//$detadoc[2]='CASAS VARIAS';
+ 		$detadoc[3]=false;
+		//$detadoc[4]=false;
 		$detadoc[5]==1;
 		$detadoc[6]==false;
 		$detadoc[7]==false;
@@ -1221,6 +1021,15 @@ switch($modo) {
 	   exit();	
 	   break;
 
+         case "ModificarFechaEmicionComprobante":
+	   ModificarFechaEmicionComprobante(CleanCadena($_GET["fecha"]),
+					    CleanCadena($_GET["tipocomprobante"]),
+					    CleanID($_GET["IdComprobante"]),
+					    CleanCadena($_GET["accion"]));
+	   exit();	
+	   break;
+
+
          case "DevolverComprobanteTPV":
 	   $IdComprobante = CleanID($_GET["comprobante"]);
 	   $Monto         = CleanDinero($_GET["montocomprobante"]);
@@ -1262,36 +1071,12 @@ switch($modo) {
 	   exit();
  	   break;
 
-         case "GuardaProductoInformacion":
-	   $IdProducto     = CleanID($_POST["xidp"]);
-	   $Indicacion     = CleanText($_POST["xind"]);
-	   $CtraIndicacion = CleanText($_POST["xcind"]);
-	   $Interaccion    = CleanText($_POST["xint"]);
-	   $Dosificacion   = CleanText($_POST["xdos"]);
-	   
-	   $oProdInfo       = new productoinformacion;
-	   $IdProductoInfo = $oProdInfo->getIdProductoInformacion($IdProducto);
-	   $opcion         = ($IdProductoInfo)? "Modificar":"Crear";
-	   
-	   echo $id = CrearProductoInformacion($IdProducto,$Indicacion,$CtraIndicacion,
-					  $Interaccion,$Dosificacion,$opcion,$IdProductoInfo);
-
-	   exit();
- 	   break;
-         case "ObtenerProductoInformacion":
-	   $IdProducto = CleanID($_GET["xidp"]);
-	   $datos      = mostrarProductoInformacion($IdProducto);
-	   VolcandoXML( Traducir2XML($datos),"ProductoInformacion");
-	   exit();
- 	   break;
-
          case "login":
 	   $id   = CleanID( isset($_POST["xid"]) ? $_POST["xid"] : NULL );
 	   $pass = CleanPass( isset($_POST["xp"]) ? $_POST["xp"] : NULL );
 
 	   if( $id and $pass ){
 	     if( verificarPassUser($id,md5($pass)) ){
-	       $aprecio = getPerfilPrecios( $id );
 	       $aprecio = getPerfilPrecios( $id );
 	       echo "1~".$aprecio;
 	     }

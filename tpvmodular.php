@@ -1,6 +1,13 @@
 <?php
 
 	include("tool.php");
+//return validaSuscripcones2facturar();
+        if (!getSesionDato("IdTienda")){
+	  session_write_close();
+	  header( "Location: ".$_BasePath."/config");
+	  exit();
+	}
+
 	include("include/tpv.inc.php");
 
         //Valida tipo venta VC/VD
@@ -66,8 +73,9 @@
 		'Entregado' 	=> _("Entregado")		
 		);
 
-	$NombreEmpresa = $_SESSION["GlobalNombreNegocio"];  
-        $MensajePromo  = ( $PROMActivo !='')? $PROMActivo:getParametro("MensajePromocion");
+	$NombreEmpresa  = $_SESSION["GlobalNombreNegocio"];  
+        $tNombreEmpresa = ($NombreEmpresa =='gPOS')?'': $NombreEmpresa;
+        $MensajePromo   = ( $PROMActivo !='')? $PROMActivo:getParametro("MensajePromocion");
 
         echo str_replace("@","?",'<@xml version="1.0" encoding="UTF-8"@>');
 	echo str_replace("@","?",'<@xml-stylesheet href="chrome://global/skin/" type="text/css"@>');
@@ -76,7 +84,7 @@
 ?>
 	
 <window id="window-tpv"  xml:lang="es" 
-        title="<?php echo $NombreEmpresa.' // TPV '.$TipoVentaText;?>"
+        title="<?php echo 'gPOS '.$tNombreEmpresa.' // TPV '.$TipoVentaText;?>"
         xmlns:html="http://www.w3.org/1999/xhtml"        
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">        
 
@@ -308,8 +316,10 @@ CargarbtnSalir();
 
 //Prepara listado de productos para limpieza rapida.
  document.gClonedListbox = document.getElementById('listaProductos').cloneNode(true);
+ document.gClonedListboxPanel = document.getElementById('listaPanelProductos').cloneNode(true);
 
 //]]></script>
 <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tpv.js?ver=49/r<?php echo rand(0,99999999); ?>"/>
+<script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/ordenservicio/ordenservicio.js?ver=49/r<?php echo rand(0,99999999); ?>"/>
 </window>
 

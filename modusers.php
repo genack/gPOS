@@ -66,7 +66,8 @@ function ModificarUsuario($id,$nombre,
 	$oUsuario->set("Direccion",$direccion,FORCE);
 	$oUsuario->set("Comision",$comision,FORCE);
 	$oUsuario->set("Telefono",$telefono,FORCE);
-	$oUsuario->set("Password",$pass,FORCE);
+	if($pass != 'usuarios')
+	  $oUsuario->set("Password",md5($pass),FORCE);
 	$oUsuario->set("IdIdioma",$idioma,FORCE);
 	$oUsuario->set("IdPerfil ",$perfil,FORCE);
 	$oUsuario->set("IdLocal ",$local,FORCE);
@@ -141,7 +142,7 @@ function CrearUsuario($nombre,
 	$oUsuario->set("Direccion",$direccion,FORCE);
 	$oUsuario->set("Comision",$comision,FORCE);
 	$oUsuario->set("Telefono",$telefono,FORCE);
-	$oUsuario->set("Password",$pass,FORCE);
+	$oUsuario->set("Password",md5($pass),FORCE);
 	$oUsuario->set("IdIdioma",$idioma,FORCE);
 	$oUsuario->set("IdPerfil ",$perfil,FORCE);
 	$oUsuario->set("IdLocal ",$local,FORCE);

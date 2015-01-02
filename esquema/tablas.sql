@@ -144,13 +144,14 @@ CREATE TABLE `ges_clientes` (
   `FechaRegistro` DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
   `FechaChange` DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
   `Bono` double NOT NULL Default '0',
+  `Suscripcion` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `Eliminado` tinyint(1) unsigned NOT NULL default '0',
   PRIMARY KEY  (`IdCliente`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 ;;;;;;
 
-CREATE TABLE `ges_colores` (
+CREATE TABLE `ges_modelos` (
   `Id` smallint(5) unsigned NOT NULL auto_increment,
   `IdColor` smallint(5) unsigned NOT NULL default '0',
   `IdIdioma` smallint(5) unsigned NOT NULL default '0',
@@ -226,10 +227,13 @@ CREATE TABLE `ges_comprobantes` (
   `IdLocal` smallint(6) NOT NULL default '0',
   `IdUsuario` smallint(6) NOT NULL default '0',
   `IdPromocion` INT unsigned NOT  NULL default '0',
+  `IdPresupuesto` int(10) unsigned NOT NULL DEFAULT '0',
+  `IdSuscripcion` int unsigned NOT NULL DEFAULT '0',
   `SerieComprobante` tinytext NOT NULL,
   `NComprobante` bigint(20) unsigned NOT NULL default '0',
   `IdAlbaranes` text NOT NULL,
   `TipoVentaOperacion` enum('VD','VC') NOT NULL DEFAULT 'VD',
+  `FacturacionAnterior` date NOT NULL DEFAULT '0000-00-00',
   `FechaComprobante` date NOT NULL default '0000-00-00',
   `IdCliente` bigint(20) NOT NULL default '0',
   `ImporteNeto` double NOT NULL default '0',
@@ -239,6 +243,8 @@ CREATE TABLE `ges_comprobantes` (
   `ImportePendiente` double NOT NULL default '0',
   `Status` tinyint(1) unsigned NOT NULL default '0',
   `Destinatario` ENUM('Cliente','Local','Proveedor') NOT NULL DEFAULT 'Cliente',
+  `PlazoPago` date NOT NULL DEFAULT '0000-00-00',
+  `Cobranza` ENUM('Ninguno','Pendiente','Prorroga','Coactivo') NOT NULL DEFAULT 'Ninguno',
   `Observaciones` tinytext NOT NULL,
   `Eliminado` tinyint(1) unsigned NOT NULL default '0',
   PRIMARY KEY  (`IdComprobante`)
@@ -519,6 +525,7 @@ CREATE TABLE `ges_parametros` (
   `SubFamiliaLatin1` int(11) NOT NULL default '0',
   `FamiliaLatin1` int(11) NOT NULL default '0',
   `TallajeLatin1` int(11) NOT NULL default '0',
+  `Suscripcion` datetime NOT NULL default '0000-00-00 00:00:00',
   `Eliminado` tinyint(1) unsigned NOT NULL default '0',
   PRIMARY KEY  (`Id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
@@ -597,7 +604,7 @@ CREATE TABLE `ges_productos` (
   `IdLabHab` smallint(5) unsigned NOT NULL DEFAULT '1',
   `IdTallaje` smallint(5) unsigned NOT NULL default '0',
   `IdTalla` smallint(5) unsigned NOT NULL default '0',
-  `Servicio` tinyint(1) unsigned NOT NULL default '0',
+  `Servicio` tinyint unsigned NOT NULL default '0',
   `IdColor` smallint(5) unsigned NOT NULL default '0',
   `IdFamilia` smallint(5) unsigned NOT NULL default '0',
   `IdSubFamilia` smallint(5) unsigned NOT NULL default '0',
@@ -704,7 +711,7 @@ CREATE TABLE `ges_subfamilias` (
 
 ;;;;;;
 
-CREATE TABLE `ges_tallajes` (
+CREATE TABLE `ges_detallescategoria` (
   `IdTallaje` int unsigned NOT NULL auto_increment,
   `Tallaje` tinytext NOT NULL,
   PRIMARY KEY  (`IdTallaje`)
@@ -712,7 +719,7 @@ CREATE TABLE `ges_tallajes` (
 
 ;;;;;;
 
-CREATE TABLE `ges_tallas` (
+CREATE TABLE `ges_detalles` (
   `Id` smallint(5) unsigned NOT NULL auto_increment,
   `IdTallaje` int unsigned NOT NULL default '0',
   `IdTalla` smallint(5) unsigned NOT NULL default '0',
@@ -1011,6 +1018,7 @@ CREATE TABLE IF NOT EXISTS `ges_presupuestos` (
   `VigenciaPresupuesto` smallint(2) unsigned NOT NULL DEFAULT '0',
   `CBMetaProducto` tinytext NOT NULL,
   `Observaciones` text NOT NULL,
+  `IdOrdenServicio` bigint(20) unsigned NOT NULL DEFAULT '0',
   `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`IdPresupuesto`),
   UNIQUE KEY `Documento Presupuesto` (`IdLocal`,`Serie`,`NPresupuesto`,`TipoPresupuesto`)
@@ -1255,5 +1263,205 @@ CREATE TABLE IF NOT EXISTS `ges_historialventas` (
   `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`IdHistorialVenta`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_ordenservicio` (
+  `IdOrdenServicio` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `IdUsuario` int(10) unsigned NOT NULL DEFAULT '0',
+  `IdLocal` int(10) unsigned NOT NULL DEFAULT '0',
+  `IdCliente` int(10) unsigned NOT NULL DEFAULT '0',
+  `IdUsuarioEntrega` int(10) unsigned NOT NULL DEFAULT '0',
+  `FechaIngreso` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `FechaEntrega` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `Estado` enum('Pendiente','Ejecucion','Finalizado','Cancelado') NOT NULL DEFAULT 'Pendiente',
+  `Prioridad` enum('1','2','3') NOT NULL DEFAULT '1' COMMENT '1:Normal,2:Alta,3:Muy Alta',
+  `Facturacion` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '0:pendiente, 1:facturado',
+  `Serie` tinyint unsigned not null DEFAULT '0',
+  `NumeroOrden` int unsigned NOT NULL DEFAULT '0', 
+  `Codigo` varchar(30) NOT NULL COMMENT 'Serie-NumeroOrden',
+  `Impuesto` float unsigned NOT NULL DEFAULT '0',
+  `Importe` double NOT NULL DEFAULT '0',
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`IdOrdenServicio`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_ordenserviciodet` (
+  `IdOrdenServicioDet` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `IdOrdenServicio` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `IdProducto` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `IdUsuarioResponsable` int(10) unsigned NOT NULL DEFAULT '0',
+  `IdComprobante` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `FechaInicio` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `FechaFin` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `FechaChange` DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `Estado` enum('Pendiente','Ejecucion','Finalizado','Cancelado') NOT NULL DEFAULT 'Pendiente',
+  `OrdenAnterior` tinytext NOT NULL,
+  `Garantia` date NOT NULL DEFAULT '0000-00-00',
+  `EstadoGarantia` enum('Garantia','Revocada','Atendida','Vencida') NOT NULL DEFAULT 'Garantia',
+  `GarantiaCondicion` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '0:En proceso, 1:Aplica, 2:No aplica',
+  `EstadoSolucion` enum('Ninguna','Parcial','Completa') NOT NULL DEFAULT 'Ninguna',
+  `Referencia` tinytext NOT NULL,
+  `CodigoBarras` tinytext NOT NULL,
+  `Concepto` text NOT NULL,
+  `NumeroSerie` varchar(30) NOT NULL COMMENT 'Numero Serie del Producto',
+  `NumList` varchar(10) NOT NULL COMMENT 'Relacion Servicio con Producto',
+  `TipoProducto` enum('Servicio','Producto') NOT NULL DEFAULT 'Servicio',
+  `Unidades` double NOT NULL DEFAULT '1',
+  `Precio` double NOT NULL DEFAULT '0',
+  `Importe` double NOT NULL DEFAULT '0',
+  `Impuesto` double NOT NULL DEFAULT '0',
+  `Ubicacion` enum('Local','Externo') NOT NULL DEFAULT 'Local',
+  `Direccion` text NOT NULL,
+  `Observaciones` text NOT NULL,
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`IdOrdenServicioDet`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_productossat` (
+  `IdProductoSat` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `IdOrdenServicioDet` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `IdMarca` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `IdModeloSat` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `IdMotivoSat` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `IdProdBaseSat` int unsigned NOT NULL default '0',
+  `NumeroSerie` varchar(30) NOT NULL,
+  `Descripcion` text NOT NULL,
+  `Solucion` text NOT NULL,
+  `Diagnostico` text NOT NULL,
+  `Detalle` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `Ubicacion` enum('Taller','Almacen','Entregado') NOT NULL DEFAULT 'Taller',
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`IdProductoSat`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_productossatdet` (
+  `IdProductoSatDet` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `IdProductoSat` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `IdMarca` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `IdModeloSat` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `IdProdBaseSat` int unsigned NOT NULL default '0',
+  `NumeroSerie` varchar(30) NOT NULL,
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`IdProductoSatDet`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_productosidiomasat` (
+  `IdProductoIdiomaSat` int unsigned NOT NULL AUTO_INCREMENT,
+  `IdProdBaseSat` int unsigned NOT NULL default '0',
+  `Descripcion` text NOT NULL,
+  `Eliminado` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`IdProductoIdiomaSat`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_tiposervicio` (
+  `IdTipoServicio` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
+  `TipoServicio` varchar(100) NOT NULL,
+  `SAT` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`IdTipoServicio`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_motivosat` (
+  `IdMotivoSat` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Motivo` varchar(100) NOT NULL,
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`IdMotivoSat`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_modelosat` (
+  `IdModeloSat` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `IdMarca` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `Modelo` tinytext NOT NULL,
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`IdModeloSat`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_suscripciones` (
+  `IdSuscripcion` int unsigned NOT NULL AUTO_INCREMENT,
+  `IdUsuario` int(10) unsigned NOT NULL DEFAULT '0',
+  `IdLocal` int(10) unsigned NOT NULL DEFAULT '0',
+  `IdCliente` int(10) unsigned NOT NULL DEFAULT '0',
+  `IdTipoSuscripcion` tinyint unsigned NOT NULL DEFAULT '0',
+  `FechaRegistro` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `FechaInicio` date NOT NULL DEFAULT '0000-00-00',
+  `FechaFin` date NOT NULL DEFAULT '0000-00-00',
+  `Estado` enum('Pendiente','Ejecucion','Suspendido','Finalizado','Cancelado','Corte') NOT NULL DEFAULT 'Pendiente',
+  `Prolongacion` enum('Ilimitado','Limitado') NOT NULL DEFAULT 'Ilimitado',
+  `Comprobante` enum('Factura','Boleta','Ticket') NOT NULL DEFAULT 'Factura',
+  `SerieComprobante` char(4) NOT NULL,
+  `TipoPago` enum('Prepago','Postpago') NOT NULL DEFAULT 'Prepago',
+  `Observaciones` text NOT NULL,
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`IdSuscripcion`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_suscripcionesdet` (
+  `IdSuscripcionDet` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `IdSuscripcion` int unsigned NOT NULL DEFAULT '0',
+  `IdProducto` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `Concepto` text NOT NULL,
+  `Intervalo` tinyint unsigned NOT NULL DEFAULT '1',
+  `UnidadIntervalo` enum('Dia','Semana','Mes') NOT NULL DEFAULT 'Mes',
+  `Estado` enum('Activo','Inactivo') NOT NULL DEFAULT 'Activo',
+  `FechaFacturacion` date NOT NULL DEFAULT '0000-00-00',
+  `DiaFacturacion` tinyint unsigned NOT NULL DEFAULT '1',
+  `AdelantoPeriodo` tinyint unsigned NOT NULL DEFAULT '0',
+  `AdelantoEstado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `PlazoPago` tinyint unsigned NOT NULL DEFAULT '1',
+  `Cantidad` double NOT NULL DEFAULT '1',
+  `Precio` double NOT NULL DEFAULT '0',
+  `Descuento` double NOT NULL DEFAULT '0',
+  `Importe` double NOT NULL DEFAULT '0',
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`IdSuscripcionDet`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_suscripciontipo` (
+  `IdTipoSuscripcion` tinyint unsigned NOT NULL AUTO_INCREMENT,
+  `TipoSuscripcion` varchar(100) NOT NULL,
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`IdTipoSuscripcion`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_suscripcionincidentes` (
+  `IdSuscripcionIncidente` int unsigned NOT NULL AUTO_INCREMENT,
+  `IdSuscripcion` int unsigned NOT NULL DEFAULT '0',
+  `IdTipoSuscripcion` tinyint unsigned NOT NULL DEFAULT '0',
+  `IdUsuario` int(10) unsigned NOT NULL DEFAULT '0',
+  `FechaRegistro` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Estado` enum('Pendiente','Ejecucion','Suspendido','Finalizado','Cancelado','Corte') NOT NULL DEFAULT 'Pendiente',
+  `Prolongacion` enum('Ilimitado','Limitado') NOT NULL DEFAULT 'Ilimitado',
+  `Comprobante` enum('Factura','Boleta','Ticket') NOT NULL DEFAULT 'Factura',
+  `SerieComprobante` char(4) NOT NULL,
+  `TipoPago` enum('Prepago','Postpago') NOT NULL DEFAULT 'Prepago',
+  `Observaciones` text NOT NULL,
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`IdSuscripcionIncidente`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ;;;;;;

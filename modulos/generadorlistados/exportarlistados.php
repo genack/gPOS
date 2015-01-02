@@ -14,7 +14,7 @@ switch($modo){
     $IdSubsidia  = CLeanID($_GET["subsidiario"]);
     $STSubsid    = CleanText($_GET["stsubsid"]);
     $IdProveedor = CleanText($_GET["proveedor"]);
-    $IdUsuario   = CleanID($_GET["usuario"]);
+    $IdUsuario   = CleanText($_GET["usuario"]);
     $Referencia  = CleanRealMysql($_GET["referencia"]);
     $CodigoBarra = CleanCadena($_GET["cb"]);
     $NumeroSerie = CleanText($_GET["ns"]);
@@ -38,9 +38,19 @@ switch($modo){
     $TipoCliente       = CleanText($_GET["tipocliente"]);
     $IdMarca           = CleanText($_GET["idmarca"]);
     $CondicionVenta    = CleanText($_GET["condicionventa"]);
+    $EstadoOS          = CleanText($_GET["estadoos"]);
+    $Prioridad         = CleanText($_GET["prioridad"]);
+    $Facturacion       = CleanText($_GET["facturacion"]);
+    $EstadoSuscripcion = CleanText($_GET["estadosucripcion"]);
+    $TipoSuscripcion   = CleanText($_GET["tiposuscripcion"]);
+    $TipoPagoSuscripcion = CleanText($_GET["tipopagosuscripcion"]);
+    $Prolongacion      = CleanText($_GET["prolongacion"]);
+    $IdCLiente         = CleanText($_GET["idcliente"]);
+    $Codigo            = CleanText($_GET["codigo"]);
+    $EstadoPagoVenta   = CleanText($_GET["estadopagoventa"]);
 
-    $Consulta      = "SELECT * FROM $Tabla WHERE (IdListado = '$Id')";
-    $row           = queryrow($Consulta);
+    $Consulta          = "SELECT * FROM $Tabla WHERE (IdListado = '$Id')";
+    $row               = queryrow($Consulta);
 
     if($row){
       $CodigoSQL      = $row["CodigoSQL"];
@@ -55,7 +65,10 @@ switch($modo){
 				    $SerieComprobante,$EstadoComprobante,$EstadoPago,
 				    $Modalidad,$EstadoPromo,$TipoPromo,$TipoOperacion,
 				    $TipoOpCjaGral,$PeriodoVenta,$NombreCliente,
-				    $TipoCliente,$IdMarca,$CondicionVenta);
+				    $TipoCliente,$IdMarca,$CondicionVenta,$EstadoOS,
+				    $Prioridad,$Facturacion,$EstadoSuscripcion,
+				    $TipoSuscripcion,$TipoPagoSuscripcion,
+				    $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta);
 
     }
     $NombreArchivo = '"'.$NombreArchivo.'"';
@@ -95,8 +108,8 @@ switch($modo){
       "       ges_locales.NombreComercial as Almacen, ".
       "       CONCAT(ges_productos.CodigoBarras,' ',ges_productos_idioma.Descripcion,' ',".
       "       ges_marcas.Marca,' ', ".
-      "       ges_colores.Color,' ', ".
-      "       ges_tallas.Talla,' ', ".
+      "       ges_modelos.Color,' ', ".
+      "       ges_detalles.Talla,' ', ".
       "       ges_laboratorios.NombreComercial) as Producto, ".
       "       ges_contenedores.Contenedor, ".
       "       ges_productos.UnidadMedida, ".
@@ -134,7 +147,9 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
 		     $LocalActual,$DNICliente,$TipoComprobante,$SerieComprobante,
 		     $EstadoComprobante,$EstadoPago,$Modalidad,$EstadoPromo,$TipoPromo,
 		     $TipoOperacion,$TipoOpCjaGral,$PeriodoVenta,$NombreCliente,
-		     $TipoCliente,$IdMarca,$CondicionVenta) {
+		     $TipoCliente,$IdMarca,$CondicionVenta,$EstadoOS,$Prioridad,
+		     $Facturacion,$EstadoSuscripcion,$TipoSuscripcion,$TipoPagoSuscripcion,
+		     $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta) {
 
   $Moneda = getSesionDato("Moneda");
   
@@ -152,6 +167,8 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
     $g_periodo = "$PeriodoVenta(FechaComprobante)";
   if($PeriodoVenta == 'YEAR')
     $g_periodo = "$PeriodoVenta(FechaComprobante)";
+
+  $EstadoPagoVenta = str_replace('%%',"'%%'",$EstadoPagoVenta);
 
   $cod = str_replace("%IDIDIOMA%",$IdLang,$cod);
   $cod = str_replace("%DESDE%",		$Desde,$cod);
@@ -185,6 +202,16 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
   $cod = str_replace("'%PERIODO_GROUP%'",$g_periodo,$cod);
   $cod = str_replace("%IDMARCA%",       $IdMarca,$cod);
   $cod = str_replace("%CONDICIONVENTA%",$CondicionVenta,$cod);
+  $cod = str_replace("%ESTADOOS%",$EstadoOS,$cod);
+  $cod = str_replace("%PRIORIDAD%",$Prioridad,$cod);
+  $cod = str_replace("%FACTURACION%",$Facturacion,$cod);
+  $cod = str_replace("%ESTADOSUSCRIPCION%",$EstadoSuscripcion,$cod);
+  $cod = str_replace("%TIPOSUSCRIPCION%",$TipoSuscripcion,$cod);
+  $cod = str_replace("%TIPOPAGOSUSCRIPCION%",$TipoPagoSuscripcion,$cod);
+  $cod = str_replace("%PROLONGACION%",$Prolongacion,$cod);
+  $cod = str_replace("%IDCLIENTE%",$IdCLiente,$cod);
+  $cod = str_replace("%CODIGO%",$Codigo,$cod);
+  $cod = str_replace("'%IMPORTE%'",$EstadoPagoVenta,$cod);
   $cod = str_replace("%SML%",$Moneda[1]['S'],$cod);
 
   if($esTPVOP)

@@ -19,7 +19,7 @@ function nuevaCompraBuscar(){
 }
 
 function verOrdenCompraConfirmado(idpedido){
-  url = 'modordencompra.php?modo=listarTodoOrdenCompra';
+  url = 'modulos/ordencompra/modordencompra.php?modo=listarTodoOrdenCompra';
   var mainweb = parent.document.getElementById('WebNormal');
   var mainlist = parent.document.getElementById('WebLista');
   var weblist = parent.document.getElementById('weblist');
@@ -37,7 +37,7 @@ function verOrdenCompraConfirmado(idpedido){
 }
 
 function verRecibirCompra(idpedido){
-  url = 'modalmacenborrador.php?modo=recibirProductosAlmacen';
+  url = 'modulos/recepcionpedido/modalmacenborrador.php?modo=recibirProductosAlmacen';
   var mainweb = parent.document.getElementById('WebNormal');
   var mainlist = parent.document.getElementById('WebLista');
   var weblist = parent.document.getElementById('weblist');
@@ -55,7 +55,7 @@ function verRecibirCompra(idpedido){
 }
 
 function verPedidoConfirmado(idpedido){
-  url = 'modcomprasborrador.php?modo=listarTodoOrdenCompra';
+  url = 'modulos/comprobantecompra/modcomprasborrador.php?modo=listarTodoOrdenCompra';
   var mainweb = parent.document.getElementById('WebNormal');
   var mainlist = parent.document.getElementById('WebLista');
   var weblist = parent.document.getElementById('weblist');
@@ -168,6 +168,7 @@ function cambiomoneda(tipo){
     xrequest.send(null);
 }
 function setfechadoc(){
+
     var fecha = document.getElementById("FechaDoc");
     if(fecha){
         var	url = "services.php?modo=setfdocCompra&fdoc="+fecha.value;
@@ -242,12 +243,11 @@ function ckAction(me,id,max,ns,xid){
 
   if(tipoAction=="trans")
   {
-
     var main  = parent.getWebForm();
     var aviso = 'Cargando Existencias ...';
-    var url   = 'selkardex.php?modo=xExistenciasAlmacenCarrito%xproducto='+xid+'%xalmacen='+id;
+    var url   = 'modulos/kardex/selkardex.php?modo=xExistenciasAlmacenCarrito%xproducto='+xid+'%xalmacen='+id;
 
-    var lurl  = 'partes-compras/progress.php?modo=lWebFormAlmacen&aviso='+aviso+'&url='+url;
+    var lurl  = 'modulos/compras/progress.php?modo=lWebFormAlmacen&aviso='+aviso+'&url='+url;
 
     main.setAttribute("src",lurl);  
     parent.xwebCollapsed(true);
@@ -264,7 +264,7 @@ function ckAction(me,id,max,ns,xid){
 function precioTransAlmacen(xid,xdato,xprecio)
 {
     xdato.value = ( xdato.value < xprecio)? xprecio:xdato.value;
-    var	url     = "selkardex.php"+
+    var	url     = "modulos/kardex/selkardex.php"+
                   "?modo=setPrecioCarritoAlmacen"+
                   "&xid="+xid+
                   "&xdato="+xdato.value;
@@ -527,15 +527,20 @@ function Producto(id){
 
 
 function genProductoLinea() {
-  var sel    = "";
-  var xinput = (this.servicio)? " style='display:none' ":""; 
+  var sel     = "";
+  var xinput  = (this.servicio)? " style='display:none' ":""; 
+  var ximagen = (this.imagen != '')? "":" style='display:none' "; 
+  var xdiv    = (this.imagen != '')? "":" display:none "; 
+  var xclick  = (this.imagen != '')? 'mostrarProductoImagen('+this.cb+',"'+this.imagen+'")':"";
 
  echo("<tr class='f'>"+
   "<td width='16' class='codigobarras'>"+this.cb+"</td>"+
   "<td class='color' width='45%'>"+this.color+"</td>"+
   "<td class='talla' width='45%'>"+this.talla+"</td>"+
-  "<td class='boton' width='10%'><nobr>"+
+  "<td class='botonicons' width='10%'><nobr>"+
+  "<input class='sbtn' "+ ximagen +" type='image' title='Ver Imagen' src='img/gpos_prodimagen.png' onclick='"+xclick+"' value=''>"+" "+
   "<input class='tb' type='image' src='img/gpos_imprimircb.png' title='Imprimir CB' onclick=\"selImpresion('codigobarrasProducto','"+this.id+"');return 0;\">"+" "+
+  "<div id='boximage_"+this.cb+"' class='productoimagen'  style='background-image:url(\"img/gpos_marcagua.png\");display: none;"+ xdiv +"' onclick='mostrarProductoImagen("+this.cb+")'></div>"+" "+
   "<input class='tb' type='image' src='img/gpos_modproducto.png' title='Modificar Producto' onclick='"+'javascript:location.href="modproductos.php?modo=editarbar&id='+this.id+'&idBase='+this.idBase+'"'+"' >"+" "+
 "<input class='sbtn' "+ xinput +" type='image' title='Comprar Producto' src='img/gpos_prodcompras.png' onclick='AgnadirProductoCompra("+this.id+","+this.serie+","+ this.lote +","+ this.fv+","+ this.servicio+",0)' value=''>"+" "+
   "<input  class='tb' type='image' src='img/gpos_eliminarproducto.png' title='Eliminar Producto' onclick='ifConfirmGo(\"gPOS: "+po_avisoborrar+"\",\"modproductos.php?modo=borrar&id="+this.id+"&idBase="+this.idBase+"\")'></nobr>"+
@@ -545,17 +550,27 @@ function genProductoLinea() {
   return 2;
 }
 
+function mostrarProductoImagen(xcb,ximage){
+
+    var xdiv     = document.getElementById('boximage_'+xcb);
+    var xdisplay = ( xdiv.style.display == 'block' )? 'none':'block';
+
+    xdiv.style.backgroundImage = ( xdisplay == 'block' )? "url('productos_img/"+ximage+"')":"url('img/gpos_marcagua.png')";
+    xdiv.style.display         = xdisplay;
+
+}
 
 
 function genProductoResumen() {
   var sel = "";
-
+  var xmas = (this.servicio > 0)?'display:none':'';
+  var xinput = (this.servicio)? " style='display:none' ":""; 
  echo("<tr class='f'>"+
   "<td width='16'></td>"+
   "<td class='color' width='45%'></td>"+
   "<td class='talla' width='45%'></td>"+
   "<td class='botonprod' width='10%'><nobr>"+
-  "<input class='tb' type='image' src='img/gpos_nuevoproducto.png' title='Clonar Producto' onclick='"+'javascript:location.href="modproductos.php?modo=clonar&id='+this.id+'&idBase='+this.idBase+'"'+"'>"+" "+ "<input class='tb' type='image' src='img/gpos_masdetallesm.png' title='Detalle Almacen' onclick='expandCruzado("+this.id+");void(0);'></nobr>"+
+  "<input class='tb' type='image' src='img/gpos_nuevoproducto.png' title='Clonar Producto' onclick='"+'javascript:location.href="modproductos.php?modo=clonar&id='+this.id+'&idBase='+this.idBase+'"'+"'>"+" "+ "<input class='tb' type='image' src='img/gpos_masdetallesm.png' title='Detalle Almacen' onclick='expandCruzado("+this.id+");void(0);' "+xinput+"></nobr>"+
   "</td>"+
   "</tr><tr><td colspan='4' id='cruzado_"+this.id+"'></td></tr>\n"
    );   
@@ -662,7 +677,7 @@ function cL(id,cb,L_talla,L_color,manejaserie,manejalote,manejafv,eservicio){ //
 }
 
 
-function cP(id,cb,L_talla,L_color,idBase,manejaserie,manejalote,manejafv,eservicio){ //Aparece en productos
+function cP(id,cb,L_talla,L_color,idBase,manejaserie,manejalote,manejafv,eservicio,esimagen){ //Aparece en productos
   var o        = new Producto(id);
   o.id         = id;
   o.idBase     = idBase;
@@ -673,6 +688,7 @@ function cP(id,cb,L_talla,L_color,idBase,manejaserie,manejalote,manejafv,eservic
   o.lote       = manejalote;
   o.fv         = manejafv;
   o.servicio   = eservicio;
+  o.imagen     = esimagen;
   o.genLinea   = genProductoLinea;
   o.tipo       = TIPO_NORMAL;
   o.genResumen = genProductoResumen;
@@ -682,6 +698,7 @@ function cP(id,cb,L_talla,L_color,idBase,manejaserie,manejalote,manejafv,eservic
 function genProductoLineaHead() { //Head de Listados de Productos
 
  var xicon = (this.servicio > 0)? icon_servicios:icon_productos;
+ var xstyle = (this.servicio > 0)? 'display:none':'';
 
  echo("</table></div></td></tr>\n\n<tr class='t f'>"+
   "<td width='16' class='iconproducto'>"+xicon+"</td>\n"+
@@ -824,6 +841,7 @@ function genAlmacenLinea() {
 	 "<td class='precio'>"+formatCurrency(this.precio)+"</td>"+
 	 "<td class='boton'>"+
 	 "<input class='tb' type='image' src='img/gpos_modproducto.png' title='Modificar Propiedades' onclick='"+'javascript:location.href="modalmacenes.php?modo=editar&id='+this.transid+'"'+"'>"+" "+
+	 "<input class='tb' type='image' src='img/gpos_movimientos.png' title='Movimientos kardex' onclick='"+'javascript:location.href="modulos/kardex/selkardex.php?modo=xMovimientosExistenciasAlmacen&id='+this.transid+'"'+"'>"+" "+
 	 "</td>"+
 	 "<td class=boton>"+sel+"</td></tr>\n"
 	);   
@@ -913,8 +931,8 @@ function argsventana(width,height){
 function verseries(idproducto,unidades){
     var main  = parent.getWebForm();
     var aviso = 'Cargando Número Series Almacén...';
-    var url   = 'selcomprar.php?id='+idproducto+'%modo=mostrarSeriesAlmacenxProducto%unid='+unidades;
-    var lurl  = 'partes-compras/progress.php?modo=lWebFormAlmacen&aviso='+aviso+'&url='+url;
+    var url   = 'modulos/compras/selcomprar.php?id='+idproducto+'%modo=mostrarSeriesAlmacenxProducto%unid='+unidades;
+    var lurl  = 'modulos/compras/progress.php?modo=lWebFormAlmacen&aviso='+aviso+'&url='+url;
 
     main.setAttribute("src",lurl);  
     parent.xwebCollapsed(true);
@@ -924,8 +942,8 @@ function verseries(idproducto,unidades){
 function visualizarserie(idbase){
     var main  = parent.getWebForm();
     var aviso = 'Cargando Número Series Almacén...';
-    var url   = 'selcomprar.php?id='+idbase+'%modo=mostrarSeriesAlmacen';
-    var lurl  = 'partes-compras/progress.php?modo=lWebFormAlmacen&aviso='+aviso+'&url='+url;
+    var url   = 'modulos/compras/selcomprar.php?id='+idbase+'%modo=mostrarSeriesAlmacen';
+    var lurl  = 'modulos/compras/progress.php?modo=lWebFormAlmacen&aviso='+aviso+'&url='+url;
 
     main.setAttribute("src",lurl);  
     parent.xwebCollapsed(true);
@@ -962,12 +980,12 @@ function visualizarNumSeries(id,fila){
         var caja  = document.getElementsByName("Cantidad"+fila);
 	var main  = parent.getWebForm();
 	var aviso = 'Cargando Número Series Carrito Compras...';
-	var url   = 'selcomprar.php?id='+id+
+	var url   = 'modulos/compras/selcomprar.php?id='+id+
 	            '%modo=visualizarseriescart'+
 		    '%u='+caja[0].value+
 		    '%fila='+fila;
 
-	var lurl  = 'partes-compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
+	var lurl  = 'modulos/compras/progress.php?modo=lWebFormCartSerieMod&aviso='+aviso+'&url='+url;
 
         main.setAttribute("src",lurl);  
 	parent.xwebCollapsed(true);
@@ -990,7 +1008,7 @@ function modificarCarritoProducto(fila,idproducto){
    unidades       = ( menudeo[0]==1 )? cantidad % menudeo[1] : 0;
    cantidad       = ( menudeo[0]==1 )? ( cantidad - unidades ) / menudeo[1] : cantidad;
 
-   var url = 'selcomprar.php?'+
+   var url = 'modulos/compras/selcomprar.php?'+
              'id='+idproducto+
 	     '%modo=visualizarModificarProductoCarrito'+
 	     '%manejalote='+menudeo[6]+
@@ -1006,7 +1024,7 @@ function modificarCarritoProducto(fila,idproducto){
 	     '%unidades='+unidades+
 	     '%fila='+fila;
 
-    var lurl = 'partes-compras/progress.php?modo=lWebFormCartMod&aviso='+aviso+'&url='+url;
+    var lurl = 'modulos/compras/progress.php?modo=lWebFormCartMod&aviso='+aviso+'&url='+url;
 
     main.setAttribute("src",lurl);
     parent.xwebCollapsed(true);
@@ -1124,14 +1142,6 @@ function cListCompras() {
 
 /*=============== SISTEMAS AUXILIARES =============*/
 
-function auxCancelarCompra(){
-
-  var url = "selcomprarapida.php?modo=noselecion"
-  Mensaje(url);
-
-}
-
-
 function getDatosProductoExtra(idproducto){
 
     var	url = "services.php?modo=datosproductoextra&id="+idproducto;
@@ -1156,7 +1166,7 @@ function AgnadirProductoCompra(idproducto,manejaserie,manejalote,manejafv,eservi
     if(noProducto)
        return alert("gPOS:\n\n Este es un "+noProducto+"; producto reservado de uso interno.");
 
-    var url  = 'selcomprar.php?'+
+    var url  = 'modulos/compras/selcomprar.php?'+
                'id='+idproducto+
 	       '%modo=visualizarAgnadirProductoCompra'+
 	       '%manejalote='+manejalote+
@@ -1169,7 +1179,7 @@ function AgnadirProductoCompra(idproducto,manejaserie,manejalote,manejafv,eservi
 	       '%CostoUnitario='+menudeo[4]+
 	       '%trasAlta='+trasAlta;
 
-    var lurl = 'partes-compras/progress.php?modo=lWebFormCartBuy&aviso='+aviso+'&url='+url;
+    var lurl = 'modulos/compras/progress.php?modo=lWebFormCartBuy&aviso='+aviso+'&url='+url;
 
     main.setAttribute("src",lurl);
     parent.xwebCollapsed(true);
@@ -1219,6 +1229,7 @@ function deshabilitar(){
    ventamenudeo.checked=false;
    OcultaCapa("Motivo1");
    OcultaCapa("Motivo2");
+   OcultaCapa("Motivo3"); 
   }
 
  if(servicio.checked)
@@ -1229,9 +1240,13 @@ function deshabilitar(){
    fv.checked=false;
    mtprod.checked=false;
    ventamenudeo.checked=false;
+   MuestraCapa("Motivo3"); 
    OcultaCapa("Motivo1");
    OcultaCapa("Motivo2");
+  } else {
+   OcultaCapa("Motivo3"); 
   }
+
  if(lote.checked)
   {
    lote.checked=true;
@@ -1246,11 +1261,13 @@ function deshabilitar(){
    check.checked=false;
    mtprod.checked=false;
   }
-
  if(ventamenudeo.checked) {
+
+     OcultaCapa("Motivo3"); 
      MuestraCapa("Motivo1"); 
-     MuestraCapa("Motivo2");} 
-  else {
+     MuestraCapa("Motivo2");
+
+ } else {
      OcultaCapa("Motivo1"); 
      OcultaCapa("Motivo2");
   }
@@ -1261,7 +1278,8 @@ function MuestraCapa(nombre){
   var servicio     = document.getElementById("Servicio");
   var check        = document.getElementById("NumeroSerie");
   var mtprod       = document.getElementById("MetaProducto");
-  if(servicio) servicio.checked = false;
+
+  if(servicio && nombre !='Motivo3') servicio.checked = false;
   if(check)    check.checked    = false;
   if(mtprod)   mtprod.checked   = false;
 
@@ -1343,9 +1361,9 @@ function s_radioComprobante(aux){
 	
         case 'SD':
 	desapareceCapa('ndoc');
-	desapareceCapa('fdoc');
+	apareceCapa('fdoc');
 	desapareceCapa('acred');
-	desapareceCapa('pgdoc');
+	apareceCapa('pgdoc');
 	CambiaTextDoc();
 	CambiaTextDoc(0,'Ticket'); 
 	cambiodoc('SD');
@@ -1627,36 +1645,35 @@ function ResetColor() {
 //
 
 function auxCarritoCompra(){     popup('vercarrito.php?modo=check','carrito');  }
-function auxCarritoMover(){     popup('vertrans.php?modo=check','carrito');  }
-function auxSeleccionRapidaAlmacen(IdLocal){    popup('selalmacen.php?modo=empieza&IdLocal='+IdLocal,'selalmacen'); }
-function auxAlta(){    popup('altarapida.php?modo=altaycompra','alta');  }
-function auxSeleccionRapidaCompra(){   popup('selcomprarapida.php?modo=empieza','selcomprar');  }
-function auxColor(idfamilia){    popup('selcolor.php?modo=color&idfamilia='+idfamilia,'color');  }
-function auxProductoAlias(idfamilia,id,txtalias){    popup('selproductoalias.php?modo=alias&idfamilia='+idfamilia+'&id='+id+'&txtalias='+txtalias,'color');  }
-function auxProveedorHab() {     popup('selproveedor.php?modo=proveedorhab','proveedorhab');  }
-function auxSubsidiarioHab() {     popup('selsubsidiario.php?modo=subsidiariohab','proveedorhab');  }
-function auxLaboratorioHab() {     popup('sellaboratorio.php?modo=laboratoriohab','laboratoriohab');  }
+//function auxCarritoMover(){     popup('modulos/almacen/vertrans.php?modo=check','carrito');  }
+function auxSeleccionRapidaAlmacen(IdLocal){    popup('modulos/almacen/selalmacen.php?modo=empieza&IdLocal='+IdLocal,'selalmacen'); }
+function auxAlta(){    popup('modulos/altarapida/altarapida.php?modo=altaycompra','alta');  }
+function auxColor(idfamilia){    popup('modulos/productos/selmodelo.php?modo=color&idfamilia='+idfamilia,'color');  }
+function auxProductoAlias(idfamilia,id,txtalias){    popup('modulos/productos/selproductoalias.php?modo=alias&idfamilia='+idfamilia+'&id='+id+'&txtalias='+txtalias,'color');  }
+function auxProveedorHab() {     popup('modulos/proveedores/selproveedor.php?modo=proveedorhab','proveedorhab');  }
+function auxSubsidiarioHab() {     popup('modulos/subsidiarios/selsubsidiario.php?modo=subsidiariohab','proveedorhab');  }
+function auxLaboratorioHab() {     popup('modulos/laboratorios/sellaboratorio.php?modo=laboratoriohab','laboratoriohab');  }
 function auxAltaProv() { popup('modproveedores.php?modo=altapopup','altaproveedor'); }
 function auxAltaSubsidiario() { popup('modsubsidiarios.php?modo=altapopup','altaproveedor'); }
 function auxAltaLab() { popup('modlaboratorios.php?modo=altapopup','altalaboratorio'); }
-function auxMarca(){    popup('selmarca.php?modo=marca','marca'); }
-function auxContenedor(){    popup('selcontenedor.php?modo=contenedor','contenedor'); }
-function auxAvanzada(vuelta){    popup('selavanzada.php?modo=avanzada&vuelta='+vuelta,'avanzada'); }
+function auxMarca(){    popup('modulos/productos/selmarca.php?modo=marca','marca'); }
+function auxTipoServicio(){    popup('modulos/productos/seltiposervicio.php?modo=servicio','marca'); }
+function auxContenedor(){    popup('modulos/productos/selcontenedor.php?modo=contenedor','contenedor'); }
 
 function auxTalla(tipo,idfamilia){    
  if (tipo=='nuevo') { //Se debe elegir primero tallaje
-   popup('selcolor.php?modo=tallaje&idfamilia='+idfamilia,'talla');     
+   popup('modulos/productos/selmodelo.php?modo=tallaje&idfamilia='+idfamilia,'talla');     
    return;
  }
- popup('selcolor.php?modo=talla&IdTallaje='+tipo+'&idfamilia='+idfamilia,'talla');  
+ popup('modulos/productos/selmodelo.php?modo=talla&IdTallaje='+tipo+'&idfamilia='+idfamilia,'talla');  
 }
 
 
 function auxFamilia(){
     //ResetSubfamilia();
     var vfamilia = getMe("IdFamilia").value;
-//    popup('selfamilia.php?modo=familia','familia');
-    popup('selsubfamilia.php?modo=familia&IdFamilia='+vfamilia,'familiaplus');
+//    popup('modulos/productos/selfamilia.php?modo=familia','familia');
+    popup('modulos/productos/selsubfamilia.php?modo=familia&IdFamilia='+vfamilia,'familiaplus');
 }
 
 function auxSubFamilia(){
@@ -1664,7 +1681,7 @@ function auxSubFamilia(){
 /*
   var vfamilia = getMe("IdFamilia").value;
 
-  popup('selfamilia.php?modo=subfamilia&IdFamilia='+vfamilia,'subfamilia');
+  popup('modulos/productos/selfamilia.php?modo=subfamilia&IdFamilia='+vfamilia,'subfamilia');
   */
 }
 
@@ -1904,6 +1921,7 @@ function changeNewColor(IdColor,label){
  vf.value = valor;
 }
 
+
 function changeTalla(o,label){
   valor = o.value;
  
@@ -1963,6 +1981,22 @@ function changeMarca(o,label){
  } 
  vf.value = valor;
 }
+
+function changeNewTipoServicio(xid,label){
+  var vf = getMe("TextoTipoServicio");
+  var xf = getMe("IdTipoServicio");
+  vf.innerHTML = ""+ label+ "";
+  xf.value = xid;
+}
+
+function changeTipoServicio(valor,label){
+
+  var txtTP = getMe("TextoTipoServicio");
+  var tdTP  = getMe("IdTipoServicio");
+  txtTP.innerHTML = ""+ label+ "";
+  tdTP.value = valor;
+}
+
 function changeContenedor(o,label){
   valor = o.value;
  
@@ -2079,12 +2113,12 @@ function verseriescarritoalma(unidades,id,producto){
 
     var main  = parent.getWebForm();
     var aviso = 'Cargando Existencias ...';
-    var url   = 'selcomprar.php?modo=mostrarSeriesAlmacenCarrito'+
+    var url   = 'modulos/compras/selcomprar.php?modo=mostrarSeriesAlmacenCarrito'+
                 '%xproducto='+producto+
                 '%unid='+unidades+
                 '%xalmacen='+id;
 
-    var lurl  = 'partes-compras/progress.php?modo=lWebFormAlmacen&aviso='+aviso+'&url='+url;
+    var lurl  = 'modulos/compras/progress.php?modo=lWebFormAlmacen&aviso='+aviso+'&url='+url;
 
     main.setAttribute("src",lurl);  
     parent.xwebCollapsed(true);

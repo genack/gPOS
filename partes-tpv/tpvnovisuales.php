@@ -37,6 +37,7 @@
      <menuitem id="VentaRealizadaAbonar" label="<?php echo _("Abonar") ?>" oncommand="VentanaAbonos()"/>
      <menuseparator />
      <menuitem id="VentaRealizadaImprimir" label="<?php echo _("Imprimir") ?>" oncommand="ReimprimirVentaSeleccionada()"/>
+     <menuitem id="VentaSuscripcionImprimir" label="<?php echo _("Imprimir Suscripción") ?>" oncommand="ReimprimirVentaSuscripcion()" collapsed="true"/>
      <menuitem id="VentaRealizadaDevolver" label="<?php echo _("Devolver") ?>" oncommand="DevolverVentaSeleccionada()"/>
      <menuseparator />
      <menuitem id="VentaRealizadaBoletar" label="<?php echo _("Boletar")?>" oncommand="BoletarNroDocumento('Boletar')" />
@@ -48,6 +49,7 @@
      <menuitem id="VentaRealizadaCambioNro" label="<?php echo _("Modificar Nro.")?>" oncommand="ModificarNroDocumento('Modificar')"  <?php gulAdmite("Administracion") ?> /> 
      <menuitem id="VentaRealizadaAnularNro" label="<?php echo _("Anular Nro.")?>" oncommand="ModificarNroDocumento('Anular')"  <?php gulAdmite("Administracion") ?> />
      <menuitem id="VentaRealizadaCambioAnularNro" label="<?php echo _("Modificar y anular Nro.")?>" oncommand="ModificarNroDocumento('Modificar_y_Anular')"  <?php gulAdmite("Administracion") ?> />
+     <menuitem id="VentaRealizadaAnularNro" label="<?php echo _("Modificar Fecha Emisión")?>" oncommand="ModificarNroDocumento('Modificar_FechaEmision')"  <?php gulAdmite("Administracion") ?> />
 
   </popup>   
 <popup id="AccionesDetallesVentas" class="media">
@@ -83,7 +85,7 @@
     oncommand="ModificarDescuento(<?php jsAdmite("Precios",false) ?>)"/>
     <menuseparator />
     <menuitem class="menuitem-iconic" image="img/gpos_tpvservicios.png" 
-	      label="<?php echo _(" Agregar Servicio") ?>"
+	      label="<?php echo _(" Agregar Outsourcing") ?>"
     oncommand="ServicioParaFila()"/>	   
     <menuitem class="menuitem-iconic" image="img/gpos_tpvservicios.png" 
 	      label="<?php echo _(" Modificar Concepto") ?>"
@@ -103,7 +105,28 @@
 	      label="<?php echo _(" Cancelar venta") ?>" oncommand="CancelarTicket()" />
     
   </popup>
-  
-  
+  <popup id="AccionesProductoDetalleSat">
+    <menuitem id="itemAgregarProductoSatDet" label="<?php echo _("Agregar") ?>"
+              oncommand="mostrarFormProductoSatDetalle('true')"/>
+    <menuitem id="itemModificarProductoSatDet" label="<?php echo _("Quitar") ?>"
+              oncommand="ModificarProductoDetSat('Quitar')"/>
+  </popup>
+  <popup id="AccionesSuscripcionLinea"> 
+        <menuitem id="itemAgregarSuscripcionLinea" label="<?php echo _("Agregar") ?>"
+              oncommand="elijePanelProducto('Suscripcion')"/>
+        <menuitem id="itemEditarSuscripcionLinea" label="<?php echo _("Editar") ?>"
+              oncommand="editarSuscripcionLinea()"/>
+  </popup>
+  <popup id="AccionesComprobantesVentaSuscripcion"> 
+        <menuitem  label="<?php echo _("Ver Detalle") ?>"
+              oncommand="verComprobanteVentaSuscripcion()"/>
+  </popup>
+  <popup id="AccionesclientPickArea"> 
+    <menuitem  label="<?php echo _("Usar Seleccionado") ?>" 
+               oncommand="cargarCliente('sel')"/>
+    <menuseparator />
+    <menuitem  label="<?php echo _("Modificar") ?>" 
+               oncommand="VerClienteId()"/>
+  </popup>
 </popupset>
 	  

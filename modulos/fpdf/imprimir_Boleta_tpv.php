@@ -162,19 +162,19 @@ $sql =
       "        ges_productos.IdProducto as codarticulo, ".
       "        ges_comprobantesdet.Referencia as referencia, ".
       "        ges_productos_idioma.Descripcion as descripcion, ".
-      "        ges_marcas.Marca,ges_colores.Color as presentacion,".
-      "        ges_tallas.Talla as subpresentacion , ".
+      "        ges_marcas.Marca,ges_modelos.Color as presentacion,".
+      "        ges_detalles.Talla as subpresentacion , ".
       "        ges_laboratorios.NombreComercial as laboratorio, ".
       "        ges_productos.IdContenedor, ".
       "        ges_productos.UnidadesPorContenedor, ".
       "        ges_productos.UnidadMedida ".
       "FROM    ges_comprobantesdet,ges_productos,ges_productos_idioma, ".
-      "        ges_tallas,ges_colores,ges_marcas,ges_laboratorios ".
+      "        ges_detalles,ges_modelos,ges_marcas,ges_laboratorios ".
       "WHERE   ges_comprobantesdet.IdComprobante = '$IdComprobante' ".
       "AND     ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
       "AND     ges_comprobantesdet.IdProducto = ges_productos.IdProducto ".
-      "AND     ges_productos.IdColor = ges_colores.IdColor ".
-      "AND     ges_productos.IdTalla = ges_tallas.IdTalla ".
+      "AND     ges_productos.IdColor = ges_modelos.IdColor ".
+      "AND     ges_productos.IdTalla = ges_detalles.IdTalla ".
       "AND     ges_marcas.IdMarca = ges_productos.IdMarca ".
       "AND     ges_productos.IdProdBase = ges_productos_idioma.IdProdBase ".
       "AND     ges_comprobantesdet.Eliminado = '0' ".

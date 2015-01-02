@@ -15,7 +15,8 @@ $CodigoSQL = '';
 $NombrePantalla = '';
 if ( $row) {
   $CodigoSQL 	  = $row["CodigoSQL"];
-  $NombrePantalla = $row["NombrePantalla"];	
+  $NombrePantalla = $row["NombrePantalla"];
+  $Categoria      = $row["Categoria"];	
   $CodigoSQL      = PostProcesarSQL($CodigoSQL,$LocalActual);
 }
 
@@ -139,6 +140,7 @@ if ($res){
   }
 
 </style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 </head>
 <body>
 
@@ -154,7 +156,7 @@ if ($res){
   </menulist>
 </row>
 
-   <input type="button" value="Imprimir" onclick="window.print()"/>
+   <input type="button" value="Imprimir" onclick="imprimirLista()"/>
    <input type="button" value="Exportar CSV" onclick="exportarcsv()"/>
 
 <!--div style="padding: 3px 0pt 2px;">
@@ -185,6 +187,22 @@ if ($res){
 
 ?>
 <script>
+
+function imprimirLista(){
+  var nombre = "<?php echo $NombrePantalla?>";
+  var cat    = "<?php echo $Categoria?>";
+  var desde  = "<?php echo $_GET["Desde"]?>";
+  var hasta  = "<?php echo $_GET["Hasta"]?>";
+  
+  var f      = new Date();
+  var hoy    = f.getFullYear() + "-" + (f.getMonth() +1) + "-" + f.getDate();
+  nombre     = nombre.replace(" ","_");
+  
+  var fecha  = (!desde || !hasta)? hoy : desde+"_AL_"+hasta;
+  var title  = cat+"_"+nombre+"_"+fecha;
+  document.title = title.toUpperCase();
+  window.print();
+ }
 
 function exportarcsv(){
    var TipoArchivo = "csv";
@@ -221,6 +239,17 @@ function exportarcsv(){
    var idmarca= "<?php echo $_GET["idmarca"]?>";
    var LocalActual = "<?php echo $LocalActual?>";
    var CondVenta = "<?php echo $_GET["condicionventa"]?>";
+   var EstadoOS  = "<?php echo $_GET["estadoos"]?>";
+   var Prioridad = "<?php echo $_GET["prioridad"]?>";
+   var Facturacion = "<?php echo $_GET["facturacion"]?>";
+   var EstadoSuscripcion = "<?php echo $_GET["estadosucripcion"]?>";
+   var TipoSuscripcion = "<?php echo $_GET["tiposuscripcion"]?>";
+   var TipoPagoSuscripcion = "<?php echo $_GET["tipopagosuscripcion"]?>";
+   var Prolongacion = "<?php echo $_GET["prolongacion"]?>";
+   var IdCliente = "<?php echo $_GET["idcliente"]?>";
+   var Codigo    = "<?php echo $_GET["codigo"]?>";
+   var EstadoPagoVenta = "<?php echo $_GET["estadopagoventa"]?>";
+
    var url  = 
      "exportarlistados.php?modo=ExportarDirectoCSV"+
      "&xfile="+TipoArchivo+
@@ -256,6 +285,16 @@ function exportarcsv(){
      "&tipocliente="+tipocliente+
      "&idmarca="+idmarca+
      "&condicionventa="+CondVenta+
+     "&estadoos="+EstadoOS+
+     "&prioridad="+Prioridad+
+     "&facturacion="+Facturacion+
+     "&estadosucripcion="+EstadoSuscripcion+
+     "&tiposuscripcion="+TipoSuscripcion+
+     "&tipopagosuscripcion="+TipoPagoSuscripcion+
+     "&prolongacion="+Prolongacion+
+     "&idcliente="+IdCliente+
+     "&codigo="+Codigo+
+     "&estadopagoventa="+EstadoPagoVenta+
      "&cb="+cb;
 
    document.location=url;
@@ -483,6 +522,8 @@ function PostProcesarSQL( $cod,$LocalActual ) {
     $cod = str_replace("%CODIGOBARRAS%",CleanRealMysql($_GET["cb"]),$cod);
   }
 
+  $estadopagoventa = str_replace('%%',"'%%'",CleanText($_GET["estadopagoventa"]));
+
   $periodoventa = $_GET["periodoventa"];
   if($periodoventa == 'DAY')
     $g_periodo = "$periodoventa(FechaComprobante)";
@@ -501,7 +542,7 @@ function PostProcesarSQL( $cod,$LocalActual ) {
   $cod = str_replace("%IDSUBSIDIARIO%",	CleanID($_GET["IdSubsidiario"]),$cod);
   $cod = str_replace("%STATUSTBJOSUBSIDIARIO%",	CleanText($_GET["StatusTrabajoSubsidiario"]),$cod);
   $cod = str_replace("%IDPROVEEDOR%",	CleanText($_GET["IdProveedor"]),$cod);
-  $cod = str_replace("%IDUSUARIO%",	CleanID($_GET["IdUsuario"]),$cod);
+  $cod = str_replace("%IDUSUARIO%",	CleanText($_GET["IdUsuario"]),$cod);
   $cod = str_replace("%REFERENCIA%",	CleanRealMysql($_GET["Referencia"]),$cod);
   $cod = str_replace("%NUMEROSERIE%",	CleanText($_GET["ns"]),$cod);
   $cod = str_replace("%LOTE%",	        CleanText($_GET["lote"]),$cod);
@@ -523,6 +564,16 @@ function PostProcesarSQL( $cod,$LocalActual ) {
   $cod = str_replace("%TIPOCLIENTE%",CleanText($_GET["tipocliente"]),$cod);
   $cod = str_replace("%IDMARCA%",CleanText($_GET["idmarca"]),$cod);
   $cod = str_replace("%CONDICIONVENTA%",CleanText($_GET["condicionventa"]),$cod);
+  $cod = str_replace("%ESTADOOS%",CleanText($_GET["estadoos"]),$cod);
+  $cod = str_replace("%PRIORIDAD%",CleanText($_GET["prioridad"]),$cod);
+  $cod = str_replace("%FACTURACION%",CleanText($_GET["facturacion"]),$cod);
+  $cod = str_replace("%ESTADOSUSCRIPCION%",CleanText($_GET["estadosucripcion"]),$cod);
+  $cod = str_replace("%TIPOSUSCRIPCION%",CleanText($_GET["tiposuscripcion"]),$cod);
+  $cod = str_replace("%TIPOPAGOSUSCRIPCION%",CleanText($_GET["tipopagosuscripcion"]),$cod);
+  $cod = str_replace("%PROLONGACION%",CleanText($_GET["prolongacion"]),$cod);
+  $cod = str_replace("%IDCLIENTE%",CleanText($_GET["idcliente"]),$cod);
+  $cod = str_replace("%CODIGO%",CleanText($_GET["codigo"]),$cod);
+  $cod = str_replace("'%IMPORTE%'",$estadopagoventa,$cod);
   $cod = str_replace("'%PERIODO_GROUP%'",$g_periodo,$cod);
   $cod = str_replace("%SML%",$Moneda[1]['S'],$cod);
 

@@ -3,11 +3,11 @@
   <spacer style="height:1.5em"/>
   <tabbox flex="1">
     <tabs style="font-size: 11px;">
-      <tab id="tab-selcliente" accesskey="S" label="Selección de cliente" />
-      <tab id="tab-newcliente" label="Crear nuevo cliente"/>
+      <tab id="tab-selcliente" label=" Selección de cliente" image="img/gpos_buscarcliente.png" />
+      <tab id="tab-newcliente" label=" Nuevo cliente"  image="img/gpos_nuevocliente.png" />
       <tab id="tab-vistacliente" label="" collapsed="true"/>
     </tabs>
-    <tabpanels flex="1" >
+    <tabpanels id="tab-boxclient" flex="1" >
       <tabpanel flex="1">
 	<groupbox flex="1">
 	  <caption label="Listado de clientes:" style="font-size: 13px;"/>
@@ -18,7 +18,7 @@
 		<button  image="img/gpos_tpv_clientecontado.png" id="clieLista" 
 			 label="  Cliente Contado" oncommand ="pickClienteContado()"
 			 style="font-size: 13px;"/>        
-		<button  image="img/gpos_clienteparticular.png" id="clieLista" style="font-size: 13px;"
+		<button  image="img/gpos_clienteparticular.png"  style="font-size: 13px;"
 			 label="  Usar seleccionado"   oncommand ="cargarCliente('sel')"/>
 		<textbox  id="buscaCliente" onkeyup="if (event.which == 13) cargarCliente('uno')" 
 			  oninput="buscarCliente()" placeholder=" Buscar " 
@@ -26,9 +26,10 @@
 		<textbox  id="buscaClienteSelect" value="0" collapsed="true"/>
 	      </hbox>
 	    </vbox>   
-	  <spacer style="height:0.9em"/>
+	    <spacer style="height:0.9em"/>
 	    <listbox id="clientPickArea" class="listado"  flex="1" style="height: 100%;" 
-		     value="0" onkeyup="if (event.which == 13) cargarCliente('sel')" >
+		     contextmenu="AccionesclientPickArea" value="0" 
+		     onkeyup="if (event.which == 13) cargarCliente('sel')" >
 	      <listcols>
 		<listcol flex="1"/>
 		<listcol flex="1"/>
@@ -46,12 +47,9 @@
 		<listheader label="Categoría"/>
 	      </listhead>
 	    </listbox>
-
-
 	  </vbox>
 	</groupbox>
       </tabpanel>
-
       <tabpanel>
 	<groupbox flex="1">
 	  <spacer style="height:1em"/>
@@ -75,7 +73,6 @@
 		    </menupopup>
 		  </menulist>
 		</row>
-
 		<row>
 		  <caption id="mtxtNombreComercial" label="Nombre"/>
 		  <textbox class="xnombre" onchange="ckeckNombreComercial()" 
@@ -191,8 +188,8 @@
 		    <box>
 		      <button image="img/gpos_aceptar.png" oncommand="ModificarCliente()" 
 			      label="Modificar" flex="1"/>
-		      <button image="img/gpos_cancelar.png" label="Eliminar"
-			      oncommand="EliminarClienteActual()" flex="1"/>
+		      <!--button image="img/gpos_cancelar.png" label="Eliminar"
+			      oncommand="EliminarClienteActual()" flex="1"/-->
 		    </box>
 		  </row>
 	      </rows>

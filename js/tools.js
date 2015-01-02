@@ -501,17 +501,17 @@ function setLocalPost(o,label){
 
 function selProveedorAux() { 
     var ven = "dialogWidth:" + "350" + "px;dialogHeight:" + "350" + "px";
-    popupx('selproveedor.php?modo=proveedorpost',ven,'proveedorhab'); 
+    popupx('../../modulos/proveedores/selproveedor.php?modo=proveedorpost',ven,'proveedorhab'); 
  }
 
 function selClienteAux() { 
     var ven = "dialogWidth:" + "350" + "px;dialogHeight:" + "350" + "px";
-    popupx('selcliente.php?modo=clientepost',ven,'clientehab'); 
+    popupx('../../modulos/clientes/selcliente.php?modo=clientepost',ven,'clientehab'); 
  }
 
 function selLocalAux() { 
     var ven = "dialogWidth:" + "350" + "px;dialogHeight:" + "350" + "px";
-    popupx('sellocal.php?modo=localpost',ven,'localhab'); 
+    popupx('../../modulos/locales/sellocal.php?modo=localpost',ven,'localhab'); 
  }
 
 

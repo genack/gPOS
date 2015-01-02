@@ -111,10 +111,12 @@ width: 1%;
 
 
 /* Datos centrados */
-.talla, .color, .iconos {
+.talla, .color{
  text-align: center;
 }
-
+.iconos { 
+ text-align: right;
+ }
 /* Precios de algo*/
 .precio, .unidades {
  text-align: right;
@@ -357,7 +359,9 @@ div.formaTituloCarrito {
  /* background-color: #ddd;*/
 
  text-align: right !important; 
- padding-right: 4px;
+ padding: .4em; 
+ padding-left: .5em; 
+ padding-right: .5em; 
 }
 
 /*??*/
@@ -594,11 +598,17 @@ td {
  color: #666;
 }
 
-td.precio, td.unidades, td.nilhead, td.talla, td.color, td.referencia,td.codigobarras, td.boton, td.iconos, td.local{
+td.precio, td.unidades, td.nilhead, td.talla, td.color, td.referencia,td.codigobarras,  td.local, td.iconos, td.boton {
  padding-top:0.6em;
  font-size: 75%;
 text-align:center;
 }
+ 
+td.botonicons{ 
+ padding-top:0.6em;
+ font-size: 75%;
+text-align:right;
+ }
 td.nombre, td.familia{
  padding-top:0.6em;
  font-size: 75%;
@@ -656,3 +666,20 @@ select{
 select:hover{
 	background-color: #ddd;
 }
+div.productoimagen{ 
+                    position: fixed; 
+                    border: 2px;
+                    border-radius: 8px;
+                    margin: 4px -120px 4px;
+                    padding: 4px;
+                    border: 1px solid #ece8de;/* green */
+                    height: 25em;
+                    width: 20em;
+                    background-color: #FBFBFB;
+                    /* background-image:url('../img/gpos_marcagua.png'); */
+                    background-size: 95%;
+                    background-repeat: no-repeat; 
+                    background-position: center center;
+                    box-shadow: 0px 1px 5px #eee;
+                    cursor:pointer;
+                    }

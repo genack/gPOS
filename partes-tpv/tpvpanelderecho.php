@@ -12,10 +12,10 @@
   <!-- box><label id='nombreProducto'   style="width:70px"  /></box -->
 </groupbox>
 
-<button  id="botonImprimir" disabled="<?php esCerradaArqueoCaja($IdLocalActivo)?>"  crop="end" image="img/gpos_imprimir.png" label=" <?php echo _("Imprimir") ?>" class="compacta" oncommand="AbrirPeticion()"/>
+<button  id="botonImprimir" disabled="<?php esCerradaArqueoCaja($IdLocalActivo)?>"  crop="end" image="img/gpos_imprimir.png" label=" <?php echo _("Vender") ?>" class="compacta" oncommand="AbrirPeticion()"/>
 
  <hbox>
-   <button id="botonBorrar" flex="1" crop="end" image="img/gpos_vaciarcompras.png" label=" <?php echo _("Borrar") ?>"  class="compacta" oncommand="BorrarVentaTPV()"/>	
+   <button id="botonBorrar" flex="1" crop="end" image="img/gpos_vaciarcompras.png" label=" <?php echo _("Cancelar") ?>"  class="compacta" oncommand="BorrarVentaTPV()"/>	
    <button id="botonGuardar" flex="1" crop="end" image="img/gpos_compras.png" label=" <?php echo _("Guardar") ?>"  class="compacta" oncommand="GuardarPreVentaTPV()"/>	
  </hbox>          
 

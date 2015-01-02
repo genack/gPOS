@@ -140,7 +140,7 @@ function Separador() {
 }
  
 function CenterOpen(){
-	//return "<p><a class=tb href='selmarca.php?modo=creamarca'>". _("Nueva marca") . "</a>";	
+	//return "<p><a class=tb href='modulos/productos/selmarca.php?modo=creamarca'>". _("Nueva marca") . "</a>";	
 	return '<center class="centered">';    
 } 
 

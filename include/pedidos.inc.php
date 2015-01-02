@@ -180,7 +180,6 @@ function registrarImportesTraslado($totalimporte,$IdComprobante,$IdPedido,$Motiv
 	   $KeysValues  = " ImporteNeto      = $baseimporte,"; 
 	   $KeysValues .= " ImporteImpuesto  = $impuesto,";
 	   $KeysValues .= " TotalImporte     = $totalimporte,";
-	   $KeysValues .= " ImportePago      = $totalimporte,";
 	   $KeysValues .= " Status           = $status,";
 	   $KeysValues .= " ImportePendiente = $pendiente";
 	   $sql         = " update ges_comprobantes set ".$KeysValues.
@@ -193,6 +192,7 @@ function registrarImportesTraslado($totalimporte,$IdComprobante,$IdPedido,$Motiv
 	   $KeysValues  = " ImporteBase      = $baseimporte,"; 
 	   $KeysValues .= " ImporteImpuesto  = $impuesto,";
 	   $KeysValues .= " TotalImporte     = $totalimporte,";
+	   $KeysValues .= " ImportePago      = $totalimporte,";
 	   $KeysValues .= " ImportePendiente = $totalimporte";
 	   $sql         = " update ges_comprobantesprov set ".$KeysValues.
 	                  " where  IdPedido  = '".$IdPedido."'";
@@ -887,8 +887,8 @@ function DetallesOrdenCompra($IdOrdenCompra){
 	  "       ges_productos.CodigoBarras,".
 	  "       CONCAT(ges_productos_idioma.Descripcion,' ',".
 	  "       ges_marcas.Marca,' ',".
-	  "       ges_colores.Color,' ',".
-	  "       ges_tallas.Talla,' ',".
+	  "       ges_modelos.Color,' ',".
+	  "       ges_detalles.Talla,' ',".
 	  "       ges_laboratorios.NombreComercial) as Producto,".
 	  "       ges_ordencompradet.Unidades as Cantidad,".
 	  "       ges_ordencompradet.Costo as Costo, ".
@@ -901,15 +901,15 @@ function DetallesOrdenCompra($IdOrdenCompra){
 	  "FROM   ges_ordencompradet 
 	        LEFT  JOIN ges_productos ON ges_ordencompradet.IdProducto = ges_productos.IdProducto 
                 INNER JOIN ges_productos_idioma ON ges_productos.IdProdBase = ges_productos_idioma.IdProdBase
-                INNER JOIN ges_tallas       ON ges_productos.IdTalla  = ges_tallas.IdTalla
-                INNER JOIN ges_colores      ON ges_productos.IdColor  = ges_colores.IdColor
+                INNER JOIN ges_detalles       ON ges_productos.IdTalla  = ges_detalles.IdTalla
+                INNER JOIN ges_modelos      ON ges_productos.IdColor  = ges_modelos.IdColor
                 INNER JOIN ges_laboratorios ON ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio
                 INNER JOIN ges_marcas       ON ges_productos.IdMarca  = ges_marcas.IdMarca
 	        INNER JOIN ges_contenedores ON ges_productos.IdContenedor = ges_contenedores.IdContenedor
                 WHERE ges_ordencompradet.IdOrdenCompra = '$IdOrdenCompra'
                 AND   ges_productos_idioma.IdIdioma    = 1
-                AND   ges_tallas.IdIdioma              = 1
-                AND   ges_colores.IdIdioma             = 1
+                AND   ges_detalles.IdIdioma              = 1
+                AND   ges_modelos.IdIdioma             = 1
                 AND   ges_ordencompradet.Eliminado     = 0 ";
 	
 	$res = query($sql);
@@ -931,8 +931,8 @@ function DetallesCompra($IdPedido,$esSoloMoneda){
 	  "       ges_productos.CodigoBarras,".
 	  "       CONCAT(ges_productos_idioma.Descripcion,' ',".
 	  "       ges_marcas.Marca,' ',".
-	  "       ges_colores.Color,' ',".
-	  "       ges_tallas.Talla,' ',".
+	  "       ges_modelos.Color,' ',".
+	  "       ges_detalles.Talla,' ',".
 	  "       ges_laboratorios.NombreComercial) as Producto,".
 	  "       ges_pedidosdet.Unidades as Cantidad,".
 	  "       (ges_pedidosdet.CostoUnidad*$extraMoneda) as Costo, ".
@@ -954,16 +954,16 @@ function DetallesCompra($IdPedido,$esSoloMoneda){
 	  "FROM   ges_pedidosdet ".
 	  "LEFT  JOIN ges_productos ON ges_pedidosdet.IdProducto = ges_productos.IdProducto ".
 	  "INNER JOIN ges_productos_idioma ON ges_productos.IdProdBase = ges_productos_idioma.IdProdBase ".
-	  "INNER JOIN ges_tallas       ON ges_productos.IdTalla  = ges_tallas.IdTalla ".
-	  "INNER JOIN ges_colores      ON ges_productos.IdColor  = ges_colores.IdColor ".
+	  "INNER JOIN ges_detalles       ON ges_productos.IdTalla  = ges_detalles.IdTalla ".
+	  "INNER JOIN ges_modelos      ON ges_productos.IdColor  = ges_modelos.IdColor ".
 	  "INNER JOIN ges_laboratorios ON ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
 	  "INNER JOIN ges_marcas       ON ges_productos.IdMarca  = ges_marcas.IdMarca ".
 	  "INNER JOIN ges_contenedores ON ges_productos.IdContenedor = ges_contenedores.IdContenedor ".
           "INNER JOIN ges_pedidos    ON ges_pedidosdet.IdPedido = ges_pedidos.IdPedido ".
 	  "WHERE ges_pedidosdet.IdPedido IN (".$IdPedido.") ".
 	  "AND   ges_productos_idioma.IdIdioma = 1 ".
-	  "AND   ges_tallas.IdIdioma           = 1 ".
-	  "AND   ges_colores.IdIdioma          = 1 ".
+	  "AND   ges_detalles.IdIdioma           = 1 ".
+	  "AND   ges_modelos.IdIdioma          = 1 ".
 	  "AND   ges_pedidosdet.Eliminado      = 0 ";
 
 	$res = query($sql);
@@ -985,8 +985,8 @@ function DetallesCompraRecibir($IdPedido,$IdAlmacen){
 	   "       ges_productos.CodigoBarras,".
 	   "       CONCAT(ges_productos_idioma.Descripcion,' ',".
 	   "       ges_marcas.Marca,' ',".
-	   "       ges_colores.Color,' ',".
-	   "       ges_tallas.Talla,' ',".
+	   "       ges_modelos.Color,' ',".
+	   "       ges_detalles.Talla,' ',".
 	   "       ges_laboratorios.NombreComercial) as Producto,".
 	   "       ges_pedidosdet.Unidades as Cantidad,".
 	   "       ges_pedidosdet.CostoUnidad as Costo, ".
@@ -1018,16 +1018,16 @@ function DetallesCompraRecibir($IdPedido,$IdAlmacen){
 	   "LEFT  JOIN ges_productos ON ges_pedidosdet.IdProducto = ges_productos.IdProducto ".
 	   "INNER JOIN ges_almacenes ON ges_almacenes.IdProducto  = ges_productos.IdProducto ".
 	   "INNER JOIN ges_productos_idioma ON ges_productos.IdProdBase = ges_productos_idioma.IdProdBase ".
-	   "INNER JOIN ges_tallas       ON ges_productos.IdTalla  = ges_tallas.IdTalla ".
-	   "INNER JOIN ges_colores      ON ges_productos.IdColor  = ges_colores.IdColor ".
+	   "INNER JOIN ges_detalles       ON ges_productos.IdTalla  = ges_detalles.IdTalla ".
+	   "INNER JOIN ges_modelos      ON ges_productos.IdColor  = ges_modelos.IdColor ".
 	   "INNER JOIN ges_laboratorios ON ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
 	   "INNER JOIN ges_marcas       ON ges_productos.IdMarca  = ges_marcas.IdMarca ".
 	   "INNER JOIN ges_contenedores ON ges_productos.IdContenedor = ges_contenedores.IdContenedor ".
 	   "WHERE ges_pedidosdet.IdPedido IN (".$IdPedido.") ".
 	   "AND   ges_almacenes.IdLocal         = '".$IdAlmacen."' ".
 	   "AND   ges_productos_idioma.IdIdioma = 1 ".
-	   "AND   ges_tallas.IdIdioma           = 1 ".
-	   "AND   ges_colores.IdIdioma          = 1 ".
+	   "AND   ges_detalles.IdIdioma           = 1 ".
+	   "AND   ges_modelos.IdIdioma          = 1 ".
 	   "AND   ges_pedidosdet.Eliminado      = 0 ";
 
 	 $res = query($sql);
@@ -1043,7 +1043,7 @@ function DetallesCompraRecibir($IdPedido,$IdAlmacen){
 
 function OrdenCompraPeriodo($local,$desde,$hasta,$nombre=false,$esSoloContado=false,
 			    $esSoloCredito=false,$esSoloMoneda=false,$esSoloLocal=false,
-			    $esSoloCompra=false,$forzaid,$entrega=false){
+			    $esSoloCompra=false,$filtrocodigo,$entrega=false,$forzaid){
          /* Clean Datos */
          $desde        = CleanRealMysql($desde);
 	 $hasta        = CleanRealMysql($hasta);
@@ -1053,7 +1053,9 @@ function OrdenCompraPeriodo($local,$desde,$hasta,$nombre=false,$esSoloContado=fa
 	 /* Proveedor */
 	 $extraNombre  = ($nombre and $nombre != '')?" AND ges_proveedores.nombreComercial LIKE '%$nombre%' ":"";
 	 /*Fechas: Desde,Hasta */
-	 $extraFecha   = ($forzaid != '')?" AND ges_ordencompra.CodOrdenCompra = '$forzaid' ":" AND date(ges_ordencompra.FechaRegistro) >= '$desde' AND date(ges_ordencompra.FechaRegistro) <= '$hasta' ";
+	 $extraFecha   = ($filtrocodigo != '')?" AND ges_ordencompra.CodOrdenCompra = '$filtrocodigo' ":" AND date(ges_ordencompra.FechaRegistro) >= '$desde' AND date(ges_ordencompra.FechaRegistro) <= '$hasta' ";
+
+	 $extraFecha   = ($forzaid > 0 )?" AND ges_ordencompra.IdOrdenCompra = '$forzaid' ":$extraFecha;
 
 	 $extraFecha   = ($entrega=='true')? " AND date(ges_ordencompra.FechaPrevista) >= '$desde' AND date(ges_ordencompra.FechaPrevista) <= '$hasta' ":$extraFecha;
 
@@ -1354,7 +1356,7 @@ function EditarOrdenCompra($xid,$tdoc,$esclon){
 	 //Header Orden Compra
 	 $estado      = ($tdoc=='O')?'Borrador':'Pedido';
 	 $detadoc     = getSesionDato('detadoc');  
-	 $datos       = OrdenCompraPeriodo('','','',false,true,true,false,false,$estado,$xid,'');
+	 $datos       = OrdenCompraPeriodo('','','',false,true,true,false,false,'Todos','','',$xid);
 	 $datostrj    = getTrabajosSubsidiario($xid);
 	 $Moneda      = getSesionDato("Moneda");
 	 $detadoc[0]  = $tdoc;//Documento Orden Compra

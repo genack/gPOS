@@ -177,8 +177,9 @@ function identificacionLocalValidaMd5($identificador,$passmd5){
 		//$_motivoFallo = _("No encuentra local");			
 		return false;
 	}
-	
-	$valido = md5($row["Password"]);// . $randString);
+
+	//$valido = md5($row["Password"]);// . $randString);
+	$valido = $row["Password"];// . $randString);
 	
 	if ( $valido != $passmd5) {
 		//$_motivoFallo = "DEBUG: datos'$valido != $passmd5', para " . $row["Password"];		
@@ -206,7 +207,8 @@ function identificacionUsuarioValidoMd5($identificador,$passmd5){
 	if (!$row)
 		return false;
 
-	$valido = md5($row["Password"]);// . $randString);
+	//$valido = md5($row["Password"]);// . $randString);
+	$valido = $row["Password"];// . $randString);
 	if ( $valido != $passmd5) {
 		$_motivoFallo = "datos'$valido != $passmd5'";		
 		return false;		

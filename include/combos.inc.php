@@ -10,7 +10,7 @@ function getIdMarcaFromMarca($marca){
 		return $row["IdMarca"];	
 	} 
 	
-	return 0;	
+	return 0;
 }
 
 function getIdContenedorFromContenedor($contenedor){
@@ -307,7 +307,7 @@ function genXulComboColores($selected=false,$xul="listitem", $idfamilia=false, $
   $idfamilia_text= "";
   $familia  = ($idfamilia)? "AND IdFamilia='".$idfamilia."'":'';
   $IdIdioma = getSesionDato("IdLenguajeDefecto");
-  $sql = "SELECT IdColor,Color  FROM ges_colores  WHERE Eliminado=0 ".$familia." AND IdIdioma = '".$IdIdioma."' ORDER BY Color ASC";
+  $sql = "SELECT IdColor,Color  FROM ges_modelos  WHERE Eliminado=0 ".$familia." AND IdIdioma = '".$IdIdioma."' ORDER BY Color ASC";
   $res = query($sql);
   if (!$res)
 		return false;
@@ -381,7 +381,7 @@ function genXulComboProductoAlias($selected=false,$xul="listitem", $idfamilia=1,
 
 function genComboColores($selected=false){
 	$IdIdioma = getSesionDato("IdLenguajeDefecto");
-	$sql = "SELECT IdColor,Color  FROM ges_colores  WHERE Eliminado=0 AND IdIdioma = '$IdIdioma' ORDER BY Color ASC";
+	$sql = "SELECT IdColor,Color  FROM ges_modelos  WHERE Eliminado=0 AND IdIdioma = '$IdIdioma' ORDER BY Color ASC";
 	$res = query($sql);
 	if (!$res)
 		return false;
@@ -402,7 +402,7 @@ function genComboColores($selected=false){
 
 function genArrayColores($idfamilia){
 	$IdIdioma = getSesionDato("IdLenguajeDefecto");
-	$sql = "SELECT IdColor,Color  FROM ges_colores  WHERE Eliminado=0 AND IdFamilia='$idfamilia' AND IdIdioma = '$IdIdioma' ORDER BY Color ASC";
+	$sql = "SELECT IdColor,Color  FROM ges_modelos  WHERE Eliminado=0 AND IdFamilia='$idfamilia' AND IdIdioma = '$IdIdioma' ORDER BY Color ASC";
 	$res = query($sql);
 
 	if (!$res)
@@ -465,6 +465,24 @@ function genArrayMarcas(){
 	}
 	return $out;		
 }
+function genArrayTipoServicios(){
+	
+	$sql = "SELECT IdTipoServicio,TipoServicio,SAT  FROM ges_tiposervicio  WHERE Eliminado=0 ORDER BY TipoServicio ASC";
+	$res = query($sql);
+	if (!$res)
+		return false;
+		
+	$out =array();	
+			
+	while($row=Row($res)){
+		$sat = ($row["SAT"])? ' - SAT':'';
+		$key = $row["IdTipoServicio"];
+		$value = $row["TipoServicio"].$sat;
+		$out[$key]=$value;
+	}
+	return $out;		
+}
+ 
 function genArrayContenedores(){
 	
 	$sql = "SELECT IdContenedor,Contenedor  FROM ges_contenedores  WHERE Eliminado=0 ORDER BY Contenedor ASC";
@@ -485,7 +503,7 @@ function genArrayContenedores(){
 function genArrayTallas($IdTallaje=5,$idfamilia=1){
         $idfamilia_text= "";
 	$IdIdioma = getSesionDato("IdLenguajeDefecto");
-	$sql = "SELECT IdTalla,Talla  FROM ges_tallas WHERE Eliminado=0 AND IdFamilia='".$idfamilia."' AND IdTallaje='".$IdTallaje."' AND IdIdioma = '".$IdIdioma."' ORDER BY Talla + 0 ASC";
+	$sql = "SELECT IdTalla,Talla  FROM ges_detalles WHERE Eliminado=0 AND IdFamilia='".$idfamilia."' AND IdTallaje='".$IdTallaje."' AND IdIdioma = '".$IdIdioma."' ORDER BY Talla + 0 ASC";
 	$res = query($sql);
 	if (!$res)
 		return false;
@@ -796,7 +814,7 @@ function genXulComboLaboratorios($selected=false,$xul="listitem") {
 function genXulComboTallas($selected=false,$xul="listitem",$IdTallaje=5, $autoid=false, $idfamilia=false){
 	$IdIdioma = getSesionDato("IdLenguajeDefecto");
 	$familia  = ($idfamilia)? "AND IdFamilia='".$idfamilia."'":'';
-	$sql = "SELECT IdTalla,Talla FROM ges_tallas   WHERE Eliminado=0 ".$familia." AND IdTallaje='".$IdTallaje."' AND IdIdioma = '".$IdIdioma."' ORDER BY Talla + 0 ASC";
+	$sql = "SELECT IdTalla,Talla FROM ges_detalles   WHERE Eliminado=0 ".$familia." AND IdTallaje='".$IdTallaje."' AND IdIdioma = '".$IdIdioma."' ORDER BY Talla + 0 ASC";
 	$res = query($sql);
 	if (!$res)
 		return false;
@@ -844,7 +862,54 @@ function genXulComboMarcas($selected=false,$xul="listitem"){
 		if ($key!=$selected)
 			$out .= "<$xul value='$key' label='$value'/>";
 		else	
-			$out .= "<$xul selected='yes' value='$key' label='$value'/>";
+			$out .= "<$xul selected='true' value='$key' label='$value'/>";
+	}
+	return $out;		
+}
+
+function genXulComboTipoServicios($selected=false,$xul="listitem"){
+
+	$sql = "SELECT IdTipoServicio,TipoServicio,SAT FROM ges_tiposervicio  WHERE Eliminado=0 ORDER BY TipoServicio ASC";
+	$res = query($sql);
+	if (!$res)
+		return false;
+		
+	$out = "";	
+			
+	while($row=Row($res)){
+		$key = $row["IdTipoServicio"];
+		$sat = ($row["SAT"])? ' - SAT':'';
+		$value = CleanXulLabel($row["TipoServicio"]);
+		if ($key!=$selected)
+			$out .= "<$xul value='$key' label='$value.$sat'/>";
+		else	
+			$out .= "<$xul selected='yes' value='$key' label='$value.$sat'/>";
+	}
+	return $out;		
+}
+
+function genXulComboTipoSuscripcion($selected=false,$xul="listitem",$xfunction=false){
+
+	$sql = "SELECT IdTipoSuscripcion,TipoSuscripcion 
+                FROM ges_suscripciontipo 
+                WHERE Eliminado=0 
+                ORDER BY TipoSuscripcion ASC ";
+
+	$xfunction = ( $xfunction )? "oncommand='".$xfunction."'":"";
+
+	$res = query($sql);
+	if (!$res)
+		return false;
+		
+	$out = "";	
+			
+	while($row=Row($res)){
+		$key = $row["IdTipoSuscripcion"];
+		$value = CleanXulLabel($row["TipoSuscripcion"]);
+		if ($key!=$selected)
+			$out .= "<$xul value='$key' label='$value' $xfunction/>";
+		else	
+			$out .= "<$xul selected='yes' value='$key' label='$value' $xfunction />";
 	}
 	return $out;		
 }
@@ -917,7 +982,7 @@ function genXulComboContenedores($selected=false,$xul="listitem",$autoid=false){
 
 function genComboTallas($selected=false){
 	$IdIdioma = getSesionDato("IdLenguajeDefecto");
-	$sql = "SELECT IdTalla,Talla FROM ges_tallas  WHERE Eliminado=0 AND IdIdioma = '$IdIdioma' ORDER BY Talla ASC";
+	$sql = "SELECT IdTalla,Talla FROM ges_detalles  WHERE Eliminado=0 AND IdIdioma = '$IdIdioma' ORDER BY Talla ASC";
 	$res = query($sql);
 	if (!$res)
 		return false;
@@ -998,9 +1063,10 @@ function genComboPaises($selected=false){
 	return $out;		
 }
 
-function genXulComboUsuarios($selected=false,$xul="listitem"){
+function genXulComboUsuarios($selected=false,$xul="listitem",$idlocal=false){
 
-	$sql = "SELECT IdUsuario,Nombre FROM ges_usuarios  WHERE Eliminado=0 ORDER BY Nombre ASC";
+	$sql = "SELECT IdUsuario,Nombre FROM ges_usuarios  WHERE Eliminado = 0 
+                AND IdLocal IN ('0','$idlocal') ORDER BY Nombre ASC";
 	$res = query($sql);
 	if (!$res)
 		return false;
@@ -1013,7 +1079,7 @@ function genXulComboUsuarios($selected=false,$xul="listitem"){
 		if ($key!=$selected)
 			$out .= "<$xul value='$key' label='$value'/>";
 		else	
-			$out .= "<$xul selected='yes' value='$key' label='$value'/>";
+			$out .= "<$xul selected='true' value='$key' label='$value'/>";
 	}
 	return $out;		
 }
@@ -1182,5 +1248,138 @@ function genXulComboHistorialVentaPeriodo(){
 	return $out;		
 }
 
+function genArrayTipoServicio(){
+	$sql = "SELECT CONCAT(IdProducto,'~',SAT) as IdProducto,
+                Descripcion as Servicio 
+                FROM ges_productos 
+                INNER JOIN ges_tiposervicio ON ges_productos.Servicio = ges_tiposervicio.IdTipoServicio 
+                INNER JOIN ges_productos_idioma ON ges_productos.IdProdBase = ges_productos_idioma.IdProdBase
+                WHERE ges_productos.Eliminado=0  ORDER BY TipoServicio ASC";
+	$res = query($sql);
+	if (!$res)
+		return false;
+		
+	$out        = array();	
+	$preprocess = array();
+			
+	while($row=Row($res)){
+		$key = $row["IdProducto"];
+		$value = NormalizaTalla($row["Servicio"]);
+		
+		//$out[$key]=$value;
+		$preprocess[$value] = $key;
+	}
+	
+	foreach($preprocess as $key=>$value){
+		$out[$value] = $key;			
+	}	
+	
+	return $out;		
+}
+
+function genArrayModeloSat($IdMarca){
+	$sql = "SELECT IdModeloSat,Modelo FROM ges_modelosat WHERE Eliminado=0 
+                AND IdMarca = '$IdMarca' ORDER BY Modelo ASC";
+	$res = query($sql);
+	if (!$res)
+		return false;
+		
+	$out        = array();	
+	$preprocess = array();
+			
+	while($row=Row($res)){
+		$key = $row["IdModeloSat"];
+		$value = NormalizaTalla($row["Modelo"]);
+		
+		//$out[$key]=$value;
+		$preprocess[$value] = $key;
+	}
+	
+	foreach($preprocess as $key=>$value){
+		$out[$value] = $key;			
+	}	
+	
+	return $out;		
+}
+
+function genXulComboMarcasSat($selected=false,$xul="listitem",$xdet){
+
+  $out  = "<$xul value='0' label='Nuevo Marca' style='font-weight: bold' oncommand='mostrarNuevoMarca(true,$xdet)'/>";
+  
+  $out .= genXulComboMarcas($selected,$xul);	
+  
+  return $out;
+}
+
+function genXulComboProductoSat($selected=false,$xul="listitem",$xdet){
+        $sql = "SELECT IdProdBaseSat as Producto, Descripcion FROM ges_productosidiomasat 
+                WHERE Eliminado = 0 order by Descripcion ASC ";
+
+	$res = query($sql);
+	if (!$res)
+		return false;
+		
+	$out = "<$xul value='0' label='Nuevo Producto' style='font-weight: bold' oncommand='mostrarNuevoProductoSat(true,$xdet)'/>";
+
+	while($row=Row($res)){
+
+	  $key   = $row["Producto"];
+	  $value = CleanXulLabel($row["Descripcion"]);
+	  if ($key!=$selected)
+	    $out .= "<$xul value='$key' label='$value'/>";
+	  else	
+	    $out .= "<$xul selected='true' value='$key' label='$value'/>";
+	}
+
+	return $out;
+}
+
+function genXulComboMotivoSat($selected=false,$xul="listitem"){
+	$sql = "SELECT IdMotivoSat,Motivo FROM ges_motivosat WHERE Eliminado=0 
+                ORDER BY Motivo ASC ";
+
+	$res = query($sql);
+	if (!$res)
+		return false;
+		
+	$out = "<$xul value='0' label='Nuevo Motivo' style='font-weight: bold' oncommand='mostrarNuevoMotivoSat(true)'/>";
+
+			
+	while($row=Row($res)){
+		$key = $row["IdMotivoSat"];
+		$value = CleanXulLabel($row["Motivo"]);
+		if ($key != $selected)
+			$out .= "<$xul value='$key' label='$value'/>";
+		else	
+			$out .= "<$xul selected='true' value='$key' label='$value'/>";
+	}
+	return $out;		
+}
+
+function genXulComboModeloSat($selected=false,$xul="listitem",$IdMarca,$xdet){
+	$sql = "SELECT IdModeloSat,Modelo FROM ges_modelosat WHERE Eliminado=0 
+                AND IdMarca = '$IdMarca' ORDER BY Modelo ASC";
+
+	$res = query($sql);
+	if (!$res)
+		return false;
+	$t = 0;
+	$xitem   = ($xdet == 0)? "modelo_def_":"modelodet_def_";
+	$xiditem = $xitem.$t;
+	
+	$out = "<$xul value='0' label='Nuevo Modelo' style='font-weight: bold' oncommand='mostrarNuevoModelo(true,$xdet)' id='$xiditem'/>";
+			
+	while($row=Row($res)){
+	  $t++;
+	  $key = $row["IdModeloSat"];
+	  $value = CleanXulLabel($row["Modelo"]);
+	  $xid = $xitem.$t;
+	  if ($key!=$selected)
+	    $out .= "<$xul value='$key' label='$value' id='$xid'/>";
+	  else	
+	    $out .= "<$xul selected='true' value='$key' label='$value' id='$xid'/>";
+	}
+	return $out;		
+}
 
 ?>

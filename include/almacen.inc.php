@@ -34,7 +34,7 @@ function DetalleProductosAlmacen($codigo,$descripcion,$idmarca,$idfamilia,$IdLoc
       $condicion = $condicion." AND ( ges_productos.Referencia like '%$codigo%' OR ges_productos.CodigoBarras like '$codigo' )";
 
     if($descripcion != "")
-      $condicion = $condicion." AND ( ges_productos_idioma.Descripcion like '%$descripcion%' OR ges_colores.Color like '%$descripcion%' OR ges_tallas.Talla like '%$descripcion%' OR ges_laboratorios.NombreComercial like '%$descripcion%' ) ";
+      $condicion = $condicion." AND ( ges_productos_idioma.Descripcion like '%$descripcion%' OR ges_modelos.Color like '%$descripcion%' OR ges_detalles.Talla like '%$descripcion%' OR ges_laboratorios.NombreComercial like '%$descripcion%' ) ";
 
     if($idfamilia != 0)
         $condicion = $condicion." AND ges_productos.IdFamilia = '$idfamilia' ";
@@ -55,14 +55,14 @@ function DetalleProductosAlmacen($codigo,$descripcion,$idmarca,$idfamilia,$IdLoc
            " Color, Talla, NombreComercial, StockMin,  CostoUnitario, ".
            " ges_almacenes.Unidades,  PrecioVenta, PVDDescontado, PrecioVentaCorporativo, ".
            " PVCDescontado, PrecioVentaSource, PrecioVentaCorpSource, UnidadMedida ".
-           " FROM ges_productos, ges_productos_idioma, ges_marcas, ges_colores , ".
-           " ges_tallas, ges_laboratorios, ges_almacenes ".
+           " FROM ges_productos, ges_productos_idioma, ges_marcas, ges_modelos , ".
+           " ges_detalles, ges_laboratorios, ges_almacenes ".
            " WHERE ges_almacenes.IdProducto = ges_productos.IdProducto ".
            " AND ges_productos.IdProdBase = ges_productos_idioma.IdProdBase ".
            " AND ges_productos.IdMarca = ges_marcas.IdMarca ".
-           " AND ges_productos.IdColor = ges_colores.IdColor ".
-           " AND ges_productos.IdTallaje = ges_tallas.IdTallaje ".
-           " AND ges_productos.IdTalla = ges_tallas.IdTalla ".
+           " AND ges_productos.IdColor = ges_modelos.IdColor ".
+           " AND ges_productos.IdTallaje = ges_detalles.IdTallaje ".
+           " AND ges_productos.IdTalla = ges_detalles.IdTalla ".
            " AND ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
            " AND ges_productos.IdProducto = ges_almacenes.IdProducto ".
            " AND ges_almacenes.IdLocal = '".$IdLocal."' ".$condicion." ".
