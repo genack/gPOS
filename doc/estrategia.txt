@@ -8,4 +8,7 @@
 * Genack
 * Activistas Software Libre
 * genack.net
+*
+* ekiss.biz
+* Darío Loaiza (diseño de los íconos)
 **/

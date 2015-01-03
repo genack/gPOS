@@ -22,9 +22,11 @@ Instalación
 
 2. En su navegador firefox ingrese a `http://tudominio/gpos/`.
 
-3. Borre la carpeta install por seguridad.
+3. Si el instalador automático de xulremote falle, configure manualmente.
 
-4. Modifique las contraseñas por defecto del local `Local:almacen, Contraseña:almacen`, del usuario `Usuario : admin, Contraseña : admin`, de mantenimiento `Usuario:soporte, Contraseña: soporte`. Otros locales registrados `local:localuno, contraseña:localuno, local:localdos, contraseña:localdos`.
+4. Borre la carpeta install por seguridad.
+
+5. Modifique las contraseñas por defecto del local `Local:almacen, Contraseña:almacen`, del usuario `Usuario : admin, Contraseña : admin`, de mantenimiento `Usuario:soporte, Contraseña: soporte`. Otros locales registrados `local:localuno, contraseña:localuno, local:localdos, contraseña:localdos`.
 
 Documentación
 -------------
@@ -36,4 +38,4 @@ Contribución
 ------------
 
 * [ekiss.biz](http://ekiss.biz)  diseño de iconos, documentación.
-* [genack.net](http://genack.get)  diseño y desarrollo.
+* [genack.net](http://genack.net)  diseño y desarrollo.

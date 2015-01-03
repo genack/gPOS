@@ -293,7 +293,7 @@ function verificarPassUser($id,$passmd5){
     return false;
   }
   
-  $valido = md5($row["Password"]);// . $randString);
+  $valido = $row["Password"];// . $randString);
   
   if ( $valido != $passmd5) {
     //$_motivoFallo = "DEBUG: datos'$valido != $passmd5', para " . $row["Password"];		
