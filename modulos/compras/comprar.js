@@ -106,7 +106,7 @@ function setblockListado(check){
 function getNumeroSeriesCompras(id,cantidadtotal,trasAlta){
 
     var main    = parent.getWebForm();
-    var url  = "selcomprar.php?id="+id+
+    var url  = "modulos/compras/selcomprar.php?id="+id+
                "&modo=visualizarseriebuy"+
                "&trasAlta="+trasAlta+
                "&u="+cantidadtotal;

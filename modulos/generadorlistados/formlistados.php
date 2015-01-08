@@ -241,6 +241,9 @@ function DetectaActivos($cod){
 	if(strpos($cod,'%IMPORTE%') > 0){
 	        $a .= "EstadoPagoVenta,";
 	}	
+	if(strpos($cod,'%COBRANZA%') > 0){
+	        $a .= "Cobranza,";
+	}	
 
 	return $a;
 }
@@ -411,14 +414,6 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
         </vbox>
       </hbox>			
 
-      <hbox id="getSerieComprobante" collapsed="true" align="center">
-	<spacer style="width: 5px"/>
-        <vbox>
-          <label value="Serie Comprobante:"/>
-	  <textbox class="media" id="SerieComprobante" value=""/>
-        </vbox>
-      </hbox>
-
       <hbox id="getTipoCliente" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
@@ -434,38 +429,6 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  </menulist>
         </vbox>
       </hbox>			
-	
-      <hbox id="getReferencia" collapsed="true" align="center">
-	<spacer style="width: 5px"/>
-        <vbox>
-	  <label value="Referencia:"/>
-	  <textbox class="media" id="Referencia" value=""/>
-        </vbox>
-      </hbox>			
-
-      <hbox id="getCB" collapsed="true" align="center">
-	<spacer style="width: 5px"/>
-        <vbox>
-	  <label value="Codigo barras:"/>
-	  <textbox class="media" id="CB" value=""/>
-        </vbox>
-      </hbox>
-
-      <hbox id="getNumeroSerie" collapsed="true" align="center">
-	<spacer style="width: 5px"/>
-        <vbox>
-	  <label value="Numero Serie:"/>
-	  <textbox class="media" id="NumeroSerie" value=""/>
-        </vbox>
-      </hbox>				
-	
-      <hbox id="getLote" collapsed="true" align="center">
-	<spacer style="width: 5px"/>
-        <vbox>
-	  <label value="Lote:"/>
-	  <textbox class="media" id="Lote" value=""/>
-        </vbox>
-      </hbox>	
 
       <hbox id="getEstadoComprobante" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
@@ -665,7 +628,6 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	      <menuitem label="Suspendido" value="Suspendido"/>
 	      <menuitem label="Finalizado" value="Finalizado"/>
 	      <menuitem label="Cancelado" value="Cancelado"/>
-	      <menuitem label="Corte" value="Corte"/>
 	    </menupopup>
 	  </menulist>
 	</vbox>
@@ -738,6 +700,61 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  </menulist>
 	</vbox>
       </hbox>
+
+      <hbox id="getCobranza" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Estado Cobranza:"/>
+	  <menulist  id="Cobranza">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Pendiente" value="Pendiente" />
+	      <menuitem label="Prórroga" value="Prorroga"/>
+	      <menuitem label="Coactivo" value="Coactivo"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getSerieComprobante" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+        <vbox>
+          <label value="Serie Comprobante:"/>
+	  <textbox class="media" id="SerieComprobante" value=""/>
+        </vbox>
+      </hbox>
+
+      <hbox id="getReferencia" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+        <vbox>
+	  <label value="Referencia:"/>
+	  <textbox class="media" id="Referencia" value=""/>
+        </vbox>
+      </hbox>			
+
+      <hbox id="getCB" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+        <vbox>
+	  <label value="Codigo barras:"/>
+	  <textbox class="media" id="CB" value=""/>
+        </vbox>
+      </hbox>
+
+      <hbox id="getNumeroSerie" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+        <vbox>
+	  <label value="Numero Serie:"/>
+	  <textbox class="media" id="NumeroSerie" value=""/>
+        </vbox>
+      </hbox>				
+	
+      <hbox id="getLote" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+        <vbox>
+	  <label value="Lote:"/>
+	  <textbox class="media" id="Lote" value=""/>
+        </vbox>
+      </hbox>	
 
       <hbox id="getDNICliente" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
@@ -828,6 +845,7 @@ function CambiaListado() {
 	        "&tipopagosuscripcion="+escape(id("TipoPagoSuscripcion").value)+
 	        "&prolongacion="+escape(id("Prolongacion").value)+
 	        "&idcliente="+escape(id("IdCliente").value)+
+	        "&cobranza="+escape(id("Cobranza").value)+
 	        "&codigo="+escape(Codigo)+
 	        "&estadopagoventa="+escape(id("EstadoPagoVenta").value)+
 	        "&estpvop="+escape(esTPVOP)+
@@ -895,6 +913,7 @@ function SetActive( val, Categoria ){
 	id("getIdCliente").setAttribute("collapsed","true");
 	id("getCodigo").setAttribute("collapsed","true");
 	id("getEstadoPagoVenta").setAttribute("collapsed","true");
+	id("getCobranza").setAttribute("collapsed","true");
 
 	for( t=0;t<dinterface.length;t++){
 	        dinterface[t] = dinterface[t].replace(/^\s+/,'').replace(/\s+$/,'');

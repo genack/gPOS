@@ -15,7 +15,12 @@ function getParametro($nombre) {
 	return $params[$nombre];	
 }
 
+function setParametroSuscripcion() {
 
+	query("update ges_parametros set Suscripcion = NOW()");
+	$row = queryrow("select * from ges_parametros","Cargando parametros");
+	$_SESSION["Parametros"] = $row;
+}
 
 function getSesionDato($nombre){
 	global $debug_mode;

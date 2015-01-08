@@ -66,8 +66,8 @@ function RevisarVentaSeleccionada(){
     cIdClienteComprobanteVenta = idex.childNodes[6].attributes.getNamedItem('value').nodeValue;
     cMontoComprobanteVenta     = idex.childNodes[8].attributes.getNamedItem('label').nodeValue;
     cPendienteComprobanteVenta = idex.childNodes[9].attributes.getNamedItem('label').nodeValue;
-    cIdLocalVenta = idex.childNodes[12].attributes.getNamedItem('value').nodeValue;
-    cIdSuscripcionVenta = idex.childNodes[13].attributes.getNamedItem('value').nodeValue;
+    cIdLocalVenta = idex.childNodes[13].attributes.getNamedItem('value').nodeValue;
+    cIdSuscripcionVenta = idex.childNodes[14].attributes.getNamedItem('value').nodeValue;
 
     idfacturaseleccionada = idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
     var cadena            = idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
@@ -421,9 +421,10 @@ var ilineabuscaventas = 0;
 
 function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
 			IdComprobanteVenta,nombreCliente,NumeroDocumento,TipoDocumento,
-			IdCliente,Local,IdLocal,MotivoAlba,IdSuscripcion){
+			IdCliente,Local,IdLocal,MotivoAlba,IdSuscripcion,FechaEmision,
+			PlazoPago,Cobranza,Observaciones){
     var lista = id("busquedaVentas");
-    var xitem, xnumitem, xvendedor,xserie,xnum,xfecha,xtotal,xpendiente,xestado,xtipodoc,xop,xlocal,xsuscripcion;
+    var xitem, xnumitem, xvendedor,xserie,xnum,xfecha,xtotal,xpendiente,xestado,xtipodoc,xop,xlocal,xsuscripcion,xemision,xplazopago,xcobranza,xobservaciones;
     
     xitem = document.createElement("listitem");
     xitem.value = IdComprobanteVenta;
@@ -463,7 +464,11 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
     xfecha = document.createElement("listcell");
     xfecha.setAttribute("style","text-align:right");
     xfecha.setAttribute("label", fecha);	
-    
+
+    xemision = document.createElement("listcell");
+    xemision.setAttribute("style","text-align:right");
+    xemision.setAttribute("label", FechaEmision);
+
     xtotal = document.createElement("listcell");
     xtotal.setAttribute("label", parseFloat(total).toFixed(2));
     xtotal.setAttribute("style","text-align:right");
@@ -506,6 +511,21 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
     xsuscripcion.setAttribute("collapsed", "true");
     xsuscripcion.setAttribute("id","venta_sucripcion_"+IdComprobanteVenta);
 
+    xplazopago = document.createElement("listcell");
+    xplazopago.setAttribute("value", PlazoPago);
+    xplazopago.setAttribute("collapsed", "true");
+    xplazopago.setAttribute("id","venta_plazopago_"+IdComprobanteVenta);
+
+    xcobranza = document.createElement("listcell");
+    xcobranza.setAttribute("value", Cobranza);
+    xcobranza.setAttribute("collapsed", "true");
+    xcobranza.setAttribute("id","venta_cobranza_"+IdComprobanteVenta);
+
+    xobservaciones = document.createElement("listcell");
+    xobservaciones.setAttribute("value", Observaciones);
+    xobservaciones.setAttribute("collapsed", "true");
+    xobservaciones.setAttribute("id","venta_observaciones_"+IdComprobanteVenta);
+
     
     xitem.appendChild( xnumitem );
     xitem.appendChild( xserie );
@@ -515,12 +535,16 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
     xitem.appendChild( xnumdoc );
     xitem.appendChild( xnombre );	
     xitem.appendChild( xfecha );
+    xitem.appendChild( xemision );
     xitem.appendChild( xtotal );
     xitem.appendChild( xpendiente );	
     xitem.appendChild( xestado );
     xitem.appendChild( xvendedor );
     xitem.appendChild( xlocal );
     xitem.appendChild( xsuscripcion );
+    xitem.appendChild( xplazopago );
+    xitem.appendChild( xcobranza );
+    xitem.appendChild( xobservaciones );
 
     lista.appendChild( xitem );		
 }
@@ -590,7 +614,7 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
     var tex = "";
     var cr = "\n";
     
-    var vendedor,serie,num,fecha,total,pendiente,estado,IdComprobanteVenta,NumeroDocumento,TipoDocumento,IdCliente,Local,IdLocal;
+    var vendedor,serie,num,fecha,total,pendiente,estado,IdComprobanteVenta,NumeroDocumento,TipoDocumento,IdCliente,Local,IdLocal,FechaEmision,PlazoPago,Cobranza,Observaciones;
     var node,t,i,codventa; 
     var totalVenta = 0;
     var totalVentaPendiente = 0;
@@ -639,11 +663,15 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
 	    IdLocal       = node.childNodes[t++].firstChild.nodeValue;
 	    MotivoAlba    = node.childNodes[t++].firstChild.nodeValue;
 	    IdSuscripcion = node.childNodes[t++].firstChild.nodeValue;
+	    FechaEmision  = node.childNodes[t++].firstChild.nodeValue;
+	    PlazoPago     = node.childNodes[t++].firstChild.nodeValue;
+	    Cobranza      = node.childNodes[t++].firstChild.nodeValue;
+	    Observaciones = node.childNodes[t++].firstChild.nodeValue;
 
 	    FuncionProcesaLinea(item,vendedor,serie,num,fecha,total,pendiente,estado,
 				IdComprobanteVenta,nombreCliente,NumeroDocumento,
 				TipoDocumento,IdCliente,Local,IdLocal,MotivoAlba,
-				IdSuscripcion);
+				IdSuscripcion,FechaEmision,PlazoPago,Cobranza,Observaciones);
 	    
 	    item--;
         }
@@ -888,7 +916,7 @@ function ImprimirSuscripcionSeleccionada(){
 	//imprime pdf
     var url=
 	"../fpdf/imprimir_suscripcion_tpv.php?"+
-	"nro"+TipoVenta+"="+nroDocumento+"&"+
+	"nro="+nroDocumento+"&"+
 	"totaletras="+importeletras+"&"+
 	"codcliente="+codcliente+"&"+
 	"nroSerie="+nroSerie+"&"+
@@ -926,19 +954,36 @@ function VentanaAbonos(){
     var dineropendiente = xpen.getAttribute("label");
     var serie           = id("venta_serie_" + IdComprobanteVenta).getAttribute("label");
     var num             = id("venta_num_" + IdComprobanteVenta).getAttribute("label");
-    var serienumfactura = serie+num;
+    var serienumfactura = serie;
+    var plazopago       = id("venta_plazopago_" + IdComprobanteVenta).getAttribute("value");
+    var cobranza        = id("venta_cobranza_" + IdComprobanteVenta).getAttribute("value");
+    var observaciones   = trim(id("venta_observaciones_" + IdComprobanteVenta).getAttribute("value"));
+    var ventapendiente  = id("venta_pendiente_" + IdComprobanteVenta).getAttribute("label");
 
+    var f = new Date();
+    var fechahoy  = f.getFullYear() + "-" + (f.getMonth() +1) + "-" + f.getDate();
+
+    plazopago = (plazopago == '0000-00-00')? fechahoy:plazopago;
     //resetea nuevo abono
     Abonar = new Object();	
     
     //fijamos la id actual
-    Abonar.IdComprobanteVenta = IdComprobanteVenta;	
+    Abonar.IdComprobanteVenta = IdComprobanteVenta;
     Abonar.Maximo             = parseFloat(dineropendiente).toFixed(2);
-    
+
     id("abono_Debe").setAttribute("value",formatDinero(Abonar.Maximo));
     id("abono_Efectivo").setAttribute("value",formatDinero(Abonar.Maximo));
     id("abono_numTicket").setAttribute("label",res[0]+' '+serienumfactura);
+    id("plazo_pago").setAttribute("value",plazopago);
+    id("plazo_pago").value = plazopago;
+    id("estado_cobranza").setAttribute("value",cobranza);
+    id("estado_cobranza").value = cobranza;
+    id("observaciones").setAttribute("value",observaciones);
+
+    var xpte = (ventapendiente > 0)? false:true;
     
+    id("rowPlazoPago").setAttribute("collapsed",xpte);
+    id("rowEstadoCobranza").setAttribute("collapsed",xpte);
 }
 
 function ActualizaPeticionAbono() {
@@ -950,6 +995,48 @@ function ActualizaPeticionAbono() {
     var pendiente = Abonar.Maximo - entrega;
     id("abono_Pendiente").setAttribute("value", formatDinero(pendiente));
     id("abono_nuevo").setAttribute("value", formatDinero(entrega));	
+}
+
+function ModificarEstadoPago(xvalue){
+    var xdato = "";
+    var idex  = id("busquedaVentas").selectedItem;
+    var IdComprobanteVenta  = idex.value;
+
+    switch(xvalue){
+    case '1':
+	var xplazo = id("plazo_pago").value;
+	xdato = xplazo;
+	
+	break;
+    case '2':
+	var xcobranza = id("estado_cobranza").value;
+	xdato = xcobranza;
+	
+	break;
+    case '3':
+	var xobs = id("observaciones").value;
+	xdato = trim(xobs);
+    
+	break;
+    }
+    
+    var obj = new XMLHttpRequest();
+    var url = "modpagoscobros.php?modo=actualizaEstadoPago"
+	+ "&xid=" + IdComprobanteVenta
+        + "&xdato=" + xdato
+        + "&xop=" + xvalue;
+
+    obj.open("GET",url,false);
+    obj.send(null);
+    if (obj.responseText != 1)
+	return alert("gPOS:\n\n "+obj.responseText);
+
+    if(xvalue == 1) 
+	id("venta_plazopago_" + IdComprobanteVenta).setAttribute("value",xplazo);
+    if(xvalue == 2)
+	id("venta_cobranza_" + IdComprobanteVenta).setAttribute("value",xcobranza);
+    if(xvalue == 3)
+	id("venta_observaciones_" + IdComprobanteVenta).setAttribute("value",xobs);
 }
 
 function LimpiarFormaAbonos(){
@@ -980,8 +1067,8 @@ function RealizarAbono(){
     obj.send("");	
     
     var text = obj.responseText;
-    
-    if (!text) return alert('gPOS: '+po_servidorocupado);
+
+    if (!parseFloat(text)) return alert('gPOS: '+po_servidorocupado+'\n'+text);
     
     var xpen = id("venta_pendiente_"+IdComprobanteVenta);
     var xstatus = id("venta_status_"+IdComprobanteVenta);
@@ -1004,6 +1091,7 @@ function RealizarAbono(){
 }
 
 function BuscarDetallesCobro(IdComprobante){
+    VaciarDetallesCobros();
     RawBuscarDetallesCobro(IdComprobante, AddLineaDetallesCobro);
 }
 

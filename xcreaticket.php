@@ -304,7 +304,7 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
     $SerialNum    = "$Serie-$Num";
     $IdCliente    = ($IdCliente)? $IdCliente:1;   
     $res          = false;
-    
+    $cobranza     = ($modoTicket == 'cesion')? 'Pendiente':'Ninguno';
     //Comprobantes...
     if($esVenta){
 
@@ -312,13 +312,13 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
 	"IdLocal, IdUsuario, SerieComprobante,".
 	"NComprobante,TipoVentaOperacion,FechaComprobante,".
 	"ImporteNeto, ImporteImpuesto, Impuesto, TotalImporte,".
-	"ImportePendiente, Status,IdCliente,IdPromocion,IdPresupuesto";
+	"ImportePendiente, Status,IdCliente,IdPromocion,IdPresupuesto,Cobranza";
 
       $datos = 
 	"'$IdLocal','$idDependiente','$Serie',".
 	"'$Num','$TipoVenta',NOW(),".
 	"'$ImporteNeto','$IvaImporte','$IGV','$TotalImporte',".
-	"'$ImportePendiente','$Status','$IdCliente','$idPromocion','$idPresupuesto'";
+	"'$ImportePendiente','$Status','$IdCliente','$idPromocion','$idPresupuesto','$cobranza'";
 
       $sql = "INSERT INTO ges_comprobantes (".$esquema.") VALUES (".$datos.")";
       $res = query($sql,"Creando Ticket ($modoTicket)");

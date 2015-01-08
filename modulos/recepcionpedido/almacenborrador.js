@@ -897,8 +897,7 @@ function actualizarNuevosPV(){
     guardarPrecios();
 
     if(confirm("gPOS:\n   Aplicar los Nuevos Precios en el Local Actual?")){
-	var listalocal= id("FiltroCompraLocal").value;
-	url = "../../services.php?modo=actualizarNuevosPV&listalocal="+listalocal;
+	url = "../../services.php?modo=actualizarNuevosPV&listalocal="+cIdAlmacen;
 	var xrequest = new XMLHttpRequest();
 	xrequest.open("GET",url,false);
 	xrequest.send(null);

@@ -249,6 +249,7 @@ function exportarcsv(){
    var IdCliente = "<?php echo $_GET["idcliente"]?>";
    var Codigo    = "<?php echo $_GET["codigo"]?>";
    var EstadoPagoVenta = "<?php echo $_GET["estadopagoventa"]?>";
+   var Cobranza = "<?php echo $_GET["cobranza"]?>";
 
    var url  = 
      "exportarlistados.php?modo=ExportarDirectoCSV"+
@@ -295,6 +296,7 @@ function exportarcsv(){
      "&idcliente="+IdCliente+
      "&codigo="+Codigo+
      "&estadopagoventa="+EstadoPagoVenta+
+     "&cobranza="+Cobranza+
      "&cb="+cb;
 
    document.location=url;
@@ -573,6 +575,7 @@ function PostProcesarSQL( $cod,$LocalActual ) {
   $cod = str_replace("%PROLONGACION%",CleanText($_GET["prolongacion"]),$cod);
   $cod = str_replace("%IDCLIENTE%",CleanText($_GET["idcliente"]),$cod);
   $cod = str_replace("%CODIGO%",CleanText($_GET["codigo"]),$cod);
+  $cod = str_replace("%COBRANZA%",CleanText($_GET["cobranza"]),$cod);
   $cod = str_replace("'%IMPORTE%'",$estadopagoventa,$cod);
   $cod = str_replace("'%PERIODO_GROUP%'",$g_periodo,$cod);
   $cod = str_replace("%SML%",$Moneda[1]['S'],$cod);

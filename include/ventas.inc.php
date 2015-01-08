@@ -185,7 +185,10 @@ function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFactu
                 ges_locales.NombreComercial as Local, ges_comprobantes.IdLocal,
                 IF(ges_comprobantesnum.IdMotivoAlbaran = 0,' ',(SELECT ges_motivoalbaran.MotivoAlbaran FROM ges_motivoalbaran WHERE ges_motivoalbaran.IdMotivoAlbaran = ges_comprobantesnum.IdMotivoAlbaran)) as MotivoAlbaran,
                 ges_comprobantes.IdSuscripcion,
-                DATE_FORMAT(ges_comprobantes.FechaComprobante,'%d/%m/%Y') as FechaEmision
+                DATE_FORMAT(ges_comprobantes.FechaComprobante,'%d/%m/%Y') as FechaEmision, 
+                ges_comprobantes.PlazoPago, 
+                ges_comprobantes.Cobranza, 
+                IF(ges_comprobantes.Observaciones like '',' ',ges_comprobantes.Observaciones) as Observaciones 
     		FROM ges_comprobantes " .
     		"LEFT JOIN ges_clientes ON ges_comprobantes.IdCliente = ges_clientes.IdCliente
                 INNER JOIN ges_comprobantesstatus ON ges_comprobantes.Status = ges_comprobantesstatus.IdStatus
@@ -223,9 +226,21 @@ function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFactu
 	  $nombre = "venta_" . $t++;
 	  $ventas[$nombre] = $row;
 	  
+	  if(($row["ImportePendiente"] > 0) && ($row["Cobranza"] != 'Ninguno') && $row["PlazoPago"] != '0000-00-00')
+	    checkEstadoPlazoPago($row["PlazoPago"],$row["Cobranza"],$row["IdComprobante"]);
 	}
 
 	return $ventas;
+}
+
+function  checkEstadoPlazoPago($PlazoPago,$Cobranza,$IdComprobante){
+  $Hoy        = strtotime('now');
+  $Fecha      = strtotime($PlazoPago);
+
+  if(($Hoy > ($Fecha+86400)) && ($Cobranza != 'Coactivo')){
+    $campoxdato = " Cobranza = 'Coactivo'";
+    ActualizarEstadoPago($IdComprobante,$campoxdato);
+  }
 }
 
 function  getTrabajosSubsidiario($xid){
@@ -418,6 +433,18 @@ function ModificarFechaEmicionComprobante($Fecha,$TipoComprobante,$IdComprobante
     " set    FechaComprobante = '$Fecha'".
     " where  IdComprobante = '$IdComprobante'";	
   echo query($sql);
+}
+
+function ActualizarEstadoPago($xid,$campoxdato){
+  $Tb         = 'ges_comprobantes';
+  $IdKey      = 'IdComprobante';
+  $Id         = CleanID($xid);
+  $KeysValue  = $campoxdato;
+  $sql   =
+    " update ".$Tb.
+    " set    ".$KeysValue." ".
+    " where  ".$IdKey." = ".$Id;	
+  return query($sql); 
 }
 
 ?>

@@ -106,7 +106,7 @@ $sat = false;
                 function soloAlfaNumerico(e){ 
                         key = e.keyCode || e.which;
                         tecla = String.fromCharCode(key).toLowerCase();
-                        letras = ' abcdefghijklmnopqrstuvwxyz0123456789-';
+                        letras = ' abcdefghijklmnopqrstuvwxyz0123456789-.';
                         especiales = [8, 13, 9];
                         tecla_especial = false
                         for(var i in especiales){

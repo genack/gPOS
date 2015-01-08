@@ -15,7 +15,7 @@ StartXul(_("Elije Propiedades del Producto"));
      echo " function soloAlfaNumerico(e){ 
                         key = e.keyCode || e.which;
                         tecla = String.fromCharCode(key).toLowerCase();
-                        letras = ' abcdefghijklmnñopqrstuvwxyz0123456789%-';
+                        letras = ' abcdefghijklmnñopqrstuvwxyz0123456789%-.';
                         especiales = [8, 13, 9];
                         tecla_especial = false
                         for(var i in especiales){

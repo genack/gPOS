@@ -525,7 +525,7 @@ CREATE TABLE `ges_parametros` (
   `SubFamiliaLatin1` int(11) NOT NULL default '0',
   `FamiliaLatin1` int(11) NOT NULL default '0',
   `TallajeLatin1` int(11) NOT NULL default '0',
-  `Suscripcion` datetime NOT NULL default '0000-00-00 00:00:00',
+  `Suscripcion` date NOT NULL default '0000-00-00',
   `Eliminado` tinyint(1) unsigned NOT NULL default '0',
   PRIMARY KEY  (`Id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
@@ -1404,7 +1404,7 @@ CREATE TABLE IF NOT EXISTS `ges_suscripciones` (
   `FechaRegistro` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `FechaInicio` date NOT NULL DEFAULT '0000-00-00',
   `FechaFin` date NOT NULL DEFAULT '0000-00-00',
-  `Estado` enum('Pendiente','Ejecucion','Suspendido','Finalizado','Cancelado','Corte') NOT NULL DEFAULT 'Pendiente',
+  `Estado` enum('Pendiente','Ejecucion','Suspendido','Finalizado','Cancelado') NOT NULL DEFAULT 'Pendiente',
   `Prolongacion` enum('Ilimitado','Limitado') NOT NULL DEFAULT 'Ilimitado',
   `Comprobante` enum('Factura','Boleta','Ticket') NOT NULL DEFAULT 'Factura',
   `SerieComprobante` char(4) NOT NULL,
@@ -1453,8 +1453,9 @@ CREATE TABLE IF NOT EXISTS `ges_suscripcionincidentes` (
   `IdSuscripcion` int unsigned NOT NULL DEFAULT '0',
   `IdTipoSuscripcion` tinyint unsigned NOT NULL DEFAULT '0',
   `IdUsuario` int(10) unsigned NOT NULL DEFAULT '0',
+  `IdLocal` int(10) unsigned NOT NULL DEFAULT '0',
   `FechaRegistro` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `Estado` enum('Pendiente','Ejecucion','Suspendido','Finalizado','Cancelado','Corte') NOT NULL DEFAULT 'Pendiente',
+  `Estado` enum('Pendiente','Ejecucion','Suspendido','Finalizado','Cancelado') NOT NULL DEFAULT 'Pendiente',
   `Prolongacion` enum('Ilimitado','Limitado') NOT NULL DEFAULT 'Ilimitado',
   `Comprobante` enum('Factura','Boleta','Ticket') NOT NULL DEFAULT 'Factura',
   `SerieComprobante` char(4) NOT NULL,

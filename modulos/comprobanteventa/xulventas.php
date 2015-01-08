@@ -178,6 +178,8 @@ var esFinanzas = false;
 	  <splitter class="tree-splitter" />
 	  <listcol flex="1"/>
 	  <splitter class="tree-splitter" />
+	  <listcol flex="1"/>
+	  <splitter class="tree-splitter" />
 	  <listcol flex="1"/>		
 	  <splitter class="tree-splitter" />
 	  <listcol flex="1"/>				
@@ -193,10 +195,11 @@ var esFinanzas = false;
 	  <listheader label="Código" id="vlistCodigo" collapsed="true"/>
 	  <listheader label="OP" id="vlistOP" collapsed="true"/>
 	  <listheader label="Documento"/>
-	  <listheader label="Numero"  collapsed="true" />
+	  <listheader label="Número"  collapsed="true" />
 	  <listheader label="Serie-Nro"/>
 	  <listheader label="Cliente"/>		
-	  <listheader label="Fecha"/>
+	  <listheader label="Fecha Registro"/>
+	  <listheader label="Fecha Emisión"/>
 	  <listheader label="Total Importe"/>
 	  <listheader label="Importe Pendiente"/>
 	  <listheader label="Estado Documento"/>

@@ -48,6 +48,7 @@ switch($modo){
     $IdCLiente         = CleanText($_GET["idcliente"]);
     $Codigo            = CleanText($_GET["codigo"]);
     $EstadoPagoVenta   = CleanText($_GET["estadopagoventa"]);
+    $Cobranza          = CleanText($_GET["cobranza"]);
 
     $Consulta          = "SELECT * FROM $Tabla WHERE (IdListado = '$Id')";
     $row               = queryrow($Consulta);
@@ -68,7 +69,8 @@ switch($modo){
 				    $TipoCliente,$IdMarca,$CondicionVenta,$EstadoOS,
 				    $Prioridad,$Facturacion,$EstadoSuscripcion,
 				    $TipoSuscripcion,$TipoPagoSuscripcion,
-				    $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta);
+				    $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta,
+				    $Cobranza);
 
     }
     $NombreArchivo = '"'.$NombreArchivo.'"';
@@ -149,7 +151,7 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
 		     $TipoOperacion,$TipoOpCjaGral,$PeriodoVenta,$NombreCliente,
 		     $TipoCliente,$IdMarca,$CondicionVenta,$EstadoOS,$Prioridad,
 		     $Facturacion,$EstadoSuscripcion,$TipoSuscripcion,$TipoPagoSuscripcion,
-		     $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta) {
+		     $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta,$Cobranza) {
 
   $Moneda = getSesionDato("Moneda");
   
@@ -212,6 +214,7 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
   $cod = str_replace("%IDCLIENTE%",$IdCLiente,$cod);
   $cod = str_replace("%CODIGO%",$Codigo,$cod);
   $cod = str_replace("'%IMPORTE%'",$EstadoPagoVenta,$cod);
+  $cod = str_replace("%COBRANZA%",$Cobranza,$cod);
   $cod = str_replace("%SML%",$Moneda[1]['S'],$cod);
 
   if($esTPVOP)
