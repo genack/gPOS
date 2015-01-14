@@ -76,7 +76,10 @@ function RevisarVentaSeleccionada(){
     seriefac              = cadena.substring(0,posicion-1);
     menuContextualVentasRealizadas(cIdComprobanteVenta);
 
-    if(RevDet == 0 || RevDet != idex.value)
+    var verdet = (RevDet == 0 || RevDet != idex.value)? true:false;
+    var esfin  = (esFinanzas)? idetallescobro:idetallesVenta;
+
+    if(verdet || esfin == 0)
         setTimeout("loadDetallesVentas('"+idex.value+"')",100);
 
     RevDet = idex.value;
@@ -553,6 +556,8 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
 function BuscarVentas(){
 
     VaciarBusquedaVentas();
+    (esFinanzas)? VaciarDetallesCobros() : VaciarDetallesVentas();
+
     var desde = id("FechaBuscaVentas").value;
     var hasta = id("FechaBuscaVentasHasta").value;
     var nombre = id("NombreClienteBusqueda").value;
@@ -1207,4 +1212,3 @@ function ImprimirCobroSeleccionada(){
                         "&totaletras="+importeletras;
     location.href=url;
 }
-

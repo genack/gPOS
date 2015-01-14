@@ -327,8 +327,8 @@ if (isUsuarioAdministradorWeb()){
 
 		    <?php
  		       $menuConfiguracion = array(		
-  		       _("Precios de Venta") =>  "verEstablecerPrecioAlmacen",
-		       _("Promociones") =>  "VerPromociones"
+		       _("Precios de Venta") =>  "verEstablecerPrecioAlmacen",
+		       _("Promociones") => "VerPromociones"
 		    );  
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
 		    ?>
@@ -343,7 +343,6 @@ if (isUsuarioAdministradorWeb()){
 
 		  </menupopup>
 		</button>
-
 
 		<button label="<?php echo _(" Reportes ") ?>" image="img/gpos_reportes.png" type="menu"  accesskey="R" >	        	       
 		  <menupopup id="idconfig">
@@ -1664,7 +1663,11 @@ var visiblebusca = 0;
 var numPeticiones = 0;
 
 function Productos_ModoAlta() {   
- subweb.setAttribute("src","modproductos.php?modo=alta"); 
+
+if( subweb.getAttribute('src') == "modproductos.php?modo=alta" )
+  subweb.setAttribute("src","modproductos.php"); 
+subweb.setAttribute("src","modproductos.php?modo=alta"); 
+
 }
 
 
@@ -1734,11 +1737,15 @@ function Productos_buscar()
 /* ========== PROVEEDORES ============ */
 
 function proveedor_Alta(){
-	var url = "modproveedores.php?modo=alta";
-	subweb.setAttribute("src",url);
+       var url = "modproveedores.php?modo=alta";
+       if(subweb.getAttribute("src") == url)
+	 subweb.setAttribute("src","modproveedores.php");
+       subweb.setAttribute("src",url);
 }
 function laboratorio_Alta(){
 	var url = "modlaboratorios.php?modo=alta";
+	if(subweb.getAttribute("src") == url)
+	  subweb.setAttribute("src","modlaboratorios.php");
 	subweb.setAttribute("src",url);
 }
 function proveedor_Ver(){
@@ -1756,11 +1763,15 @@ function laboratorio_Ver(){
 
 function clientes_Alta(){
 	var url = "modclientes.php?modo=alta";
+	if(subweb.getAttribute("src") == url)
+	  subweb.setAttribute("src","modclientes.php");
 	subweb.setAttribute("src",url);
 }
 
 function clientes_AltaParticular(){
 	var url = "modclientes.php?modo=altaparticular";
+	if(subweb.getAttribute("src") == url)
+	  subweb.setAttribute("src","modclientes.php");
 	subweb.setAttribute("src",url);
 }
 

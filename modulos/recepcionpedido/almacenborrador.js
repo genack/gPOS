@@ -60,6 +60,7 @@ function VaciarDetallesCompra(){
 //Busqueda 
 function BuscarCompra(){
     VaciarBusquedaCompra();
+    VaciarDetallesCompra();
     var emision = id("FechaBuscaCompraEmision").selected;
     var desde   = id("FechaBuscaCompra").value;
     var hasta   = id("FechaBuscaCompraHasta").value;
@@ -411,9 +412,9 @@ function RevisarCompraSeleccionada(){
     id("guardarPrecios").setAttribute("collapsed","false");
     id("actualizarLPV").setAttribute("collapsed","false");
     id("recibirProductos").setAttribute("collapsed","false");
-    //ExtraBuscarEnServidor("");  	  		
 
-    if(RevDet == 0 || RevDet != idex.value)
+    var verdet = (RevDet == 0 || RevDet != idex.value)? true:false;
+    if(verdet || idetallesCompra == 0)
         setTimeout("loadDetalleCompra("+IdPedidos+","+cIdAlmacen+")",100);
 
     RevDet = idex.value;

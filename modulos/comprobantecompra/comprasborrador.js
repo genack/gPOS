@@ -78,6 +78,7 @@ function VaciarDetallesCompra(){
 function BuscarCompra(){
 
     VaciarBusquedaCompra();
+    VaciarDetallesCompra();
     volverComprobantes(0);
     var emision = id("FechaBuscaCompraEmision").selected;
     var desde   = id("FechaBuscaCompra").value;
@@ -455,6 +456,7 @@ function RevisarCompraSeleccionada(){
 
     var idex      = id("busquedaCompra").selectedItem;
     if(!idex) return;
+
     cBMoneda      = id("FiltroCompraMoneda").getAttribute("value");
     cIdMoneda     = (cBMoneda=='todoSol')?'0':id("idmoneda_"+idex.value).getAttribute("value");
     cCambioMoneda = id("cambiomoneda_"+idex.value).getAttribute("value");
@@ -484,9 +486,9 @@ function RevisarCompraSeleccionada(){
     var seriedocumento  =  idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
     seriedocumentodevol = seriedocumento;
     var cadena          =  idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
-    //ExtraBuscarEnServidor("");
 
-    if(RevDet == 0 || RevDet != idex.value)
+    var verdet = (RevDet == 0 || RevDet != idex.value)? true:false;
+    if(verdet || idetallesCompra == 0)
         setTimeout("loadDetallesCompras('"+IdPedidos+"')",100);
 
     RevDet = idex.value;
