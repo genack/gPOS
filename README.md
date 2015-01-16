@@ -1,9 +1,7 @@
-gPOS - gnu Point Of Sale
-========================
+gPOS - Gestión Puntos de Venta
+==============================
 
-Gestión Puntos de Venta
-
-gPos es un fork de [9gestion Moda](http://sourceforge.net/projects/es9gestion/), basado en tecnologia XUL, javascript, PHP5.4 y MySQL.
+gPOS es un fork de [9gestion Moda](http://sourceforge.net/projects/es9gestion/), basado en tecnologia XUL, javascript, PHP5.4 y MySQL.
 
 gPOS se distribuye con licencia LGPL v2.1
 
@@ -12,13 +10,9 @@ Instalación
 
 1. Modifique los permisos de las siguientes carpetas
 
-    chmod 777 config/
+    chown apache:apache  gpos/ -Rf
 
-    chmod 777 install/
-
-    chmod 777 productos_img/
-
-    chmod 777 xulremote/
+    chmod 740 gpos/ -Rf
 
 2. En su navegador firefox ingrese a `http://tudominio/gpos/`.
 
