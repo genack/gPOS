@@ -23,7 +23,7 @@ function AbrirAplicacion() {
 Recuerde:
 <ul>
  <li>Borre la carpeta install, para evitar una reinstalación por accidente</li>
- <li>Modifique las contraseñas por defecto del local "demo"</li>
- <li>Modifique las contraseñas por defecto del usuario "demo" y "administrador"</li> 
+ <li>Modifique las contraseñas por defecto del local "almacen,localuno y localdos"</li>
+ <li>Modifique las contraseñas por defecto del usuario "admin" y "soporte"</li> 
 </ul>
 </p>

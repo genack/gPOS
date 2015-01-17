@@ -9682,8 +9682,8 @@ function RevisarVentaSeleccionada(){
     cSerieNroComprobante  = idex.childNodes[5].attributes.getNamedItem('label').nodeValue;
     cClienteComprobante   = idex.childNodes[6].attributes.getNamedItem('label').nodeValue;
     cIdClienteComprobante = idex.childNodes[6].attributes.getNamedItem('value').nodeValue;
-    cMontoComprobante     = idex.childNodes[8].attributes.getNamedItem('label').nodeValue;
-    cPendienteComprobante = idex.childNodes[9].attributes.getNamedItem('label').nodeValue;
+    cMontoComprobante     = idex.childNodes[9].attributes.getNamedItem('label').nodeValue;
+    cPendienteComprobante = idex.childNodes[10].attributes.getNamedItem('label').nodeValue;
     idfacturaseleccionada = idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
     var nrodocumento      = idex.childNodes[3].attributes.getNamedItem('label').nodeValue;
     nrodocumentodevol     = nrodocumento;
