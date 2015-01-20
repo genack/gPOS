@@ -30,7 +30,7 @@ class bug extends Cursor {
 		if ($this->esSugerencia()){
 			$sugerencia = $this->get("QueEsperaba");
 			$loc = $this->get("LOC");
-			$titulo = "[9Gestion-sugerencia][$loc]: $titulo";
+			$titulo = "[gPOS-sugerencia][$loc]: $titulo";
 			
 			
 			$res = mail(CORREO_ADMIN, $titulo,"Sugerencia $loc:\n".$crline .$cr .$sugerencia.$crend );
@@ -44,7 +44,7 @@ class bug extends Cursor {
 			$loc = $this->get("LOC");
 
 			
-			$titulo = "[9Gestion-bug-$prioridad][$loc] $categoria : $titulo";			
+			$titulo = "[gPOS-bug-$prioridad][$loc] $categoria : $titulo";			
 			$cuerpo = "Bug $loc, de categoria $categoria:\n".
 				$crline .			
 				"Donde ocurrio el error:\n". $this->get("QueDonde"). $cr .

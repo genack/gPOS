@@ -38,12 +38,12 @@ function AltaDesdePostProducto($esMudo=false) {
   $idfamilia 	= CleanID($_POST["IdFamilia"]);
   $idsubfamilia = CleanID($_POST["IdSubFamilia"]);
   $condventa    = CleanText($_POST["CondicionVenta"]);
-  $idprovhab 	= (!isset($_POST["IdProvHab"]))? $_POST["ProvHab"] : $_POST["IdProvHab"];
+  $idprovhab 	= (!isset($_POST["IdProvHab"]))? CleanID($_POST["ProvHab"]) : CleanID($_POST["IdProvHab"]);
   $idprovhab    = CleanID($idprovhab);
-  $idlabhab 	= (!isset($_POST["IdLabHab"]))? $_POST["LabHab"] : $_POST["IdLabHab"];
+  $idlabhab 	= (!isset($_POST["IdLabHab"]))? CleanID($_POST["LabHab"]) : CleanID($_POST["IdLabHab"]);
   $idlabhab 	= CleanID($idlabhab);
   $codigobarras = CleanCB($_POST["CodigoBarras"]);
-  $refprovhab 	= (!isset($_POST["RefProv"]))? $_POST["RefProvHab"] : $_POST["RefProv"];
+  $refprovhab 	= (!isset($_POST["RefProv"]))? CleanReferencia($_POST["RefProvHab"]) : CleanReferencia($_POST["RefProv"]);
   $refprovhab   = CleanReferencia($refprovhab);
   $numeroserie  = (isset( $_POST["NumeroSerie"] ))?  CleanID($_POST["NumeroSerie"]=='on'):false;
   $metaproducto = (isset( $_POST["MetaProducto"] ))? CleanID($_POST["MetaProducto"]=='on'):false;
@@ -57,7 +57,7 @@ function AltaDesdePostProducto($esMudo=false) {
   $idtalla      = CleanID($_POST["IdTalla"]);
   $idmarca      = (!isset($_POST["IdMarca"]))? CleanID($_POST["Marca"]) : CleanID($_POST["IdMarca"]);
   $idcontenedor = CleanID($_POST["IdContenedor"]);
-  $idcontenedor = (!isset($_POST["IdContenedor"]))?$_POST["Contenedor"] : $_POST["IdContenedor"];
+  $idcontenedor = (!isset($_POST["IdContenedor"]))? $_POST["Contenedor"] : $_POST["IdContenedor"];
   $idcontenedor = CleanID($idcontenedor);
 
   if ($id = CrearProducto($esMudo,$referencia,$descripcion, $precioventa,

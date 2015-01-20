@@ -312,23 +312,23 @@ echo gas("cabecera", _("Gestión de Clientes"));
 switch ($modo) {
 	case "modcliente":
 		$id 		= CleanID($_POST["IdCliente"]);
-		$comercial 	= $_POST["NombreComercial"];
-		$legal 		= (isset($_POST["NombreLegal"]))? $_POST["NombreLegal"]:'';
-		$direccion	= $_POST["Direccion"];
-		$poblacion 	= $_POST["Localidad"];
+		$comercial 	= CleanText($_POST["NombreComercial"]);
+		$legal 		= (isset($_POST["NombreLegal"]))? CleanText($_POST["NombreLegal"]):'';
+		$direccion	= CleanText($_POST["Direccion"]);
+		$poblacion 	= CleanText($_POST["Localidad"]);
 		$cp 		= CleanCP($_POST["CP"]);
 		$email 		= (isset($_POST["Email"]))? CleanEmail($_POST["Email"]):'';
 		$telefono1 	= CleanTelefono($_POST["Telefono1"]);
 		$telefono2 	= (isset($_POST["Telefono2"]))? CleanTelefono($_POST["Telefono2"]):'';
-		$contacto 	= (isset($_POST["Contacto"]))? $_POST["Contacto"]:'';
-		$cargo 		= (isset($_POST["Cargo"]))? $_POST["Cargo"]:'';
+		$contacto 	= (isset($_POST["Contacto"]))? CleanText($_POST["Contacto"]):'';
+		$cargo 		= (isset($_POST["Cargo"]))? CleanText($_POST["Cargo"]):'';
 		$cuentabancaria = CleanCC($_POST["CuentaBancaria"]);
-		$numero 	= $_POST["NumeroFiscal"];
-		$comentario     = $_POST["Comentarios"];
+		$numero 	= CleanText($_POST["NumeroFiscal"]);
+		$comentario     = CleanText($_POST["Comentarios"]);
 		$IdModPagoHabitual = CleanID($_POST["IdModPagoHabitual"]);
 		$idpais 	= (isset($_POST["IdPais"]))? CleanID($_POST["IdPais"]):0; 
-		$paginaweb      = (isset($_POST["PaginaWeb"]))? $_POST["PaginaWeb"]:'';
-		$nace  		= (isset($_POST["FechaNacim"]))? $_POST["FechaNacim"]:'';	
+		$paginaweb      = (isset($_POST["PaginaWeb"]))? CleanUrl($_POST["PaginaWeb"]):'';
+		$nace  		= (isset($_POST["FechaNacim"]))? CleanText($_POST["FechaNacim"]):'';	
 		$IdLocal	= (isset($_POST["IdLocal"]))? CleanID($_POST["IdLocal"]):'';	
 			
 		$parametros = array($id,$comercial, $legal, $direccion, $poblacion, $cp, $email,
@@ -341,28 +341,28 @@ switch ($modo) {
 		PaginaBasica();
 		break;
 	case "editar":	
-		$id = $_GET["Id"];
+	        $id = CleanID($_GET["Id"]);
 		MostrarClienteParaEdicion($id,$lang);		
 		break;
 	case "newcliente" :
-	       $comercial 	= (isset($_POST["NombreComercial"]))? $_POST["NombreComercial"]:'';
-	       $legal 		= (isset($_POST["NombreLegal"]))? $_POST["NombreLegal"]:'';
-		$direccion	= $_POST["Direccion"];
-		$poblacion 	= $_POST["Localidad"];
+	        $comercial 	= (isset($_POST["NombreComercial"]))? CleanText($_POST["NombreComercial"]):'';
+	        $legal 		= (isset($_POST["NombreLegal"]))? CleanText($_POST["NombreLegal"]):'';
+		$direccion	= CleanText($_POST["Direccion"]);
+		$poblacion 	= CleanText($_POST["Localidad"]);
 		$cp		= CleanCP($_POST["CP"]);
 		$email 		= (isset($_POST["Email"]))? CleanEmail($_POST["Email"]):'';
 		$telefono1 	= CleanTelefono($_POST["Telefono1"]);
 		$telefono2 	= (isset($_POST["Telefono2"]))? CleanTelefono($_POST["Telefono2"]):'';
-		$contacto 	= (isset($_POST["Contacto"]))? $_POST["Contacto"]:'';
-		$cargo 		= (isset($_POST["Cargo"]))? $_POST["Cargo"]:'';
+		$contacto 	= (isset($_POST["Contacto"]))? CleanText($_POST["Contacto"]):'';
+		$cargo 		= (isset($_POST["Cargo"]))? CleanText($_POST["Cargo"]):'';
 		$cuentabancaria = CleanCC($_POST["CuentaBancaria"]);
-		$numero 	= $_POST["NumeroFiscal"];
-		$comentario     = $_POST["Comentarios"];
-		$tipocliente    = $_POST["TipoCliente"];
+		$numero 	= CleanText($_POST["NumeroFiscal"]);
+		$comentario     = CleanText($_POST["Comentarios"]);
+		$tipocliente    = CleanText($_POST["TipoCliente"]);
 		$IdModPagoHabitual = CleanID($_POST["IdModPagoHabitual"]);
 		$idpais 	= (isset($_POST["IdPais"]))? CleanID($_POST["IdPais"]):0; 
-		$paginaweb      = (isset($_POST["PaginaWeb"]))? $_POST["PaginaWeb"]:'';
-		$nace  		= (isset($_POST["FechaNacim"]))? $_POST["FechaNacim"]:'';
+		$paginaweb      = (isset($_POST["PaginaWeb"]))? CleanUrl($_POST["PaginaWeb"]):'';
+		$nace  		= (isset($_POST["FechaNacim"]))? CleanText($_POST["FechaNacim"]):'';
 		$IdLocal        = '';
 				
 		CrearCliente($comercial, $legal, $direccion, $poblacion, $cp, $email, 

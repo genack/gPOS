@@ -13,9 +13,9 @@ if (!isset($IdLocal))
 
 $nroAlbaran    = $_GET["nroAlbaranInt"];
 $nroSerie      = $_GET["nroSerie"];
-$codcliente    = $_GET["codcliente"];
+$codcliente    = CleanID($_GET["codcliente"]);
 $totaletras    = $_GET["totaletras"];
-$IdComprobante = $_GET["idcomprobante"];
+$IdComprobante = CleanID($_GET["idcomprobante"]);
 $operador      = ($_GET["nombreusuario"])? $_GET["nombreusuario"]:$_SESSION["NombreUsuario"];
 $LocalVenta    = (isset($_GET["idlocal"]))? CleanID($_GET["idlocal"]):0;
 $IdLocal       = ($LocalVenta != 0)? $LocalVenta:$IdLocal;

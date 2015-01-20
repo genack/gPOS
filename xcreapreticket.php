@@ -26,7 +26,7 @@ $trabajos 	= array(); //acumularemos aqui los trabajos a enviar al subsidiario
 
 /* LEEMOS ALGUNOS DATOS GENERALES DEL TICKET */
 
-$IdPresupuesto  = $_POST["IdPresupuesto"];
+$IdPresupuesto  = CleanID($_POST["IdPresupuesto"]);
 $entregado	= CleanFloat($_POST["entrega"]);
 $cambio		= CleanFloat($_POST["cambio"]);//dinero devuelto al cliente
 if ($cambio>0)

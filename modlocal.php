@@ -242,25 +242,25 @@ PageStart();
 
 switch($modo){
 	case "newsave":		
-		$nombre = $_POST["NombreComercial"];
-		$nombrelegal = $_POST["NombreLegal"];
-		$direccion = $_POST["DireccionFactura"];
-		$poblacion = $_POST["Poblacion"];
-		$codigopostal = $_POST["CodigoPostal"];
-		$telefono = $_POST["Telefono"];
-		$fax = $_POST["Fax"];
-		$movil = $_POST["Movil"];
-		$email = $_POST["Email"];
-		$paginaweb = $_POST["PaginaWeb"];
-		$cuentabancaria = $_POST["CuentaBancaria"];		
-		$identificacion = $_POST["Identificacion"];		
+	        $nombre         = CleanText($_POST["NombreComercial"]);
+		$nombrelegal    = CleanText($_POST["NombreLegal"]);
+		$direccion      = CleanText($_POST["DireccionFactura"]);
+		$poblacion      = CleanText($_POST["Poblacion"]);
+		$codigopostal   = CleanCP($_POST["CodigoPostal"]);
+		$telefono       = CleanTelefono($_POST["Telefono"]);
+		$fax            = CleanTelefono($_POST["Fax"]);
+		$movil          = CleanTelefono($_POST["Movil"]);
+		$email          = CleanEmail($_POST["Email"]);
+		$paginaweb      = CleanUrl($_POST["PaginaWeb"]);
+		$cuentabancaria = CleanCC($_POST["CuentaBancaria"]);		
+		$identificacion = CleanText($_POST["Identificacion"]);		
 		$idpais 	= CleanID($_POST["IdPais"]);	
-		$ididioma 	= (isset($_POST["IdIdioma"]))?CleanID($_POST["IdIdioma"]):1;
-		$pass= $_POST["Password"];
-		$margen = $_POST["MargenUtilidad"];
-		$tipomargen = $_POST["TipoMargenUtilidad"];
-		$igv = $_POST["IGV"];
-		$ipc = $_POST["Percepcion"];
+		$ididioma 	= (isset($_POST["IdIdioma"]))? CleanID($_POST["IdIdioma"]):1;
+		$pass           = CleanText($_POST["Password"]);
+		$margen         = CleanText($_POST["MargenUtilidad"]);
+		$tipomargen     = CleanText($_POST["TipoMargenUtilidad"]);
+		$igv            = CleanText($_POST["IGV"]);
+		$ipc            = CleanText($_POST["Percepcion"]);
 
 		CrearLocal($nombre,
 			$nombrelegal,$direccion,
@@ -289,7 +289,7 @@ switch($modo){
 		$paginaweb 			= CleanUrl($_POST["PaginaWeb"]);
 		$cuentabancaria 	        = CleanText($_POST["CuentaBancaria"]);
 		$pass 				= CleanTo($_POST["Password"]," ");
-		$identificacion 	        = $_POST["Identificacion"];
+		$identificacion 	        = CleanText($_POST["Identificacion"]);
 		$esCentral 			= (isset($_POST["esCentral"]))? ($_POST["esCentral"] =='on'):false;
 		$IdTipoNumeracionFactura        = CleanID($_POST["IdTipoNumeracionFactura"]);
 		$ImpuestoIncluido 	        = (isset($_POST["ImpuestoIncluido"]))? CleanID($_POST["ImpuestoIncluido"]=='on'):false;

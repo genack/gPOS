@@ -113,7 +113,7 @@ switch($modo){
 			</script>";				
 		break;	
 	default:
-		$local = $_GET["IdLocal"];
+	        $local = CleanID($_GET["IdLocal"]);
 		FormularioEntrada($local);
 		break;	
 }

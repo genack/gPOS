@@ -10,7 +10,7 @@ setlocale(LC_ALL,"es_ES");
 
 if (!isset($IdLocal))
   echo "<script>parent.location.href='../logout.php';</script>";
-$idcod     = $_GET["idoc"];
+$idcod         = CleanID($_GET["idoc"]);
 $totaletras    = utf8_decode($_GET["totaletras"]);
 $operador      = utf8_decode($_SESSION["NombreUsuario"]);
 $nombrelegal   = getNombreLegalLocalId($IdLocal);

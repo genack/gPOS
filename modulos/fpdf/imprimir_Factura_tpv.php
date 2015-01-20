@@ -9,9 +9,9 @@ if (!isset($IdLocal))
   echo "<script>parent.location.href='../logout.php';</script>";
 $nroFactura    = $_GET["nroFactura"];
 $nroSerie      = $_GET["nroSerie"];
-$codcliente    = $_GET["codcliente"];
+$codcliente    = CleanID($_GET["codcliente"]);
 $totaletras    = $_GET["totaletras"];
-$IdComprobante = $_GET["idcomprobante"];
+$IdComprobante = CleanID($_GET["idcomprobante"]);
 $operador      = ($_GET["nombreusuario"])? $_GET["nombreusuario"]:$_SESSION["NombreUsuario"];
 $IGV	       = getSesionDato("IGV");
 $LocalVenta    = (isset($_GET["idlocal"]))? CleanID($_GET["idlocal"]):0;

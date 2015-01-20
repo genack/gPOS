@@ -913,15 +913,15 @@ switch($modo){
 					
 		break;	
 	case "hacercompra":
-		$IdProducto = $_POST["IdProducto"];
-		$Cantidad = $_POST["Cantidad"];
+	        $IdProducto = CleanID($_POST["IdProducto"]);
+		$Cantidad   = CleanFloat($_POST["Cantidad"]);
 		$esHabitual = $_POST["habitual"] == "on";
 		
 		//RealizarPedido();
 		//echo gas("TODO","Cuando trabajemos los albaranes, se continuara por aqui");
 		break;	
 	case "comprar":
-		$IdProducto = $_GET["id"];
+	        $IdProducto = CleanID($_GET["id"]);
 		FormularioCompras($IdProducto);
 		break;		
 	case "buscarproductos":

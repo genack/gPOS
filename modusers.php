@@ -173,17 +173,17 @@ PageStart();
 
 switch($modo){
 	case "newsave":		
-		$nombre = $_POST["Nombre"];	
-		$identificacion = $_POST["Identificacion"];
-		$direccion = $_POST["Direccion"];
-		$comision  = (isset($_POST["Comision"]))?$_POST["Comision"]:0;
-		$telefono  = $_POST["Telefono"];
-		$pass      = $_POST["Password"];
-		$idioma    = $_POST["Idioma"];
-		$perfil    = $_POST["Perfil"];
-		$local     = $_POST["Local"];
-		$cc 	   = (isset($_POST["CuentaBanco"]))? $_POST["CuentaBanco"]:0;		
-		$nace	   = $_POST["FechaNacim"];						
+	        $nombre    = CleanText($_POST["Nombre"]);	
+		$identificacion = CleanText($_POST["Identificacion"]);
+		$direccion = CleanText($_POST["Direccion"]);
+		$comision  = (isset($_POST["Comision"]))? CleanDinero($_POST["Comision"]):0;
+		$telefono  = CleanTelefono($_POST["Telefono"]);
+		$pass      = CleanPass($_POST["Password"]);
+		$idioma    = CleanID($_POST["Idioma"]);
+		$perfil    = CleanID($_POST["Perfil"]);
+		$local     = CleanID($_POST["Local"]);
+		$cc 	   = (isset($_POST["CuentaBanco"]))? CleanCC($_POST["CuentaBanco"]):0;
+		$nace	   = CleanText($_POST["FechaNacim"]);
 	
 		CrearUsuario($nombre,
 			$identificacion,$direccion,
@@ -195,18 +195,18 @@ switch($modo){
 		FormularioAlta();	
 		break;
 	case "modsave":
-		$id = CleanID($_POST["id"]);
-		$nombre = $_POST["Nombre"];
-		$identificacion = $_POST["Identificacion"];
-		$direccion = $_POST["Direccion"];
-		$comision = $_POST["Comision"];
-		$telefono = $_POST["Telefono"];
-		$pass = $_POST["Password"];
-		$idioma = $_POST["Idioma"];
-		$perfil = $_POST["Perfil"];
-		$local  = $_POST["Local"];
-		$cc 	= $_POST["CuentaBanco"];
-		$nace	= $_POST["FechaNacim"];						
+		$id        = CleanID($_POST["id"]);
+		$nombre    = CleanText($_POST["Nombre"]);
+		$identificacion = CleanText($_POST["Identificacion"]);
+		$direccion = CleanText($_POST["Direccion"]);
+		$comision  = CleanDinero($_POST["Comision"]);
+		$telefono  = CleanTelefono($_POST["Telefono"]);
+		$pass      = CleanPass($_POST["Password"]);
+		$idioma    = CleanID($_POST["Idioma"]);
+		$perfil    = CleanID($_POST["Perfil"]);
+		$local     = CleanID($_POST["Local"]);
+		$cc 	   = CleanCC($_POST["CuentaBanco"]);
+		$nace	   = CleanText($_POST["FechaNacim"]);
 		
 		ModificarUsuario($id,$nombre,
 			$identificacion,$direccion,

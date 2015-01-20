@@ -215,7 +215,7 @@ switch ($modo) {
 
 	     case "actualizarSeriesCarritoNS" :
 
-	       $id      = $_GET['id'];
+	       $id      = CleanID($_GET['id']);
 	       $nseries = $_POST['numerosdeserie']; 
 	       $fg      = CleanFechaES($_GET['garantia']); 
 	       actualizarSeriesCarritoNS($id,$nseries,$fg);

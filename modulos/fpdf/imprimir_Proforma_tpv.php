@@ -13,9 +13,9 @@ if (!isset($IdLocal))
 
 $nroProforma     = $_GET["nroProforma"];
 //$nroSerie      = $_GET["nroSerie"];
-$codcliente    = $_GET["codcliente"];
+$codcliente    = CleanID($_GET["codcliente"]);
 $totaletras    = $_GET["totaletras"];
-$IdPresupuesto = $_GET["idcomprobante"];
+$IdPresupuesto = CleanID($_GET["idcomprobante"]);
 $operador      = (isset($_GET["nombreusuario"]))? $_GET["nombreusuario"]:$_SESSION["NombreUsuario"];
 $IGV	       = getSesionDato("IGV");
 $nombrelegal   = getNombreLegalLocalId($IdLocal);

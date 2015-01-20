@@ -68,8 +68,8 @@ $trabajos 	= array(); //acumularemos aqui los trabajos a enviar al subsidiario
 
 /* LEEMOS ALGUNOS DATOS GENERALES DEL TICKET */
 
-$IdMProducto    = $_POST["IdMProducto"];
-$IdMetaProducto = $_POST["IdMetaProducto"];
+$IdMProducto    = CleanID($_POST["IdMProducto"]);
+$IdMetaProducto = CleanID($_POST["IdMetaProducto"]);
 //$Estado         = $_POST["Estado"];
 $entregado	= CleanFloat($_POST["entrega"]);
 $cambio		= CleanFloat($_POST["cambio"]);//dinero devuelto al cliente

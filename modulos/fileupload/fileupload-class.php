@@ -1,4 +1,4 @@
-<?php
+<?php
 # =================================================================== #
 #
 # iMarc PHP Library
@@ -80,17 +80,17 @@ class uploader {
 		}
 
 		// Copy PHP's global $_FILES array to a local array
-		$this->file = $_FILES[$filename];				//$this->file['file'] = $filename;				if (!$this->file) {			$this->file = $_POST[$filename];					} 						AddError(0,"Info :tmp is " . $this->file['tmp_name']);		if (!$this->file) {
+		$this->file = $_FILES[$filename];				//$this->file['file'] = $filename;				if (!$this->file) {			$this->file = $_POST[$filename];					} 						AddError(0,"Info :tmp is " . $this->file['tmp_name']);		if (!$this->file) {
 			AddError(__FILE__ . __LINE__ , "W: no llega el fichero!");
 		} else
 			AddError(__FILE__ . __LINE__ , "Info: algo llega");
 
 		// test max size
-		if ($this->max_filesize && ($this->file["size"] > $this->max_filesize)) {			AddError(__FILE__ . __LINE__ , "Info: tamaño no permitido");
+		if ($this->max_filesize && ($this->file["size"] > $this->max_filesize)) {			AddError(__FILE__ . __LINE__ , "Info: tamaño no permitido");
 			$this->errors[1] = "Maximum file size exceeded. File may be no larger than ".($this->max_filesize / 1000)."KB (".$this->max_filesize." bytes).";
 			$this->accepted = false;
 			return false;
-		}				
+		}				
 
 		if (preg_match("/image/", $this->file["type"])) {
 
@@ -104,7 +104,7 @@ class uploader {
 			if (($this->max_image_width || $this->max_image_height) && (($this->file["width"] > $this->max_image_width) || ($this->file["height"] > $this->max_image_height))) {
 				$this->errors[2] = "Maximum image size exceeded. Image may be no more than ".$this->max_image_width." x ".$this->max_image_height." pixels";
 				$this->accepted = false;
-								AddError(__FILE__ . __LINE__ , "W: tamaño de imagen ilegal");
+								AddError(__FILE__ . __LINE__ , "W: tamaño de imagen ilegal");
 				return false;
 			}
 			// Image Type is returned from getimagesize() function
@@ -169,7 +169,7 @@ class uploader {
 			$this->accepted = TRUE;
 		}
 		
-		  //AddError(__FILE__ . __LINE__ , "Info: raw_name: '" . $this->file["raw_name"] . "' , filename: '". $this->file['filename']."'");		
+		  //AddError(__FILE__ . __LINE__ , "Info: raw_name: '" . $this->file["raw_name"] . "' , filename: '". $this->file['filename']."'");		
 		return $this->accepted;
 	}
 	# ----------------------------------- #

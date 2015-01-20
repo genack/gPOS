@@ -3,8 +3,8 @@
 include("../../tool.php");
 $txtMoDet    = getModeloDetalle2txt();
 $txtalias    = $txtMoDet[3];
-$idfamilia   = $_GET['idfamilia'];
-$id          = $_GET['id'];
+$idfamilia   = CleanID($_GET['idfamilia']);
+$id          = CleanText($_GET['id']);
 
 SimpleAutentificacionAutomatica("visual-xulframe");
 

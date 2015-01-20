@@ -1,7 +1,6 @@
 /*=========== REVISION VENTAS   ==============*/	
 
 var idetallesVenta        = 0;
-var idfacturaseleccionada = 0;
 var cIdComprobanteVenta        = 0;
 var cComprobanteVenta          = '';
 var cSerieNroComprobanteVenta  = '';
@@ -64,16 +63,11 @@ function RevisarVentaSeleccionada(){
     cSerieNroComprobanteVenta  = idex.childNodes[5].attributes.getNamedItem('label').nodeValue;
     cClienteComprobanteVenta   = idex.childNodes[6].attributes.getNamedItem('label').nodeValue;
     cIdClienteComprobanteVenta = idex.childNodes[6].attributes.getNamedItem('value').nodeValue;
-    cMontoComprobanteVenta     = idex.childNodes[8].attributes.getNamedItem('label').nodeValue;
-    cPendienteComprobanteVenta = idex.childNodes[9].attributes.getNamedItem('label').nodeValue;
-    cIdLocalVenta = idex.childNodes[13].attributes.getNamedItem('value').nodeValue;
-    cIdSuscripcionVenta = idex.childNodes[14].attributes.getNamedItem('value').nodeValue;
+    cMontoComprobanteVenta     = idex.childNodes[9].attributes.getNamedItem('label').nodeValue;
+    cPendienteComprobanteVenta = idex.childNodes[10].attributes.getNamedItem('label').nodeValue;
+    cIdLocalVenta              = idex.childNodes[13].attributes.getNamedItem('value').nodeValue;
+    cIdSuscripcionVenta        = idex.childNodes[14].attributes.getNamedItem('value').nodeValue;
 
-    idfacturaseleccionada = idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
-    var cadena            = idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
-    posicion              = cadena.indexOf('-');
-    idfac                 = cadena.substring(posicion+1);
-    seriefac              = cadena.substring(0,posicion-1);
     menuContextualVentasRealizadas(cIdComprobanteVenta);
 
     var verdet = (RevDet == 0 || RevDet != idex.value)? true:false;
@@ -955,8 +949,6 @@ function VentanaAbonos(){
 
     var IdComprobanteVenta = num;
 
-    var xpen            = id("venta_pendiente_"+IdComprobanteVenta);
-    var dineropendiente = xpen.getAttribute("label");
     var serie           = id("venta_serie_" + IdComprobanteVenta).getAttribute("label");
     var num             = id("venta_num_" + IdComprobanteVenta).getAttribute("label");
     var serienumfactura = serie;
@@ -974,7 +966,7 @@ function VentanaAbonos(){
     
     //fijamos la id actual
     Abonar.IdComprobanteVenta = IdComprobanteVenta;
-    Abonar.Maximo             = parseFloat(dineropendiente).toFixed(2);
+    Abonar.Maximo             = parseFloat(ventapendiente).toFixed(2);
 
     id("abono_Debe").setAttribute("value",formatDinero(Abonar.Maximo));
     id("abono_Efectivo").setAttribute("value",formatDinero(Abonar.Maximo));

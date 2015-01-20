@@ -144,8 +144,8 @@ PageStart();
 
 switch($modo){
 	case "newsave":		
-		$nombre = $_POST["Nombre"];
-		$codigo = $_POST["Codigo"];				
+	        $nombre = CleanText($_POST["Nombre"]);
+		$codigo = CleanText($_POST["Codigo"]);				
 		CrearTemplate($nombre,$codigo);
 				Separador();
 		PaginaBasica();	
@@ -155,7 +155,7 @@ switch($modo){
 		break;
 	case "salvarextra":
 		$id = CleanID($_POST["id"]);
-		$comentario = $_POST["Comentario"];
+		$comentario = CleanText($_POST["Comentario"]);
 		$paginas = intval($_POST["Paginas"]);
 		ModificarExtrasTemplate($id,$comentario,$paginas);
 				Separador();
@@ -163,8 +163,8 @@ switch($modo){
 		break;			
 	case "modsave":
 		$id = CleanID($_POST["id"]);
-		$codigo = $_POST["Codigo"];
-		$nombre = $_POST["Nombre"];
+		$codigo = CleanText($_POST["Codigo"]);
+		$nombre = CleanText($_POST["Nombre"]);
 					
 		ModificarTemplate($id,$nombre,$codigo);
 				Separador();

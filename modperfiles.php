@@ -182,7 +182,7 @@ switch($modo){
 		break;	
 
 	case "newsave":		
-		$nombre = $_POST["NombrePerfil"];			
+	        $nombre = CleanText($_POST["NombrePerfil"]);			
 		CrearPerfil($nombre);
 		Separador();
 		PaginaBasica();	

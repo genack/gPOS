@@ -716,8 +716,8 @@ switch($modo){
 		break;
 	case "salvaclon":
 		$id 	       = CleanID($_POST["id"]);
-		$idalias0       = $_POST["IdProductoAlias0"];
-		$idalias1       = $_POST["IdProductoAlias1"];
+		$idalias0      = CleanID($_POST["IdProductoAlias0"]);
+		$idalias1      = CleanID($_POST["IdProductoAlias1"]);
 		$idcolor       = CleanID($_POST["IdColor"]);
 		$idtalla       = CleanID($_POST["IdTalla"]);
 		$condventa     = CleanText($_POST["CondicionVenta"]);
@@ -808,8 +808,8 @@ switch($modo){
 		
 	case "modsavebar":
 		$id   	        = CleanID($_POST["id"]);
-		$idalias0       = $_POST["IdProductoAlias0"];
-		$idalias1       = $_POST["IdProductoAlias1"];
+		$idalias0       = CleanID($_POST["IdProductoAlias0"]);
+		$idalias1       = CleanID($_POST["IdProductoAlias1"]);
 		$codigobarras   = CleanCB($_POST["CodigoBarras"]);
 		$refprovhab     = CleanCB($_POST["RefProvHab"]);
 		$idcontenedor 	= CleanID($_POST["IdContenedor"]);
@@ -853,9 +853,9 @@ switch($modo){
 	case "modsave":
 		$id	= CleanID($_POST["id"]);
 		
-		$nombre   = $_POST["Nombre"];
-		$idalias0 = $_POST["IdProductoAlias0"];
-		$idalias1 = $_POST["IdProductoAlias1"];
+		$nombre   = CleanText($_POST["Nombre"]);
+		$idalias0 = CleanID($_POST["IdProductoAlias0"]);
+		$idalias1 = CleanID($_POST["IdProductoAlias1"]);
 
 		if (getParametro("ProductosLatin1")){			
 			//NOTA: si tenemos la tabla en latin1, la recepcion de nombre como utf8

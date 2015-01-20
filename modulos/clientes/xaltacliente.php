@@ -19,13 +19,13 @@ switch($modo) {
 		$telefono2      = (isset($_POST["Telefono2"]))? CleanTelefono($_POST["Telefono2"]):'';
 		$contacto       = (isset($_POST["Contacto"]))? CleanText($_POST["Contacto"]):'';
 		$cargo          = (isset($_POST["Cargo"]))? CleanText($_POST["Cargo"]):'';
-		$cuentabancaria = (isset($_POST["CuentaBancaria"]))? $_POST["CuentaBancaria"]:'';
-		$numero         = $_POST["NumeroFiscal"];
+		$cuentabancaria = (isset($_POST["CuentaBancaria"]))? CleanCC($_POST["CuentaBancaria"]):'';
+		$numero         = CleanText($_POST["NumeroFiscal"]);
 		$comentario     = CleanText($_POST["Comentarios"]);
 		$tipocliente    = CleanText($_POST["TipoCliente"]);
 		$IdModPagoHabitual = (isset($_POST["IdModPagoHabitual"]))? CleanID($_POST["IdModPagoHabitual"]):1;
 		$idpais 	= (isset($_POST["IdPais"]))? CleanID($_POST["IdPais"]):1; 
-		$paginaweb      = (isset($_POST["PaginaWeb"]))? $_POST["PaginaWeb"]:'';
+		$paginaweb      = (isset($_POST["PaginaWeb"]))? CleanUrl($_POST["PaginaWeb"]):'';
 		$oCliente       = new cliente;
 
 		if(!$oCliente->Load($idcliente)) {
@@ -72,13 +72,13 @@ switch($modo) {
 		$telefono2 = ( isset($_POST["Telefono2"]) )? CleanTelefono($_POST["Telefono2"]):'';
 		$contacto  = ( isset($_POST["Contacto"]) )? CleanText($_POST["Contacto"]):'';
 		$cargo     = ( isset($_POST["Pago"]) )? CleanText($_POST["Cargo"]):'';
-		$cuentabancaria = (isset($_POST["CuentaBancaria"]))? $_POST["CuentaBancaria"]:'';
-		$numero     = $_POST["NumeroFiscal"];
-		$comentario = $_POST["Comentarios"];
-		$tipocliente = $_POST["TipoCliente"];
+		$cuentabancaria = (isset($_POST["CuentaBancaria"]))? CleanCC($_POST["CuentaBancaria"]):'';
+		$numero     = CleanText($_POST["NumeroFiscal"]);
+		$comentario = CleanText($_POST["Comentarios"]);
+		$tipocliente = CleanText($_POST["TipoCliente"]);
 		$IdModPagoHabitual = (isset($_POST["IdModPagoHabitual"]))? CleanID($_POST["IdModPagoHabitual"]):'';
 		$idpais     = (isset($_POST["IdPais"]))? CleanID($_POST["IdPais"]):''; 
-		$paginaweb  = (isset($_POST["PaginaWeb"]))? $_POST["PaginaWeb"]:'';
+		$paginaweb  = (isset($_POST["PaginaWeb"]))? CleanUrl($_POST["PaginaWeb"]):'';
 		$IdLocal    = CleanID(getSesionDato("IdTienda"));
 		
 		$id         = CrearCliente($comercial,$legal,$direccion,$poblacion,$cp,$email,

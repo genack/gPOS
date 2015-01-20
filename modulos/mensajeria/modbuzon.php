@@ -160,7 +160,7 @@ switch($modo){
 	case "avisobug":
 	case "enviosugerencia":
 		
-		$res = mail(CORREO_ADMIN, "[9Gestion] $modo: ". $_POST["titulo"], "Cuerpo:\n".$_POST["cuerpo"]);
+		$res = mail(CORREO_ADMIN, "[gPOS] $modo: ". $_POST["titulo"], "Cuerpo:\n".$_POST["cuerpo"]);
 		
 		if ($res)
 		   echo "OK";
@@ -171,7 +171,7 @@ switch($modo){
 		break;
 }
 
-StartXul("Buzon 9Gestion");
+StartXul("Buzon gPOS");
  
 
 ?>

@@ -65,10 +65,10 @@ switch ($modo) {
     $IdLocal    = getSesionDato("IdTienda");
     if($listalocal!=0)
       $IdLocal = $listalocal;
-    $PV  = $_GET["PV"];
-    $PVD = $_GET["PVD"];
-    $MDS = $_GET["MDS"];
-    $idproducto = $_GET["idproducto"];
+    $PV  = CleanDinero($_GET["PV"]);
+    $PVD = CleanDinero($_GET["PVD"]);
+    $MDS = CleanText($_GET["MDS"]);
+    $idproducto = CleanID($_GET["idproducto"]);
     echo guardarPreciosVentaAlmacen($PV,$PVD,$MDS,$idproducto,$IdLocal);
     exit(); 		
     break;
@@ -78,10 +78,10 @@ switch ($modo) {
     $IdLocal    = getSesionDato("IdTienda");
     if($listalocal!=0)
       $IdLocal = $listalocal;
-    $PV = $_GET["PV"];
-    $PVD = $_GET["PVD"];
-    $MDS = $_GET["MDS"];
-    $idproducto = $_GET["idproducto"];
+    $PV  = CleanDinero($_GET["PV"]);
+    $PVD = CleanDinero($_GET["PVD"]);
+    $MDS = CleanText($_GET["MDS"]);
+    $idproducto = CleanID($_GET["idproducto"]);
     echo eliminarCambiosPreciosVentaAlmacen($PV,$PVD,$MDS,$idproducto,$IdLocal);
     exit(); 		
     break;
