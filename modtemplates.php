@@ -163,7 +163,7 @@ switch($modo){
 		break;			
 	case "modsave":
 		$id = CleanID($_POST["id"]);
-		$codigo = CleanText($_POST["Codigo"]);
+		$codigo = $_POST["Codigo"];
 		$nombre = CleanText($_POST["Nombre"]);
 					
 		ModificarTemplate($id,$nombre,$codigo);

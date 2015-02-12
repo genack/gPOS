@@ -1714,6 +1714,7 @@ function changeFamYSub(idsubfamilia,idfamilia,texsubfamilia, texfamilia ){
  getMe("TextoSubFamilia").innerHTML = ""+ texsubfamilia + "";
  getMe("IdFamilia").value = idfamilia;
  getMe("IdSubFamilia").value = idsubfamilia;
+ UpTextBaseDescrip();
 
 }
 
@@ -1849,6 +1850,7 @@ function changeSub(o,label){
   return;
  } 
  vf.value = valor;
+ UpTextBaseDescrip();
 }
 
 
