@@ -203,8 +203,8 @@ function UsarNuevoFam() {
 function soloAlfaNumerico(e){
     key = e.keyCode || e.which;
     tecla = String.fromCharCode(key).toLowerCase();
-    letras = " áéíóúabcdefghijklmnñopqrstuvwxyz0123456789";
-    especiales = [8, 13];
+    letras = " áéíóúabcdefghijklmnñopqrstuvwxyz0123456789.-";
+    especiales = [8, 13, 9, 35, 36, 37, 39];
     tecla_especial = false
     for(var i in especiales){
         if(key == especiales[i]){
@@ -212,7 +212,7 @@ function soloAlfaNumerico(e){
             break;
         }
     }
-    
+
     if(letras.indexOf(tecla)==-1 && !tecla_especial){
         return false;
     }
@@ -246,7 +246,6 @@ function soloAlfaNumerico(e){
 <groupbox flex='1'>
 	<caption label='<?php echo _("Crear nueva") ?>'/>		
 	<textbox id='nueva'  style="text-transform:uppercase;" 
-                 onkeyup="javascript:this.value=this.value.toUpperCase();"
                  onkeypress="return soloAlfaNumerico(event)"/>
 	<hbox flex="1">
 	<button flex='1' label='<?php echo _("Familia") ?>' onkeypress='if (event.which == 13) UsarNuevoFam()' oncommand='UsarNuevoFam()'/>

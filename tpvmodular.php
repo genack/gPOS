@@ -238,6 +238,7 @@ var po_ticketde             = "<?php echo addslashes(_("Ticket de "). $NombreEmp
  Local.promoMensaje	    = "<?php echo addslashes($MensajePromo) ?>";
  Local.TPV                  = "<?php echo $TipoVenta; ?>";
  Local.Giro                 = "<?php echo $GiroEmpresa; ?>";
+ Local.Imprimir             = true;
 
  Local.diasLimiteDevolucion = 7;
 

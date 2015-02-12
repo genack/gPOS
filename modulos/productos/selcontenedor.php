@@ -41,7 +41,7 @@ switch($modo){
 
     echo "<groupbox> <caption label='Buscar Empaque:'/>";
      echo "<hbox>";
-     echo "<textbox  flex='1'   id='buscacontenedor' onkeyup='BuscarContenedor();   if (event.which == 13) agnadirDirecto();' onkeypress='javascript:this.value=this.value.toUpperCase(); return soloAlfaNumerico(event)' /> ";
+     echo "<textbox  flex='1'   id='buscacontenedor' onkeyup='BuscarContenedor();   if (event.which == 13) agnadirDirecto();' onkeypress='javascript: return soloAlfaNumerico(event)' /> ";
     echo "</hbox>";
     echo "<hbox flex='1'>";
     echo "<button flex='1' label='"._("Nuevo")."' onkeypress='if (event.which == 13) UsarNuevo()' oncommand='UsarNuevo()'/>";

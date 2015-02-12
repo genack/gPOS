@@ -124,7 +124,12 @@
 		</row>
 		
 		<row>
-		<box/>
+		<box>
+                  <checkbox id="checkimprimir" class="Compacta" label="Imprimir" 
+                            checked="true" style="padding-left:3em;margin-top: -2.5em"
+                            oncommand="CambiarModoImpresion(this.checked)"/>
+
+                </box>
 		<hbox>		
 		<button flex="1" id="BotonAceptarImpresion" image="img/gpos_imprimir.png" class="media" label="  Aceptar  " oncommand="ImprimirTicket()"/>
 		<button flex="1" id="BotonCancelarImpresion" image="img/gpos_vaciarcompras.png" class="media" label="  Cancelar  " oncommand="CerrarPeticion()"/>

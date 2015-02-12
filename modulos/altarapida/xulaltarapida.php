@@ -122,7 +122,6 @@ $ibtnVaciar  = ($esInvent)? "$_BasePath"."img/gpos_volver.png":"$_BasePath"."img
     <row>
       <caption class="media" label="Nombre"/>
       <textbox class="media" multiline="true"  style="text-transform:uppercase;" 
-	       onkeyup="javascript:this.value=this.value.toUpperCase();" 
 	       onfocus="this.select()" id="Descripcion" value="<?php echo $Nombre ?>"
                onkeypress="return soloAlfaNumerico(event);"/>
     </row>

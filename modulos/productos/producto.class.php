@@ -260,7 +260,7 @@ function NormalizaTalla($talla){
 		$talla = substr($talla,1);
 	}	
 
-	$talla = strtoupper($talla);
+	//$talla = strtoupper($talla);
 	$valnum = intval($talla);
 /*	if ($valnum >0 and $valnum <10 ){
 		$talla = " " . $valnum;

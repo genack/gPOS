@@ -2562,7 +2562,7 @@
 
 	    if( trim( xconcepto ) == '' ) return;
 	    
-	    xconcepto = xconcepto.toUpperCase();
+	    //xconcepto = xconcepto.toUpperCase();
 	    ticket[cod].concepto = xconcepto;
 
 	    id("tic_nombre_"+cod).setAttribute('value',xconcepto); 
@@ -7105,7 +7105,7 @@ function convertirNumLetras(number){
 
 
         function validanombreCliente(itm){
-	    itm = itm.toUpperCase();		
+	    //itm = itm.toUpperCase();		
 	    itm = itm.replace('"',"");
 	    itm = itm.replace("'","");
 	    itm = itm.replace("  "," ");
@@ -7129,7 +7129,7 @@ function convertirNumLetras(number){
 	    //itm = itm.replace("&","Y");
 	    itm = itm.replace("NRO","Nº");
 	    itm = itm.replace("#","Nº");
-	    itm = itm.toUpperCase();
+	    //itm = itm.toUpperCase();
 	    return itm;
 	}
 
@@ -7578,7 +7578,8 @@ function convertirNumLetras(number){
 	    break;
 
 	case 1://Ticket
-            top.TicketFinal = window.open(EncapsrTextoParaImprimir(text_ticket),
+	    if(Local.Imprimir)
+		top.TicketFinal = window.open(EncapsrTextoParaImprimir(text_ticket),
 					  "Consola Ticket",
 					  "width=400,height=600,scrollbars=1,resizable=1",
 					  "text/plain");
@@ -7622,7 +7623,11 @@ function convertirNumLetras(number){
 	NuevoModo();
 
 	//Lanzamos Impresion Comprobante
-	if( comprobante == 0 ) location.href=url;//Imprime Comprobante
+	if( comprobante == 0 && Local.Imprimir) location.href=url;//Imprime Comprobante
+    }
+
+    function CambiarModoImpresion(xvalue){
+	Local.Imprimir = xvalue;
     }
  
     function ImprimirTicketOld() {    

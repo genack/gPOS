@@ -16,7 +16,7 @@ StartXul(_("Elije Propiedades del Producto"));
                         key = e.keyCode || e.which;
                         tecla = String.fromCharCode(key).toLowerCase();
                         letras = ' abcdefghijklmnñopqrstuvwxyz0123456789%-.';
-                        especiales = [8, 13, 9];
+                        especiales = [8, 13, 9, 35, 36, 37, 39];
                         tecla_especial = false
                         for(var i in especiales){
                            if(key == especiales[i]){
@@ -61,7 +61,7 @@ StartXul(_("Elije Propiedades del Producto"));
        
        echo "<groupbox> <caption label='Buscar ".$txtModelo."'/>";
        echo "<vbox>";
-       echo "<textbox  flex='1'   id='buscapresentacion' style='text-transform:uppercase;' onkeyup='javascript:this.value=this.value.toUpperCase();BuscarPresentacion();   if (event.which == 13) agnadirDirecto();' onkeypress='return soloAlfaNumerico(event)' />";
+       echo "<textbox  flex='1'   id='buscapresentacion' style='text-transform:uppercase;' onkeyup='javascript:BuscarPresentacion();   if (event.which == 13) agnadirDirecto();' onkeypress='return soloAlfaNumerico(event)' />";
        echo "<button label='"._("Nuevo")."' onkeypress='if (event.which == 13) UsarNuevo()' oncommand='UsarNuevo()'/>";
        echo "</vbox>";
        echo "</groupbox>";
@@ -186,7 +186,7 @@ StartXul(_("Elije Propiedades del Producto"));
 
        echo "<groupbox> <caption label='Buscar ".$txtDetalle."'/>";
        echo "<vbox>";
-       echo "<textbox  flex='1'   id='buscapresentacion' style='text-transform:uppercase;' onkeyup='javascript:this.value=this.value.toUpperCase();BuscarSubPresentacion();   if (event.which == 13) agnadirDirecto();' onkeypress='return soloAlfaNumerico(event)'/>";
+       echo "<textbox  flex='1'   id='buscapresentacion' style='text-transform:uppercase;' onkeyup='javascript:BuscarSubPresentacion();   if (event.which == 13) agnadirDirecto();' onkeypress='return soloAlfaNumerico(event)'/>";
        echo "<button label='"._("Nuevo")."' onkeypress='if (event.which == 13) UsarNuevo()' oncommand='UsarNuevo(".$IdTallaje.")'/>";
        echo "</vbox>";
        echo "</groupbox>";

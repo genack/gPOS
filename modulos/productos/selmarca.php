@@ -53,7 +53,7 @@ $sat = false;
 
     echo "<groupbox> <caption label='Buscar Marca'/>";
     echo "<hbox>";
-    echo "<textbox  flex='1'   id='buscamarca' onkeyup='BuscarMarca();   if (event.which == 13) agnadirDirecto(); javascript:this.value=this.value.toUpperCase();' onkeypress='return soloAlfaNumerico(event)' />";
+    echo "<textbox  flex='1'   id='buscamarca' onkeyup='BuscarMarca();   if (event.which == 13) agnadirDirecto();' onkeypress='return soloAlfaNumerico(event)' />";
     echo "</hbox>";
     echo "<hbox flex='1'>";
     echo "<button flex='1' label='"._("Nuevo")."' onkeypress='if (event.which == 13) UsarNuevo()' oncommand='UsarNuevo()'/>";
@@ -106,8 +106,8 @@ $sat = false;
                 function soloAlfaNumerico(e){ 
                         key = e.keyCode || e.which;
                         tecla = String.fromCharCode(key).toLowerCase();
-                        letras = ' abcdefghijklmnopqrstuvwxyz0123456789-.';
-                        especiales = [8, 13, 9];
+                        letras = ' abcdefghijklmnñopqrstuvwxyz0123456789-.';
+                        especiales = [8, 13, 9, 35, 36, 37, 39];
                         tecla_especial = false
                         for(var i in especiales){
                            if(key == especiales[i]){

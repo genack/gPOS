@@ -42,7 +42,7 @@ case "alias":
 
     echo "<groupbox> <caption label='Buscar $txtalias:'/>";
     echo "<vbox>";
-    echo "<textbox  flex='1'   id='buscaalias' style='text-transform:uppercase;' onkeyup='javascript:this.value=this.value.toUpperCase(); BuscarAlias();   if (event.which == 13) agnadirDirecto();' onkeypress='return soloAlfaNumerico(event)'/>";
+    echo "<textbox  flex='1'   id='buscaalias' style='text-transform:uppercase;' onkeyup='javascript:BuscarAlias();   if (event.which == 13) agnadirDirecto();' onkeypress='return soloAlfaNumerico(event)'/>";
     echo "<button label='"._("Nuevo ")."' oncommand='UsarNuevo()'/>";
     echo "</vbox>";
     echo "</groupbox>";
@@ -96,7 +96,7 @@ case "alias":
                         key = e.keyCode || e.which;
                         tecla = String.fromCharCode(key).toLowerCase();
                         letras = ' abcdefghijklmnopqrstuvwxyz0123456789-%';
-                        especiales = [8, 13, 9];
+                        especiales = [8, 13, 9, 35, 36, 37, 39];
                         tecla_especial = false
                         for(var i in especiales){
                            if(key == especiales[i]){
