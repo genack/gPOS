@@ -10,6 +10,10 @@ if (!getSesionDato("IdTienda")){
 $IdLocal = getSesionDato("IdTienda");
 $locales = getLocalesPrecios($IdLocal);
 $modo    = CleanText($_GET["modo"]);
+$MargenUtilidad = getSesionDato("MargenUtilidad");
+$DescuentoGral  = getSesionDato("DescuentoTienda");
+$MetodoRedondeo = getSesionDato("MetodoRedondeo");
+$COPImpuesto    = getSesionDato("COPImpuesto");
 
 switch($modo) {
         case "recibirProductosAlmacen":

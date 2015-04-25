@@ -62,7 +62,7 @@ switch($modo){
       $password = $_POST["password"];
       $nombreBase = $_POST["database"];
       $baseurlDato = $_POST["baseurl"];
-      $giroNegocioDato = "PINF";
+      $giroNegocioDato = $_POST["gironegocio"];
       $adminEmailDato = $_POST["adminemail"];
       $passModulos = $_POST["passmodulos"];
 
@@ -83,16 +83,22 @@ switch($modo){
       webAssert(function_exists("htmlentities"),"","Su version de PHP no reune las caractersticias minimas",true);				
 						
       $pathTablas   = dirname(__FILE__) . "/../esquema/tablas.sql";
-      $pathInserts  = dirname(__FILE__) . "/../esquema/datos.sql";
       $pathFunction = dirname(__FILE__) . "/../esquema/funciones.sql";
+      $pathInserts  = dirname(__FILE__) . "/../esquema/datos.sql";
+      $pathTemplate = dirname(__FILE__) . "/../esquema/template.sql";
+      $pathListados = dirname(__FILE__) . "/../esquema/listados.sql";
 
       $bigSQL       = file_get_contents($pathTablas);
       $bigINSERTS   = file_get_contents($pathInserts);
       $bigFunciones = file_get_contents($pathFunction);
+      $bigTemplate  = file_get_contents($pathTemplate);
+      $bigListados  = file_get_contents($pathListados);
 	        
       webAssert($bigSQL,"","No se encuentra $pathTablas",true);
       webAssert($bigINSERTS,"","No se encuentra $pathInserts",true);
       webAssert($bigFunciones,"","No se encuentra $pathFunction",true);
+      webAssert($bigTemplate,"","No se encuentra $pathTemplate",true);
+      webAssert($bigListados,"","No se encuentra $pathListados",true);
 										
       IniciaTarea("Conectando");
 	
@@ -123,6 +129,16 @@ switch($modo){
 	  webAssert($result,".","E: problema al iniciar tablas: ".mysql_error($link));
 	}
       }	
+
+      IniciaTarea("Creando funciones");
+      $querys = split_queris($bigFunciones);
+
+      foreach($querys as $query){
+	if ($query and $query != "\n"){
+	  $result  = mysql_query($query);
+	  webAssert($result,".","E: Problema al iniciar funciones".mysql_error($link));
+	}
+      }
    
       IniciaTarea("Cargando datos");
       $querys = split_queris($bigINSERTS);
@@ -135,13 +151,25 @@ switch($modo){
 	}
       }
 
-      IniciaTarea("Creando funciones");
-      $querys = split_queris($bigFunciones);
+      IniciaTarea("Cargando Templates");
+      $querys = split_queris($bigTemplate);
 
       foreach($querys as $query){
 	if ($query and $query != "\n"){
-	  $result  = mysql_query($query);
-	  webAssert($result,".","E: Problema al iniciar funciones".mysql_error($link));
+	  $result = mysql_query($query);
+	  $query_s = htmlentities($query);
+	  webAssert($result,".","E: problema al iniciar datos: $cr <font color=red>$query_s</font>  ".mysql_error($link));
+	}
+      }
+
+      IniciaTarea("Cargando Listados");
+      $querys = split_queris($bigListados);
+
+      foreach($querys as $query){
+	if ($query and $query != "\n"){
+	  $result = mysql_query($query);
+	  $query_s = htmlentities($query);
+	  webAssert($result,".","E: problema al iniciar datos: $cr <font color=red>$query_s</font>  ".mysql_error($link));
 	}
       }
 

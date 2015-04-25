@@ -39,6 +39,11 @@
 <label for="nombreNegocio">Nombre comercial del negocio</label><br />
 <input id="nombreNegocio" value="gPOS" style="width: 20em" class="textinput" type="text" name="nombreNegocio"><br />
 
+<select name="gironegocio" id="gironegocio" style="display:none">
+  <option value="PINF" selected>Productos Informáticos</option>
+</select>
+<br/>
+
 <br/>
 <label for="adminemail">Email del contacto administrador</label><br />
 <input id="adminemail" value="admin@localhost" style="width: 20em" class="textinput" type="text" name="adminemail"><br />

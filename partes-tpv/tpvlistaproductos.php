@@ -52,8 +52,12 @@
 	     onkeypress="if (event.which == 13) setTimeout('agnadirPorMenu(\'preguntar\')',50)" >
       <listcols flex="1">
 	<listcol/>		
-	<listcol flex="8"/>
+	<listcol/>
 	<listcol/>		
+	<listcol/>			
+	<listcol/>
+	<listcol/>			
+	<listcol  flex="8"/>		
 	<listcol/>			
 	<listcol/>
 	<listcol style="width:1em"/>
@@ -61,6 +65,10 @@
       <listhead>
 	<listheader label="CR"/>
 	<listheader label="Producto"/>
+	<listheader label=""/>
+	<listheader label=""/>
+	<listheader label=""/>
+	<listheader label=""/>
 	<listheader label=""/>
 	<listheader label="Stock" />
 	<listheader label="PV/U"/>

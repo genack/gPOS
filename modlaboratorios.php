@@ -260,7 +260,7 @@ function CrearProveedor($comercial, $legal, $direccion, $poblacion,
 
 }
 
-function ModificarProveedor($id,$comercial, $legal, $direccion, $poblacion, $cp, $email, $telefono1, 
+function ModificarLaboratorio($id,$comercial, $legal, $direccion, $poblacion, $cp, $email, $telefono1, 
 	$telefono2, $contacto, $cargo, $cuentabancaria, $numero, $comentario,	$IdModPagoHabitual,$paginaweb,$idpais	){
 	$oProveedor = new laboratorio;
 	if (!$oProveedor->Load($id)){
@@ -310,25 +310,25 @@ switch ($modo) {
 		PaginaBasica();
 		break;
 	case "modproveedor":
-		$id = CleanID($_POST["IdProveedor"]);
-		$comercial = $_POST["NombreComercial"];
-		$legal = $_POST["NombreLegal"];
-		$direccion = $_POST["Direccion"];
-		$poblacion = $_POST["Localidad"];
-		$cp = CleanCP($_POST["CP"]);
-		$email = CleanEmail($_POST["Email"]);
+		$id        = CleanID($_POST["IdProveedor"]);
+		$comercial = CleanText($_POST["NombreComercial"]);
+		$legal     = CleanText($_POST["NombreLegal"]);
+		$direccion = CleanText($_POST["Direccion"]);
+		$poblacion = CleanText($_POST["Localidad"]);
+		$cp        = CleanCP($_POST["CP"]);
+		$email     = CleanEmail($_POST["Email"]);
 		$telefono1 = CleanTelefono($_POST["Telefono1"]);
 		$telefono2 = CleanTelefono($_POST["Telefono2"]);
-		$contacto = $_POST["Contacto"];
-		$cargo = $_POST["Cargo"];
-		$cuentabancaria = $_POST["CuentaBancaria"];
-		$numero = $_POST["NumeroFiscal"];
-		$comentario = $_POST["Comentarios"];
+		$contacto  = CleanText($_POST["Contacto"]);
+		$cargo     = CleanText($_POST["Cargo"]);
+		$cuentabancaria = CleanCC($_POST["CuentaBancaria"]);
+		$numero     = CleanText($_POST["NumeroFiscal"]);
+		$comentario = CleanText($_POST["Comentarios"]);
 		$IdModPagoHabitual = CleanID($_POST["IdModPagoHabitual"]);
-		$paginaweb = CleanUrl($_POST["PaginaWeb"]);
-		$idpais = CleanID($_POST["IdPais"]);
+		$paginaweb  = CleanUrl($_POST["PaginaWeb"]);
+		$idpais     = CleanID($_POST["IdPais"]);
 		
-		ModificarProveedor($id,$comercial, $legal, $direccion, $poblacion, $cp, $email,
+		ModificarLaboratorio($id,$comercial, $legal, $direccion, $poblacion, $cp, $email,
 			 $telefono1, $telefono2, $contacto, $cargo, $cuentabancaria, $numero, $comentario,
 			 	$IdModPagoHabitual,$paginaweb,$idpais);
 		//Separador();
@@ -339,23 +339,23 @@ switch ($modo) {
 		MostrarProveedorParaEdicion($id,$lang);		
 		break;
 	case "newproveedor" :
-		$comercial = $_POST["NombreComercial"];
-		$legal = $_POST["NombreLegal"];
-		$direccion = $_POST["Direccion"];
-		$poblacion = $_POST["Localidad"];
-		$cp = $_POST["CP"];
-		$email = $_POST["Email"];
-		$telefono1 = $_POST["Telefono1"];
-		$telefono2 = $_POST["Telefono2"];
-		$contacto = $_POST["Contacto"];
-		$cargo = $_POST["Cargo"];
-		$cuentabancaria = $_POST["CuentaBancaria"];
-		$numero = $_POST["NumeroFiscal"];
-		$comentario = $_POST["Comentarios"];
+	        $comercial = CleanText($_POST["NombreComercial"]);
+		$legal     = CleanText($_POST["NombreLegal"]);
+		$direccion = CleanText($_POST["Direccion"]);
+		$poblacion = CleanText($_POST["Localidad"]);
+		$cp        = CleanCP($_POST["CP"]);
+		$email     = CleanEmail($_POST["Email"]);
+		$telefono1 = CleanTelefono($_POST["Telefono1"]);
+		$telefono2 = CleanTelefono($_POST["Telefono2"]);
+		$contacto  = CleanText($_POST["Contacto"]);
+		$cargo     = CleanText($_POST["Cargo"]);
+		$cuentabancaria = CleanCC($_POST["CuentaBancaria"]);
+		$numero     = CleanText($_POST["NumeroFiscal"]);
+		$comentario = CleanText($_POST["Comentarios"]);
 		$IdModPagoHabitual = CleanID($_POST["IdModPagoHabitual"]);
-		$paginaweb = (isset($_POST["PaginaWeb"]))? $_POST["PaginaWeb"]:"";
-		$idpais = (isset($_POST["IdPais"]))? $_POST["IdPais"]:1;		
-		$espopup = $_POST["esPopup"];
+		$paginaweb  = (isset($_POST["PaginaWeb"]))? CleanUrl($_POST["PaginaWeb"]):"";
+		$idpais     = (isset($_POST["IdPais"]))? CleanID($_POST["IdPais"]):1;
+		$espopup    = $_POST["esPopup"];
 
 		if (CrearProveedor($comercial, $legal, $direccion, $poblacion, $cp, $email, $telefono1, $telefono2, $contacto, $cargo, $cuentabancaria, $numero, $comentario,$IdModPagoHabitual,$paginaweb,$idpais )) {
 			if ($espopup){

@@ -11,6 +11,7 @@ $modo    = CleanText($_GET["modo"]);
 $locales = getLocalesPrecios($IdLocal);
 switch($modo) {
 	case "mostrarComprobantes":
+	  #Valida Suscripciones
 	  include("xulventas.php"); 
 	  break;
 }

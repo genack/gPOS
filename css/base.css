@@ -293,6 +293,17 @@ font-size: 13px;
  border: 1px solid #ece8de;/* green */
 }
 
+#boxCarritoTraspasoCant {
+ background-color: transparent;
+  /*background-color: #eee;  */
+ border: 2px;
+ border-radius: 8px;
+ margin: 0px;
+ padding: 0px;
+ width: 20em;font-size:80%;
+ border: 1px solid #ece8de;/* green */
+}
+
 .formacarrito {
  background-color: transparent;
   /*background-color: #eee;  */
@@ -335,8 +346,15 @@ div.formaTituloCarrito {
  font: small-caps;
 }
 
-
-
+tr.formaCabezaLista td{
+    background-color: #009bf9 !important;
+    text-align: center;
+    font-family: monospace;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+ 
 
 /* Navegador, simbolo de pagina actual */
 .pagactual {

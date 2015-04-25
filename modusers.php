@@ -52,10 +52,8 @@ function MostrarUsuarioParaEdicion($id) {
 	echo $oUsuario->formEntrada($action,true);	
 }
 
-function ModificarUsuario($id,$nombre,
-			$identificacion,$direccion,
-			$comision,
-			  $telefono,$pass,$idioma,$perfil,$cc,$nace,$local){
+function ModificarUsuario($id,$nombre,$identificacion,$direccion,$comision,
+			  $telefono,$pass,$idioma,$perfil,$cc,$nace,$local,$idlocales){
 	$oUsuario = new usuario;
 	if (!$oUsuario->Load($id)){
 		error(__FILE__ . __LINE__ ,"W: no pudo mostrareditar '$id'");
@@ -73,6 +71,7 @@ function ModificarUsuario($id,$nombre,
 	$oUsuario->set("IdLocal ",$local,FORCE);
 	$oUsuario->set("CuentaBanco",$cc,FORCE);		
 	$oUsuario->set("FechaNacim",$nace,FORCE);
+	$oUsuario->set("GrupoLocales",$idlocales,FORCE);
 	
 	if ($oUsuario->Save()){
 		//if(isVerbose())
@@ -130,10 +129,8 @@ function FormularioAlta() {
 	echo $oUsuario->formAlta($action,false);	
 }
 
-function CrearUsuario($nombre,
-			$identificacion,$direccion,
-			$comision,
-		      $telefono,$pass,$idioma,$perfil,$cc,$nace,$local){
+function CrearUsuario($nombre,$identificacion,$direccion,$comision,$telefono,
+		      $pass,$idioma,$perfil,$cc,$nace,$local,$idlocales){
 	$oUsuario = new usuario;
 
 	$oUsuario->Crea();
@@ -149,6 +146,7 @@ function CrearUsuario($nombre,
 	$oUsuario->set("Nombre",$nombre,FORCE);		
 	$oUsuario->set("CuentaBanco",$cc,FORCE);
 	$oUsuario->set("FechaNacim",$nace,FORCE);
+	$oUsuario->set("GrupoLocales",$idlocales,FORCE);
 	
 	if ($oUsuario->Alta()){
 		//if(isVerbose())
@@ -184,11 +182,17 @@ switch($modo){
 		$local     = CleanID($_POST["Local"]);
 		$cc 	   = (isset($_POST["CuentaBanco"]))? CleanCC($_POST["CuentaBanco"]):0;
 		$nace	   = CleanText($_POST["FechaNacim"]);
+		$glocales  = CleanText($_POST["GrupoLocales"]);
+		$idlocales = obtnerIdLocales($glocales,$local);
+		$verificar = verficarExistenciaUsuario($identificacion,0);
+		if($verificar) return FormularioAlta();
+		if(strlen($pass) < 8 ) return FormularioAlta();
+
+		if($local == 0)
+		  $idlocales = '';
 	
-		CrearUsuario($nombre,
-			$identificacion,$direccion,
-			$comision,
-			     $telefono,$pass,$idioma,$perfil,$cc,$nace,$local);
+		CrearUsuario($nombre,$identificacion,$direccion,$comision,$telefono,
+			     $pass,$idioma,$perfil,$cc,$nace,$local,$idlocales);
 		PaginaBasica();	
 		break;	
 	case "alta":
@@ -207,11 +211,18 @@ switch($modo){
 		$local     = CleanID($_POST["Local"]);
 		$cc 	   = CleanCC($_POST["CuentaBanco"]);
 		$nace	   = CleanText($_POST["FechaNacim"]);
-		
-		ModificarUsuario($id,$nombre,
-			$identificacion,$direccion,
-			$comision,
-				 $telefono,$pass,$idioma,$perfil,$cc,$nace,$local);
+
+		$glocales  = CleanText($_POST["GrupoLocales"]);
+		$idlocales = obtnerIdLocales($glocales,$local);
+		$existe    = verficarExistenciaUsuario($identificacion,$id);
+		if($existe) return MostrarUsuarioParaEdicion($id);;
+		if(strlen($pass) < 8 ) return MostrarUsuarioParaEdicion($id);
+
+		if($local == 0)
+		  $idlocales = '';
+
+		ModificarUsuario($id,$nombre,$identificacion,$direccion,$comision,
+				 $telefono,$pass,$idioma,$perfil,$cc,$nace,$local,$idlocales);
 		PaginaBasica();	
 		break;
 	case "editar":

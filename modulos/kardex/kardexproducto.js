@@ -162,7 +162,7 @@ function buscarMovimientosExistencias(){
           item.setAttribute('style','text-align:center;font-weight:bold;');
 
           var textbox1 = document.createElement('label');
-          textbox1.setAttribute('value',formatDinero(arreglo[i]));
+          textbox1.setAttribute('value',formatDineroTotal(arreglo[i]));
           textbox1.setAttribute('readonly','true');
           textbox1.setAttribute('style','text-align:right');
           textbox1.setAttribute('id','costo_'+String(i+1));
@@ -180,7 +180,7 @@ function buscarMovimientosExistencias(){
           costolinea       = arreglo[i]*arreglo[i+1];
 
           var textbox3 = document.createElement('label');
-          textbox3.setAttribute('value',formatDinero(costolinea.toFixed(2)));
+          textbox3.setAttribute('value',formatDineroTotal(costolinea.toFixed(2)));
           textbox3.setAttribute('readonly','true');
           textbox3.setAttribute('id','costo_parcial'+String(i+1));
           textbox3.setAttribute('style','text-align:right');
@@ -268,7 +268,7 @@ function buscarMovimientosExistenciasCarrito(){
           item.setAttribute('style','text-align:center;font-weight:bold;');
 	  
           var costo = document.createElement('label');
-          costo.setAttribute('value',formatDinero(arreglo[i]));
+          costo.setAttribute('value',formatDineroTotal(arreglo[i]));
           costo.setAttribute('readonly','true');
           costosunitarios.push(arreglo[i]);
           costo.setAttribute('id','costo_'+arreglo[i+2]);

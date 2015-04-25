@@ -25,6 +25,7 @@ CREATE TABLE `ges_almacenes` (
   `FechaChange` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `ResumenKardex` text NOT NULL,
   `EstadoInventario` tinyint(1) unsigned NOT NULL default '0',
+  `CostoOperativo` double NOT NULL default '0',
   `Eliminado` tinyint(1) unsigned NOT NULL default '0',
   PRIMARY KEY  (`Id`),
   UNIQUE KEY `IdLocal` (`IdLocal`,`IdProducto`)
@@ -141,10 +142,15 @@ CREATE TABLE `ges_clientes` (
   `Contacto` tinytext NOT NULL,
   `Cargo` tinytext NOT NULL,
   `Comentarios` tinytext NOT NULL,
+  `FechaNacimiento` DATE NOT NULL DEFAULT '0000-00-00',
   `FechaRegistro` DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
   `FechaChange` DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
   `Bono` double NOT NULL Default '0',
   `Suscripcion` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `Login` varchar(20) NOT NULL,
+  `Pass` varchar(60) NOT NULL,
+  `Alta` tinyint(4) NOT NULL,
+  `CodigoAlta` varchar(8) NOT NULL,
   `Eliminado` tinyint(1) unsigned NOT NULL default '0',
   PRIMARY KEY  (`IdCliente`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
@@ -246,6 +252,7 @@ CREATE TABLE `ges_comprobantes` (
   `PlazoPago` date NOT NULL DEFAULT '0000-00-00',
   `Cobranza` ENUM('Ninguno','Pendiente','Prorroga','Coactivo') NOT NULL DEFAULT 'Ninguno',
   `Observaciones` tinytext NOT NULL,
+  `Traslado` bigint unsigned NOT NULL DEFAULT '0' COMMENT 'IdPedido Traslado',
   `Eliminado` tinyint(1) unsigned NOT NULL default '0',
   PRIMARY KEY  (`IdComprobante`)
 ) ENGINE=MyISAM   DEFAULT CHARSET=utf8;
@@ -273,6 +280,8 @@ CREATE TABLE `ges_comprobantesdet` (
     `Vencimiento` tinyint(1) unsigned NOT NULL default '0' COMMENT 'con Fecha Vencimiento(1), sin Fecha Vencimiento(0)',
     `Serie` tinyint(1) unsigned NOT NULL default '0' COMMENT 'con serie(1), sin serie(0)',
     `Oferta` tinytext NOT NULL COMMENT 'uni~ofertaunid~pv~pvo',
+    `CantidadDevolucion` float NOT NULL DEFAULT '0',
+    `IdOrdenServicio` bigint(20) unsigned NOT NULL DEFAULT '0',
     `Eliminado` tinyint(1) unsigned NOT NULL default '0',
     PRIMARY KEY  (`IdComprobanteDet`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
@@ -350,6 +359,7 @@ CREATE TABLE `ges_locales` (
     `ImpuestoIncluido` tinyint(1) unsigned NOT NULL default '0',
     `IdTipoNumeracionFactura` smallint(5) unsigned NOT NULL default '0',
     `CuentaBancaria` tinytext NOT NULL,
+    `CuentaBancaria2` tinytext NOT NULL,
     `Logotipo` tinytext NOT NULL,
     `MensajeMes` tinytext NOT NULL,
     `MensajePromocion` TINYTEXT NOT NULL,
@@ -357,6 +367,10 @@ CREATE TABLE `ges_locales` (
     `TipoMargenUtilidad` tinyint(1) unsigned NOT NULL,
     `VigenciaPresupuesto` smallint(2) unsigned NOT NULL,
     `GarantiaComercial` smallint(2) unsigned NOT NULL, 
+    `Descuento` double NOT NULL,
+    `MetodoRedondeo` enum('SR','RDE','RIE') NOT NULL default 'RDE' comment 'SR:Sin Redondeo,RIDE:Redondeo importe a decimal entero,RIE, Redondeo a ImporteEntero',
+    `COPImpuesto` tinyint(1) unsigned NOT NULL default '0',
+    `AdmitePassword` tinyint(1) unsigned NOT NULL default '0',
     `Eliminado` tinyint(1) unsigned NOT NULL default '0',
     PRIMARY KEY  (`IdLocal`),
     UNIQUE KEY `IdLocal` (`IdLocal`)
@@ -567,6 +581,7 @@ CREATE TABLE `ges_perfiles_usuario` (
   `VerStocks` tinyint(1) unsigned NOT NULL default '0',
   `Clientes` tinyint(1) unsigned NOT NULL default '0',
   `TPV` tinyint(1) unsigned NOT NULL default '0',
+  `B2B` tinyint(1) unsigned NOT NULL default '0',
   `Precios` tinyint(1) NOT NULL DEFAULT '0',
   `Ventas` tinyint(1) NOT NULL DEFAULT '0',
   `Finanzas` tinyint(1) NOT NULL DEFAULT '0',
@@ -582,6 +597,10 @@ CREATE TABLE `ges_perfiles_usuario` (
   `VerAjustes` tinyint(1) NOT NULL DEFAULT '0',
   `Almacen` tinyint(1) NOT NULL DEFAULT '0',
   `CajaTPV` tinyint(1) NOT NULL DEFAULT '0',
+  `PedidosVenta` tinyint(1) NOT NULL DEFAULT '0',
+  `Servicios` tinyint(1) NOT NULL DEFAULT '0',
+  `SAT` tinyint(1) NOT NULL DEFAULT '0',
+  `Suscripcion` tinyint(1) NOT NULL DEFAULT '0',
   `Eliminado` tinyint(1) unsigned NOT NULL default '0',
   PRIMARY KEY  (`IdPerfil`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
@@ -651,6 +670,7 @@ CREATE TABLE `ges_proveedores` (
   `IdPais` smallint(5) unsigned NOT NULL default '0',
   `Descuento` double unsigned NOT NULL default '0',
   `CuentaBancaria` tinytext NOT NULL,
+  `CuentaBancaria2` tinytext NOT NULL,
   `IdModPagoHabitual` smallint(5) unsigned NOT NULL default '0',
   `Telefono1` tinytext NOT NULL,
   `Telefono2` tinytext NOT NULL,
@@ -704,6 +724,9 @@ CREATE TABLE `ges_subfamilias` (
   `IdSubFamilia` smallint(5) unsigned NOT NULL default '0',
   `IdIdioma` smallint(5) unsigned NOT NULL default '0',
   `SubFamilia` tinytext NOT NULL,
+  `MargenUtilidadVD` double unsigned NOT NULL default '0',
+  `MargenUtilidadVC` double unsigned NOT NULL default '0',
+  `Descuento` double unsigned NOT NULL default '0',
   `Eliminado` tinyint(1) unsigned NOT NULL default '0',
   PRIMARY KEY  (`Id`),
   KEY `IdFamilia` (`IdFamilia`,`IdSubFamilia`)
@@ -762,6 +785,7 @@ CREATE TABLE `ges_usuarios` (
   `AdministradorWeb` tinyint(1) unsigned NOT NULL default '0',
   `AdministradorFacturas` int(11) NOT NULL,
   `CuentaBanco` tinytext NOT NULL,
+  `GrupoLocales` tinytext NOT NULL COMMENT 'IdLocales',
   `Eliminado` tinyint(1) unsigned NOT NULL default '0',
   PRIMARY KEY  (`IdUsuario`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
@@ -864,51 +888,6 @@ CREATE TABLE `ges_kardex` (
 
 ;;;;;;
 
-CREATE TABLE IF NOT EXISTS `ges_clientes_online` (
-  `IdClienteOnline` bigint(10) unsigned NOT NULL auto_increment,
-  `IdCliente` bigint(20) NOT NULL,
-  `User` varchar(15) NOT NULL,
-  `Pass` varchar(32) NOT NULL,
-  `Alta` tinyint(4) NOT NULL,
-  `CodigoAlta` varchar(8) NOT NULL,
-  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY (`IdClienteOnline`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-;;;;;;
-
-CREATE TABLE IF NOT EXISTS `ges_pedidos_online` (
-  `IdPedidoOnline` bigint(20) NOT NULL AUTO_INCREMENT,
-  `IdCliente` bigint(20) NOT NULL,
-  `FechaPedido` datetime NOT NULL,
-  `SinRegistro` tinyint(4) NOT NULL,
-  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY (`IdPedidoOnline`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
-
-;;;;;;
-
-CREATE TABLE IF NOT EXISTS `ges_pedidos_detalle_online` (
-  `IdPedidoOnlineDet` bigint(20) NOT NULL AUTO_INCREMENT,
-  `IdPedidoOnline` bigint(20) NOT NULL,
-  `IdProducto` bigint(20) NOT NULL,
-  `Cantidad` float NOT NULL,
-  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY (`IdPedidoOnlineDet`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
-
-;;;;;;
-
-CREATE TABLE IF NOT EXISTS `ges_pedidos_sinregistro_online` (
-  `IdPedidoOnlineSinReg` bigint(20) NOT NULL AUTO_INCREMENT,
-  `IdPedidoOnline` bigint(20) NOT NULL,
-  `Email` varchar(40) NOT NULL,
-  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY (`IdPedidoOnlineSinReg`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-;;;;;;
-
 CREATE TABLE IF NOT EXISTS `ges_comprobantesnum` (
   `IdNumComprobante` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `IdComprobante` bigint(20) unsigned NOT NULL DEFAULT '0',
@@ -1003,7 +982,7 @@ CREATE TABLE IF NOT EXISTS `ges_presupuestos` (
   `IdUsuario` smallint(6) NOT NULL DEFAULT '0',
   `Serie` BIGINT(20) UNSIGNED NOT NULL DEFAULT '0',
   `NPresupuesto` bigint(20) unsigned NOT NULL DEFAULT '0',
-  `TipoPresupuesto` enum('Proforma','Preventa') NOT NULL DEFAULT 'Preventa',
+  `TipoPresupuesto` enum('Proforma','Preventa','ProformaOnline') NOT NULL DEFAULT 'Preventa',
   `TipoVentaOperacion` enum('VD','VC') NOT NULL DEFAULT 'VD',
   `FechaPresupuesto` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   `FechaAtencion` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
@@ -1019,6 +998,8 @@ CREATE TABLE IF NOT EXISTS `ges_presupuestos` (
   `CBMetaProducto` tinytext NOT NULL,
   `Observaciones` text NOT NULL,
   `IdOrdenServicio` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `IdOperacionCaja` bigint(20) NOT NULL DEFAULT '0' comment 'ges_dinero_movimientos',
+  `ImporteAdelanto` double NOT NULL DEFAULT '0',
   `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`IdPresupuesto`),
   UNIQUE KEY `Documento Presupuesto` (`IdLocal`,`Serie`,`NPresupuesto`,`TipoPresupuesto`)
@@ -1277,6 +1258,7 @@ CREATE TABLE IF NOT EXISTS `ges_ordenservicio` (
   `FechaIngreso` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `FechaEntrega` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   `Estado` enum('Pendiente','Ejecucion','Finalizado','Cancelado') NOT NULL DEFAULT 'Pendiente',
+  `Tipo` enum('Regular','Garantia')NOT NULL DEFAULT 'Regular',
   `Prioridad` enum('1','2','3') NOT NULL DEFAULT '1' COMMENT '1:Normal,2:Alta,3:Muy Alta',
   `Facturacion` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '0:pendiente, 1:facturado',
   `Serie` tinyint unsigned not null DEFAULT '0',
@@ -1298,7 +1280,7 @@ CREATE TABLE IF NOT EXISTS `ges_ordenserviciodet` (
   `IdComprobante` bigint(20) unsigned NOT NULL DEFAULT '0',
   `FechaInicio` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   `FechaFin` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `FechaChange` DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `FechaChange` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `Estado` enum('Pendiente','Ejecucion','Finalizado','Cancelado') NOT NULL DEFAULT 'Pendiente',
   `OrdenAnterior` tinytext NOT NULL,
   `Garantia` date NOT NULL DEFAULT '0000-00-00',
@@ -1464,5 +1446,43 @@ CREATE TABLE IF NOT EXISTS `ges_suscripcionincidentes` (
   `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`IdSuscripcionIncidente`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_dwgroups` (
+  `gid` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`gid`)
+) ENGINE = MYISAM DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_dwusergroup` (
+  `uid` int(10) unsigned NOT NULL DEFAULT '0' comment 'IdCliente',
+  `gid` int(10) unsigned NOT NULL DEFAULT '0',
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY  (`uid`,`gid`)
+) ENGINE = MYISAM DEFAULT CHARSET=utf8;
+
+;;;;;;
+
+CREATE TABLE IF NOT EXISTS `ges_synctpv` (
+  `IdSync` tinyint unsigned NOT NULL AUTO_INCREMENT,
+  `IdLocal` int(10) unsigned NOT NULL DEFAULT '0',
+  `IdUsuario` int(10) unsigned NOT NULL DEFAULT '0',
+  `KeySync` char(32) NOT NULL,
+  `Preventa` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `Proforma` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `ProformaOnline` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `Stock` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `Cliente` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `Promocion` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `Mensaje` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `Caja` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `MetaProducto` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `Eliminado` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY  (`IdSync`)
+) ENGINE = MYISAM DEFAULT CHARSET = utf8;
 
 ;;;;;;

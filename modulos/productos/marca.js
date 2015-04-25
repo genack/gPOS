@@ -3,17 +3,39 @@ function BuscarMarca(){
     var ns = new String(filtro);
     ns = ns.toUpperCase();
     var theList=document.getElementById('Marca');
-    for(var i=0; i<theList.itemCount; i++){
-        var texto2  = document.getElementsByTagName('listitem');
-        var cadena =  new String(texto2[i].attributes.getNamedItem('label').nodeValue);
-        cadena = cadena.toUpperCase();
-        if(cadena.indexOf(ns) != -1){
-            theList.ensureIndexIsVisible(i);
-            theList.selectedIndex=i;
-            return;
+    filas = theList.itemCount;
+    for(var i=0;i<filas;i++){
+        theList.removeItemAt(0);
+    }
+    if(ns==""){
+        for(var i=0;i<filas;i++){
+            theList.removeItemAt(0);
+        }
+        for(var i in fam){
+            var row = document.createElement('listitem');
+            row.setAttribute('label',fam[i]);
+            row.setAttribute('value',i);
+            theList.appendChild(row);	
         }
     }
-            theList.clearSelection();    
+    else
+    {
+        for(var i=0;i<filas;i++){
+            theList.removeItemAt(0);
+        }
+        for(var i in fam){
+            var cadena = new String(fam[i]);
+            cadena = cadena.toUpperCase();
+            if(cadena.indexOf(ns) != -1){
+                var row = document.createElement('listitem');
+                row.setAttribute('label',fam[i]);
+                row.setAttribute('value',i);
+                theList.appendChild(row);	
+            }
+            var elemento = theList.getItemAtIndex(0);
+            theList.selectItem(elemento);
+        }
+    }
 }
 
 function agnadirDirecto(){

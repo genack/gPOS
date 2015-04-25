@@ -465,7 +465,7 @@ function getTipoComprobante($IdComprobante,$IdLocal){
 }
 
 
-function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobante){
+function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobante,$Items){
 
          $IdLocal         = getSesionDato("IdTiendaDependiente");
 	 $TipoVenta       = getSesionDato("TipoVentaTPV");
@@ -571,10 +571,6 @@ function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobant
 
 	 while($row = Row($res))
 	   {
-	     $DocumentoSalida = ( $row["IdAlbaran"] )? $row["IdAlbaran"]:$IdComprobante;
-	     $aSeries         = ( $row["Serie"] )? getSeries2IdProductoVentas($DocumentoSalida,
-									      $row["IdProducto"],
-									      false):false; 
 	     $Keys    = "IdPresupuesto,";
 	     $Values  = "'".$IdPresupuesto."',";
 	     $Keys   .= "IdProducto,";
@@ -599,15 +595,45 @@ function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobant
 	     $Values .= "'".$row['CodigoBarras']."'";
 	     $sql     = "insert into ges_presupuestosdet (".$Keys.") values (".$Values.")";
 	     query($sql);   
-	     
-	     // libera las series...
+	   }
+
+         //++++++ LIBERA SERIES PRODUCTOS COMPROBANTE DETALLE +++++++    
+
+	 // trae detalle comprobante...
+	 $sql= 
+	   " select IdProducto,Cantidad,IdPedidoDet,".
+	   "        IdAlbaran,Serie,IdComprobanteDet ".
+	   " from   ges_comprobantesdet ".
+	   " where  IdComprobante = '".$IdComprobante."' ".
+	   " and    Eliminado     = 0 ".
+	   " and    Serie         = 1 ".
+	   " and    IdPedidoDet  <> 0 ";
+	 $res = query($sql);
+	 if (!$res) return false;
+
+	 while($row = Row($res))
+	   {
+	     $DocumentoSalida = ( $row["IdAlbaran"] )? $row["IdAlbaran"]:$IdComprobante;
+	     $aSeries         = getSeries2IdProductoVentas($DocumentoSalida,$row["IdProducto"],$row["IdPedidoDet"]);
+	     // retorna las series...
+	     registraDevolucionSeriesVenta($row["IdProducto"],$IdComprobante,
+					   $IdPresupuesto,$aSeries);
+	     // libera series del detalle comprobante...
 	     $sql = " update ges_comprobantesdet set Serie = 0 ".
 	            " where  IdComprobanteDet=".$row['IdComprobanteDet'];
-	     if($aSeries) query($sql);   
-	     if($aSeries) registraDevolucionSeriesVenta($row["IdProducto"],$IdComprobante,
-							$IdPresupuesto,$aSeries);
+	     query($sql);   
 	   }
-	 
+
+         //++++++ MARCAR PRODUCTOS Y CANTIDAD COMPROBANTES DETALLE ++++++++++
+
+	 $xitem = explode("~",$Items);
+	 foreach ($xitem as $key=>$xdet){
+	   	 $xdetalle = explode(":",$xdet);
+		 $sql = 
+		   " update ges_comprobantesdet set CantidadDevolucion = ".$xdetalle[1].
+		   " where  IdComprobanteDet=".$xdetalle[0];
+		 query($sql);   
+	 }
 
 	 //++++++ KARDEX ++++++++++++
 
@@ -1005,9 +1031,8 @@ function  getDetFromCBMetaProductoAlbaran($codigo=array(),$IdProducto,$conNS=tru
       //guardamos registros de series y cantidad en array
       if($ns=='')
 	{
-
 	  //Sin N/S
-	  if($a_prod[$row['IdProducto']])
+	  if(isset( $a_prod[$row['IdProducto']] ))
 	    $a_prod[$row['IdProducto']] = $a_prod[$row['IdProducto']]." ".$row['IdProducto'];
 	  else 
 	    $a_prod[$row['IdProducto']] = $row['IdProducto'];
@@ -1016,7 +1041,7 @@ function  getDetFromCBMetaProductoAlbaran($codigo=array(),$IdProducto,$conNS=tru
 	{
 
 	  //Con N/S
-	  if($a_prod[$row['IdProducto']])
+	  if(isset( $a_prod[$row['IdProducto']] ))
 	    $a_prod[$row['IdProducto']] = $a_prod[$row['IdProducto']]." ". $ns;
 	  else
 	    $a_prod[$row['IdProducto']] = $ns;
@@ -1037,7 +1062,7 @@ function  getDetFromCBMetaProductoAlbaran($codigo=array(),$IdProducto,$conNS=tru
       $ns='';
     $det .= "<br/> * ".$row['Descripcion']." CANT:".$row['Cantidad']."  ".$ns; 
   }
-
+  
   return $det;
 }
 
@@ -1068,7 +1093,7 @@ function getItemProducto($descripcion_0,$NL=85){
       if(trim($acotadotext)!='') 
 	array_push($acotado,$acotadotext);
 
-      $tamanoControl .= strlen($acotadotext);
+      $tamanoControl = $tamanoControl + strlen($acotadotext);
       $acotadotext='';
     }
   return $acotado;
@@ -1101,10 +1126,9 @@ function getItemMetaProducto($MP,$NS,$series,$IdProducto,$NL=64){
     foreach ($itemmprod as $key=>$linemp){
 
       if($key > 0){
-
 	$numcaract  = strlen($linemp);
 	$contTexto  = 0;
-	$arrTexto   = split(' ',$linemp);
+	$arrTexto   = explode(' ',$linemp);
 	$acottext   = "";
 	$tamTexto   = $NL;
 	$tamControl = 0;
@@ -1113,6 +1137,8 @@ function getItemMetaProducto($MP,$NS,$series,$IdProducto,$NL=64){
 	  while( $tamTexto >= strlen($acottext)+ strlen($arrTexto[$contTexto])){
 	    $acottext .= " ".$arrTexto[$contTexto];
 	    $contTexto++;
+
+	    if(!isset($arrTexto[$contTexto]) ) break;
 	  }	     
 	  //add new line
 	  if(trim($acottext)!='') 
@@ -1453,6 +1479,24 @@ function ModificarMovDocSubsidiario($xid,$campoxdato){
     " where  ".$IdKey." = ".$Id;	
   return query($sql); 
   
+}
+
+function obtenerSyncTPV(){
+  $keysync = getSesionDato('KeySync');
+  if(!$keysync) return '';
+  $sql = " SELECT obtenerSyncTPV('$keysync') ";
+  $row = queryrow($sql);
+  return $row[0];
+}
+
+function setSyncTPV($xkey){
+  $keysync = getSesionDato('KeySync');
+  $sql = 
+    " update ges_synctpv".
+    " SET    $xkey = 0 ".
+    " WHERE  KeySync   = '".$keysync."' ".
+    " AND    Eliminado = '0'";
+  query($sql);
 }
 
 ?>

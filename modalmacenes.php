@@ -239,7 +239,7 @@ function ListarSeleccion($marcadotrans){
                 <tbody>
                  <tr class="formaCabeza">
                    <td height="16" colspan="4">
-                    <div class="formaTituloCarrito"> Carrito Almacén </div>
+                    <div class="formaTituloCarrito"> Carrito Almacén</div>
                    </td>
                  </tr> 
                 </tbody>
@@ -460,15 +460,15 @@ function FormularioEditarArticulo($id){
             $ot->fijar("vIGVD",$IGVD);
             $ot->fijar("tIGVD",_("IGV"));
             $ot->fijar("vPVD",$PVD);
-            $ot->fijar("tPVD",_("PV"));
+            $ot->fijar("tPVD",_("PVP"));
             $ot->fijar("vPVDD",$PVDD);
-            $ot->fijar("tPVDD",_("PVDD"));
+            $ot->fijar("tPVDD",_("PVPD"));
             $ot->fijar("vMUC",$MUC);
             $ot->fijar("tMUC",_("MU"));
             $ot->fijar("vIGVC",$IGVC);
             $ot->fijar("tIGVC",_("IGV"));
             $ot->fijar("vPVC",$PVC);
-            $ot->fijar("tPVC",_("PV"));
+            $ot->fijar("tPVC",_("PVC"));
             $ot->fijar("vPVCD",$PVCD);
             $ot->fijar("tPVCD",_("PVCD"));
             $ot->fijar("tTipoImpuesto",_("Impuesto"));
@@ -508,7 +508,6 @@ switch($modo){
 		$id     = CleanID($_GET["id"]);
 		$u      = CleanCadena($_GET["u"]);
 		$series = CleanCadena($_GET["series"]);
-
 		AgnadirCarritoTraspaso($id,$u);
 		AgnadirCarritoTraspasoSeries($id,$series);
 
@@ -516,7 +515,6 @@ switch($modo){
 		break;
 	case "notrans": //desAgadir un producto al carrito de la 
 		$id     = CleanID($_GET["id"]);	
-
 		QuitarDeCarritoTraspaso($id);
 		QuitarDeCarritoTraspasoSeries($id);
 		exit();
@@ -526,6 +524,16 @@ switch($modo){
 PageStart();
 
 echo gas("cabecera",_("Stock"));
+
+$CarritoTraspasoCant = count(getSesionDato("CarritoTrans"));
+$xdisplay = ($CarritoTraspasoCant > 0)? 'display:block':'display:none';
+  
+echo "<center>
+<div id='boxCarritoTraspasoCant' style=".$xdisplay.">
+<p> <input id='CarritoTraspasoCant' type='text' value='".$CarritoTraspasoCant."' style='width:1.5em'/> Producto(s) Seleccionado(s)</p>
+</div>
+</center>";
+
 
 switch($modo) {
 	case "bases":	
@@ -860,7 +868,8 @@ switch($modo){
 
 		if (isset($_POST["borraseleccion"]) and $_POST["borraseleccion"]){
 			$_SESSION["CarritoTrans"]=array();
-			BusquedaBasica();							
+			BusquedaBasica();
+
 			$ref          = $_SESSION["BusquedaReferencia"];
 			$local        = $_SESSION["BusquedaLocal"];
 			$cb           = $_SESSION["BusquedaCB"];

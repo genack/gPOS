@@ -6,8 +6,12 @@ function PedidosVentaPeriodo($desde,$hasta,$cliente,$presupuesto,$tipoventa,
   $hasta        = CleanRealMysql($hasta);
   $cliente      = CleanRealMysql($cliente);
   $cod          = ($codigo != '')? explode("-",$codigo):"";
-
-  $extraFecha   = " AND date(ges_presupuestos.FechaPresupuesto) >= '$desde' AND date(ges_presupuestos.FechaPresupuesto) <= '$hasta' ";
+  $cod[0]       = (isset($cod[0]))? $cod[0]:'';
+  $xcod         = (isset($cod[1]))? " AND ges_presupuestos.NPresupuesto like '%$cod[1]%' 
+                                      AND ges_presupuestos.Serie like '%$cod[0]%' ":
+                                    " AND ges_presupuestos.NPresupuesto like '%$cod[0]%' ";
+  $extraFecha   = " AND date(ges_presupuestos.FechaPresupuesto) >= '$desde' 
+                    AND date(ges_presupuestos.FechaPresupuesto) <= '$hasta' ";
 
   $extraCliente = ($cliente != '')? " AND ges_clientes.NombreComercial LIKE '%$cliente%' ":"";
 
@@ -16,7 +20,7 @@ function PedidosVentaPeriodo($desde,$hasta,$cliente,$presupuesto,$tipoventa,
   $extraEstado  = ($estado != 'Todos')? " AND ges_presupuestos.Status = '$estado' ":"";
   $extraLocal   = ($local)?" AND ges_presupuestos.IdLocal = '$local' ":"";
 
-  $extraCodigo  = ($codigo != '')? " AND ges_presupuestos.Serie like '%$cod[0]%' AND ges_presupuestos.NPresupuesto like '%$cod[1]%' ":$extraFecha;
+  $extraCodigo  = ($codigo != '')? $xcod:$extraFecha;
 
   $sql=
     " SELECT ges_presupuestos.IdCliente, IdPresupuesto as Id, Npresupuesto as Codigo,".
@@ -97,7 +101,8 @@ function DestallePedidosVentaPeriodo($IdPresupuesto,$local){
         "       ges_productos.UnidadMedida, ".
         "       IF(ges_presupuestosdet.Concepto like '',' ', ".
         "       ges_presupuestosdet.Concepto) as Concepto, ".
-        "       Cantidad, Precio, ges_presupuestosdet.Descuento, Importe ".
+        "       Cantidad,Precio,ges_presupuestosdet.Descuento,Importe,".
+        "       ges_productos.Serie ".
         "FROM   ges_presupuestosdet ".
         "INNER JOIN ges_productos ON ".
         "           ges_presupuestosdet.IdProducto = ges_productos.IdProducto ".
@@ -118,17 +123,19 @@ function DestallePedidosVentaPeriodo($IdPresupuesto,$local){
 	$t = 0;
 
 	while($row = Row($res)){
-		$nombre = "detalles_" . $t++;
-
-		if($row["Concepto"]!= ' ')
-		  { $row["Nombre"] = $row ["Concepto"];
-		    $row["Marca"] = ' ';
-		    $row["Talla"] = ' ';
-		    $row["Color"] = ' ';
-		    $row["Lab"]   = ' ';
-	      }
-
-		$detallepedidoventa[$nombre] = $row;
+	  $nombre = "detalles_" . $t++;
+	  
+	  if($row["Concepto"]!= ' ')
+	    { $row["Nombre"] = $row ["Concepto"];
+	      $row["Marca"] = ' ';
+	      $row["Talla"] = ' ';
+	      $row["Color"] = ' ';
+	      $row["Lab"]   = ' ';
+	    }
+	  if( $row["Serie"] == '1' )
+	    $row["Serie"] = obtenerSeriesReservadas($IdPresupuesto,$local,
+						    $row["IdProducto"],'Venta');
+	  $detallepedidoventa[$nombre] = $row;
 	}
 
 	if(sizeof($detallepedidoventa)==0)
@@ -163,13 +170,18 @@ function obtenerMaxNPresupuesto(){
 
 function obtenerListaPresupuestosTPV($tipopresupuesto){
 
-         //$tipopresupuesto = CleanRealMysql($_GET["tipopresupuesto"]);
+         $tipopresupuesto = CleanRealMysql( $tipopresupuesto );
          $TipoVenta       = getSesionDato("TipoVentaTPV");
 	 $IdLocal         = getSesionDato("IdTiendaDependiente");
-	 $esFecha         = "";
 
-	 if($tipopresupuesto == 'Proforma')
+	 switch($tipopresupuesto){
+	 case 'Proforma': 
+	 case 'ProformaOnline': 
 	   $esFecha = "AND UNIX_TIMESTAMP(FechaPresupuesto ) > UNIX_TIMESTAMP() - 86400*VigenciaPresupuesto";
+	   break;
+	 default:
+	   $esFecha  = "";
+	 }
 
 	 $sql=
 	   " SELECT ges_presupuestos.IdCliente, IdPresupuesto as Id, Npresupuesto as Codigo,".
@@ -474,29 +486,45 @@ function setStatusPresupuestoTPV($IdPresupuesto,$Opcion){
 
          $TipoVenta = getSesionDato("TipoVentaTPV");
 	 $IdLocal   = getSesionDato("IdTiendaDependiente");
-
-	 $where     = 
-	   " WHERE  IdPresupuesto   = '".$IdPresupuesto."'".
-	   " AND Status = 'Pendiente'".
-	   " AND TipoVentaOperacion = '".$TipoVenta."'".
-	   " AND IdLocal ='".$IdLocal."'";
-
-	 //Cierre Caja
-	 if($Opcion=='CleanPreventa')
-	   {
-	     $where =
+	 $xset      = '';
+	 $xwhere    = '';
+	 switch($Opcion){
+	 case 'CleanPreventa': //Cierre Caja
+	   $xwhere =
+	     " WHERE  TipoPresupuesto  = 'Preventa' ".
+	     " AND TipoVentaOperacion = '".$TipoVenta."'".
+	     " AND Status = 'Pendiente'".
+	     " AND Serie  <> 0".
+	     " AND IdLocal = '".$IdLocal."'";
+	   $xset = "Status = 'Vencido', FechaAtencion = NOW() "; 
+	   break;
+	 case 'AsociarPreventa':
+	   $mov     = new movimiento;
+	   $esCajaAbierta = $mov->GetArqueoActivo($IdLocal);
+	   if($esCajaAbierta != 0) {
+	     $xwhere =
 	       " WHERE  TipoPresupuesto  = 'Preventa' ".
 	       " AND TipoVentaOperacion = '".$TipoVenta."'".
-	       " AND Status = 'Pendiente'".
+	       " AND Status  = 'Pendiente'".
+	       " AND Serie   = 0".
 	       " AND IdLocal = '".$IdLocal."'";
-	     $Opcion = 'Vencido';
+	     $xset =  " Serie = $esCajaAbierta  "; 
 	   }
+	   break;
+	 default:
+	   $xwhere     = 
+	     " WHERE  IdPresupuesto   = '".$IdPresupuesto."'".
+	     " AND Status = 'Pendiente'".
+	     " AND TipoVentaOperacion = '".$TipoVenta."'".
+	     " AND IdLocal ='".$IdLocal."'";
+	   $xset = "Status = '".$Opcion."', FechaAtencion = NOW() "; 
+	 }
 
+	 if($xset == '' && $xwhere == '') return;
 	 //Ejecuta accion
 	 $sql = 
 	   " UPDATE ges_presupuestos ".
-	   " SET    Status = '".$Opcion."', ".
-	   "        FechaAtencion = NOW() ".$where;
+	   " SET ".$xset.$xwhere;
 	 query($sql);	
 
 	 return 1;

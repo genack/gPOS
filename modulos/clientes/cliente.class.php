@@ -23,9 +23,9 @@ function ClienteFactory($res) {
 
 
 
-function CrearCliente($comercial, $legal, $direccion, $poblacion, $cp, $email, 
-	$telefono1, $telefono2, $contacto, $cargo, $cuentabancaria, $numero, 
-	$comentario,$tipocliente,$idpais,$paginaweb,$IdLocal=false) {
+function CrearCliente($comercial, $legal, $direccion, $poblacion, $cp, $email, $telefono1, 
+		      $telefono2, $contacto, $cargo, $cuentabancaria, $numero, $comentario,
+		      $tipocliente,$idpais,$paginaweb,$IdLocal=false,$FechaNacimiento) {
 
         $comercial = str_replace('&','&#038;',$comercial);
         $legal     = str_replace('&','&#038;',$legal);
@@ -54,6 +54,7 @@ function CrearCliente($comercial, $legal, $direccion, $poblacion, $cp, $email,
 	$oCliente->set("FechaRegistro", "NOW()", FORCE);
 	$oCliente->set("FechaChange", "NOW()", FORCE);
 	$oCliente->set("IdLocal", $IdLocal, FORCE);
+	$oCliente->set("FechaNacimiento", $FechaNacimiento, FORCE);
 	
 	if ($oCliente->Alta()) {
 		//if(isVerbose())		
@@ -275,7 +276,7 @@ function getClientesTPV($time=false){
           $sql = 
 	    " select IdCliente,TipoCliente,Telefono1,Direccion,Email, ".
 	    "        NombreLegal as legal,NombreComercial as comercial,Bono,".
-	    "        NumeroFiscal as NFiscal,Comentarios,".
+	    "        NumeroFiscal as NFiscal,Comentarios,FechaNacimiento,".
 	    "        ( select sum(ges_comprobantes.ImportePendiente) ".
 	    "          from   ges_comprobantes ".
 	    "          where  ges_comprobantes.ImportePendiente > 0 ".
@@ -309,6 +310,7 @@ function getClientesTPV($time=false){
 		              qq($row["Email"]).",".
 		              qq($row["Direccion"]).",".
 		              qq($legal).",".
+		              qq($row["FechaNacimiento"]).",".
 		              qq($row["Comentarios"])." );\n";
 	     }
 

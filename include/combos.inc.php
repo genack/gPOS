@@ -147,7 +147,7 @@ function genComboPerfiles($selected=false){
 
 function getFamiliasProductos(){
 
-         $sql = "SELECT IdFamilia,Familia FROM ges_familias WHERE Eliminado=0";
+         $sql = "SELECT IdFamilia,Familia FROM ges_familias WHERE Eliminado=0 ORDER BY Familia ASC";
 	 $res = query($sql);
 	 $arr = array();
 	 while( $row = Row($res) ){
@@ -440,7 +440,7 @@ function genArrayProductoAlias($idfamilia){
 
 function getMarcasProductos(){
 
-        $sql ="SELECT IdMarca,Marca FROM ges_marcas WHERE Eliminado=0";
+        $sql ="SELECT IdMarca,Marca FROM ges_marcas WHERE Eliminado=0 ORDER BY Marca ASC";
 	$res = query($sql);
 	$arr = array();
 	while( $row = Row($res) ){
@@ -1381,5 +1381,28 @@ function genXulComboModeloSat($selected=false,$xul="listitem",$IdMarca,$xdet){
 	}
 	return $out;		
 }
+
+function genComboMetodoRedondeo($selected='RDE') {
+	
+	$values = array(_("SR"),_("RDE"),_("RIE"));	
+
+	$opciones = Array();
+	$opciones['SR']= 'Sin Redondeo';
+	$opciones['RDE']= 'Decimal Entero';
+	$opciones['RIE']= 'Decimal Entero Media';
+
+	$out   = '';
+	$key   = 0;
+
+	foreach ($values as $value){
+		
+		if ($value!=$selected)
+			$out .= "<option value='$value'>$opciones[$value]</option>";
+		else	
+			$out .= "<option selected value='$value'>$opciones[$value]</option>";
+	}
+	return $out;		
+}
+
 
 ?>

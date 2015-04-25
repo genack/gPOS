@@ -113,6 +113,7 @@ if ($broswer->isFirefox()){
        }
 
         </style>
+
        </head> 
        <body>
        <div class='spinner'>
@@ -121,26 +122,23 @@ if ($broswer->isFirefox()){
        </div>
 
        <iframe id='checkxuldominio' src='xuldominio.php' style='display:none'></iframe>
-       <input id='esDominio' value='' style='display:none'/>
-       </body>
+       <input id='esDominio' value='0' style='display:none'/>
 
        <script>//<![CDATA[
-        var esDominio   = document.getElementById('esDominio');
-        var xiframe     = document.getElementById('checkxuldominio');
-
-        esDominio.value = '';
-        setTimeout('WaitForIFrame();', 600);
-
-        function WaitForIFrame() {
-           if (xiframe.readyState != 'complete') return checkDominio();
-           setTimeout('WaitForIFrame();', 200);
-        }
-
         function checkDominio(){ 
-           location= (esDominio.value)? '".$_BasePath."xulentrar.php':'xulremoto/'; 
+          if( xdominio.value == 0 && xcheck ){
+               xcheck = false;
+               return setTimeout('checkDominio()', 2000);
+          }
+          location = ( xdominio.value == 1)? '".$_BasePath."xulentrar.php':'".$_BasePath."xulremoto/'; 
         }
-       //]]></script>
-";
+
+        var xdominio   = document.getElementById('esDominio');
+        xdominio.value = 0;
+        var xcheck     = true;
+        setTimeout('checkDominio()', 600);
+        //]]></script>
+       </body>";
 } else 
   echo $htmlOut;
 

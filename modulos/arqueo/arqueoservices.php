@@ -17,6 +17,7 @@ switch($modo){
 		ActualizarArqueoDeLocal($IdArqueo,$IdLocal);
 		$data = getDatosArqueo($IdArqueo);
 		$output = $json->encode($data);
+		$xsync  = setSyncTPV('Caja');
 		echo $output;
 		exit();					
 		break;
@@ -73,6 +74,10 @@ switch($modo){
 		break;
 
         case "hacerOperacionDinero":
+
+	        /*+++++++++++ VALIDA CAJA +++++++++++++++*/
+	        if( cajaescerrado() == 1 )  return false;
+
 	        $IdLocal      = intval($_REQUEST["xidl"]);
 		$cantidad     = CleanFloat($_REQUEST["cantidad"]);	
 		$concepto     = $_REQUEST["concepto"];
@@ -112,7 +117,12 @@ switch($modo){
 		$IdLocal  = getSesionDato("IdTiendaDependiente");
 		$cantidad = CleanFloat($_REQUEST["cantidad"]);	
 		$concepto = $_REQUEST["concepto"];
+
+		global $UltimaInsercion;	
 		EntregarMetalico($IdLocal,$cantidad,$concepto,false,"Ingreso");
+
+		setSesionDato("OperacionCajaPresupuesto",$UltimaInsercion);
+		setSesionDato("OperacionCajaImportePresupuesto",$cantidad);
 		exit();	
 		break;			
 		
@@ -313,7 +323,7 @@ function getMovimientosArqueo($IdArqueo){
 	$sql =
 	  " SELECT IdOperacionCaja, Identificacion, (IF(ges_dinero_movimientos.IdPartidaCaja <>0,(SELECT ges_partidascaja.PartidaCaja FROM ges_partidascaja WHERE ges_partidascaja.IdPartidaCaja = ges_dinero_movimientos.IdPartidaCaja AND ges_partidascaja.Eliminado = 0),'Venta')) as PartidaCaja, IdArqueoCaja, ".
           " ges_dinero_movimientos.TipoOperacion, ".
-	  " TipoVentaOperacion, FechaCaja, IF(IdComprobante = 0,Concepto,(SELECT CONCAT('Metalico: ',ges_comprobantestipo.TipoComprobante,': ',ges_comprobantestipo.Serie,' - ',ges_comprobantesnum.NumeroComprobante) FROM ges_comprobantesnum INNER JOIN ges_comprobantestipo ON ges_comprobantesnum.IdTipoComprobante = ges_comprobantestipo.IdTipoComprobante WHERE ges_comprobantesnum.IdComprobante = ges_dinero_movimientos.IdComprobante AND ges_comprobantesnum.Status <>'Anulado' AND ges_comprobantesnum.Eliminado = 0)) as Concepto, Importe, ".
+	  " TipoVentaOperacion, FechaCaja, Concepto, Importe, ".
 	  " IdModalidadPago, FechaInsercion ".
 	  " FROM   ges_dinero_movimientos ".
 	  " INNER JOIN ges_usuarios ON ".
@@ -322,7 +332,7 @@ function getMovimientosArqueo($IdArqueo){
 	  " AND    IdModalidadPago    = 1 ".
 	  " AND    TipoVentaOperacion = '$TipoVenta' ".
 	  " AND    ges_dinero_movimientos.Eliminado = 0 ".
-	  " ORDER  BY FechaInsercion DESC";
+	  " ORDER  BY IdOperacionCaja DESC";
 	$res = query($sql);
 	if (!$res) return $datos;
 	

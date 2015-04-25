@@ -536,7 +536,7 @@ function CrearProducto($mudo,$referencia,$descripcion, $precioventa,
   $oProducto->setReferencia($referencia);	
   $oProducto->setDescripcion($descripcion);
   $oProducto->setLang(getSesionDato("IdLenguajeDefecto"));	
-  $oProducto->setPrecioVenta(0);
+  $oProducto->setPrecioVenta($precioventa);
   $oProducto->setPrecioOnline($precioonline);
   $oProducto->set("Costo",$coste,FORCE);
   $oProducto->set("IdFamilia",$idfamilia,FORCE);
@@ -1023,7 +1023,8 @@ class producto extends Cursor {
 		
 	//	error(__FILE__ . __LINE__ ,"($cb)($ref)($nombre)$idprov,$idmarca,$idcolor,$idtalla,$lang,$min=0,$base=false,$idprod=false,$idfamilia=false,$tamPag=10");
 			
-      $extra = "";
+      $extra = "";	  
+      $extrafrom = "";
     	if (!$lang)
     		$lang = getSesionDato("IdLenguajeDefecto");
     	if ($idprov)
@@ -1051,8 +1052,14 @@ class producto extends Cursor {
     	if ($idalias)
     		$extra .= "AND (IdProductoAlias0 = '".$idalias."' OR IdProductoAlias1 ='".$idalias."')";
 	else{
-	  if ($nombre)
-    		$extra .= "AND ges_productos_idioma.Descripcion  LIKE '%".$nombre."%' ";
+	    if ($nombre){
+	      $xnombre    = explode("|", $nombre);
+
+	      $extra     .= " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre[0]."%' ";
+	      $extra     .= ( isset( $xnombre[1] ) )? " AND ( ges_marcas.Marca  LIKE '%".$xnombre[1]."%' OR ges_modelos.Color  LIKE '%".$xnombre[1]."%' OR ges_detalles.Talla LIKE '%".$xnombre[1]."%' OR ges_productos.RefProvHab  LIKE '%".$xnombre[1]."%' ) ": "";
+	      $extrafrom .= ( isset( $xnombre[1] ) )? " INNER JOIN ges_marcas ON ges_marcas.IdMarca = ges_productos.IdMarca  INNER JOIN ges_modelos ON ges_modelos.IdColor = ges_productos.IdColor  INNER JOIN ges_detalles ON ges_detalles.IdTalla = ges_productos.IdTalla ":"";
+	    }
+
 	}    		
 
     	if (!$obsoletos)
@@ -1065,7 +1072,7 @@ class producto extends Cursor {
 		FROM
 		ges_productos INNER JOIN ges_productos_idioma ON
 		ges_productos.IdProdBase = ges_productos_idioma.IdProdBase
-		
+		$extrafrom
 		WHERE
 		ges_productos_idioma.IdIdioma = '$lang'
 		AND ges_productos.Eliminado = 0
@@ -1119,15 +1126,20 @@ class producto extends Cursor {
 	  if ($idalias)
 	    $extra .= "AND (IdProductoAlias0 = '".$idalias."' OR IdProductoAlias1 ='".$idalias."')";
 	  else{
-	    if ($nombre)
-	      $extra .= "AND ges_productos_idioma.Descripcion  LIKE '%".$nombre."%' ";
+	    if ($nombre){
+	      $xnombre    = explode("|", $nombre);
+
+	      $extra     .= " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre[0]."%' ";
+	      $extra     .= ( isset( $xnombre[1] ) )? " AND ( ges_marcas.Marca  LIKE '%".$xnombre[1]."%' OR ges_modelos.Color  LIKE '%".$xnombre[1]."%' OR ges_detalles.Talla LIKE '%".$xnombre[1]."%'  OR ges_productos.RefProvHab  LIKE '%".$xnombre[1]."%' ) ": "";
+	      $extrafrom .= ( isset( $xnombre[1] ) )? " INNER JOIN ges_marcas ON ges_marcas.IdMarca = ges_productos.IdMarca  INNER JOIN ges_modelos ON ges_modelos.IdColor = ges_productos.IdColor  INNER JOIN ges_detalles ON ges_detalles.IdTalla = ges_productos.IdTalla ":"";
+	    }
 	  }    	
 	
 	  if($stockminimo){
 
 	    $idlocal   = getSesionDato("IdTienda");
 	    $extra    .= " AND ges_almacenes.IdLocal = $idlocal AND ges_productos.Servicio = 0 AND ges_almacenes.StockMin > 0 AND ges_almacenes.StockMin >= ges_almacenes.Unidades ";
-	    $extrafrom = " INNER JOIN ges_almacenes ON ges_almacenes.IdProducto = ges_productos.IdProducto ";
+	    $extrafrom .= " INNER JOIN ges_almacenes ON ges_almacenes.IdProducto = ges_productos.IdProducto ";
 	  }
 
 	  if (!$obsoletos)
@@ -1419,7 +1431,7 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
             "vCosteSinIVA" => $this->get("Costo")*1,
             "Descripcion" => _("Nombre"),
             "vDescripcion" => $this->getDescripcion(),			
-            "PrecioVenta" => _("Precio venta"),
+            "tPrecioVenta" => _("Precio Venta"),
             "vPrecioVenta" => $this->getPrecioVenta(),
             "PrecioOnline" => _("Precio online"),
             "vPrecioOnline" => $this->getPrecioOnline(),
@@ -1656,8 +1668,8 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
 		$titulo     = _("$txtTitulo $txtModelo / $txtDetalle");
 					
 		$cambios = array(
-			"tPrecioVenta" => _("Previo venta"),
-			"vPrecioVenta" => $this->get("PrecioVenta"),
+			"tPrecioVenta" => _("Previo Venta"),
+			"vPrecioVenta" => $this->getPrecioVenta(),
 			//"phpPageVolver" => $volver,
 			"vIdTallaje" => $this->get("IdTallaje"),
 			"ListaCombinada" => $ListadoCombinado,
@@ -1789,7 +1801,7 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
 	}
 
 	function getPrecioOnline(){
-		return $this->get("PrecioOnline");	
+	        //return $this->get("PrecioOnline");	
 	}
 
 	function getTipoImpuesto(){
@@ -2437,14 +2449,11 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
 	}	
 		
 	function setPrecioVenta($value){
-	         $igv = getSesionDato("IGV");
-		 if($igv>0) 
-		   $value = $value * (1+($igv/100));
-		 $this->set("PrecioVenta",$value,FORCE);	
+	        $this->set("PrecioVenta",$value,FORCE);	
 	}
 
 	function setPrecioOnline($value){
-		$this->set("PrecioOnline",$value,FORCE);	
+	        //$this->set("PrecioOnline",$value,FORCE);	
 	}
 	
 	function getTallaTexto(){
@@ -2603,5 +2612,12 @@ function getTipoServicio($xid){
   $row = queryrow($sql);
   return ( $row["SAT"] == "0")? 1:2;  
 }
-
+function getSerie2Producto($xid){
+  $sql = 
+    " select Serie ".
+    " from   ges_productos ".
+    " where  IdProducto='$xid'";
+  $row = queryrow($sql);
+  return ( $row["Serie"] == "1");  
+}
 ?>

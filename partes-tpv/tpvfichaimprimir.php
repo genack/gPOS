@@ -126,7 +126,7 @@
 		<row>
 		<box>
                   <checkbox id="checkimprimir" class="Compacta" label="Imprimir" 
-                            checked="true" style="padding-left:3em;margin-top: -2.5em"
+                            checked="true" style="padding-left:3em;"
                             oncommand="CambiarModoImpresion(this.checked)"/>
 
                 </box>

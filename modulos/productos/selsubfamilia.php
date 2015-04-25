@@ -7,25 +7,25 @@ SimpleAutentificacionAutomatica("visual-xulframe");
 switch($modo){
 	case "salvafamilia":
 		$nombre = CleanText($_GET["familia"]);		
-		if (strlen($nombre)>1)	CrearFamilia($nombre);							
-		break;	
+		if (strlen($nombre)>1)	CrearFamilia($nombre);
+		break;
 		
 	case "salvasubfamilia":			
-		$padre = CleanID($_GET["IdFamilia"]);
+		$padre  = CleanID($_GET["IdFamilia"]);
 		$nombre = CleanText($_GET["Nombre"]);					
-		CrearSubFamilia($nombre,$padre);	
+		CrearSubFamilia($nombre,0,0,0,$padre);
 		break;				
 	case "getsubfamilia":
-		$idfamilia = CleanID($_GET["IdFamilia"]);
-
+		$idfamilia   = CleanID($_GET["IdFamilia"]);
 		$subfamilias = genArraySubFamilias($idfamilia);
 
 		foreach ($subfamilias as $key=>$value){
-			echo "$value=$key\n";			
+		     echo "$value=$key\n";			
 		}		
 		
 		exit();
 		break;
+
 }
 
 
@@ -89,6 +89,7 @@ function BuscarSubFamilia(){
             contador++;
             posicion = i;
             theList.ensureIndexIsVisible(i);
+	    theList.selectedIndex=posicion;
         }
     }
     if(contador==1){

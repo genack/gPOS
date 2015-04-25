@@ -87,7 +87,9 @@ switch($modo){
 		exit();	
 		break;
 	case "leernuevos":
-	  $IdUltimo = (isset($_GET["IdUltimo"]))? CleanID($_GET["IdUltimo"]):0;
+	        $IdUltimo = (isset($_GET["IdUltimo"]))? CleanID($_GET["IdUltimo"]):0;
+		$xsync    = setSyncTPV('Mensaje');
+
 	case "hoy":
 		if (!$IdUltimo)
 			$IdUltimo = 0;

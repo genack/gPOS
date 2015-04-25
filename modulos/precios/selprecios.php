@@ -9,6 +9,10 @@ if (!getSesionDato("IdTienda")){
 $modo = CleanText($_GET['modo']);
 $IdLocal = getSesionDato("IdTienda");
 $locales = getLocalesPrecios($IdLocal);
+$DescuentoGral  = getSesionDato("DescuentoTienda");
+$MetodoRedondeo = getSesionDato("MetodoRedondeo");
+$MargenUtilidad = getSesionDato("MargenUtilidad");
+$COPImpuesto    = getSesionDato("COPImpuesto");
 
 switch ($modo) {
   case "mostrarProductosPrecios":
@@ -86,16 +90,6 @@ switch ($modo) {
     exit(); 		
     break;
 
-  case "mostrarMargenUtilidad":
-    echo getSesionDato("MargenUtilidad");		
-    exit(); 		
-    break;	
-    
-  case "mostrarIGV":
-    echo getSesionDato("IGV");
-    exit(); 		
-    break;	
-		
   case "mostrarProductosAlmacen":
     
     $IdLocal     = getSesionDato("IdTienda");
@@ -112,7 +106,16 @@ switch ($modo) {
     VolcandoXML( Traducir2XML($datos),"productosAlmacen");
     exit();
     break;
-		
+
+  case "actualizarCostoOperativo":
+    $listalocal = CleanID($_GET["listalocal"]);	
+    $IdLocal    = getSesionDato("IdTienda");
+    $IdLocal    = ($listalocal!=0)? $listalocal:$IdLocal;
+    $COP        = $_GET["COP"];
+    $idproducto = CleanID($_GET["idproducto"]);
+    echo guardarCostoOperativo($COP,$idproducto,$IdLocal);
+    exit(); 		
+    break;
 
 }
 ?>

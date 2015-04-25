@@ -33,9 +33,13 @@ function DetalleProductosAlmacen($codigo,$descripcion,$idmarca,$idfamilia,$IdLoc
     if($codigo != "")
       $condicion = $condicion." AND ( ges_productos.Referencia like '%$codigo%' OR ges_productos.CodigoBarras like '$codigo' )";
 
-    if($descripcion != "")
-      $condicion = $condicion." AND ( ges_productos_idioma.Descripcion like '%$descripcion%' OR ges_modelos.Color like '%$descripcion%' OR ges_detalles.Talla like '%$descripcion%' OR ges_laboratorios.NombreComercial like '%$descripcion%' ) ";
+    if($descripcion != ""){
+      $anombre   = explode("|", $descripcion);
+    
+      $condicion .= ($anombre[0] != '')? "  AND ges_productos_idioma.Descripcion like '%$anombre[0]%'":"";
+      $condicion .= (isset($anombre[1]))? " AND ( ges_marcas.Marca like '%$anombre[1]%' OR ges_modelos.Color like '%$anombre[1]%' OR ges_detalles.Talla like '%$anombre[1]%' OR ges_laboratorios.NombreComercial like '%$anombre[1]%') ":"";
 
+    }
     if($idfamilia != 0)
         $condicion = $condicion." AND ges_productos.IdFamilia = '$idfamilia' ";
 
@@ -43,7 +47,7 @@ function DetalleProductosAlmacen($codigo,$descripcion,$idmarca,$idfamilia,$IdLoc
         $condicion = $condicion." AND ges_productos.IdMarca = '$idmarca' ";
 
     if($listarTodo == 0)
-         $condicion = $condicion." AND ges_almacenes.Unidades > 0 ";
+         $condicion = $condicion." AND ( ges_almacenes.Unidades > 0 OR ges_productos.Servicio = 1 ) ";
 
 
     if($listalocal != 0)
@@ -52,21 +56,21 @@ function DetalleProductosAlmacen($codigo,$descripcion,$idmarca,$idfamilia,$IdLoc
     $sql = " SELECT ges_almacenes.IdProducto, CONCAT(ges_productos.Referencia,'  ".
            " ',ges_productos.CodigoBarras,'   ',ges_productos_idioma.Descripcion) as Descripcion,".
            " Marca, ".
-           " Color, Talla, NombreComercial, StockMin,  CostoUnitario, ".
+           " Color, Talla, ges_laboratorios.NombreComercial, StockMin,  CostoUnitario, ".
            " ges_almacenes.Unidades,  PrecioVenta, PVDDescontado, PrecioVentaCorporativo, ".
-           " PVCDescontado, PrecioVentaSource, PrecioVentaCorpSource, UnidadMedida ".
-           " FROM ges_productos, ges_productos_idioma, ges_marcas, ges_modelos , ".
-           " ges_detalles, ges_laboratorios, ges_almacenes ".
-           " WHERE ges_almacenes.IdProducto = ges_productos.IdProducto ".
-           " AND ges_productos.IdProdBase = ges_productos_idioma.IdProdBase ".
-           " AND ges_productos.IdMarca = ges_marcas.IdMarca ".
-           " AND ges_productos.IdColor = ges_modelos.IdColor ".
-           " AND ges_productos.IdTallaje = ges_detalles.IdTallaje ".
-           " AND ges_productos.IdTalla = ges_detalles.IdTalla ".
-           " AND ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
-           " AND ges_productos.IdProducto = ges_almacenes.IdProducto ".
-           " AND ges_almacenes.IdLocal = '".$IdLocal."' ".$condicion." ".
-           " AND ges_almacenes.IdProducto = ges_productos.IdProducto ".
+           " PVCDescontado, PrecioVentaSource, PrecioVentaCorpSource, UnidadMedida, CostoOperativo, ges_productos.IdFamilia, ges_productos.IdSubFamilia ".         
+
+	   "FROM   ges_almacenes ".
+	   "LEFT   JOIN ges_productos ON ges_almacenes.IdProducto = ges_productos.IdProducto ".
+	   "INNER  JOIN ges_productos_idioma ON ges_productos.IdProdBase = ges_productos_idioma.IdProdBase ".
+	   "INNER  JOIN ges_detalles       ON ges_productos.IdTalla  = ges_detalles.IdTalla ".
+	   "INNER  JOIN ges_modelos      ON ges_productos.IdColor  = ges_modelos.IdColor ".
+
+	   "INNER  JOIN ges_laboratorios ON ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
+	   "INNER  JOIN ges_marcas       ON ges_productos.IdMarca  = ges_marcas.IdMarca ".
+	   "INNER  JOIN ges_locales      ON ges_locales.IdLocal    = ges_almacenes.IdLocal ".
+           " WHERE  ges_almacenes.IdLocal = '".$IdLocal."' ".
+           $condicion." ".
            " ORDER BY ges_productos_idioma.Descripcion ASC ";
 
    //$sql=$sql." limit ".$iniciopagina.",100";
@@ -76,6 +80,7 @@ function DetalleProductosAlmacen($codigo,$descripcion,$idmarca,$idfamilia,$IdLoc
     $t = 0;
     while($row = Row($res)){
       $nombre = "producto_" . $t++;
+      $row["MUSubFamilia"] = ObtenerMUSubFamilia($row["IdProducto"],$row["IdFamilia"],$row["IdSubFamilia"]);
       $productosAlmacen[$nombre] = $row; 		
     }		
 
@@ -348,10 +353,22 @@ function ModificarArticulo($id,$esDisponible,$esDisponibleOnline,$esOferta,$esSt
 	return true;
 }
 
-
 function OperacionTrasladoResumida($Destino,$Origen,$Motivo) {
 
 	$oTraslado = new traslado;
 	$oTraslado->OperacionTraslado($Destino,$Origen,$Motivo);
 }
+
+function guardarCostoOperativo($COP,$xid,$IdLocal){
+  $sql = 
+        " UPDATE ges_almacenes SET CostoOperativo = '$COP' ".
+	" WHERE IdProducto =".$xid.
+	" AND IdLocal =".$IdLocal.
+	" AND Eliminado  = 0";
+  $res = query($sql);
+
+  if (!$res) return false;
+  else return $COP;
+}
+
 ?>

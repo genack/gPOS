@@ -6,6 +6,12 @@ SimpleAutentificacionAutomatica("novisual-service");
 include_once("class/filaticket.class.php");
 include_once("class/arreglos.class.php");
 
+/*+++++++++++ VALIDA CAJA +++++++++++++++*/
+  if( cajaescerrado() == 1 )
+  {
+    echo "noCAJA"; return;
+  } 
+
 /*+++++++++++ VALIDA TICKET ++++++++++++++++*/
 
 $modoTicket = CleanText($_GET["moticket"]);
@@ -299,11 +305,12 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
     $IvaImporte   = ($TotalImporte*100/100.0) - round( $TotalImporte*100/($IGV+100), 2);
     $ImporteNeto  = $TotalImporte - $IvaImporte;
     $TipoVenta    = getSesionDato("TipoVentaTPV");
-    $t_Doc        = ( $modoTicket=="interno"    )? $textDoc." Servicio :" : $textDoc." Venta :";
-    $textticket   = $t_Doc." ".$sreDocumento." - ".$nroDocumento;
+    $t_Doc        = ( $modoTicket=="interno"    )? $textDoc." Servicio" : $textDoc." Venta";
+    $textticket   = $t_Doc." ".$sreDocumento."-".$nroDocumento;
     $SerialNum    = "$Serie-$Num";
     $IdCliente    = ($IdCliente)? $IdCliente:1;   
     $res          = false;
+    $textCaja     = $textticket."  Cod. ".$SerialNum;
     $cobranza     = ($modoTicket == 'cesion')? 'Pendiente':'Ninguno';
     //Comprobantes...
     if($esVenta){
@@ -328,28 +335,36 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
       $xbono = ( $entregaBono > 0 )? ' Bono = 0 ':false;
       $xbono = ( $bonoPromocion > 0 )? " Bono = '$bonoPromocion' ": $xbono;
       cargarVenta2HistorialVenta($IdCliente,$TotalImporte,true,$xbono);
+
+      //AdelantosEnPresupuesto
+      if(  $modoTicket=="cesion" && $idPresupuesto != '0')
+	ActualizaPagoAdelantadoPresupuesto($idPresupuesto,$idComprobante,$textCaja);
+
     }
 
     //Proformas...
     if( $esPedido ){
-
+      $IdOperacionCaja = getSesionDato("OperacionCajaPresupuesto");
+      $ImporteAdelanto = getSesionDato("OperacionCajaImportePresupuesto");
       $esquema = 
 	"IdLocal, IdUsuario, NPresupuesto,TipoPresupuesto,".
 	"TipoVentaOperacion,FechaPresupuesto,ImporteNeto,".
 	"ImporteImpuesto, Impuesto, TotalImporte, Status,IdCliente,".
-	"Observaciones,CBMetaProducto,VigenciaPresupuesto,Serie";
+	"Observaciones,CBMetaProducto,VigenciaPresupuesto,Serie,IdOperacionCaja,ImporteAdelanto";
 
       $datos = 
 	"'$IdLocal','$idDependiente','$nroDocumento','$textDoc',".
 	"'$TipoVenta',NOW(),'$ImporteNeto',".
 	"'$IvaImporte','$IGV','$TotalImporte','Pendiente','$IdCliente',".
-	"'$mensaje','$nsmprod','$vigencia','$sreDocumento'";
+	"'$mensaje','$nsmprod','$vigencia','$sreDocumento','$IdOperacionCaja','$ImporteAdelanto'";
 	
       $sql = "INSERT INTO ges_presupuestos (".$esquema.") VALUES (".$datos.")";
       $res = query($sql,"Creando Ticket ($modoTicket)");
   
       $idComprobante = $UltimaInsercion;
       setVigenciaMProductos($nsmprod,$vigencia);//VIgencia meta Productos
+      setSesionDato("OperacionCajaPresupuesto",0);
+      setSesionDato("OperacionCajaImportePresupuesto",0);
     }
 
     if (!$res) return 0;
@@ -365,7 +380,7 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
 
     //Dinero...
     if($esVenta)
-      EntregarCantidades($textticket,$IdLocal,$entregaEfectivo,$entregaBono,$entregaTarjeta,
+      EntregarCantidades($textCaja,$IdLocal,$entregaEfectivo,$entregaBono,$entregaTarjeta,
 			 $idComprobante,$TipoOperacion);
 
     //Procesar Lineas...
@@ -422,7 +437,6 @@ function setIdCPPresupuesto($idPresupuesto,$idComprobante,$modoTicket){
     " WHERE  IdPresupuesto   = '".$idPresupuesto."'";
 
   query($sql);	
-
 }
 
 ?>

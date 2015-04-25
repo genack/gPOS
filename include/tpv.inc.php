@@ -155,36 +155,38 @@
         // LISTADO DE LOCALDEPENDIENTES
         // con identificador
         //Apuntamos todos los perfiles que pueden actuar en la TPV.
-        $localdependientes = Array();
-        $sql =
-	  "select IdLocal,NombreComercial ".
-	  "from   ges_locales ".
-	  "where  Eliminado=0";			
-        $res = query($sql);
 
-        if($res) 
-	  {	
-	    $t = 0;
-	    while($row = Row($res))
-	      {
-	      if(getSesionDato("esAlmacenCentral"))
-		$localdependientes[$row["NombreComercial"]] = $row["IdLocal"];
-	      else
-		if(getSesionDato("IdTienda")==$row["IdLocal"])
-		  $localdependientes[$row["NombreComercial"]] = $row["IdLocal"];
-	      }	
-	  }
+        /* $localdependientes = Array(); */
+        /* $sql = */
+	/*   "select IdLocal,NombreComercial ". */
+	/*   "from   ges_locales ". */
+	/*   "where  Eliminado=0";			 */
+        /* $res = query($sql); */
 
-        $out = "";
-        $t   = 0;	 	
+        /* if($res)  */
+	/*   {	 */
+	/*     $t = 0; */
+	/*     while($row = Row($res)) */
+	/*       { */
+	/*       if(getSesionDato("esAlmacenCentral")) */
+	/* 	$localdependientes[$row["NombreComercial"]] = $row["IdLocal"]; */
+	/*       else */
+	/* 	if(getSesionDato("IdTienda")==$row["IdLocal"]) */
+	/* 	  $localdependientes[$row["NombreComercial"]] = $row["IdLocal"]; */
+	/*       }	 */
+	/*   } */
 
-        foreach ( $localdependientes as $nombrelocal => $idlocaldep)
-	  {
-	    $out .= "<menuitem id='localdep_". $idlocaldep ."' type='radio' name='radio' label='$nombrelocal' value='$idlocaldep' oncommand ='cambiaLocalDependiente($idlocaldep)'/>\n"; 
-	    $t++;		
-	  }
+        /*   $out = ""; */
+        /*   $t   = 0;	 	 */
 
-          $generadorLocalDependientes = $out;
+        /*   foreach ( $localdependientes as $nombrelocal => $idlocaldep) */
+	/*   { */
+	/*      $out .= "<menuitem id='localdep_". $idlocaldep ."' type='radio' name='radio' label='$nombrelocal' value='$idlocaldep' oncommand ='cambiaLocalDependiente($idlocaldep)'/>\n";  */
+	/*     $t++;		 */
+	/*   } */
+
+        /*   $generadorLocalDependientes = $out; */
+
 
 	  //--------------------------------------------------
           // LISTADO DE PRODUCTOS

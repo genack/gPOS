@@ -7,6 +7,7 @@
     <spacer style="height:4px"/>
   </vbox> 
 
+
     <!-- Formulario elije Cliente -->
     <panel id="panelElijeCliente" style="border:1px solid #aaa">
 
@@ -58,9 +59,8 @@
     </panel>
     <!--/Formulario elije Cliente -->
 
-  
 <!-- Servicios tercerizados -->
-<vbox id="boxOutsourcing" flex="1" collapsed="false">
+<vbox id="boxOutsourcing" flex="1">
   <spacer style="height:0.4em"/>
   <hbox align="start" pack="center" style="background-color: #d7d7d7;padding:0.8em;">
     <vbox>

@@ -2,6 +2,11 @@
 
 include("tool.php");
 
+if (!getSesionDato("IdTienda")){
+  session_write_close();
+  header("Location: logout.php");
+  exit();
+}
 
 SimpleAutentificacionAutomatica("visual-xul","xulentrar.php");
 
@@ -101,8 +106,8 @@ if (isUsuarioAdministradorWeb()){
 <command id="verKardex"   oncommand="solapa('modulos/kardex/selkardex.php?modo=verKardex','<?php echo _("Almacén - Kardex") ?>','framelist')" accesskey="K"
   <?php gulAdmite("Kardex") ?> label="<?php echo _("Kardex") ?>"/>
 
-<command id="verInventario"   oncommand="solapa('modulos/inventario/modinventario.php?modo=verInventario','<?php echo _("Almacén - Inventario") ?>','framelist')" accesskey="I"
-  <?php gulAdmite("VerAjustes") ?> label="<?php echo _("Inventario") ?>"/>
+<command id="verAjuste"   oncommand="solapa('modulos/inventario/modinventario.php?modo=verAjuste','<?php echo _("Almacén - Ajuste") ?>','framelist')" accesskey="A"
+  <?php gulAdmite("VerAjustes") ?> label="<?php echo _("Ajustes") ?>"/>
 
 
 <!-- ====== MENU ALMACEN - ITEM  ====== -->
@@ -132,7 +137,8 @@ if (isUsuarioAdministradorWeb()){
 
 
 <!--  ====== MENU VENTAS - ITEM   ======  -->
-<command id="lanzarTPV" oncommand="lanzarTPV('rd')" <?php gulAdmite("TPV") ?>  label="<?php echo _("TPV B2C") ?>"/> 
+
+<command id="lanzarTPV" oncommand="lanzarTPV('rd')" <?php gulAdmite("TPV") ?>  label="<?php echo _("TPV") ?>"/> 
 
 <command id="VerComprobantesVentas" oncommand="solapa('modulos/comprobanteventa/modventas.php?modo=mostrarComprobantes','<?php echo _("Ventas - Comprobantes") ?>','framelist')" 
    <?php gulAdmite("ComprobantesVenta") ?> label="<?php echo _("Comprobantes") ?>"/>
@@ -157,10 +163,15 @@ if (isUsuarioAdministradorWeb()){
 <!-- ====== MENU FINAZAS - ITEM  ====== -->
 
 <!-- ====== MENU REPORTES  ====== -->  
+   <?php
+    $disablelistado = "";
+    $arealistados   = "";
+    if (Admite('Informes')){ $arealistados = 'admin'; }
+    elseif(Admite('InformeLocal')){ $arealistados = 'tpv'; } 
+    else{ $disablelistado = "disabled='true'";}?>
 
-<command id="verListados"   oncommand="solapa('modulos/generadorlistados/formlistados.php?area=admin','<?php echo _("Listados") ?>','framelist')"
-  <?php gulAdmite("Informes") ?>  label="<?php echo _("Listados") ?>"/>  
-
+<command id="verListados"   oncommand="solapa('modulos/generadorlistados/formlistados.php?area=<?php echo $arealistados;?>','<?php echo _("Listados") ?>','framelist')"
+    <?php echo $disablelistado; ?>  label="<?php echo _("Listados") ?>"/> 
 <!-- ====== MENU REPORTES  ====== -->  
 
 
@@ -238,8 +249,6 @@ if (isUsuarioAdministradorWeb()){
 <command id="buzonNotaImportante" oncommand="solapa('modulos/mensajeria/modbuzon.php?modo=notaimportante','<?php echo _("Nota importante") ?>','buzon')" 
  <?php gulAdmite("Administracion","mensajeria") ?>  label="<?php echo _("Enviar nota importante") ?>"/> 
 
-<!-- command id="lanzarTPV" oncommand="lanzarTPV(rd)" <?php gulAdmite("TPV") ?>  label="<?php echo _("TPV") ?>"/ --> 
-   
 <groupbox flex="1" class="frameExtraXX">
   <caption label="<?php echo $NombreEmpresa?>"/>
 
@@ -303,7 +312,8 @@ if (isUsuarioAdministradorWeb()){
  		       $menuConfiguracion = array(
 
 		       _("Kardex") =>  "verKardex",	
-		       _("Inventario") =>  "verInventario"
+		       _("Ajuste") =>  "verAjuste"
+
 		    );  
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
 		    
@@ -317,7 +327,7 @@ if (isUsuarioAdministradorWeb()){
 		    <?php
  		       
  		       $menuConfiguracion = array(		
-		    _("TPV VD") =>  "lanzarTPV",
+		    _("TPV") =>  "lanzarTPV",
 		    _("ComprobantesVenta") =>  "VerComprobantesVentas"
 		    );  
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
@@ -349,7 +359,8 @@ if (isUsuarioAdministradorWeb()){
 		    <?php
  		
  		       $menuConfiguracion = array(		
-						  _("Listados") =>  "verListados"
+						  _("Listados General") =>  "verListados"
+
 		    );  
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
 		    
@@ -465,8 +476,8 @@ if (isUsuarioAdministradorWeb()){
        </box>
        
        <tabs class="AreaPagina">
-	 <tab id="buscarAlmacen" onclick="almacen_buscar(0)" label="<?php echo _(" Buscar") ?>"/>
-	 <tab id="capturarAlmacen" onclick="almacen_buscar(0)" label="<?php echo _(" Capturar CB ") ?>"/>
+	 <tab id="buscarAlmacen" onclick="almacen_buscar()" label="<?php echo _(" Buscar") ?>"/>
+	 <tab id="capturarAlmacen" onclick="almacen_buscar()" label="<?php echo _(" Capturar CB ") ?>" collapsed='true'/>
 	 <tab id="accionesCarrito" onclick="almacen_MuestraCarrito()" label="<?php echo _(" Acciones Carrito") ?>" />
        </tabs>
        <tabpanels flex="1" id="tabpanelAlmacen">
@@ -490,15 +501,15 @@ if (isUsuarioAdministradorWeb()){
      		 </row>
 		 <row>
 		   <caption label="<?php echo _("CB"); ?>"/>
-		   <textbox id="a_CB" flex="1" onkeypress="if (event.which == 13) { almacen_buscar(0) }"/>
+		   <textbox id="a_CB" flex="1" onkeypress="if (event.which == 13) { almacen_buscar() }"/>
 		 </row>				
 		 <row>
 		   <caption label="<?php echo _("Ref"); ?>"/>
-		   <textbox id="a_Referencia" flex="1" onkeypress="if (event.which == 13) { almacen_buscar(0) }"/>
+		   <textbox id="a_Referencia" flex="1" onkeypress="if (event.which == 13) { almacen_buscar() }"/>
 		 </row>						
 		 <row>
 		   <caption label="<?php echo _("Nombre"); ?>"/>
-		   <textbox id="a_Nombre" flex="1" onkeypress="if (event.which == 13) { almacen_buscar(0) }" onfocus="select()"/>
+		   <textbox id="a_Nombre" flex="1" onkeypress="if (event.which == 13) { almacen_buscar() }" onfocus="select()"/>
 		 </row>						
 		 <row>
 		   <box/>
@@ -520,7 +531,7 @@ if (isUsuarioAdministradorWeb()){
 		 </row>						
 	       </rows>
 	     </grid>					
-	     <button image="img/gpos_buscar.png" label='<?php echo _("Buscar") ?>' oncommand="almacen_buscar(0)"/>
+	     <button image="img/gpos_buscar.png" label='<?php echo _("Buscar") ?>' oncommand="almacen_buscar()"/>
 	   </groupbox>
 	 </tabpanel>
 	 <tabpanel id="capturarAlmacen" flex='1'>
@@ -890,7 +901,7 @@ var id2nombreProveedores = new Array();
 	}
 
         //Lanzar TPV 
-        if( $lanzarTPV && Admite("TPV") ){ echo "lanzarTPV('rd');"; }
+        if( $lanzarTPV && Admite("TPV") ){ echo "setTimeout('lanzarTPV()',4200);"; }
 ?>;	
 
 var myBrowser = false;
@@ -965,13 +976,16 @@ function ifConfirmExec( mensaje, command){
   }	
 }
 
+function blankBrowser(){
+  var main = getBrowser();
+  main.setAttribute("src","about:blank");  
+}
 
 function OpenDeck(index){
   var deck = document.getElementById("DeckArea");  
-  var main = getBrowser();
-       
+  //var main = getBrowser();
   deck.setAttribute("selectedIndex",index);
-  main.setAttribute("src","about:blank");  
+  //main.setAttribute("src","about:blank");  
 }
 
 function CloseDeck(){ //No cierra realmente, solo oculta
@@ -993,10 +1007,12 @@ function OcultaDeck(){
 function MostrarDeck(){
 	if (extraVisible)
 		return;
-
 	var deck = document.getElementById("DeckArea");
 	deck.setAttribute("collapsed","false");	 	   
 }
+
+var cSolapaLista  = '';
+var cSolapaNormal = '';
 
 function solapa(url,area,deck){
 	var main     = getBrowser();  
@@ -1010,37 +1026,58 @@ function solapa(url,area,deck){
 	switch(deck){
 	  case "almacen":
 	  	OpenDeck(1);
-		document.getElementById("a_Nombre").focus();
-		almacen_buscar(1);
 		MostrarDeck();
+		document.getElementById("a_Nombre").focus();
+
+		if( cSolapaNormal != deck ){
+		     //blankBrowser();
+		     almacen_buscar();
+		    }
+		cSolapaNormal = deck;
 	  	break;
+
 	  case "compras":
 	  	OpenDeck(2);
-	  	document.getElementById("c_Nombre").focus();
 		MostrarDeck();
-		Compras_buscar();	  	
+	  	document.getElementById("c_Nombre").focus();
+
+		if( cSolapaNormal != deck){
+		    //blankBrowser();
+		    Compras_buscar();	  	
+		   }
+		cSolapaNormal = deck;
 	  	break;
 	  case "productos":
 	  	OpenDeck(3);
-	  	document.getElementById("p_Nombre").focus();
 		MostrarDeck();
-		Productos_buscar();	  	
+	  	document.getElementById("p_Nombre").focus();
+
+		if( cSolapaNormal != deck){
+		  //blankBrowser();
+		  Productos_buscar();	  
+		}	
+		cSolapaNormal = deck;
 	  	break;
+
 	  case "proveedores":
 	  	OpenDeck(4);
 		MostrarDeck();	  	
+		proveedor_Ver();
 	  	break;
 	  case "clientes":
 	  	OpenDeck(5);
-		MostrarDeck();  	
+		MostrarDeck();  
+		clientes_Ver();
 	  	break;
 	  case "listados":
 	  	OcultaDeck();
 	  	main.setAttribute("src", url);
+		cSolapaNormal = '';
 		break;	   
 	 case "series":
 		OcultaDeck();
 		main.setAttribute("src", url);
+		cSolapaNormal = '';
 	        break;
 	 case "framelist":
                 w_list = document.getElementById("weblist");
@@ -1054,7 +1091,10 @@ function solapa(url,area,deck){
                 extraVisible = 0;	 	   
 
 	        // CARGAR URL
-		w_list.setAttribute("src", url);
+		if( cSolapaLista != url )
+		    w_list.setAttribute("src", url);
+
+		cSolapaLista = url;
 
                 if(window.innerWidth){
                    var ancho = window.innerWidth - 12;
@@ -1066,19 +1106,23 @@ function solapa(url,area,deck){
 	  case "buzon":	
 	  	OcultaDeck();
 	  	main.setAttribute("src", url);
+		cSolapaNormal = '';
 	  	break;	    	  	
 	  case "configuracion":
 	  	OcultaDeck();
 	  	main.setAttribute("src", url);
+		cSolapaNormal = '';
 	  	//alert("configuracion, deck oculto");
 	  	break;
 	  case "varios":
 	  	OcultaDeck();
+		cSolapaNormal = '';
 	  	main.setAttribute("src", url);
 	  	break;
 	  default:
 	    avanzadoCargado = 0;//cambios en familias/etc se reflejan inmediatamente
 		main.setAttribute("src", url);     		      	  
+		cSolapaNormal = '';
 	    CloseDeck();
 	    break;
 	}     	     	    	
@@ -1099,11 +1143,13 @@ function lanzarTPV(rt){
 	
 	<?php 
 	if (Admite("TPV")){
+
+	  $rtpv = 'rd';
 	?>
 	
 	if (tpvWindow && tpvWindow.close) tpvWindow.close();
 
-	var url    = 'tpvload.php?modo=tpv&t='+rt+'&espopup=on&r=' + Math.random();
+	var url    = 'tpvload.php?modo=tpv&t=<?php echo $rtpv; ?>&espopup=on&r=' + Math.random();
 	var metodo = 'fullscreen=yes,directories=No,toolbar=No,menubar=No,status=No,resizable=No,titlebar=No,location=No';
 	tpvWindow  =  open(url,"gPOS // TPV ",metodo);	
 	<?php  } ?>
@@ -1475,7 +1521,7 @@ function xWebMensaje(url)
 
 function xWebDummyFunction() {};
 
-function almacen_buscar(xclean)
+function almacen_buscar()
 {  
   subweb.setAttribute("src","about:blank");
   xwebCollapsed(false,true); 
@@ -1582,7 +1628,7 @@ function Compras_cambiaBtnCarrito(modo) {
 	case "Load":
 	 if(thisbtn.id == 'loadBtnCarrito') return;
 	 var btnid    = 'loadBtnCarrito';		
-	 var btnlink  = 'Compras_loadCarrito()';
+	 var btnlink  = 'Compras_buscar()';
 	 var btnimg   = 'img/gpos_compras.png';
 	 var btnlabel = ' Cargar Carrito';
 	 var actualiza = true;

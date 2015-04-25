@@ -30,7 +30,7 @@
 	<?php endif; ?>
  </hbox>
  <hbox>
-    <button flex="1" id="VerServiciosButton" crop="end" image="img/gpos_tpvservicios.png" label="<?php echo _(" Servicios") ?>"  
+    <button flex="1" id="VerServiciosButton" crop="end" image="img/gpos_tpvservicios.png" label="<?php echo _(" Servicios") ?>" <?php gulAdmite("Servicios") ?>
             class="compacta" oncommand="VerServicios()"/>
     <?php if($modulos["generadorlistados"]): ?>	    
     <button flex="1" id="VerListadosButton" crop="end" image="img/gpos_tpvlistado.png" label="<?php echo _("Listados") ?>" <?php gulAdmite("InformeLocal") ?> class="compacta" oncommand="VerListados()"/>

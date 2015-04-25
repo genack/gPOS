@@ -20,7 +20,12 @@ var cIdAlmacen            = 0;
 var cIdLocal              = 0;
 var cIdPedido             = 0;
 var cIdPedidoDet          = 0;
+var cImporteFlete         = 0;
 var ilineabuscacompra     = 0;
+var cElementosPedido      = 0;
+var cTipoCosto            = 'CP';
+var cIdProveedor          = 0;
+var cIdProvTras           = 0;
 var Vistas = new Object(); 
 Vistas.ventas = 7;
 
@@ -79,6 +84,7 @@ function BuscarCompra(){
     RawBuscarCompraRecibir(desde,hasta,emision,nombre,modocontado,modocredito,filtrodocumento,
 			   filtrocompra,filtrolocal,filtromoneda,forzaid,AddLineaCompra);
     if(forzaid) buscarPorCodigo(filtrocodigo);
+    document.getElementById("busquedaCompraFooter").setAttribute("collapsed",true);
 }
 
 function buscarPorCodigo(elemento){
@@ -128,7 +134,7 @@ function RawBuscarCompraRecibir(desde,hasta,emision,nombre,modocontado,modocredi
 
     var tex = "";
     var cr = "\n";
-    var item,Almacen,Proveedor,Codigo,Documento,Registro,Emision,Pago,Impuesto,Percepcion,Simbolo,ImporteBase,ImporteImpuesto,TotalImporte,ImportePendiente,ImportePercepcion,ModoPago,Estado,Usuario,CambioMoneda,FechaCambioMoneda,IdPedidoDetalle,IdPedido,IdComprobanteProv,IdMoneda,IdOrdenCompra,IdLocal,ImpuestoVenta;
+    var item,Almacen,Proveedor,Codigo,Documento,Registro,Emision,Pago,Impuesto,Percepcion,Simbolo,ImporteBase,ImporteImpuesto,TotalImporte,ImportePendiente,ImportePercepcion,ModoPago,Estado,Usuario,CambioMoneda,FechaCambioMoneda,IdPedidoDetalle,IdPedido,IdComprobanteProv,IdMoneda,IdOrdenCompra,IdLocal,ImpuestoVenta,ImporteFlete,IdProveedor,TipoDoc;
     var node,t,i,codcompra; 
     var totalCompra = 0;
     var totalCompraPendiente = 0;
@@ -190,13 +196,16 @@ function RawBuscarCompraRecibir(desde,hasta,emision,nombre,modocontado,modocredi
             IdLocal          = node.childNodes[t++].firstChild.nodeValue;
             ImpuestoVenta    = node.childNodes[t++].firstChild.nodeValue;
             IdAlmacen        = node.childNodes[t++].firstChild.nodeValue;
+	    IdProveedor      = node.childNodes[t++].firstChild.nodeValue;
+            ImporteFlete     = node.childNodes[t+2].firstChild.nodeValue;
+            TipoDoc          = node.childNodes[t+4].firstChild.nodeValue;
 
-	    if (Documento == 'Albaran')    nroAlbaran++; 
- 	    if (Documento == 'AlbaranInt') nroAlbaranInt++; 
+	    if (TipoDoc == 'Albaran')    nroAlbaran++; 
+ 	    if (TipoDoc == 'AlbaranInt') nroAlbaranInt++; 
 
 	    //Consolidado basico
-	    sldoc = ( Documento == 'Albaran'   )?true:false;
-	    sldoc = ( Documento == 'AlbaranInt')?true:sldoc;
+	    sldoc = ( TipoDoc == 'Albaran'   )?true:false;
+	    sldoc = ( TipoDoc == 'AlbaranInt')?true:sldoc;
 	    sldoc = ( Estado    == 'Cancelada' )?true:sldoc;
 	    if ( Estado == 'Cancelada') nroCancelado++;
 	    if (!sldoc)
@@ -207,11 +216,12 @@ function RawBuscarCompraRecibir(desde,hasta,emision,nombre,modocontado,modocredi
 				TotalImporte,ImportePendiente,ImportePercepcion,ModoPago,Estado,
 				Usuario,CambioMoneda,FechaCambioMoneda,IdPedidosDetalle,IdPedido,
 				IdComprobanteProv,IdMoneda,IdOrdenCompra,Observaciones,IdLocal,
-				ImpuestoVenta,IdAlmacen);
+				ImpuestoVenta,IdAlmacen,ImporteFlete,IdProveedor);
 	    item--;
         }
     }
     //CARGAMOS UN PEQUEnO REPORTE DE TOTALES EN EL HEADER
+
     id("TotalFacturas").value  = parseFloat(tC)-parseFloat(nroAlbaran+nroAlbaranInt);
     id("TotalAlbaranes").value = parseFloat(nroAlbaran+nroAlbaranInt);
     id("TotalImporte").value   = cMoneda[1]['S']+" "+formatDinero(totalImporte);
@@ -222,10 +232,10 @@ function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision
 			TotalImporte,ImportePendiente,ImportePercepcion,ModoPago,Estado,
 			Usuario,CambioMoneda,FechaCambioMoneda,IdPedidosDetalle,IdPedido,
 			IdComprobanteProv,IdMoneda,IdOrdenCompra,Observaciones,IdLocal,
-			ImpuestoVenta,IdAlmacen){
+			ImpuestoVenta,IdAlmacen,ImporteFlete,IdProveedor){
 
     var lista = id("busquedaCompra");
-    var xitem,xnumitem,xAlmacen,xCodigo,XDocumento,xProveedor,xRegistro,xEmision,xPago,xModoPago,xBase,xImpuesto,xTotal,xPercepcion,xEstado,xUsuario,xObservaciones,xIdPedido,xIdLocal,xImpuestoVenta,xIdAlmacen;
+    var xitem,xnumitem,xAlmacen,xCodigo,XDocumento,xProveedor,xRegistro,xEmision,xPago,xModoPago,xBase,xImpuesto,xTotal,xPercepcion,xEstado,xUsuario,xObservaciones,xIdPedido,xIdLocal,xImpuestoVenta,xIdAlmacen,xFlete;
     var Cont = (Observaciones!=' ' && Observaciones.length > 50 )?'...':'';
     var lobs = (Observaciones==' ')?'':Observaciones.substring(0, 50)+Cont;
 
@@ -290,6 +300,7 @@ function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision
 
     xProveedor = document.createElement("listcell");
     xProveedor.setAttribute("label",Proveedor);
+    xProveedor.setAttribute("value",IdProveedor);
     xProveedor.setAttribute("style","text-align:left;font-weight:bold;");
     xProveedor.setAttribute("id","proveedor_"+IdPedido);
 
@@ -355,6 +366,11 @@ function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision
     xObservaciones.setAttribute("style","text-align:left");
     xObservaciones.setAttribute("crop", "end");
 
+    xFlete = document.createElement("listcell");
+    xFlete.setAttribute("value", ImporteFlete);
+    xFlete.setAttribute("id","flete_"+IdPedido);
+    xFlete.setAttribute("collapsed","true");
+
     xitem.appendChild( xnumitem );
     xitem.appendChild( xAlmacen );
     xitem.appendChild( xCodigo );
@@ -372,6 +388,7 @@ function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision
     xitem.appendChild( xImpuestoVenta );
     xitem.appendChild( xEstado );
     xitem.appendChild( xIdAlmacen );
+    xitem.appendChild( xFlete );
     lista.appendChild( xitem );		
 }
 
@@ -389,14 +406,18 @@ function RevisarCompraSeleccionada(){
     cIdMoneda     = id("idmoneda_"+idex.value).getAttribute("value");
     cCambioMoneda = id("cambiomoneda_"+idex.value).getAttribute("value");
     cProveedor    = id("proveedor_"+idex.value).getAttribute("label");
+    cIdProveedor  = id("proveedor_"+idex.value).getAttribute("value");
     cDocumento    = id("documento_"+idex.value).getAttribute("label");
     cImpuesto     = id("impuestoventa_"+idex.value).getAttribute("value");
     cCodigo       = id("codigo_"+idex.value).getAttribute("label");
     cEstado       = id("estado_"+idex.value).getAttribute("label");
     cIdAlmacen    = id("idalmacen_"+idex.value).getAttribute("value");
     cIdLocal      = id("idlocal_"+idex.value).getAttribute("value");
+    cImporteFlete = id("flete_"+idex.value).getAttribute("value");
     cIdPedido     = idex.value;
     cIdPedidoDet  = IdPedidos;
+
+    cIdProvTras   = (cDocumento == 'AlbaranInt - Traslado')? cIdProveedor:0;
 
     //Documento
     xOperacion    = cDocumento.replace(" - ", "-");
@@ -412,8 +433,11 @@ function RevisarCompraSeleccionada(){
     id("guardarPrecios").setAttribute("collapsed","false");
     id("actualizarLPV").setAttribute("collapsed","false");
     id("recibirProductos").setAttribute("collapsed","false");
+    id("TipoCosto").setAttribute("collapsed","false");
+    document.getElementById("busquedaCompraFooter").setAttribute("collapsed",false);
 
     var verdet = (RevDet == 0 || RevDet != idex.value)? true:false;
+
     if(verdet || idetallesCompra == 0)
         setTimeout("loadDetalleCompra("+IdPedidos+","+cIdAlmacen+")",100);
 
@@ -437,18 +461,21 @@ function RawBuscarDetallesCompraRecibir(IdPedido,IdAlmacen,FuncionRecogerDetalle
 
     var url = "../../services.php?modo=mostrarDetallesComprasRecibir"+
 	      "&IdPedido="+IdPedido+
+	      "&xidprov="+cIdProvTras+
 	      "&IdAlmacen="+IdAlmacen;
     obj.open("GET",url,false);
     obj.send(null);	
 
     var tex = "";
     var cr = "\n";
-    var Referencia,IdProducto,CodigoBarras,Producto,Cantidad,Costo,CostoPromedio,PVD,PVDDcto,PVC,PVCDcto,LT,FV,NS,IdPedido,StockMin;
+    var Referencia,IdProducto,CodigoBarras,Producto,Cantidad,Costo,CostoPromedio,PVD,PVDDcto,PVC,PVCDcto,LT,FV,NS,IdPedido,StockMin,MUSubFamilia,CostoOperativo,COPOrigen;
     var node,t,i;
     var numitem = 0;
 
     if (!obj.responseXML) return alert(po_servidorocupado);		
     var xml = obj.responseXML.documentElement;
+    cElementosPedido = xml.childNodes.length;
+
     for (i=0; i<xml.childNodes.length; i++) {
         node = xml.childNodes[i];
         if (node && node.childNodes && node.childNodes.length >0){
@@ -482,12 +509,16 @@ function RawBuscarDetallesCompraRecibir(IdPedido,IdAlmacen,FuncionRecogerDetalle
 		Contenedor   = node.childNodes[t++].firstChild.nodeValue;
 		UndContenedor= node.childNodes[t++].firstChild.nodeValue;
 		UndMedida    = node.childNodes[t++].firstChild.nodeValue;
+		CostoOperativo = node.childNodes[t+2].firstChild.nodeValue;
+		MUSubFamilia = node.childNodes[t+3].firstChild.nodeValue;
+		COPOrigen    = node.childNodes[t+4].firstChild.nodeValue;
 
                 FuncionRecogerDetalles(numitem,Referencia,IdProducto,CodigoBarras,
 				       Producto,Cantidad,Costo,CostoPromedio,PVD,
 				       PVDDcto,PVC,PVCDcto,LT,FV,NS,IdPedidoDet,StockMin,
 				       PVDS,PVCS,PVD,PVC,PVDD,PVCD,VentaMenudeo,
-				       Contenedor,UndContenedor,UndMedida);
+				       Contenedor,UndContenedor,UndMedida,
+				       MUSubFamilia,CostoOperativo,COPOrigen);
             }
         }
     }
@@ -497,10 +528,11 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
 				       Producto,Cantidad,Costo,CostoPromedio,PVD,
 				       PVDDcto,PVC,PVCDcto,LT,FV,NS,IdPedidoDet,StockMin,
 				       PVDS,PVCS,PVD,PVC,PVDD,PVCD,VentaMenudeo,
-				       Contenedor,UndContenedor,UndMedida){
+				       Contenedor,UndContenedor,UndMedida,
+				       MUSubFamilia,CostoOperativo,COPOrigen){
 
     var lista = id("busquedaDetallesCompra");
-    var xitem,xnumitem,xReferencia,xCodigoBarras,grid1,grid2,grid3,row1,row2,row3,xProducto,xCantidad,xStockMin,xCP,xMUD,xPVD,xPVDD,xMUC,xPVC,xPVCD,xIdProducto,button0,xDetalle;
+    var xitem,xnumitem,xReferencia,xCodigoBarras,grid1,grid2,grid3,row1,row2,row3,xProducto,xCantidad,xStockMin,xCP,xMUD,xPVD,xPVDD,xMUC,xPVC,xPVCD,xIdProducto,button0,xDetalle,xMUSubFamiliaVD,xMUSubFamiliaVC,xDSTO,xMUG;
 
     var fclkNS  = 'sNSProductosAlmacenBorrador('+IdProducto+','+Cantidad+','+cIdPedido+','+IdPedidoDet+')';
     var telemt  = (NS!='0')?'button':'description';//Elemento Detalle
@@ -509,38 +541,69 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     var oclkNS  = (telemt=='button')?fclkNS:'';
     var Detalle = '';
 
-    
+    var aMUSF   = MUSubFamilia.split('~~');
+    var MUSFVD  = parseFloat(aMUSF[0]);
+    var MUSFVC  = parseFloat(aMUSF[1]);
+    var Descuento = parseFloat(aMUSF[2]);
+    var DSTO    = (Descuento/100).round(2);
+
+
     Detalle  += (LT!=' ')?'Lt. '+LT :'';
     Detalle  += (FV!=' ')?' Fv. '+FV :'';
     Detalle   = (NS!='0')?lvNS:Detalle;
     var PV,MUD,MUC,ImpD,ImpC,CP;
     var aPVDS,aPVCS;
 
-    //Costo & Impuesto
-    CP    = (CostoPromedio=='')?parseFloat((Costo+CostoPromedio)/2).toFixed(2): Costo;
-    CP    = parseFloat(CP).toFixed(2);
-    Imp   = parseFloat(CP*cImpuesto/100).toFixed(2)
-    PV    = parseFloat(CP)+parseFloat(Imp);
-    PV    = PV.toFixed(2);
+    //Convert a Números los variables
+    COP   = parseFloat(CostoOperativo);
+
+    // Costo Operativo del local origen
+    COP   = (cIdProvTras != 0)? parseFloat(COPOrigen):COP;
+
+    Costo = parseFloat(Costo);
+    CostoPromedio  = parseFloat(CostoPromedio);
+    CostoOperativo = parseFloat(CostoOperativo);
+    cMargenUtilidad = parseFloat(cMargenUtilidad);
+    cDescuentoGral = parseFloat(cDescuentoGral);
+    cImpuesto      = parseFloat(cImpuesto);
+    cCambioMoneda  = parseFloat(cCambioMoneda);
+    var MU_Directo    = (MUSFVD == 0)? cMargenUtilidad:MUSFVD;
+    var MU_Corporativo= (MUSFVC == 0)? cMargenUtilidad:MUSFVC;
+
+    var DSTO_G     = (cDescuentoGral/100).round(2);
+    DSTO           = (Descuento != 0)? DSTO:DSTO_G;
+    CostoOperativo = (cImpuestoIncluido)? 0:CostoOperativo;
+
+    //Costo
+    CP    = (CostoPromedio!=0)? ((Costo+CostoPromedio)/2).round(2) : Costo;
+    CP    = (cTipoCosto == 'CP')? CP:Costo;
 
     //Precio Venta Directo
     aPVDS = ( PVDS == '0')? false:PVDS.split('~');
-    PVD   = ( PVD < PV   )? PV:PVD;
-    PVD   = ( !aPVDS     )? PVD:aPVDS[0];
-    PVD   = ( PVD == '0' )? PV:PVD;
-    PVDD  = ( !aPVDS     )? PVD:aPVDS[1];
-    PVDD  = ( PVDD == '0')? PV:PVDD;
-    MUD   = parseFloat(PVD-PV).toFixed(2);
+    MUD   = (CP + CostoOperativo)*(MU_Directo/100);
+    PVD   = CP + MUD + CostoOperativo;
+    Imp   = (PVD*cImpuesto/100).round(2);
+    PVD   = (cImpuestoIncluido)? (PVD + Imp + COP):(PVD + Imp);
+    PVD   = ( !aPVDS     )? PVD:parseFloat(aPVDS[0]);
+    PVD   = PVD.round(2);
+    MUD   = (!aPVDS)? MUD:(PVD*100/(100+(cImpuesto))-CP-CostoOperativo);
+    MUD   = MUD.round(2);
+    PVDD  = ( !aPVDS     )? PVD:parseFloat(aPVDS[1]);
+    PVDD  = (FormatPreciosTPV(PVD)-(MUD*DSTO)).round(2);
 
     //Precio Venta Coorporativo
     aPVCS = ( PVCS == '0' )? false:PVCS.split('~');
-    PVC   = ( PVC<PV      )? PV:PVC;
-    PVC   = ( !aPVCS      )? PVC:aPVCS[0];
-    PVC   = ( PVC == '0'  )? PV:PVC;
-    PVCD  = ( !aPVCS      )? PVC:aPVCS[1];
-    PVCD  = ( PVCD == '0' )? PV:PVCD;
-    MUC   = parseFloat(PVC-PV).toFixed(2);
 
+    MUC   = (CP + CostoOperativo)*(MU_Corporativo/100);
+    PVC   = (CP + MUC + CostoOperativo);
+    Imp   = (PVC*cImpuesto/100).round(2)
+    PVC   = (cImpuestoIncluido)? (PVC + Imp + COP):(PVC + Imp);
+    PVC   = ( !aPVCS      )? PVC:parseFloat(aPVCS[0]);
+    PVC   = PVC.round(2);
+    MUC   = (!aPVCS)? MUC:(PVC*100/(100+cImpuesto))-CP-CostoOperativo;
+    MUC   = MUC.round(2);
+    PVCD  = ( !aPVCS      )? PVC:aPVCS[1];
+    PVCD  = (FormatPreciosTPV(PVC)-(MUC*DSTO)).round(2);
 
     //Cantidad
     cResto    = (Cantidad%UndContenedor==Cantidad)?Cantidad:Cantidad%UndContenedor;
@@ -591,15 +654,28 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xCP.setAttribute('id','CP_'+IdPedidoDet);
     xCP.setAttribute("size","5");
 
+    xCOP = document.createElement('textbox');//COP
+    xCOP.setAttribute('value',formatDineroTotal(COP));
+    xCOP.setAttribute('label',formatDineroTotal(COP));
+    xCOP.setAttribute('id','COP_'+IdPedidoDet);
+    xCOP.setAttribute('onkeypress','return soloNumeros(event,this.value)');
+    xCOP.setAttribute('onchange','validarCOP('+IdPedidoDet+')');
+    xCOP.setAttribute('onfocus','this.select()');
+    xCOP.setAttribute('style','width:4em;font-weight:bold;');
+    xCOP.setAttribute("size","5");
+
+
     xMUD = document.createElement('description');//MUD
-    xMUD.setAttribute('value',MUD);
+    xMUD.setAttribute('value',MUD.toFixed(2));
+    xMUD.setAttribute('label',MUD.toFixed(2));
     xMUD.setAttribute('readonly','true');
     xMUD.setAttribute('style','border:1px solid #BEBDBC;width:4em;background-color: #BEBDBC;');
     xMUD.setAttribute('id','MUD_'+IdPedidoDet);
     xMUD.setAttribute("size","5");
 
     xPVD = document.createElement('textbox');//PVD
-    xPVD.setAttribute('value',PVD);
+    xPVD.setAttribute('value',FormatPreciosTPV(PVD));
+    xPVD.setAttribute('label',FormatPreciosTPV(PVD));
     xPVD.setAttribute('id','PVD_'+IdPedidoDet);
     xPVD.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xPVD.setAttribute('onblur','validarPVD('+IdPedidoDet+')');
@@ -609,7 +685,7 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xPVD.setAttribute("size","5");
 
     xPVDD = document.createElement('textbox');//PVDD
-    xPVDD.setAttribute('value',PVDD);
+    xPVDD.setAttribute('value',FormatPreciosTPV(PVDD));
     xPVDD.setAttribute('id','PVDD_'+IdPedidoDet);
     xPVDD.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xPVDD.setAttribute('onfocus','this.select()');
@@ -618,14 +694,16 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xPVDD.setAttribute("size","5");
 
     xMUC = document.createElement('description');//MUC
-    xMUC.setAttribute('value',MUC);
+    xMUC.setAttribute('value',MUC.toFixed(2));
+    xMUC.setAttribute('label',MUC.toFixed(2));
     xMUC.setAttribute('readonly','true');
     xMUC.setAttribute('style','border:1px solid #BEBDBC;width:3.2em;background-color: #BEBDBC;');
     xMUC.setAttribute('id','MUC_'+IdPedidoDet);
     xMUC.setAttribute("size","5");
 
     xPVC = document.createElement('textbox');//PVC
-    xPVC.setAttribute('value',PVC);
+    xPVC.setAttribute('value',FormatPreciosTPV(PVC));
+    xPVC.setAttribute('label',FormatPreciosTPV(PVC));
     xPVC.setAttribute('id','PVC_'+IdPedidoDet);
     xPVC.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xPVC.setAttribute('onblur','validarPVC('+IdPedidoDet+')');
@@ -635,13 +713,24 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xPVC.setAttribute("size","5");
 
     xPVCD = document.createElement('textbox');//PVCD
-    xPVCD.setAttribute('value',PVCD);
+    xPVCD.setAttribute('value',FormatPreciosTPV(PVCD));
     xPVCD.setAttribute('id','PVCD_'+IdPedidoDet);
     xPVCD.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xPVCD.setAttribute('style','width:4em;');
     xPVCD.setAttribute('onblur','validarPVCD('+IdPedidoDet+')');
     xPVCD.setAttribute('onfocus','this.select()');
     xPVCD.setAttribute("size","5");
+
+    xDSTO = document.createElement('textbox');//DSTO
+    xDSTO.setAttribute('value',DSTO);
+    xDSTO.setAttribute('id','DSTO_'+IdPedidoDet);
+    xDSTO.setAttribute('collapsed','true');
+
+    xMUG = document.createElement('textbox');//MUG
+    xMUG.setAttribute('value',parseFloat(MU_Directo));
+    xMUG.setAttribute('label',parseFloat(MU_Corporativo));
+    xMUG.setAttribute('id','MUG_'+IdPedidoDet);
+    xMUG.setAttribute('collapsed','true');
 
     xDetalle = document.createElement( telemt );//Unidades
     xDetalle.setAttribute(tprint,Detalle);
@@ -656,6 +745,7 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     row0.appendChild(xProducto);
     row0.appendChild(xCantidad);
     row0.appendChild(xCP);
+    row0.appendChild(xCOP);
     row0.appendChild(xMUD);
     row0.appendChild(xPVD);
     row0.appendChild(xPVDD);
@@ -663,7 +753,8 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     row0.appendChild(xPVC);
     row0.appendChild(xPVCD);
     row0.appendChild(xDetalle);
-
+    row0.appendChild(xDSTO);
+    row0.appendChild(xMUG);
     grid0.appendChild(row0);
 
 }
@@ -708,71 +799,139 @@ function actualizarCantidades(fila){
     var ImpC = 0;
     var PVC  = id("PVC_"+fila);
     var PVCD = id("PVCD_"+fila);
+    var COP   = id("COP_"+fila);
+
     //Opera y set value 
-    ImpD       = ((PVD.value/(1+cImpuesto/100))*(cImpuesto/100)).toFixed(2);
-    MUD.value  = ((PVD.value - ImpD) - CP.value).toFixed(2);
-    ImpC       = ((PVC.value/(1+cImpuesto/100))*(cImpuesto/100)).toFixed(2);
-    MUC.value  = ((PVC.value - ImpC) - CP.value).toFixed(2);
+    var Costo  = (cImpuestoIncluido)? 0: COP.value;
+    var mg     = (PVD.value*100/(100+parseFloat(cImpuesto)))-CP.value-Costo;
+    MUD.value  = mg.toFixed(2);
+
+    var mgc    = (PVC.value*100/(100+parseFloat(cImpuesto)))-CP.value-Costo;
+    MUC.value  = mgc.toFixed(2);
     //PVDD.value = PVD.value;
     //PVCD.value = PVC.value;
 }
 
-function validarPVD(fila){
-    var CP = id("CP_"+fila);
-    var MUD = id("MUD_"+fila);
-    var PVD = id("PVD_"+fila);
+function validarCOP(fila){
+    var CP   = id("CP_"+fila);
+    var COP  = id("COP_"+fila);
+    var DSTO = id("DSTO_"+fila);
+    var MUG  = id("MUG_"+fila);
+
+    var MUD  = id("MUD_"+fila);
+    var PVD  = id("PVD_"+fila);
     var PVDD = id("PVDD_"+fila);
+
+    var MUC  = id("MUC_"+fila);
+    var PVC  = id("PVC_"+fila);
+    var PVCD = id("PVCD_"+fila);
+
+    COP.value  = formatDineroTotal(COP.value);
+
+    var xCP  = parseFloat(CP.value);
+    var xCOP = parseFloat(COP.value);
+    var Costo  = (cImpuestoIncluido)? 0:xCOP;
+    var xMUGD  = parseFloat(MUG.getAttribute("value"));
+    var xMUGC  = parseFloat(MUG.label);
+
+    MUD.value  = ((xCP+Costo)*(xMUGD/100)).round(2);
+    var precio = parseFloat(CP.value)+Costo+parseFloat(MUD.value);
+    var Imp    = precio*cImpuesto/100;
+    precio     = (cImpuestoIncluido)? (precio+Imp+xCOP):(precio + Imp);
+    precio     = precio.round(2);
+    PVD.value  = FormatPreciosTPV(precio);
+    PVDD.value = FormatPreciosTPV((PVD.value-MUD.value*DSTO.value).round(2));
+
+    //Corporativo
+    MUC.value  = ((xCP+Costo)*xMUGC/100).round(2);
+    var precioc= parseFloat(CP.value)+Costo+parseFloat(MUC.value);
+    var Impc   = precioc*cImpuesto/100;
+    precioc    = (cImpuestoIncluido)? (precioc + Impc + xCOP):(precioc + Impc);
+    precioc    = (precioc).round(2);
+    PVC.value  = FormatPreciosTPV(precioc);
+    PVCD.value = FormatPreciosTPV((precioc-MUC.value*DSTO.value).round(2));
+
+    //actualizarCantidades(fila);
+
+}
+
+function validarPVD(fila){
+    var CP    = id("CP_"+fila);
+    var DSTO  = id("DSTO_"+fila);
+    var MUD   = id("MUD_"+fila);
+    var PVD   = id("PVD_"+fila);
+    var PVDD  = id("PVDD_"+fila);
+    var COP   = id("COP_"+fila);
+
+    PVD.value = parseFloat(PVD.value).toFixed(2);
+    PVDD.value = FormatPreciosTPV((PVD.value-MUD.value*DSTO.value).round(2));
     if(parseFloat(MUD.value)<0){
         alert("gPOS: ¡Acción Restringida! "+
 	      "\n\n - Margen de Utilidad negativo:  "+cMoneda[1]['S']+" "+MUD.value+".");
-        var PrecioMinimo =  CP.value*(1+cImpuesto/100);
-        PrecioMinimo =PrecioMinimo.toFixed(2);
-        PVD.value = PrecioMinimo;
-        PVDD.value = PrecioMinimo;
-        actualizarCantidades(fila);
+
+	COP.value  = formatDineroTotal(COP.label);
+	MUD.value  = MUD.getAttribute("label");
+	PVD.value  = FormatPreciosTPV(PVD.label);
+	PVDD.value = FormatPreciosTPV((PVD.value-MUD.value*DSTO.value).round(2));
+        //actualizarCantidades(fila);
     }
 }
 function validarPVDD(fila){
-    var CP = id("CP_"+fila);
-    var PrecioMinimo =  CP.value*(1+cImpuesto/100);
-    PrecioMinimo = parseFloat(PrecioMinimo.toFixed(2));
-    var PVD = id("PVD_"+fila);
-    var PVDD = id("PVDD_"+fila);
+    var CP   = id("CP_"+fila);
+    var COP  = id("COP_"+fila);
+    var MUD  = id("MUD_"+fila);
+    var DSTO = id("DSTO_"+fila);
+    var Costo = (cImpuestoIncluido)? 0:parseFloat(COP.value);
+    var PrecioMinimo = (parseFloat(CP.value)+Costo)*(1+cImpuesto/100);
+    PrecioMinimo     = (cImpuestoIncluido)? PrecioMinimo+parseFloat(COP.value):PrecioMinimo;
+    PrecioMinimo     = PrecioMinimo.round(2);
+    var PVD    = id("PVD_"+fila);
+    var PVDD   = id("PVDD_"+fila);
+    PVDD.value = parseFloat(PVDD.value).toFixed(2);
     if(parseFloat(PVDD.value)>parseFloat(PVD.value) || parseFloat(PVDD.value) < PrecioMinimo){
         alert("gPOS: ¡Acción Restingida! "+
 	      "\n\n  - Precio con descuento  "+cMoneda[1]['S']+" "+
 	      PVDD.value+", el precio minimo es: "+cMoneda[1]['S']+" "+PrecioMinimo);
-        PVDD.value = PVD.value;
+        PVDD.value = FormatPreciosTPV((PVD.value-MUD.value*DSTO.value).round(2));
     }
 }
 
 function validarPVC(fila){
-    var CP = id("CP_"+fila);
-    var MUC = id("MUC_"+fila);
-    var PVC = id("PVC_"+fila);
-    var PVCD = id("PVCD_"+fila);
+    var CP     = id("CP_"+fila);
+    var DSTO   = id("DSTO_"+fila);
+    var MUC    = id("MUC_"+fila);
+    var PVC    = id("PVC_"+fila);
+    var PVCD   = id("PVCD_"+fila);
+    PVC.value  = parseFloat(PVC.value).toFixed(2);
+    PVCD.value = FormatPreciosTPV((PVC.value-MUC.value*DSTO.value).toFixed(2));
     if(parseFloat(MUC.value)<0){
         alert("gPOS: ¡Acción Restringida! "+
 	      "\n\n - Margen de Utilidad negativo: "+cMoneda[1]['S']+" "+MUC.value);
-        var PrecioMinimo =  CP.value*(1+cImpuesto/100);
-        PrecioMinimo =PrecioMinimo.toFixed(2);
-        PVC.value = PrecioMinimo;
-        PVCD.value = PrecioMinimo;
-        actualizarCantidades(fila);
+
+	MUC.value  = MUC.getAttribute("label");
+	PVC.value  = FormatPreciosTPV(PVC.label);
+	PVCD.value = FormatPreciosTPV((PVC.value-MUC.value*DSTO.value).round(2));
+        //actualizarCantidades(fila);
     }
 }
 
 function validarPVCD(fila){
-    var CP = id("CP_"+fila);
-    var PrecioMinimo =  CP.value*(1+cImpuesto/100);
-    PrecioMinimo = parseFloat(PrecioMinimo.toFixed(2));
-    var PVC = id("PVC_"+fila);
+    var CP   = id("CP_"+fila);
+    var COP  = id("COP_"+fila);
+    var DSTO = id("DSTO_"+fila);
+    var MUC  = id("MUC_"+fila);
+    var Costo = (cImpuestoIncluido)? 0:parseFloat(COP.value);
+    var PrecioMinimo = (parseFloat(CP.value)+Costo)*(1+cImpuesto/100);
+    PrecioMinimo     = (cImpuestoIncluido)? PrecioMinimo+parseFloat(COP.value):PrecioMinimo;
+    PrecioMinimo     = PrecioMinimo.round(2);
+    var PVC  = id("PVC_"+fila);
     var PVCD = id("PVCD_"+fila);
+    PVCD.value = parseFloat(PVCD.value).toFixed(2);
     if(parseFloat(PVCD.value)>parseFloat(PVC.value) || parseFloat(PVCD.value) < PrecioMinimo){
         alert("gPOS: ¡Acción Restringida! "+
 	      "\n\n  - Precio con descuento "+
 	      PVCD.value+", el precio minimo es: "+PrecioMinimo);
-        PVCD.value = PVC.value;
+        PVCD.value = FormatPreciosTPV((PVC.value-MUC.value*DSTO.value).round(2));
     }
 }
 
@@ -800,12 +959,31 @@ function recibirProductos(){
     xrequest.open("GET",url,false);
     xrequest.send(null);
     //alert(xrequest.responseText);
-    if(isNaN(xrequest.responseText))
-	return alert(po_servidorocupado);
+    var xres = xrequest.responseText;
+    var ares = xres.split('~');
+
+    if(!parseInt(ares[0])){
+
+	switch(ares[0]){
+	case 'Registro':
+	    return alert ("gPOS: \n\n"+"El documento "+cDocumento+" "+cCodigo+" está registrado");
+	    break;
+	case 'Series':
+	    alert ("gPOS: "+cDocumento+" "+cCodigo+"\n\n"+"Los productos marcados con **NS** tienen los siguientes posibles problemas: \n - Si la cantidad de series ingresadas es mayor a la cantidad registrada,\n   Ingrese las series que faltan. \n - Si la cantidad de series es correcta y la cantidad del producto es diferente,\n   Cancele el comprobante.");
+	    break;
+	default:
+	    alert(po_servidorocupado+'\n\n    -- '+cDocumento+" "+cCodigo+" --\n"+ares[0]);
+	}
+
+	VaciarDetallesCompra();
+	BuscarCompra();
+	return;
+    }
 
     id("recibirProductos").setAttribute("collapsed","true");
     id("guardarPrecios").setAttribute("collapsed","true");
     id("actualizarLPV").setAttribute("collapsed","true");
+    id("TipoCosto").setAttribute("collapsed","true");
     VaciarDetallesCompra();
     BuscarCompra();
     
@@ -822,7 +1000,7 @@ function guardarPrecios(){
 	pvd = id("PVD_"+kit).value+'~'+id("PVDD_"+kit).value;
         pvc = id("PVC_"+kit).value+'~'+id("PVCD_"+kit).value;
 	idx = id("IDP_"+kit).value;	    
-	pv  = pvd+'_'+pvc;
+	pv  = pvd+'_'+pvc+'_'+id("COP_"+kit).value;
 	//Ejecuta
 	var url="../../services.php?"+
 	    "modo=SalvaPreciosVenta"+
@@ -840,9 +1018,11 @@ function guardarPrecios(){
 	id("PVDD_"+kit).setAttribute('readonly','true');
 	id("PVC_"+kit).setAttribute('readonly','true');
 	id("PVCD_"+kit).setAttribute('readonly','true');
+	id("COP_"+kit).setAttribute('readonly','true');
     }
     //Guarda Precios Sources
     id("guardarPrecios").setAttribute("collapsed","true");
+    id("TipoCosto").setAttribute("collapsed",true);
 }
 
 function sNSProductosAlmacenBorrador(IdProducto,Cantidad,IdPedido,IdPedidoDet){
@@ -902,12 +1082,13 @@ function actualizarNuevosPV(){
 	var xrequest = new XMLHttpRequest();
 	xrequest.open("GET",url,false);
 	xrequest.send(null);
-	if(xrequest.responseText) 
+	if(xrequest.responseText)
 	    id("actualizarLPV").setAttribute("collapsed",true);
 	else
 	    alert('gPOS: Precios TPV \n\n - El servidor esta ocupado');
     }
 }
+
 function actualizarAllNuevosPV(){
 
     guardarPrecios();
@@ -918,9 +1099,23 @@ function actualizarAllNuevosPV(){
 	var xrequest = new XMLHttpRequest();
 	xrequest.open("GET",url,false);
 	xrequest.send(null);
-	if(xrequest.responseText) 
+	if(xrequest.responseText)
 	    id("actualizarLPV").setAttribute("collapsed",true);
 	else
 	    alert('gPOS:  Precios TPV \n\n - El servidor esta ocupado');
     }
 }
+
+function ActualizarTipoCosto(xvalue,xid){
+    cTipoCosto = xvalue;
+    var xval = id(xid).getAttribute("checked");
+
+    id("tipo_costopromedio").setAttribute("checked",false);
+    id("tipo_ultimocosto").setAttribute("checked",false);
+
+    id(xid).setAttribute("checked",true);
+    
+    if(xval=='false')
+	loadDetalleCompra(cIdPedidoDet,cIdAlmacen);
+}
+

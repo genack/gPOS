@@ -9,8 +9,8 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 <window id="CompraVista" title="Establecer Precio Por Pedido" 
 	xmlns:html="http://www.w3.org/1999/xhtml"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/comprobanteventa/ventas.js" />
   <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js" />
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/comprobanteventa/ventas.js"/>
   <script>//<![CDATA[
   var IGV = <?php echo getSesionDato("IGV"); ?>;  
 var esFinanzas = false;
@@ -20,11 +20,24 @@ var esFinanzas = false;
 <!--  no-visuales -->
 <popupset>
   <popup id="AccionesBusquedaVentas">
-     <menuitem id="mheadImprimir" label="<?php echo _("Imprimir") ?>" oncommand="ReimprimirVentaSeleccionada()"/>
-     <menuitem id="mheadImprimirSuscripcion" label="<?php echo _("Imprimir Suscripción") ?>" oncommand="ImprimirSuscripcionSeleccionada()" collapsed="true"/>
+    <menu id="mheadImprimir" label="<?php echo _("Imprimir") ?>">
+      <menupopup> 
+        <menuitem label="<?php echo _("Comprobante") ?>" 
+                  oncommand="ReimprimirVentaSeleccionada(1)"/>
+        <menuitem id="mheadImprimirSuscripcion" label="<?php echo _("Suscripción") ?>"
+                  oncommand="ImprimirSuscripcionSeleccionada()" collapsed="true"/>
+      </menupopup>
+    </menu>
+     <menu id="mheadImprimirInt" label="Imprimir" <?php gulAdmite("Compras") ?> collapsed="true" >
+      <menupopup>
+	<menuitem label="Formato gPOS" oncommand="ReimprimirVentaSeleccionada(1)"/>
+	<menuitem label="Formato Oficial"  oncommand="ReimprimirVentaSeleccionada(2)"/>
+      </menupopup>
+     </menu>
   </popup>
   <popup id="AccionesDetallesVentas" class="media">
-    <menuitem id="VentaRealizadaDetalleNS" label="<?php echo _("Ver Números de Serie") ?>" oncommand="verNSVentaSeleccionada()"/>
+    <menuitem id="VentaRealizadaDetalleNS" label="<?php echo _("Ver Números de Serie") ?>" 
+              oncommand="verNSVentaSeleccionada()"/>
     <menuitem id="VentaRealizadaDetalleMProducto" label="<?php echo _("Ver Detalle Meta Producto") ?>" oncommand="verDetMPSeleccionada()"/>
   </popup> 
 </popupset>
@@ -257,9 +270,7 @@ var esFinanzas = false;
 
   <script>//<![CDATA[
   var id = function(name) { return document.getElementById(name); }
-
-  BuscarVentas(); 
-  
+  BuscarVentas();   
    <?php
      if($locales)
        if(getSesionDato("esAlmacenCentral"))

@@ -225,13 +225,16 @@ class local extends Cursor {
 	$titulo          = ($esModificar)? _("Modificando local"):_("Nuevo local");
 	$idlocal         = $this->get("IdLocal");
 	
-	
 	$combonumeracion = getComboFormatoComprobante($this->get("IdTipoNumeracionFactura"));
 	$comboidiomas    = genComboIdiomas($this->get("IdIdioma"));
 	$incluido        = ( $this->is("ImpuestoIncluido") )? "checked":"";
 	$esCentral       = ( $this->is("AlmacenCentral")   )? "checked":"";
+	$esCOPImpuesto   = ( $this->is("COPImpuesto")      )? "checked":"";
 	$esMoneda        = ( $this->is("AlmacenCentral")   )? "":"style='display:none'";
 	$Moneda          = getMoneda();
+	$esConPass       = ( $this->is("AdmitePassword")   )? "checked":"";
+	$mostrarpass     = ( $this->is("AdmitePassword"))? "style='visibility:visible'":"style='visibility:hidden'";
+
 	$cambios = array(
 			 "tMensajeMes" => _("Mensaje Ticket"),
 			 "vMensajeMes" => $this->get("MensajeMes"),
@@ -246,6 +249,8 @@ class local extends Cursor {
 			 "vTipoMargenUtilidad" => $this->get("TipoMargenUtilidad"),
 			 "vIGV" => $this->get("Impuesto"),
 			 "vIPC" => $this->get("Percepcion"),
+			 "vDescuento" => $this->get("Descuento"),
+			 "vMetodoRedondeo" => genComboMetodoRedondeo($this->get("MetodoRedondeo")),
 			 "tIdIdioma" => _("Idioma"),
 			 "comboIdiomas" =>$comboidiomas,				
 			 "tIdPais" => _("País"),
@@ -259,6 +264,7 @@ class local extends Cursor {
 			 "vNombreComercial" => $this->get("NombreComercial"),
 			 "vNombreLegal" => $this->get("NombreLegal"),
 			 "vAlmacenCentral" => $esCentral,
+			 "vCOPImpuesto" => $esCOPImpuesto,
 			 "vMoneda0" => $Moneda[1]['T'],
 			 "vMonedaPlural0" => $Moneda[1]['TP'],
 			 "vMonedaSimbolo0" => $Moneda[1]['S'],
@@ -266,6 +272,7 @@ class local extends Cursor {
 			 "vMonedaPlural1" => $Moneda[2]['TP'],
 			 "vMonedaSimbolo1" => $Moneda[2]['S'],
 			 "vMoneda" => $esMoneda,
+			 "vConContrasenia" => $esConPass,
 			 "vPoblacion" => $this->get("Poblacion"),
 			 "vCodigoPostal" => $this->get("CodigoPostal"),
 			 "vDireccionFactura" => $this->get("DireccionFactura"),
@@ -278,9 +285,11 @@ class local extends Cursor {
 			 "vTelefono" => $this->get("Telefono"),
 			 "vPaginaWeb" => $this->get("PaginaWeb"),
 			 "vCuentaBancaria" => $this->get("CuentaBancaria"),
+			 "vCuentaBancaria2" => $this->get("CuentaBancaria2"),
 			 "Password" =>_("Contraseña"),			
 			 //"vPassword" => $this->get("Password"),
-			 "vPassword" => _("locales"),
+			 "vPassword" => _("localess"),
+			 "sPassword" => $mostrarpass,
 			 //"Ver" => _("Ver"),
 			 "Identificacion" => _("Identificación"),
 			 "vIdentificacion" => $this->get("Identificacion"),
@@ -293,7 +302,8 @@ class local extends Cursor {
 			 "Movil" => _("Móvil"),
 			 "Telefono" => _("Teléfono"),
 			 "PaginaWeb" => _("Pagina web"),
-			 "CuentaBancaria" => _("Cuenta bancaria"),
+			 "CuentaBancaria" => _("CTA Moneda Principal"),
+			 "CuentaBancaria2" => _("CTA Moneda Secundaria"),
 			 "tAlmacenCentral" => _("El almacén central"),
 			 "HIDDENDATA" => Hidden("id",$this->getId()),
 			 "ACTION" => "$action?modo=$modo",
@@ -500,5 +510,12 @@ echo "
 ";
   
 }
+
+function verficarExistenciaLocal($ident,$idlocal){
+  $sql = "SELECT Identificacion FROM ges_locales WHERE Identificacion = '$ident' AND IdLocal <> $idlocal ";
+  $row = queryrow($sql);
+  return $row["Identificacion"];
+}
+
 
 ?>

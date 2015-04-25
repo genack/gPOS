@@ -523,7 +523,7 @@ function popupx(url,extra,tipo) {
 function soloAlfaNumerico(e){
     key = e.keyCode || e.which;
     tecla = String.fromCharCode(key).toLowerCase();
-    letras = " áéíóúabcdefghijklmnñopqrstuvwxyz0123456789:,%-";
+    letras = " áéíóúabcdefghijklmnñopqrstuvwxyz0123456789:,%-|";
     especiales = [8, 13, 9, 39, 46, 35, 36];
     tecla_especial = false
     for(var i in especiales){
@@ -542,7 +542,7 @@ function soloNumericoCodigoSerie(e){
     key = e.keyCode || e.which;
     tecla = String.fromCharCode(key).toLowerCase();
     letras = "-0123456789abcdefghijklmnopqrstuvwxyz";
-    especiales = [8, 13, 9];
+    especiales = [8, 13, 9, 39, 46, 35, 36];
     tecla_especial = false
     for(var i in especiales){
         if(key == especiales[i]){
@@ -607,3 +607,43 @@ function compararIgualdadFechas(Fecha1, Fecha2) {
     else return true;
 }
 
+function formatDineroTotal(numero) {
+    
+    var num = new Number(numero);
+    num = num.toString();
+    
+    if(isNaN(num)) num = "0";
+    
+    num = Math.round(num*100)/100;
+    num = Math.round(num*10)/10;
+    //more  alert(num);
+    var sign = (num == (num = Math.abs(num)));
+    num = num.toFixed(2);
+    return (((sign)?'':'-') + num );   
+}
+
+function FormatPreciosTPV(Precio){
+    switch(cMetodoRedondeo){
+    case 'SR':
+	Precio = parseFloat(Precio).toFixed(2);
+	break;
+    case 'RDE':
+	Precio = formatDineroTotal(Precio);
+	break;
+    case 'RIE':
+	var xresto = Precio%1;
+	if(xresto == 0)
+	    Precio = formatDineroTotal(Precio);
+	if(xresto > 0.0 && xresto < 0.5)
+	    Precio = formatDineroTotal(parseInt(Precio)+0.5);
+	if(xresto > 0.5)
+	    Precio = formatDineroTotal(Math.round(Precio));
+	break;
+    }
+    return Precio;
+}
+
+Number.prototype.round = function(places) {
+    // Redondeo con precision 
+    return +(Math.round(this + "e+" + places)  + "e-" + places);
+}

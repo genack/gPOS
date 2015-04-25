@@ -45,7 +45,7 @@ function VerMovimiento(){
 
 //Limpieza de Box
 function VaciarBusquedaMovimiento(){
-    var lista = id("listadoMovimiento");
+    var lista = id("my_tree_children");
 
     for (var i = 0; i < ilinealistamovimiento; i++) { 
         kid = id("linealistamovimiento_"+i);					
@@ -185,7 +185,7 @@ function AddLineaMovimiento(item,IdKardex,FechaMovimiento,KardexOperacion,Cantid
 			    Menudeo,Documento,Detalle){
 
     var lista = id("listadoMovimiento");
-    var xnumitem,xitem,xFechaMovimiento,xKardexOperacion,xCantidad,xCostoUnitario,xUsuario,xSaldoCantidad,xTipoMovimiento,xProducto,xAlmacen,xDocumento,xDetalle,xLocal,vExistencias,vResto,vCantidad,vSaldoCantidad;
+    var xnumitem,xitem,xFechaMovimiento,xKardexOperacion,xCantidad,xCostoUnitario,xUsuario,xSaldoCantidad,xTipoMovimiento,xProducto,xAlmacen,xDocumento,xDetalle,xLocal,vExistencias,vResto,vCantidad,vSaldoCantidad,xrow;
 
     //Cantidad
     vMenudeo       = parseFloat(Menudeo);
@@ -199,121 +199,134 @@ function AddLineaMovimiento(item,IdKardex,FechaMovimiento,KardexOperacion,Cantid
     vTtExistencias = (vMenudeo)? vSaldoCantidad+' '+Contenedor+' '+vResto:vSaldoCantidad;
     vTtExistencias = vTtExistencias+' '+Unidades;
 
-    xitem = document.createElement("listitem");
+    //treechildren
+    //treeitem
+    //treerow
+    //treecell
+    var treeChildren = document.getElementById("my_tree_children");
+
+    xitem = document.createElement("treeitem");
+    xrow  = document.createElement("treerow");
     xitem.value = IdKardex;
+    xitem.setAttribute("value",IdKardex);
     xitem.setAttribute("id","linealistamovimiento_"+ilinealistamovimiento);
     ilinealistamovimiento++;
 
-    xnumitem = document.createElement("listcell");
+    xnumitem = document.createElement("treecell");
     xnumitem.setAttribute("label",'  '+item+'.');
+    //xnumitem.setAttribute("value",IdKardex);
     xnumitem.setAttribute("style","text-align:left");
 
-    xFecha = document.createElement("listcell");
+    xFecha = document.createElement("treecell");
     xFecha.setAttribute("label",FechaMovimiento);
     xFecha.setAttribute("style","text-align:center;");
     xFecha.setAttribute("id","codigo_"+IdKardex);
 
-    xDocumento = document.createElement("listcell");
+    xDocumento = document.createElement("treecell");
     xDocumento.setAttribute("label",Documento);
     xDocumento.setAttribute("collapsed",vDocumento);
     xDocumento.setAttribute("style","text-align:left;font-weight:bold;");
     xDocumento.setAttribute("id","documento_"+IdKardex);
 
-    xDetalle = document.createElement("listcell");
+    xDetalle = document.createElement("treecell");
     xDetalle.setAttribute("label",Detalle);
     xDetalle.setAttribute("id","detalle_"+IdKardex);
     xDetalle.setAttribute("style","text-align:left;");
 
-    xProducto = document.createElement("listcell");
+    xProducto = document.createElement("treecell");
     xProducto.setAttribute("label",Producto);
     xProducto.setAttribute("id","producto_"+IdKardex);
     xProducto.setAttribute("style","text-align:left;font-weight:bold;");
 
-    xIdProducto = document.createElement("listcell");
+    xIdProducto = document.createElement("treecell");
     xIdProducto.setAttribute("value",IdProducto);
     xIdProducto.setAttribute("collapsed","true");
     xIdProducto.setAttribute("id","idproducto_"+IdKardex);
 
-    xIdLocal = document.createElement("listcell");
+    xIdLocal = document.createElement("treecell");
     xIdLocal.setAttribute("value",IdLocal);
     xIdLocal.setAttribute("collapsed","true");
     xIdLocal.setAttribute("id","idlocal_"+IdKardex);
 
-    xCantidad = document.createElement("listcell");
+    xCantidad = document.createElement("treecell");
     xCantidad.setAttribute("value",Cantidad);
     xCantidad.setAttribute("collapsed","true");
     xCantidad.setAttribute("id","cantidad_"+IdKardex);
 
-    xSaldo = document.createElement("listcell");
+    xSaldo = document.createElement("treecell");
     xSaldo.setAttribute("label",SaldoCantidad);
     xSaldo.setAttribute("collapsed","true");
     xSaldo.setAttribute("id","saldo_"+IdKardex);
 
-    xOperacion = document.createElement("listcell");
+    xOperacion = document.createElement("treecell");
     xOperacion.setAttribute("label",TipoMovimiento+' - '+KardexOperacion);
     xOperacion.setAttribute("id","operacion_"+IdKardex);
     xOperacion.setAttribute("style","text-align:left;");
 
-    xMovimiento = document.createElement("listcell");
+    xMovimiento = document.createElement("treecell");
     xMovimiento.setAttribute("label",TipoMovimiento);
     xMovimiento.setAttribute("id","movimiento_"+IdKardex);
 
-    xExistencias = document.createElement("listcell");
+    xExistencias = document.createElement("treecell");
     xExistencias.setAttribute("label",vExistencias);
     xExistencias.setAttribute("id","existencias_"+IdKardex);
     xExistencias.setAttribute("style","text-align:right;font-weight:bold;");
 
-    xCosto = document.createElement("listcell");
+    xCosto = document.createElement("treecell");
     xCosto.setAttribute("label",CostoUnitario);
     xCosto.setAttribute("id","costo_"+IdKardex);
     xCosto.setAttribute("style","text-align:right;");
 
-    xTtExistencias = document.createElement("listcell");
+    xTtExistencias = document.createElement("treecell");
     xTtExistencias.setAttribute("label",vTtExistencias);
     xTtExistencias.setAttribute("id","ttexistencias_"+IdKardex);
     xTtExistencias.setAttribute("style","text-align:right;font-weight:bold; ");
 
-    xImporte = document.createElement("listcell");
+    xImporte = document.createElement("treecell");
     xImporte.setAttribute("label", CostoTotal);
     xImporte.setAttribute("style","text-align:right;");
     xImporte.setAttribute("id","importe_"+IdKardex);
 
-    xUsuario = document.createElement("listcell");
+    xUsuario = document.createElement("treecell");
     xUsuario.setAttribute("label", Usuario);
     xUsuario.setAttribute("style","text-align:center;");
 
-    xAlmacen = document.createElement("listcell");
+    xAlmacen = document.createElement("treecell");
     xAlmacen.setAttribute("label", Almacen);
     xAlmacen.setAttribute("style","text-align:left;");
 
 
-    xitem.appendChild( xnumitem );
-    xitem.appendChild( xAlmacen );
-    xitem.appendChild( xFecha );
-    xitem.appendChild( xProducto );
-    //xitem.appendChild( xMovimiento );
-    xitem.appendChild( xOperacion );
-    xitem.appendChild( xDocumento );
-    //xitem.appendChild( xDetalle );
-    xitem.appendChild( xExistencias );
-    xitem.appendChild( xCosto );
-    //xitem.appendChild( xImporte );
-    xitem.appendChild( xTtExistencias );
-    //xitem.appendChild( xUsuario );
-    xitem.appendChild( xIdProducto );
-    xitem.appendChild( xIdLocal );
-    xitem.appendChild( xCantidad );
-    xitem.appendChild( xSaldo );
-    lista.appendChild( xitem );		
+    xrow.appendChild( xnumitem );
+    xrow.appendChild( xAlmacen );
+    xrow.appendChild( xFecha );
+    xrow.appendChild( xProducto );
+    //xrow.appendChild( xMovimiento );
+    xrow.appendChild( xOperacion );
+    xrow.appendChild( xDocumento );
+    //xrow.appendChild( xDetalle );
+    xrow.appendChild( xExistencias );
+    xrow.appendChild( xCosto );
+    //xrow.appendChild( xImporte );
+    xrow.appendChild( xTtExistencias );
+    //xrow.appendChild( xUsuario );
+    xrow.appendChild( xIdProducto );
+    xrow.appendChild( xIdLocal );
+    xrow.appendChild( xCantidad );
+    xrow.appendChild( xSaldo );
+
+    xitem.appendChild( xrow );		
+    treeChildren.appendChild( xitem );		
 }
 
-function RevisarMovimientoSeleccionada(){
+function RevisarMovimientoSeleccionada( ){
 
-    var idex      = id("listadoMovimiento").selectedItem;
+    var idex  = id("listadoMovimiento");
+    var xitem = idex.contentView.getItemAtIndex( idex.currentIndex );
+
     if(!idex) return;
 
-    var xproducto = id("idproducto_"+idex.value).getAttribute("value");
-    var xlocal    = id("idlocal_"+idex.value).getAttribute("value");
+    var xproducto = id("idproducto_"+xitem.value).getAttribute("value");
+    var xlocal    = id("idlocal_"+xitem.value).getAttribute("value");
     var listado   = id("listadoMovimiento");
     var resumen   = id("resumenMovimiento");
     var busqueda  = id("busquedaMovimiento");

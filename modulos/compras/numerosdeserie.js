@@ -189,10 +189,18 @@ function selcKBoxSerie(){
     actualizarTotalNS();
 }
 
+function quitareditarns(){
+    var idex = xid('lista').selectedItem;
+    if(!idex) return;
+    var xns  = idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
 
+    xid("numerodeserie").value = xns;  
+    quitarns();
+    xid("numerodeserie").focus();
+}
 function quitarns(){
     var lista=xid('lista');
-    var ini =lista.itemCount;
+    var ini  =lista.itemCount;
     lista.removeItemAt(lista.selectedIndex);
     var fin = lista.itemCount;
     if(ini!=fin) 
@@ -400,7 +408,7 @@ function soloAlfaNumericoSerie(e){
     key = e.keyCode || e.which;
     tecla = String.fromCharCode(key).toLowerCase();
     letras = "abcdefghijklmnopqrstuvwxyz0123456789-";
-    especiales = [8, 13];
+    especiales = [8, 13, 9, 35, 36, 37, 39];
     tecla_especial = false
     for(var i in especiales){
         if(key == especiales[i]){

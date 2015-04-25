@@ -433,6 +433,7 @@ switch ($modo) {
 	       $costo         = (isset($_GET["costo"]))? CleanDinero($_GET["costo"]):0;
 	       $tituloCart    = CleanCadena($_GET["titulo"]);
 	       $textounidades = $unidades;
+
 	       $series        = obtenerSeriesCompraProducto($id,$idpedidodet,true);
 	       $cantidadNS    = obtenerCantidadSeriesCompra($id,$idpedidodet);
 	       $Garantia      = getGarantiaPedidoDet($idpedidodet,$id);

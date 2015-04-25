@@ -108,7 +108,7 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
     $checkigv     = (getSesionDato("incImpuestoDet")=='true')?'CHECKED':'';
     $checkipc     = (getSesionDato("incPercepcion")=='true')?'CHECKED':'';
     $checkcredt   = (getSesionDato("aCredito")=='true')?'CHECKED':'';
-    $admiteCompra = ( selAdmite('Compras') )? " disabled='true' ":"";
+    $admiteCompra = (!selAdmite('Compras') );
     $tipodoc      = ( selAdmite('Compras') )? "O":$tipodoc;
     $checkF       = '';
     $checkO       = '';
@@ -195,8 +195,9 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
       <div id='t_comprov' class='formaTitulo'>$titulo</div>
     </td>
   </tr>
-  <tr>   
-   <td  class='lh' colspan='3' style='padding: 0em 1em 0.3em 0.6em'>
+  <tr>
+  <td  class='lh' colspan='3' style='padding: 0em 1em 0.3em 0.6em'>
+
     <div id=prov style='display: none;color:#000000;'> 
       <b>Proveedor :</b>
       <input type=hidden id=IdProvHab name=IdProvHab value='$idprov' > 
@@ -209,10 +210,14 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
     &nbsp;&nbsp;&nbsp;&nbsp; 
       <b>Presupuesto :</b>
 	<select>
-		<option $admiteCompra onclick=".'"'."s_radioComprobante('F');".'"'."  $checkF >Factura</option>
-		<option $admiteCompra onclick=".'"'."s_radioComprobante('R');".'"'."  $checkR>Boleta</option>
-		<option $admiteCompra onclick=".'"'."s_radioComprobante('G');".'"'."  $checkG>Albarán</option>
-		<option $admiteCompra onclick=".'"'."s_radioComprobante('SD');".'"'."  $checkSD>Ticket</option>
+                ";
+    if($admiteCompra){
+      echo "<option  onclick=".'"'."s_radioComprobante('F');".'"'."  $checkF >Factura</option>
+		<option  onclick=".'"'."s_radioComprobante('R');".'"'."  $checkR>Boleta</option>
+		<option  onclick=".'"'."s_radioComprobante('G');".'"'."  $checkG>Albarán</option>
+		<option  onclick=".'"'."s_radioComprobante('SD');".'"'."  $checkSD>Ticket</option>";
+    }
+        echo "
 	</select>
    </td>
   </tr>
@@ -811,6 +816,8 @@ switch($modo){
 		$coddoc  = ($detadoc[0]=="SD")? $IdLocal.'-'.$IdOrden:$coddoc;
 		$xdocum  = $nomdoc." Nro. ".$coddoc;
 		$xlocal  = "Local ".$nomdes;
+		$xrecibir= ( $nomdoc == "Pedido" )? "style='display:none'":"";
+
 		echo _("<center>
                           <div class='forma' style='width: 200px'>
                             
@@ -823,7 +830,7 @@ switch($modo){
                                 <input class='btn item' type='button' value='Ver ".$nomdoc."' 
                                        onclick='".$linkdoc."(".$IdOrden.")'>
                              </li>
-                             <li class='auxitem'>
+                             <li class='auxitem' ".$xrecibir.">
                                  <input class='btn item' type='button' value='Recibir ".$nomdoc."' 
                                         onclick='verRecibirCompra()'>
                              </li>

@@ -46,31 +46,14 @@ switch($modo) {
 			echo 0;
 		break;
 	
-	
-	case "mostrarCliente":		
-		$idcliente 	= CleanID($_GET["idcliente"]);
-		
-		$datos = DetallesCliente($idcliente);		
-		
-		VolcandoXML( Traducir3XML($datos),"clientes");
-		exit(); 		
-		break;	
-
-	
 	case "realizarAbono":
 		$id = CleanID($_GET["IdComprobante"]);
-		$pago = CleanFloat($_GET["pago"]);
-		
-		/*
-		+ "&pago_efectivo=" + parseFloat(abono_efectivo)
-		+ "&pago_bono=" + parseFloat(abono_bono)
-		+ "&pago_tarjeta=" + parseFloat(abono_tarjeta)*/
 		
 		$pago_efectivo 	= CleanFloat($_GET["pago_efectivo"]);
-		$pago_bono 		= CleanFloat($_GET["pago_bono"]);
-		$pago_tarjeta 	= CleanFloat($_GET["pago_tarjeta"]);				
-		
-		$newpendiente = OperarPagoSobreTicket($id,$pago_efectivo, $pago_bono, $pago_tarjeta);
+		$pago_bono 	= CleanFloat($_GET["pago_bono"]);
+		$pago_tarjeta 	= CleanFloat($_GET["pago_tarjeta"]);
+		$concepto       = CleanText($_GET["pago_concepto"]);;
+		$newpendiente   = OperarPagoSobreTicket($id,$pago_efectivo, $pago_bono, $pago_tarjeta,$concepto);
 		echo $newpendiente;//Cantidad pendiente o cero.				
 		break;
 	
@@ -86,6 +69,7 @@ switch($modo) {
 
 			$unidades = CleanInt($_POST["Unidades"]);
 			$costo    = CleanFloat($_POST["CosteSinIVA"]);
+			$costoop  = CleanFloat($_POST["CostoOP"]);
 			$vfv      = CleanCadena($_POST["vFV"]);
 			$vlt      = CleanCadena($_POST["vLT"]);
 			$PVD      = CleanCadena($_POST["vPVD"]);
@@ -104,7 +88,8 @@ switch($modo) {
 						       $importe,0);
 			//Ventas Precios
 			registrarPreciosVentaAlmacenProducto($PVD,$PVDD,$PVC,$PVCD,$id);
-
+			$IdLocal = CleanID(getSesionDato("IdTienda"));
+			guardarCostoOperativo($costoop,$id,$IdLocal);
 			echo $id;
 		}  else {
 			echo "0";
@@ -143,9 +128,10 @@ switch($modo) {
 		break;
 
 	case "mostrarDetallesComprasRecibir":
-		$IdPedido  = CleanText($_GET["IdPedido"]);
-		$IdAlmacen = CleanText($_GET["IdAlmacen"]);
-		$datos     = DetallesCompraRecibir($IdPedido,$IdAlmacen);
+		$IdPedido    = CleanText($_GET["IdPedido"]);
+		$IdAlmacen   = CleanText($_GET["IdAlmacen"]);
+		$IdProveedor = CleanID($_GET["xidprov"]);
+		$datos       = DetallesCompraRecibir($IdPedido,$IdAlmacen,$IdProveedor);
 		VolcandoXML( Traducir2XML($datos),"detalles");				
 		exit();				
 		break;
@@ -230,6 +216,7 @@ switch($modo) {
         case "syncStockAlmacen":
 	       $IdLocal = getSesionDato("IdTiendaDependiente");
 	       $time    = CleanInt($_POST["timeSyncTPV"]);
+	       $xsync   = setSyncTPV('Stock');
 	       $xjsOut  = syncUnidAlmacen($time,$IdLocal);
 	       echo $xjsOut;
 	       exit();
@@ -251,6 +238,7 @@ switch($modo) {
         case "syncClientesTPV":
 	       $time = CleanInt($_GET["tsyncClient"]);//segundos
 	       $xout = getClientesTPV($time);
+	       $xsync= setSyncTPV('Cliente');
 
 	       echo $xout;
 	       exit();
@@ -259,6 +247,7 @@ switch($modo) {
         case "syncPresupuestosTPV":
 	       $tipo = CleanText($_GET["tipopresupuesto"]);
 	       $xout = obtenerListaPresupuestosTPV($tipo);
+	       $xsync= setSyncTPV($tipo);
 
 	       echo $xout;
 	       exit();
@@ -267,6 +256,7 @@ switch($modo) {
         case "syncMProductosTPV":
 	       $estado = trim(CleanRealMysql($_GET["Estado"]));
 	       $xout   = obtenerListaMProductosTPV($estado);
+	       $xsync  = setSyncTPV('MetaProducto');
 
 	       echo $xout;
 	       exit();
@@ -884,21 +874,24 @@ switch($modo) {
 		  break;
 		case 7:
 		  $campoxdato  = " ImportePercepcion = '".$xdato."'";
-		  $campoxdato .= ",ImportePago = TotalImporte+ImporteFlete+ '".$xdato."' ";
-		  $campoxdato .= ",ImportePendiente = TotalImporte+ImporteFlete+ '".$xdato."' ";
+		  $campoxdato .= ",ImportePago = TotalImporte+ '".$xdato."' ";
+		  $campoxdato .= ",ImportePendiente = TotalImporte+ '".$xdato."' ";
 		  echo sModificarCompra($xid,$campoxdato,false,false);
 		  break;
 		case 19:
 		  $campoxdato  = " ImporteFlete = '".$xdato."'";
-		  $campoxdato .= ",ImportePago = TotalImporte+ImportePercepcion+ '".$xdato."' ";
-		  $campoxdato .= ",ImportePendiente = TotalImporte+ImportePercepcion+ '".$xdato."' ";
 		  echo sModificarCompra($xid,$campoxdato,false,false);
 		  break;
 		case 8:
 		  $estado =" EstadoDocumento = 'Cancelada' ";
 		  $codigo = " Codigo='".$xdato."',TipoComprobante='Ticket' ";
 		  $campoxdato = ($xdato=='Ticket')?$estado:$codigo;
+
+		  //Detalle NS
+		  sModificarCompra2EliminarNS($xid);//libera NS
+		  //Encabezado
 		  echo sModificarCompra($xid,$campoxdato,false,false);
+
 		  break;
 		case 9:
 		  echo sConsolidaCompras($xid,$xdato);
@@ -966,6 +959,9 @@ switch($modo) {
 		$PVC     = $xPC[0];
 		$PVCD    = $xPC[1];
 		echo guardarPreciosVentaAlmacen($PVC,$PVCD,"PVC",$xid,$IdLocal);
+		// Costo Operativo
+		$COP     = $xPV[2];
+		echo guardarCostoOperativo($COP,$xid,$IdLocal);
 		exit();
 		break;
 
@@ -976,11 +972,21 @@ switch($modo) {
  		//$campoxdato = " EstadoDocumento = 'Pendiente' ";
 		$Operacion  = CleanID($_GET["xoperacion"]);//1:Compras 3:Traslado interno
 
+		if(verificarEstadoDocumento($xid)) {
+		  echo 'Registro~';
+		  return;
+		}
+
+		if(validaIntegridadSeries($xid)) {
+		  echo 'Series~';
+		  return;
+		}
+
 		registrarPedidoKardexFifo($xid,$xdato,$IdLocal,$Operacion,false,false,false);
 		actualizarStatusPedido($xid,'2');
 		actualizarEstadoDocumentoPedido($xid);
 		//sModificarCompra($xid,$campoxdato,false,false);
-		echo 1; 
+		echo "1~1"; 
 		exit();
 		break;
 
@@ -1032,6 +1038,7 @@ switch($modo) {
 
          case "DevolverComprobanteTPV":
 	   $IdComprobante = CleanID($_GET["comprobante"]);
+	   $Items         = CleanText($_GET["items"]);
 	   $Monto         = CleanDinero($_GET["montocomprobante"]);
 	   $Pendiente     = CleanDinero($_GET["pendientecomprobante"]);
 	   $Concepto      = CleanText($_GET["concepto"]);
@@ -1040,7 +1047,7 @@ switch($modo) {
 
 	   //Obtenemos cantidad devuelta
 	   $Presupuesto  = DevolverComprobanteTPV($IdComprobante,$Monto,
-						  $iDependiente,$Concepto);
+						  $iDependiente,$Concepto,$Items);
 	   echo $Presupuesto;
 	   exit();
  	   break;
@@ -1084,6 +1091,53 @@ switch($modo) {
 	   else
 	     echo "fail";
 	   
+	   break;
+	case "realizarAbonoComprobanteCliente":
+	   $IdComprobante = CleanID($_GET["IdComprobanteVenta"]);
+	   $PagoEfectivo  = CleanFloat($_GET["pago_efectivo"]);
+	   $Comprobante   = CleanText($_GET["comprobante"]);
+	   $numComprobante= CleanText($_GET["numcomprobante"]);
+	   $IdLocal       = CleanID(getSesionDato("IdTienda"));
+	   $IdUsuario     = CleanID(getSesionDato("IdUsuario"));
+	   $IdMoneda      = 1;
+
+	   $mov           = new movimientogral;
+	   $FechaApertura = $mov->getAperturaCajaGral($IdMoneda,$IdLocal);
+	   $cantidad      = $PagoEfectivo;
+	   $concepto      = "Venta";
+	   $IdPartida     = obtenerPartidaCajaGral("Cobro Comprobantes","CG","Ingreso");
+	   $cambiomoneda  = 1;
+	   $fechacaja     = CleanCadena($FechaApertura);
+	   $operacion     = "Ingreso";
+	   $documento     = $Comprobante;
+	   $codigodoc     = $numComprobante;
+	   $proveedor     = "";
+
+	   $mov           = new movimientogral;
+	   $IdArqueo      = $mov->getIdArqueoEsCerrado($IdMoneda,$IdLocal);
+
+	   if(!$IdArqueo){
+	     echo 'cjacda';
+	     return;
+	   }
+     
+	   $id =  EntregarOperacionGral($IdLocal,$cantidad,$concepto,$IdPartida,$IdMoneda,
+					$cambiomoneda,$operacion,$fechacaja,$IdUsuario,
+					$IdArqueo,$documento,$codigodoc,$proveedor,
+					$IdComprobante);
+
+	   $campo        = 'ImportePendiente';
+	   $Pendiente    = obtnerPendienteComprobante($IdComprobante);
+	   $newpendiente = actualizarPendienteComprobante($IdComprobante,$Pendiente,
+							  $cantidad);
+	   echo $newpendiente;//Cantidad pendiente o cero.				
+	   break;
+
+	case "mostrarDetallesCobro":
+	   $IdComprobante = CleanText($_GET["IdComprobante"]);
+	   $datos    = DetallesCobro($IdComprobante);
+	   VolcandoXML( Traducir2XML($datos),"detallescobro");
+	   exit();				
 	   break;
 
         case "checkServicio":
@@ -1170,6 +1224,46 @@ switch($modo) {
     	   exit();
  	   break;
 
+         case "obtenerdatasubfamilia":
+	   $datos = ObtenerDataSubFamilia();
+	   VolcandoXML( Traducir2XML($datos),"SubFamilias");
+	   break;
+	   
+         case "setTipoVentaDependiente":
+	   $xtipoventa  = CleanText($_GET["xtipoventa"]);
+	   if ( !esTipoVenta( $xtipoventa ) ) return false;
+	   //if ($xtipoventa == 'rc') 
+	   //if(!Admite("B2B") ) return false;
+	   setTipoVenta($xtipoventa); 	
+	   echo $xtipoventa;
+	   return;
+
+	   exit();
+	   break;
+
+         case "getsyncTPV":
+	   echo ":".obtenerSyncTPV();
+	   exit();
+	   break;
+        case "existelocal":
+	   $identificacion = CleanCadena($_GET["ident"]);
+	   $idlocal = CleanID($_GET["idl"]);
+	   echo verficarExistenciaLocal($identificacion,$idlocal);
+	   exit();
+	   break;
+        case "existeuser":
+	   $identificacion = CleanCadena($_GET["ident"]);
+	   $iduser = CleanID($_GET["idu"]);
+	   echo verficarExistenciaUsuario($identificacion,$iduser);
+	   exit();
+	   break;
+
+        case "creaProforma":
+           $IdOrdenCompra = CleanID($_GET["xidoc"]);
+	   $IdCliente     = CleanID($_GET["xidc"]);
+	   $CodigoOC      = CleanText($_GET["xidc"]);
+	   echo crearProforma($IdOrdenCompra,$IdCliente,$CodigoOC);
+	   break;
 }
 
 ?>

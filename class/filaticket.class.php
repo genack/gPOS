@@ -311,7 +311,7 @@ class filaTicket {
 		   {
 
 		     $axrow       = explode(":", $xrow); 
-		     $idpedidodet = ($axrow[1])? $axrow[0] : 0;
+		     $idpedidodet = (isset($axrow[1]) )? $axrow[0] : 0;
 		     $xnseries    = (isset($axrow[2]))? $axrow[2] : false;
 
 		     //Series...

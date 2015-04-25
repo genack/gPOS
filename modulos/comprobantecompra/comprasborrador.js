@@ -401,7 +401,7 @@ function AddLineaCompra(item,Almacen,Proveedor,Codigo,Documento,Registro,Emision
     xPercepcion.setAttribute("id","percepcion_"+IdPedido);
 
     xFlete = document.createElement("listcell");
-    xFlete.setAttribute("label", Simbolo+' '+formatDinero(ImporteFlete));
+    xFlete.setAttribute("label", cMoneda[1]['S'] +' '+formatDinero(ImporteFlete));
     xFlete.setAttribute("collapsed",vFlete);
     xFlete.setAttribute("style","text-align:right");
     xFlete.setAttribute("value",ImporteFlete);
@@ -747,9 +747,9 @@ function getNuevoDatoCompra(xocs,campo,cvalue,mj,mja){
 
 	//Filtro Numero/Caracteres
 	if( xfh != '' || xfh != cCodigo || axfh.length == 2 )
-	    if( patron .test(axfh[0]) && patron .test(axfh[1]) )
+	    if( patron .test(axfh[1]) )
 		if( axfh[0] !='' && axfh[1] != '' )
-		    if( axfh[0].length < 4 && axfh[1].length < 8 )
+		    if( axfh[0].length < 5 && axfh[1].length < 8 )
 			esCodigo = false;
 	
 	if(esCodigo)
@@ -778,9 +778,9 @@ function getNuevoDatoCompra(xocs,campo,cvalue,mj,mja){
 	    var axfh   = afh[i].split('-');
 	    var patron = /^\d*$/;    
 
-	    if ( patron .test(axfh[0]) && patron .test(axfh[1]) && axfh.length == 2 )
+	    if ( patron .test(axfh[1]) && axfh.length == 2 )
 	    {
-		if (!(axfh[0].length < 4 && axfh[1].length < 8)) 
+		if (!(axfh[0].length < 5 && axfh[1].length < 8)) 
 		    return getNuevoDatoCompra(xocs,campo,cvalue,true,mja);//Inicia
 	    }
 	    else
@@ -812,9 +812,9 @@ function getNuevoDatoCompra(xocs,campo,cvalue,mj,mja){
 	    var axfh   = afh[i].split('-');
 	    var patron = /^\d*$/;    
 
-	    if ( patron .test(axfh[0]) && patron .test(axfh[1]) && axfh.length == 2 )
+	    if ( patron .test(axfh[1]) && axfh.length == 2 )
 	    {
-		if (!(axfh[0].length < 4 && axfh[1].length < 8))
+		if (!(axfh[0].length < 5 && axfh[1].length < 8))
 		    return getNuevoDatoCompra(xocs,campo,cvalue,true,mja);//Inicia
 	    }
 	    else
@@ -913,9 +913,9 @@ function ModificarCompra(xocs,xdet){
 
 	//Filtro Numero/Caracteres
 	if( xfh != '' || xfh != cCodigo || axfh.length == 2 )
-	    if( patron .test(axfh[0]) && patron .test(axfh[1]) )
+	    if( patron .test(axfh[1]) )
 		if( axfh[0] !='' && axfh[1] != '' )
-		    if( axfh[0].length < 4 && axfh[1].length < 8 )
+		    if( axfh[0].length < 5 && axfh[1].length < 8 )
 			esCodigo = false;
 	
 	if(esCodigo) id("xCodigo").value = cCodigo;

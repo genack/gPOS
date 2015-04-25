@@ -114,6 +114,10 @@ radiogroup#rgModosTicket radio[selected="true"] {
 	font-size: 15px;
 }
 
+.xnormalmine {
+	font-size: 12px;
+}
+
 .xmedia {
           font-size: 30px;
           margin-top: 30px;
@@ -169,3 +173,16 @@ radiogroup#rgModosTicket radio[selected="true"] {
 .salir {
 	font-size: 18px
 }
+
+listitem:hover{ 
+                border-top: 1px dotted #AA0000;
+                border-bottom: 1px dotted #AA0000;
+ }
+
+.sync_pause{ 
+          list-style-image: url("../img/gpos_tpvsynch_pause.png");
+          }
+
+.sync_run{ 
+          list-style-image: url("../img/gpos_tpvsynch_run.png");
+          }

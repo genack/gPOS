@@ -99,7 +99,8 @@ function MostrarProveedorParaEdicion($id, $lang) {
 	$ot->campo(_("Contacto"), "Contacto", $oProveedor);
 	$ot->campo(_("Cargo"), "Cargo", $oProveedor);
 	$ot->campo(_("Email"), "Email", $oProveedor);
-	$ot->campo(_("Cuenta bancaria"), "CuentaBancaria", $oProveedor);
+	$ot->campo(_("CTA Moneda Principal"), "CuentaBancaria", $oProveedor);
+	$ot->campo(_("CTA Moneda Secundaria"), "CuentaBancaria2", $oProveedor);
 	$ot->campo(_("Número fiscal"), "NumeroFiscal", $oProveedor);
 	$ot->campo(_("Comentarios"), "Comentarios", $oProveedor);	
 	
@@ -263,8 +264,10 @@ function CrearProveedor($comercial, $legal, $direccion, $poblacion,
 
 }
 
-function ModificarProveedor($id,$comercial, $legal, $direccion, $poblacion, $cp, $email, $telefono1, 
-	$telefono2, $contacto, $cargo, $cuentabancaria, $numero, $comentario,	$IdModPagoHabitual,$paginaweb,$idpais	){
+function ModificarProveedor($id,$comercial, $legal, $direccion, $poblacion, $cp, $email, 
+			    $telefono1, $telefono2, $contacto, $cargo, $cuentabancaria, 
+			    $numero, $comentario, $IdModPagoHabitual,$paginaweb,$idpais,
+			    $cuentabancaria2 ){
 	$oProveedor = new proveedor;
 	if (!$oProveedor->Load($id)){
 		error(__FILE__ . __LINE__ ,"W: no pudo mostrareditar '$id'");
@@ -287,6 +290,7 @@ function ModificarProveedor($id,$comercial, $legal, $direccion, $poblacion, $cp,
 	$oProveedor->set("CuentaBancaria", $cuentabancaria, FORCE);
 	$oProveedor->set("NumeroFiscal", $numero, FORCE);
 	$oProveedor->set("Comentarios", $comentario, FORCE);
+	$oProveedor->set("CuentaBancaria2", $cuentabancaria2, FORCE);
 	
 	if($IdModPagoHabitual)
 		$oProveedor->set("IdModPagoHabitual", $IdModPagoHabitual, FORCE);
@@ -331,10 +335,12 @@ switch ($modo) {
 	       $IdModPagoHabitual = CleanID($_POST["IdModPagoHabitual"]);
 	       $paginaweb = CleanUrl($_POST["PaginaWeb"]);
 	       $idpais    = CleanID($_POST["IdPais"]);
+	       $cuentabancaria2 = CleanCC($_POST["CuentaBancaria2"]);
 
-		ModificarProveedor($id,$comercial, $legal, $direccion, $poblacion, $cp, $email,
-			 $telefono1, $telefono2, $contacto, $cargo, $cuentabancaria, $numero, $comentario,
-			 	$IdModPagoHabitual,$paginaweb,$idpais);
+		ModificarProveedor($id,$comercial, $legal, $direccion, $poblacion, $cp, 
+				   $email, $telefono1, $telefono2, $contacto, $cargo, 
+				   $cuentabancaria, $numero, $comentario, $IdModPagoHabitual,
+				   $paginaweb,$idpais,$cuentabancaria2);
 		//Separador();
 		PaginaBasica();
 		break;

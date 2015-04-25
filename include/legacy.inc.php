@@ -264,7 +264,7 @@ function Enviar($texto){
 }
 
 function Hidden($name,$texto){
-	return "<input type=hidden name='$name' value='$texto'>";
+	return "<input type=hidden id='$name' name='$name' value='$texto'>";
 }
 
 //Lee de un post un checkbox

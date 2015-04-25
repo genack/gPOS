@@ -57,21 +57,14 @@ include ("class/pedidos.class.php");
 include ("class/subsidiario.class.php");
 include ("class/movimiento.class.php");
 include ("class/albaran.class.php");
-//include ("class/movimientogral.class.php");
 
 //CLASS OTHER MODULES
 include ("modulos/promociones/promociones.class.php");
-//include ("modulos/pagoscobros/pagodoc.class.php");
-//include ("modulos/pagoscobros/pago.class.php");
-//include ("modulos/ordenservicio/ordenservicio.class.php");
-//include ("modulos/ordenservicio/productosat.class.php");
 include ("modulos/clientes/cliente.class.php");
 include ("modulos/productos/productosinfo.class.php");
 include ("modulos/productos/familia.class.php");
 include ("modulos/productos/producto.class.php");
 include ("modulos/almacen/almacen.class.php");
-//include ("modulos/suscripciones/suscripciones.class.php");
-
 
 //TOOLS
 include ("tools/toolkit.php");

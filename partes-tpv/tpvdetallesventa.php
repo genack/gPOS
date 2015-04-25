@@ -84,9 +84,9 @@
   <!--/groupbox-->
 
   <!-- Ventas -->
-  <vbox >
+
     <spacer style="height:10px"/>
-    <hbox flex="1">
+    <hbox flex="0">
       <caption style="font-size:10px; font-weight: bold;" label="Comprobantes" />
       <hbox flex="1" pack="center">
 	<label value="Ventas:" />
@@ -176,6 +176,20 @@
 	<splitter class="tree-splitter" />		
 	<listcol/>
 	<splitter class="tree-splitter" />				
+	<listcol />
+	<splitter class="tree-splitter" />
+	<listcol />
+	<splitter class="tree-splitter" />
+	<listcol />
+	<splitter class="tree-splitter" />
+	<listcol />
+	<splitter class="tree-splitter" />
+	<listcol />
+	<splitter class="tree-splitter" />
+	<listcol />
+	<splitter class="tree-splitter" />
+	<listcol />
+	<splitter class="tree-splitter" />
 	<listcol flex="1"/>
 	<splitter class="tree-splitter" />
 	<!--listcol flex="1"/-->
@@ -191,10 +205,23 @@
 	<listheader label="DCTO(%)"/>	
 	<listheader label="PV" />
 	<listheader label="" />
+	<listheader label="" />
+	<listheader label="" />
+	<listheader label="" />
+	<listheader label="" />
+	<listheader label="" />
+	<listheader label="" />
+	<listheader label="" />
+	<listheader label="" />
       </listhead>
-
     </listbox>
-  </vbox>
+
+  <hbox align="end" pack="end" id="btnsDevolucion" collapsed="true" style="padding-right: 1em;margin-top:.8em">
+    <description value="Acciones Devolución:" style="font-size: 14px;margin: .7em;"/>
+    <button  image="img/gpos_compras.png" label=" Seleccionar Todo" oncommand="seleccionarALLDetalle2Devolucion()"  />
+    <button image="img/gpos_vaciarcompras.png" label=" Cancelar" oncommand="checkDevolucionDetalle(true)" />
+    <button image="img/gpos_fincompras.png" label=" Devolver" oncommand="DevolverVentaSeleccionada()"/>
+  </hbox>
   <box flex="1"/>
   <button class="media"  image="img/gpos_volver.png" label="Volver TPV" oncommand="VerTPV()" collapsed="false" id="btnreturndetventa"/>
 </vbox>

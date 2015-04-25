@@ -14,6 +14,10 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
   var cImpuesto = <?php echo getSesionDato("IGV"); ?>;
   var cIdLocal  = <?php echo getSesionDato("IdTienda"); ?>;
   var cUtilidad = <?php echo getSesionDato("MargenUtilidad"); ?>;
+  var cDescuentoGral  = <?php echo $DescuentoGral ?>;
+  var cMetodoRedondeo = "<?php echo $MetodoRedondeo ?>";
+  var COPImpuesto     = <?php echo $COPImpuesto ?>;
+
   //]]></script>
   <?php $Moneda = getSesionDato("Moneda"); getMonedaJS($Moneda); ?>
 
@@ -29,10 +33,10 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 <!-- Movimientos Encabezado-->
 <vbox> 
     <vbox pack="center" align="center">
-      <radiogroup id="rdioInvetarioAjuste" flex="1" orient="horizontal" style="font-size: 14px;font-weight: bold;" >
-	<radio id="ajust" value="ajust" label="Ajustes"  selected="true" oncommand="mostrarOperacion(this.id)" />
-	<radio id="invent" value="invent"  crop="right" label="Inventarios"   oncommand="mostrarOperacion(this.id)" />
-      </radiogroup>
+      <hbox id="rdioInvetarioAjuste" flex="1"  style="font-size: 14px;font-weight: bold;" >
+	<caption id="ajust" value="ajust" label="Ajustes" />
+	<caption id="invent" value="invent" label="Inventarios"  />
+      </hbox>
       <caption id="wtitleInventario" style="padding:0.4em;font-size: 14px;font-weight: bold;"
 	       label="<?php echo _("Inventario") ?>" collapsed="true"/>
       <textbox id="filtroOperacion" collapsed="true" value="5"/>
@@ -163,11 +167,6 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <button id="btnbuscar" label=" Buscar "  image="<?php echo $_BasePath; ?>img/gpos_buscar.png" 
 	      oncommand="BuscarMovimiento()"/>
     </vbox>
-    <vbox id="btnAltaRapida"  collapsed="true" style="margin-top:.9em">
-      <button  image="<?php echo $_BasePath; ?>img/gpos_altarapida.png" label=" Alta Rápida..." style="height:3.5em"
-	      oncommand="altarapidaArticulo()" <?php gulAdmite("Productos") ?> />
-    </vbox>
-
     <vbox style="margin-top:.9em">
       <button id="btnImprimirInventarioPDF" image="<?php echo $_BasePath; ?>img/gpos_pdf_ico.png" label=""
 	      oncommand="exportarInventario('pdf');" collapsed="false" />
@@ -306,8 +305,8 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <listheader label="Producto"/>
       <listheader label="Existencias"/>
       <listheader label="Costo"/>
-      <listheader label="PV"/>
-      <listheader label="PVD"/>
+      <listheader label="PVP"/>
+      <listheader label="PVPD"/>
       <listheader label="PVC"/>
       <listheader label="PVCD"/>
       <listheader label=""/>
@@ -382,14 +381,14 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
  	      <caption label="Costo" />
 	      <textbox style="text-align:right" id="xValorCompra"  size="40" onfocus="this.select()" 
 		       onkeypress="return soloNumeros(event,this.value)" 
-		       onblur="setCostoPrecios('costo',this.value)"/>
+		       onchange="setCostoPrecios('costo',this.value)"/>
 	    </row>
 
 	    <row>
-	      <caption label="Precio Compra" />
-	      <textbox style="text-align:right" id="xPrecioCompra"  size="40" onfocus="this.select()" 
+	      <caption label="Costo Operativo" />
+	      <textbox style="text-align:right" id="xCostoOP"  size="40" onfocus="this.select()" 
 		       onkeypress="return soloNumeros(event,this.value)" 
-		       onblur="setCostoPrecios('precio',this.value)" />
+		       onchange="setCostoPrecios('precio',this.value)" />
 	    </row>
 
 	    <spacer style="height:0.4em"/>
@@ -400,31 +399,31 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
 
 	    <row>
-	      <caption label="PVD" />
+	      <caption label="PVP" />
 	      <textbox style="text-align:right" id="xPVD"  size="40" onfocus="this.select()"
 		       onkeypress="return soloNumeros(event,this.value)" 
-		       onblur="setCostoPrecios('pvd',this.value)"/>
+		       onchange="setCostoPrecios('pvd',this.value)"/>
 	    </row>
 
 	    <row>
-	      <caption label="PVD/Dcto." />
+	      <caption label="PVP/Dcto." />
 	      <textbox style="text-align:right" id="xPVDD"  size="40" onfocus="this.select()" 
 		       onkeypress="return soloNumeros(event,this.value)" 
-		       onblur="setCostoPrecios('pvdd',this.value)"/>
+		       onchange="setCostoPrecios('pvdd',this.value)"/>
 	    </row>
 
 	    <row>
 	      <caption label="PVC" />
 	      <textbox style="text-align:right" id="xPVC"  size="40" onfocus="this.select()" 
 		       onkeypress="return soloNumeros(event,this.value)" 
-		       onblur="setCostoPrecios('pvc',this.value)"/>
+		       onchange="setCostoPrecios('pvc',this.value)"/>
 	    </row>
 
 	    <row>
 	      <caption label="PVC/Dcto." />
 	      <textbox style="text-align:right" id="xPVCD"  size="40" onfocus="this.select()"
 		       onkeypress="return soloNumeros(event,this.value)" 
-		       onblur="setCostoPrecios('pvcd',this.value)"/>
+		       onchange="setCostoPrecios('pvcd',this.value)"/>
 
 	    </row>
 	    <spacer style="height:0.8em"/>
@@ -528,6 +527,11 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	     oncommand="finalizaOperacionInventario()" collapsed="true" 
              <?php gulAdmite("Ajustes") ?>/>
 
+    <button flex="1" id="btnAltaRapida" style="font-weight: bold;font-size:11px;" 
+	    image="<?php echo $_BasePath; ?>img/gpos_altarapida.png" label=" Alta Rápida..."
+	    oncommand="altarapidaArticulo()" collapsed="true" 
+	    <?php gulAdmite("Productos") ?> />
+
   </hbox>
 </vbox>
 
@@ -535,7 +539,9 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
 <script>//<![CDATA[
   VerMovimiento();
+<?php echo "mostrarOperacion('".$xload."');"?>
 //]]></script>
+
 
 
   <?php

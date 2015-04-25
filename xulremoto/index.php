@@ -1,6 +1,15 @@
 <?php
 include('../include/browser.inc.php');
 $broswer = new browser();
+
+if( isset( $_SERVER['HTTPS']) )
+  if($_SERVER['HTTPS']== 'on')
+    {
+      header("Location: http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+      exit();
+    }
+
+
 ?>
 <html>
 <meta charset="utf-8">﻿
@@ -22,8 +31,8 @@ $broswer = new browser();
             margin-right: auto;
             }
        div#xPOS {
-            width: calc(50%);
-            height: 7em;
+            width: calc(30%);
+            height: 19em;
             margin-top: 0%;
             border: solid 0px red;
             margin-left: auto;
@@ -31,9 +40,9 @@ $broswer = new browser();
             cursor:pointer;
             }
        div#xFox {
-            width: calc(50%);
-            height: 6em;
-            margin-top: 5em;
+            width: calc(30%);
+            height: 20em;
+            margin-top: 1em;
             border: solid 0px blue;
             margin-left: auto;
             margin-right: auto;

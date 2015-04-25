@@ -26,6 +26,12 @@ switch($modo) {
 		$IdModPagoHabitual = (isset($_POST["IdModPagoHabitual"]))? CleanID($_POST["IdModPagoHabitual"]):1;
 		$idpais 	= (isset($_POST["IdPais"]))? CleanID($_POST["IdPais"]):1; 
 		$paginaweb      = (isset($_POST["PaginaWeb"]))? CleanUrl($_POST["PaginaWeb"]):'';
+		$FechaNacimiento = CleanText($_POST["FechaNacimiento"]);
+		$datehoy = date("Y-m-d");
+		$FechaNacimiento = ($FechaNacimiento >= $datehoy)? '0000-00-00':$FechaNacimiento;
+		if($tipocliente != 'Particular') $FechaNacimiento = '0000-00-00';
+		if($FechaNacimiento == '1899-11-30') $FechaNacimiento = '0000-00-00';
+
 		$oCliente       = new cliente;
 
 		if(!$oCliente->Load($idcliente)) {
@@ -51,6 +57,7 @@ switch($modo) {
 		$oCliente->setIfData("TipoCliente", $tipocliente, FORCE);
 		$oCliente->setIfData("IdPais", $idpais, FORCE);
 		$oCliente->setIfData("PaginaWeb", $paginaweb, FORCE);
+		$oCliente->setIfData("FechaNacimiento", $FechaNacimiento, FORCE);
 		//$oCliente->setIfData("IdLocal", CleanID(getSesionDato("IdTienda")), FORCE);
 		
 		if( $oCliente->Save()){
@@ -80,10 +87,16 @@ switch($modo) {
 		$idpais     = (isset($_POST["IdPais"]))? CleanID($_POST["IdPais"]):''; 
 		$paginaweb  = (isset($_POST["PaginaWeb"]))? CleanUrl($_POST["PaginaWeb"]):'';
 		$IdLocal    = CleanID(getSesionDato("IdTienda"));
+		$FechaNacimiento = CleanText($_POST["FechaNacimiento"]);
+		$datehoy = date("Y-m-d");
+		$FechaNacimiento = ($FechaNacimiento >= $datehoy)? '0000-00-00':$FechaNacimiento;
+		if($tipocliente != 'Particular') $FechaNacimiento = '0000-00-00';
+		if($FechaNacimiento == '1899-11-30') $FechaNacimiento = '0000-00-00';
 		
-		$id         = CrearCliente($comercial,$legal,$direccion,$poblacion,$cp,$email,
-					   $telefono1,$telefono2,$contacto,$cargo,$cuentabancaria,
-					   $numero,$comentario,$tipocliente,$idpais,$paginaweb,$IdLocal);
+		$id = CrearCliente($comercial,$legal,$direccion,$poblacion,$cp,$email,
+				   $telefono1,$telefono2,$contacto,$cargo,$cuentabancaria,
+				   $numero,$comentario,$tipocliente,$idpais,$paginaweb,
+				   $IdLocal,$FechaNacimiento);
 		if ($id)		
 		  echo "$id";
 		else

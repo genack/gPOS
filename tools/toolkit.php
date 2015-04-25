@@ -64,6 +64,7 @@ function exportMysqlToCsv($query,$filename,$xtitulo=false) {
   while ($row = mysql_fetch_array($result)) {
     $schema_insert = ''; 
     for ($j = 0; $j < $fields_cnt; $j++) { 
+      $row[$j] = str_replace('&#038;','&',$row[$j]);
       if ($row[$j] == '0' || $row[$j] != '') { 
 	if ($csv_enclosed == '') { 
 	  $schema_insert .= $row[$j]; 
@@ -71,7 +72,7 @@ function exportMysqlToCsv($query,$filename,$xtitulo=false) {
 	  $schema_insert .= $csv_enclosed . str_replace($csv_enclosed, $csv_escaped . $csv_enclosed, $row[$j]) . $csv_enclosed; 
 	} 
       } else { 
-	$schema_insert .= ''; 
+	$schema_insert .= ' '; 
       } 
       if ($j < $fields_cnt - 1) { 
 	$schema_insert .= $csv_separator; 

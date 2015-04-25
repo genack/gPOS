@@ -18,12 +18,19 @@ if ( $row) {
   $NombrePantalla = $row["NombrePantalla"];
   $Categoria      = $row["Categoria"];	
   $CodigoSQL      = PostProcesarSQL($CodigoSQL,$LocalActual);
+  $esnombreclient = strpos($CodigoSQL,'ges_clientes.NombreLegal');
+  $esnombreclient1= strpos($CodigoSQL,'ges_clientes.NombreComercial');
+  $nombrereplace  = ($esnombreclient || $esnombreclient1)? true:false;
 }
-
+//echo $CodigoSQL."--------------";
 $genCabecera = "";
 $genListado  = "";
 $genListCol  = "";
-$res         = query( $CodigoSQL,"Listado: " . CleanText($NombrePantalla) ); //Sirve para extraer headers
+
+// calcular tiempo de respuesta de la consulta
+timequery();
+$res = query( $CodigoSQL,"Listado: " . CleanText($NombrePantalla) ); //Sirve para extraer headers
+timequery();
 
 $maximoPorcentaje = 0;
 $nombrePorcentaje = "";
@@ -35,23 +42,25 @@ $ponerBotonImprimir = false;
 
 if ($res){
   $row = Row($res);
+
   if ($row){
     $genCabecera = "<tr class='head'>\n";
+    $genCabecera .= "\t<td class='headitem'>#</td>\n";
     $genTotales  = "<tr class='head'>\n";
     
     foreach ( $row as $key=>$value){
       if (!esNumero2($key)){
 	$totales[$key] = 0;				
 	$titulo = ReformateaTitulo($key);//Cosa__Euro --> Cosa
-	
+
 	$genCabecera .= "\t<td class='headitem' key='$key'>$titulo</td>\n";
-	
+
 	if ( esPorcentaje($key) ) {
 	  $nombrePorcentaje = $key;//Requiere total al final 
 	}	
 	
 	if ( esAutoSuma($key) ){
-	  $genTotales .= "\t<td class='headitem' autosuma='1' key='$key' align='right'>%TOTAL:".$key."%</td>\n";
+	  $genTotales .= "\t<td class='headitem' autosuma='1' key='$key' align='right'>%TOTAL:".$key."% </td>\n";
 	  $totalesNombre[$key] = $key;//requiere computo de totales								
 	} else if ( esPorcentaje($key) ){
 	  $nombrePorcentaje = $key;//donde se colocara el total de porcentaje
@@ -77,28 +86,28 @@ if ($res){
     $listado  = array();
     $ilistado = 0;
     
-    $genListado .= Datos2Codigo($row);
+    $genListado .= Datos2Codigo($row,false,$nombrereplace);
     $listado[$ilistado]= $row;		
     
     $ilistado = $ilistado + 1;		
-    
+
     $odd = 1;
     
     //Genera listado
     while( $row= Row($res)){
-      $genListado .= Datos2Codigo($row,$odd%2);
+      $genListado .= Datos2Codigo($row,$odd%2,$nombrereplace);
       $odd = $odd + 1;
       $listado[$ilistado]= $row;
       $ilistado = $ilistado + 1;
       $ponerBotonImprimir = true;
     }
-    
+
     //Completa autosumas
     foreach ($totalesNombre as $key=>$texto){
       $subformat = str_replace("AutoSuma","",SubKey($key));//Noseque__AutoSumaEuro -> AutoSumaEuro-> Euro			
       $genTotales = str_replace( "%TOTAL:".$texto."%", "<!-- key:$key, sub:$subformat -->TOTAL: " . SubFormateo($subformat,$totales[$key]), $genTotales  );	
     }
-    
+
     //Completa porcentaje
     if ($nombrePorcentaje){
       $maximoPorcentaje = SubFormateo(str_replace("Porcentaje","",SubKey($nombrePorcentaje)),$maximoPorcentaje);
@@ -250,6 +259,7 @@ function exportarcsv(){
    var Codigo    = "<?php echo $_GET["codigo"]?>";
    var EstadoPagoVenta = "<?php echo $_GET["estadopagoventa"]?>";
    var Cobranza = "<?php echo $_GET["cobranza"]?>";
+   var CodigoComprobante = "<?php echo $_GET["codcomprobante"]?>";
 
    var url  = 
      "exportarlistados.php?modo=ExportarDirectoCSV"+
@@ -297,6 +307,7 @@ function exportarcsv(){
      "&codigo="+Codigo+
      "&estadopagoventa="+EstadoPagoVenta+
      "&cobranza="+Cobranza+
+     "&codcomprobante="+CodigoComprobante+
      "&cb="+cb;
 
    document.location=url;
@@ -313,6 +324,24 @@ echo "</script></body></html>";
 // 
 ///////////////////////////////////////////////////////////////////////////////////
 //  Funciones auxiliares
+
+// Funcion que caulcula tiempo de respuesta de la consulta
+function timequery(){
+   static $querytime_begin;
+   global $tr;
+   list($usec, $sec) = explode(' ',microtime());
+    
+       if(!isset($querytime_begin))
+      {   
+         $querytime_begin= ((float)$usec + (float)$sec);
+      }
+      else
+      {
+         $querytime = (((float)$usec + (float)$sec)) - $querytime_begin;
+	 $tr =  sprintf('%01.5f', $querytime);
+         //echo sprintf('La consulta tardó %01.5f segundos. <br />', $querytime);
+      }
+}
 
 function SubKey($clave){
   $variable = explode("__",$clave);
@@ -427,14 +456,18 @@ function ReformateaTitulo( $titulo ){
   return $variable[0];
 }
 
-function Datos2Codigo( $datos,$par=false ){
+function Datos2Codigo( $datos,$par=false,$nombrereplace ){
   global $totalesNombre,$totales;
-  
+  global $ilistado;
+  $count =   $ilistado+1;
   if(!$datos or !is_array($datos))
     return;
-  
+
   $out ="\n<tr class='lineadatos'>";		
-  foreach ($datos as $key=>$value){		
+  $out .= "\t<td class='headitem'>$count.</td>\n";    
+  foreach ($datos as $key=>$value){
+    if($nombrereplace)
+      $value = str_replace('&#038;','&',$value);
     if (isset($totalesNombre[$key])){
       $original = $totales[$key];
       $suma = $original + $value;
@@ -443,14 +476,16 @@ function Datos2Codigo( $datos,$par=false ){
     } else {
       //echo "<p>$key no esta en totalesNombre";	
     }
-    
+
     if (!esNumero2($key)) {
       $value = AutoformatoSQL($key,$value);
-      
+
       $out .= "\t<td class='dato'>$value &nbsp;</td>\n";
     }
   }
+
   return $out . "</tr>\n";
+
 }
 
 function esAutoSuma($key){ //contiene __AutoSuma
@@ -526,7 +561,7 @@ function PostProcesarSQL( $cod,$LocalActual ) {
 
   $estadopagoventa = str_replace('%%',"'%%'",CleanText($_GET["estadopagoventa"]));
 
-  $periodoventa = $_GET["periodoventa"];
+  $periodoventa = CleanText($_GET["periodoventa"]);
   if($periodoventa == 'DAY')
     $g_periodo = "$periodoventa(FechaComprobante)";
   if($periodoventa == 'WEEK')
@@ -535,6 +570,9 @@ function PostProcesarSQL( $cod,$LocalActual ) {
     $g_periodo = "$periodoventa(FechaComprobante)";
   if($periodoventa == 'YEAR')
     $g_periodo = "$periodoventa(FechaComprobante)";
+
+  $TipoVenta = getSesionDato("TipoVentaTPV");
+  $Precio    = ($TipoVenta == 'VD')? 'PrecioVenta':'PrecioVentaCorporativo';
 
   $cod = str_replace("%IDIDIOMA%",$IdLang,$cod);
   $cod = str_replace("%DESDE%",		CleanCadena($_GET["Desde"]),$cod);
@@ -576,9 +614,11 @@ function PostProcesarSQL( $cod,$LocalActual ) {
   $cod = str_replace("%IDCLIENTE%",CleanText($_GET["idcliente"]),$cod);
   $cod = str_replace("%CODIGO%",CleanText($_GET["codigo"]),$cod);
   $cod = str_replace("%COBRANZA%",CleanText($_GET["cobranza"]),$cod);
+  $cod = str_replace("%CODIGOCOMPROBANTE%",CleanText($_GET["codcomprobante"]),$cod);
   $cod = str_replace("'%IMPORTE%'",$estadopagoventa,$cod);
   $cod = str_replace("'%PERIODO_GROUP%'",$g_periodo,$cod);
   $cod = str_replace("%SML%",$Moneda[1]['S'],$cod);
+  $cod = str_replace("'%TIPOVENTA%'",$Precio,$cod);
 
   return $cod;
 }

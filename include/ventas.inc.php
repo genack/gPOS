@@ -27,7 +27,9 @@ function DetallesVenta($IdComprobante,$IdLocal){
     "       ges_comprobantesdet.IdPedidoDet, ".
     "       ges_comprobantesdet.CostoUnitario as Costo, ".
     "       IF(ges_comprobantesdet.Concepto = '',' ',ges_comprobantesdet.Concepto) as Concepto, ".
-    "       ges_comprobantesdet.IdAlbaran ".
+    "       ges_comprobantesdet.IdAlbaran, ".
+    "       ges_comprobantesdet.IdOrdenServicio, ".
+    "       ges_comprobantesdet.CantidadDevolucion ".
     "FROM   ges_comprobantesdet ".
     "INNER JOIN ges_productos ON ges_comprobantesdet.IdProducto = ges_productos.IdProducto ".
     "INNER JOIN ges_productos_idioma ON ges_productos.IdProdBase= ges_productos_idioma.IdProdBase ".
@@ -261,22 +263,6 @@ function  getTrabajosSubsidiario($xid){
 
 	}
 
-function DetallesCliente($idcliente){	
-	  $cliente = new cliente;
-	  
-	  if ($cliente->Load($idcliente)){
-	    $row = $cliente->export();	
-	  } else return false;
-	  
-	  $clientes = array();
-	  $t = 0;
-	  
-	  $row["id"] = "cliente";
-	  $clientes["cliente"] = $row; 		
-	  
-	  return $clientes;
-	}
-
 function cajaescerrado(){
 	  $TipoVenta = getSesionDato("TipoVentaTPV");
 	  $IdLocalActivo = getSesionDato("IdTienda");
@@ -295,13 +281,13 @@ function cajaescerrado(){
 	  return $esCerrada;
 	}
 
-function OperarPagoSobreTicket($IdComprobante,$pago_efectivo, $pago_bono, $pago_tarjeta){
+function OperarPagoSobreTicket($IdComprobante,$pago_efectivo, $pago_bono, $pago_tarjeta,$concepto){
   
         $TipoVenta = getSesionDato("TipoVentaTPV");
 
 	/* Movimientos de dinero */
 	$IdLocal =  getSesionDato("IdTienda");
-	EntregarCantidades("Abonando pendiente", $IdLocal,$pago_efectivo, $pago_bono, $pago_tarjeta,$IdComprobante);	
+	EntregarCantidades("Abonando pendiente ".$concepto, $IdLocal,$pago_efectivo, $pago_bono, $pago_tarjeta,$IdComprobante);	
 	
 	$pago = $pago_efectivo + $pago_bono + $pago_tarjeta;
 	
@@ -445,6 +431,32 @@ function ActualizarEstadoPago($xid,$campoxdato){
     " set    ".$KeysValue." ".
     " where  ".$IdKey." = ".$Id;	
   return query($sql); 
+}
+
+function  ActualizaPagoAdelantadoPresupuesto($idPresupuesto,$idComprobante,$textCaja){
+
+  $sql = 
+    " select ImporteAdelanto, TipoVentaOperacion,IdLocal,NPresupuesto ".
+    " from   ges_presupuestos".
+    " where  IdPresupuesto   = '".$idPresupuesto."'";
+  $row       = queryrow($sql);
+  $Monto     = $row["ImporteAdelanto"];
+
+  if(!($Monto > 0)) return;
+
+  $TipoVenta = $row["TipoVentaOperacion"];
+  $IdLocal   = $row["IdLocal"];
+  $arqueo    = new movimiento;
+  $IdArqueo  = $arqueo->GetArqueoActivo($IdLocal);
+  $FechaCaja = $arqueo->getAperturaCaja($IdLocal,$TipoVenta);
+  $IdPartida = ($TipoVenta == 'VD')? 22:23;
+  $concepto  = "Metalico: Adelanto Proforma Nro. ".$row["NPresupuesto"]." - ".$textCaja;
+
+  //Sustraccion Caja.
+  EntregarOperacionCaja($IdLocal,$Monto,$concepto,$IdPartida,'Sustraccion',
+			$FechaCaja,$IdArqueo,$TipoVenta);
+  //Abono Metalico Ticket
+  $xpendiente = OperarPagoSobreTicket($idComprobante,$Monto, 0, 0,$textCaja);
 }
 
 ?>

@@ -3,15 +3,12 @@
 // El objetivo de este modulo es cachear informacion
 // en la sesion sin que sea necesario repetir busquedas
 
-
-
 function getParametro($nombre) {
 	$params = getSesionDato("Parametros");
 	if (!is_array($params)){
 		error(__FILE__ . __LINE__ , "E: lectura fallida de parametros");
 		return false;	
 	}
-	
 	return $params[$nombre];	
 }
 

@@ -123,7 +123,15 @@ function reloadAltaRapida(){
     main.setAttribute('src','modulos/altarapida/xulaltarapida.php?modo=alta');
 }
 //]]></script>
+<html:style>
+  #boxprogress{
+            background-image: url("../../img/gpos_marcagua.png");
+            background-position: center center;
+            background-repeat: no-repeat;
+	    }
+</html:style>
 
+<vbox flex="1" id="boxprogress" >
 <spacer style="height:6px"/>
 <hbox pack="center">
   <caption style="font-size: 14px;font-weight: bold;">
@@ -137,7 +145,7 @@ function reloadAltaRapida(){
 <progressmeter mode="undetermined" />
 <!-- alta de prod -->
 </groupbox>
-
+</vbox>
 <?php
 
 EndXul();

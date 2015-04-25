@@ -4,7 +4,7 @@ include("tool.php");
 
 SimpleAutentificacionAutomatica("visual-iframe");
 
-$tamPagina = 10;
+$tamPagina = 30;
 
 function dosdecimales($num){
     return round($num*100)/100;
@@ -247,6 +247,7 @@ function ListaFormaDeUnidades() {
 
 function ListadoModificableImpresionPorLote(){
 	$oProducto = new producto; 
+	global  $action;
 
 	$carrito 	= getSesionDato("CarritoCompras");
 	$costescarrito 	= getSesionDato("CarroCostesCompra");

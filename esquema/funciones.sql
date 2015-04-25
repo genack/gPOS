@@ -22,7 +22,7 @@ begin
   declare res int;
   declare esSerie INT;
   SELECT Serie INTO esSerie FROM ges_pedidosdet WHERE IdProducto = New.IdProducto AND IdPedidoDet = NEW.DocumentoEntrada;
-  IF (esSerie = 1) THEN
+  IF (esSerie <> 0) THEN
     set np = (select Unidades from ges_pedidosdet where IdPedidoDet = new.DocumentoEntrada AND IdProducto = new.IdProducto);
     set ns = (select count(*) from ges_productos_series where DocumentoEntrada = new.DocumentoEntrada AND IdProducto = new.IdProducto AND ges_productos_series.Eliminado = 0);
     IF (ns=np) THEN
@@ -48,22 +48,22 @@ BEGIN
     SELECT Serie INTO esSerie FROM ges_pedidosdet WHERE IdProducto = NEW.IdProducto AND IdPedidoDet = NEW.IdPedidoDet; 
     IF(NEW.CantidadMovimiento = 0) THEN 
        SET NEW.Estado = 4; 
-       SET NEW.EstadoDetalle = 'Entrada: Cantidad igual a 0'; 
+       SET NEW.EstadoDetalle = 'Entrada Cantidad igual a 0'; 
     END IF; 
   ELSEIF(NEW.TipoMovimiento = 'Salida') THEN 
     SELECT Serie INTO esSerie FROM ges_comprobantesdet WHERE IdProducto = NEW.IdProducto AND IdPedidoDet = NEW.IdPedidoDet AND IdComprobanteDet = NEW.IdComprobanteDet; 
     SELECT obtenerStockProducto(NEW.IdProducto , NEW.IdLocal, NEW.IdPedidoDet) INTO Stock; 
     IF((NEW.CantidadMovimiento)*(-1) > Stock) THEN 
        SET NEW.Estado = 1; 
-       SET NEW.EstadoDetalle = 'Salida: Stock menor que la cantidad';
+       SET NEW.EstadoDetalle = 'Salida Stock menor que la cantidad';
     END IF; 
     IF((Stock + NEW.CantidadMovimiento) < 0) THEN 
        SET NEW.Estado = 2; 
-       SET NEW.EstadoDetalle = 'Salida: Stock negativo'; 
+       SET NEW.EstadoDetalle = 'Salida Stock negativo'; 
     END IF; 
     IF(Stock = 0) THEN 
        SET NEW.Estado = 3; 
-       SET NEW.EstadoDetalle = 'Salida: Stock cero'; 
+       SET NEW.EstadoDetalle = 'Salida Stock cero'; 
     END IF; 
   END IF; 
   IF (esSerie = 1) THEN 
@@ -72,15 +72,15 @@ BEGIN
       SET ns = (SELECT COUNT(*) FROM ges_productos_series WHERE ges_productos_series.DocumentoEntrada = NEW.IdPedidoDet AND ges_productos_series.IdProducto = NEW.IdProducto AND ges_productos_series.Eliminado = 0); 
       IF(ns <> np) THEN 
       	SET NEW.Estado = 5; 
-        SET NEW.EstadoDetalle = 'Entrada: Cantidad y números de series diferentes.'; 
+        SET NEW.EstadoDetalle = 'Entrada Cantidad y números de series diferentes'; 
       END IF; 
     ELSEIF(NEW.TipoMovimiento = 'Salida') THEN 
       SELECT IdComprobante INTO IdComp FROM ges_comprobantesdet WHERE ges_comprobantesdet.IdComprobanteDet = NEW.IdComprobanteDet; 
       SELECT Cantidad INTO np FROM ges_comprobantesdet WHERE ges_comprobantesdet.IdComprobanteDet = NEW.IdComprobanteDet; 
-      SELECT COUNT(*) INTO ns FROM ges_productos_series WHERE ges_productos_series.IdProducto = NEW.IdProducto AND ges_productos_series.DocumentoSalida = IDComp AND Eliminado = 0; 
+      SELECT COUNT(*) INTO ns FROM ges_productos_series WHERE ges_productos_series.IdProducto = NEW.IdProducto AND ges_productos_series.DocumentoSalida = IdComp AND Eliminado = 0 AND ges_productos_series.DocumentoEntrada = NEW.IdPedidoDet; 
       IF(ns <> np) THEN 
       	SET NEW.Estado = 6; 
-        SET NEW.EstadoDetalle = 'Salida: Cantidad y números de series diferentes.'; 
+        SET NEW.EstadoDetalle = 'Salida Cantidad y números de series diferentes'; 
       END IF; 
     END IF; 
   END IF; 
@@ -205,5 +205,143 @@ begin
   AND ges_comprobantestipo.TipoComprobante IN ('Factura','Boleta','Ticket');
   return Cantidad;
 end;
+
+;;;;;;
+
+CREATE FUNCTION obtenerSyncTPV(xkeysinc char(32)) 
+  RETURNS tinytext 
+DETERMINISTIC 
+READS SQL DATA 
+BEGIN 
+  DECLARE SyncUser tinytext; 
+  SELECT CONCAT(Preventa,'~',Proforma,'~',ProformaOnline,'~',Stock,'~',Cliente,'~',Promocion,'~',Mensaje,'~',Caja,'~',MetaProducto) INTO SyncUser 
+  FROM ges_synctpv 
+  WHERE ges_synctpv.KeySync = xkeysinc; 
+  RETURN SyncUser; 
+END; 
+
+;;;;;;
+
+create trigger actualizar_presupuestos_in after insert on ges_presupuestos 
+FOR EACH ROW 
+begin 
+  IF(NEW.TipoPresupuesto = 'Preventa') THEN 
+    UPDATE ges_synctpv SET ges_synctpv.Preventa = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+  ELSEIF(NEW.TipoPresupuesto = 'Proforma') THEN 
+    UPDATE ges_synctpv SET ges_synctpv.Proforma = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+  ELSE  
+    UPDATE ges_synctpv SET ges_synctpv.ProformaOnline = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+  END IF; 
+END; 
+
+;;;;;;
+
+create trigger actualizar_presupuestos_up after update on ges_presupuestos 
+FOR EACH ROW 
+begin 
+  IF(NEW.TipoPresupuesto = 'Preventa') THEN 
+    UPDATE ges_synctpv SET ges_synctpv.Preventa = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal;
+  ELSEIF(NEW.TipoPresupuesto = 'Proforma') THEN 
+    UPDATE ges_synctpv SET ges_synctpv.Proforma = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+  ELSE  
+    UPDATE ges_synctpv SET ges_synctpv.ProformaOnline = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+  END IF; 
+END; 
+
+;;;;;;
+
+create trigger actualizar_stock_in after insert on ges_almacenes 
+FOR EACH ROW 
+begin 
+  UPDATE ges_synctpv SET ges_synctpv.Stock = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+END;
+
+;;;;;;
+
+create trigger actualizar_stock_up after update on ges_almacenes 
+FOR EACH ROW 
+begin 
+  UPDATE ges_synctpv SET ges_synctpv.Stock = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+END; 
+
+;;;;;;
+
+create trigger actualizar_cliente_in after insert on ges_clientes 
+FOR EACH ROW 
+begin 
+  UPDATE ges_synctpv SET ges_synctpv.Cliente = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+END; 
+
+;;;;;;
+
+create trigger actualizar_cliente_up after update on ges_clientes 
+FOR EACH ROW 
+begin 
+  UPDATE ges_synctpv SET ges_synctpv.Cliente = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+END; 
+
+;;;;;;
+
+create trigger actualizar_promocion_in after insert on ges_promociones 
+FOR EACH ROW 
+begin 
+  UPDATE ges_synctpv SET ges_synctpv.Promocion = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+END; 
+
+;;;;;;
+
+create trigger actualizar_promocion_up after update on ges_promociones 
+FOR EACH ROW 
+begin 
+  UPDATE ges_synctpv SET ges_synctpv.Promocion = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+END; 
+
+;;;;;;
+
+create trigger actualizar_mensaje_in after insert on ges_mensajes 
+FOR EACH ROW 
+begin 
+  UPDATE ges_synctpv SET ges_synctpv.mensaje = 1 WHERE ges_synctpv.IdLocal = NEW.IdOrigenLocal; 
+END; 
+
+;;;;;;
+
+create trigger actualizar_caja_in after insert on ges_arqueo_caja 
+FOR EACH ROW 
+begin 
+  UPDATE ges_synctpv SET ges_synctpv.Caja = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+END;
+
+;;;;;;
+
+create trigger actualizar_caja_up after update on ges_arqueo_caja 
+FOR EACH ROW 
+begin 
+  UPDATE ges_synctpv SET ges_synctpv.Caja = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+END; 
+
+;;;;;;
+
+create trigger actualizar_metaproducto_in after insert on ges_metaproductos 
+FOR EACH ROW 
+begin 
+  UPDATE ges_synctpv SET ges_synctpv.MetaProducto = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+END; 
+
+;;;;;;
+
+create trigger actualizar_metaproducto_up after update on ges_metaproductos 
+FOR EACH ROW 
+begin 
+  UPDATE ges_synctpv SET ges_synctpv.MetaProducto = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
+END; 
+
+;;;;;;
+
+create trigger crear_synctpv_usuario_in after insert on ges_usuarios 
+FOR EACH ROW 
+begin 
+  INSERT INTO ges_synctpv (ges_synctpv.IdLocal,ges_synctpv.IdUsuario) values (NEW.IdLocal,NEW.IdUsuario); 
+END; 
 
 ;;;;;;

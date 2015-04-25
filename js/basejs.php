@@ -1,12 +1,12 @@
 <?php
 require("../tool.php");
 
-$idlocal=getSesionDato("IdTienda");
-$margen=getSesionDato("MargenUtilidad");
-
+$idlocal = getSesionDato("IdTienda");
+$margen  = getSesionDato("MargenUtilidad");
 $Moneda  = getSesionDato("Moneda");
 $IPC     = getSesionDato("IPC");
 $cMoneda = json_encode($Moneda);
+
 echo "var cMoneda = ".$cMoneda,";\n";
 echo "var cIPC = parseFloat(".$IPC,");\n";
 
@@ -166,6 +166,7 @@ function cambiomoneda(tipo){
     var xrequest = new XMLHttpRequest();
     xrequest.open("GET",url,false);
     xrequest.send(null);
+    actualizaImportePago();
 }
 function setfechadoc(){
 
@@ -235,14 +236,21 @@ function timingTerminaGeneracionPagina(tiempoProcesoPHP) {
 // GenCore, libreria compartida
 var ancho_lista = 750;
 
-
 function ckAction(me,id,max,ns,xid){ 
+  var xcanttrans = document.getElementById('CarritoTraspasoCant');
+  var tipoAction = (me.checked)? "trans" : "notrans";     
+  var p          = 0;
 
- var tipoAction = (me.checked)? "trans" : "notrans";     
- var p          = 0;
+  if(xcanttrans.value >= 25 && tipoAction=="trans"){
+    me.checked = false;
+    return alert("gPOS: Carrito Almacén, tiene 25 productos seleccionados:\n\n     - Cantidad máxima permitida: 25 productos.");
+  }
 
   if(tipoAction=="trans")
   {
+    xcanttrans.value++;
+    if(xcanttrans.value > 0)
+      document.getElementById('boxCarritoTraspasoCant').setAttribute('style','display:block');
     var main  = parent.getWebForm();
     var aviso = 'Cargando Existencias ...';
     var url   = 'modulos/kardex/selkardex.php?modo=xExistenciasAlmacenCarrito%xproducto='+xid+'%xalmacen='+id;
@@ -256,6 +264,9 @@ function ckAction(me,id,max,ns,xid){
 
   if(tipoAction=="notrans")
   {
+    xcanttrans.value--;
+    if(xcanttrans.value == 0)
+      document.getElementById('boxCarritoTraspasoCant').setAttribute('style','display:none');
    var url = 'modalmacenes.php?modo='+tipoAction+'&id='+id+'&u='+p;
    Mensaje (url);  
   }
@@ -270,62 +281,6 @@ function precioTransAlmacen(xid,xdato,xprecio)
                   "&xdato="+xdato.value;
     Mensaje (url);  
 }
-
-function ckActionold(me,id,max,ns,xid){ 
-
- var p = 0;
- var tipoAction= "";
-    
- if (me.checked)
-  tipoAction="trans";
- else
-  tipoAction="notrans";     
-
-  if (max>0 && me.checked){
-   if (max>1)
-    p = prompt(po_cuantasunidades, max );
-   else 
-       p = 1;
-   if (p>max)  p = max;
-    if( isNaN(p) || p < 1){ 
-    me.checked = false;
-    return;
-    }
-  }
-  var resultado = 1;
-    if(resultado==1){
-        if (me.checked){
-            var args = "dialogWidth:" + "420" + "px;dialogHeight:" + "300" + "px";
-            miPopup=window.showModalDialog("seriesalmacen.php?id="+id+"&u="+p+"&modo=agregarcarritoalma","miwin",args);
-            if(miPopup == true){
-                return;
-            }
-        }
-         else{
-        var args = "dialogWidth:" + "420" + "px;dialogHeight:" + "300" + "px";
-        miPopup=window.showModalDialog("seriesalmacen.php?id="+id+"&u="+p+"&modo=quitarcarritoalma","miwin",args);
-         }
-
-        if(resultado==1){
-            var        url = "services.php?modo=settipodocCompra&tipodoc="+tipo;
-            var xrequest = new XMLHttpRequest();
-            xrequest.open("GET",url,false);
-            xrequest.send(null);
-
-        }
-    }
-
-   else
-    {
-        var url      = "services.php?modo=settipodocCompra&tipodoc="+tipo;
-        var xrequest = new XMLHttpRequest();
-        xrequest.open("GET",url,false);
-  }
-
-  var url = 'modalmacenes.php?modo='+tipoAction+'&id='+id+'&u='+p;
-  Mensaje (url);  
-}
-
 
 function setndoc(xvl){
     xvl        = new String(xvl);
@@ -396,11 +351,12 @@ function setpercepcion(xvalue){
      actualizaImportePago();
 }
 function actualizaImportePago(){
+   if(!document.getElementById("ImportePercepcion")) return;
 
    var xpercepcion = parseFloat(document.getElementById("ImportePercepcion").value);
-   var xflete      = parseFloat(document.getElementById("ImporteFlete").value);
+   //var xflete      = ( document.getElementById("tipoDolar").checked )? parseFloat(0):parseFloat(document.getElementById("ImporteFlete").value);
    var xtotalneto  = parseFloat(document.getElementById("TotalNeto").value);
-   document.getElementById("ImportePago").value = (xtotalneto+xflete+xpercepcion).toFixed(2);
+   document.getElementById("ImportePago").value = (xtotalneto+xpercepcion).toFixed(2);
     
 }
 
@@ -1205,6 +1161,7 @@ function deshabilitar(){
  var lote         = document.getElementById("Lote");
  var fv           = document.getElementById("FechaVencimiento");
  var ventamenudeo = document.getElementById("ventamenudeo");
+ var aplicamargen = document.getElementById("margensubfamilia");
  //existe?
  unidmed  = (unidmed)?  unidmed:false;
  check    = (check)?    check:false;
@@ -1213,6 +1170,7 @@ function deshabilitar(){
  lote     = (lote)?     lote:false;
  fv       = (fv)?       fv:false;
  ventamenudeo = (ventamenudeo)? ventamenudeo:false;
+ aplicamargen = (aplicamargen)? aplicamargen:false;
 
  if(unidmed && unidmed.value!='und')
   {
@@ -1272,6 +1230,37 @@ function deshabilitar(){
      OcultaCapa("Motivo2");
   }
 
+ if(aplicamargen.checked) {
+   MuestraCapaBase("MargenSubFamiliaTipoCosto"); 
+   ListarProductosxSubFamilia();
+ }
+ else 
+   OcultaCapa("MargenSubFamiliaTipoCosto"); 
+
+}
+
+function ListarProductosxSubFamilia(){
+
+   var tipocosto= getMe("TipoCosto").value;
+   var mud      = getMe("muvd").value;
+   var muc      = getMe("muvc").value;
+   var dsto     = getMe("dsto").value;
+   var id       = getMe("IdBase").value;
+
+   var	url = "modfamilias.php?modo=editarsubfamilia&mud="+mud+
+     "&muc="+muc+"&dsto="+dsto+"&tipocosto="+tipocosto+"&id="+id;
+   //return alert(url);
+   location.href=url;
+   
+}
+
+function MuestraCapaSubFamilia(nombre){
+  var capa = getMe(nombre);
+  if (!capa) 
+    return;
+ 
+  capa.style.visibility = "visible";
+  capa.style.block = "auto";
 }
 
 function MuestraCapa(nombre){
@@ -2127,3 +2116,132 @@ function verseriescarritoalma(unidades,id,producto){
 
 }
 
+function verificarDescuento(){
+  var muvd = document.getElementById("muvd").getAttribute('value');
+  var muvc = document.getElementById("muvc").getAttribute('value');
+  var dsto = document.getElementById("dsto").getAttribute('value');
+}
+
+function habilitarpasslocal(){
+ var conpass = document.getElementById("concontrasenia");
+ conpass = (conpass)? conpass:false;
+
+ if(conpass.checked) {
+   MuestraCapaBase("rPassword"); 
+ }
+ else 
+   OcultaCapa("rPassword"); 
+}
+
+function MuestraCapaBase(nombre){
+  var capa = getMe(nombre);
+  if (!capa) 
+    return;
+ 
+  capa.style.visibility = "visible";
+  capa.style.block = "auto";
+}
+
+function validarPasswordLocal(){
+
+  var conpass = document.getElementById("concontrasenia");
+
+  conpass = (conpass)? conpass:false;
+  if(conpass.checked){
+    var xpass = getMe('Password');
+    var pass  = xpass.value;
+    var login = getMe('Identificacion').value;
+
+    validarPassword(pass,login);
+  }
+}
+
+function validarPasswordUser(){
+  var pass = getMe('Password').value;
+  var login = getMe('Identificacion').value;
+  validarPassword(pass,login);
+}
+
+
+
+function validarPassword(xpass,login){
+  if(login == xpass){
+    getMe('Password').value = '';
+    alert("La contraseña debe ser diferente de identificación");
+    return ;
+  }
+
+  if(xpass.length < 8){
+    getMe('Password').value = '';
+    alert("La contraseña debe ser como mínico 8 caracteres");
+    return;
+  }
+
+  var tchar = contienCharNum(1,xpass);
+  var tnum  = contienCharNum(0,xpass);
+
+  if(tchar == 0 || tnum == 0){
+    getMe('Password').value = '';
+    alert("La contraseña debe contener caracteres, números y símbolos");
+    return;
+  }
+
+}
+
+function contienCharNum(xchar,texto){
+  xchar = (xchar == 0)? "0123456789":"abcdefghyjklmnñopqrstuvwxyz"
+  texto = texto.toLowerCase();
+
+  for(i=0; i<texto.length; i++){
+      if (xchar.indexOf(texto.charAt(i),0)!=-1){
+         return 1;
+      }
+   }
+   return 0;
+}
+
+function mostrarGrupoLocales(xval){
+  if(xval != 0) {
+    MuestraCapaBase("rGrupoLocales"); 
+  }
+  else 
+    OcultaCapa("rGrupoLocales"); 
+}
+
+function verficarExistenciaLocal(ident){
+
+  var idlocal  = getMe('id').value;
+  var url      = "services.php?modo=existelocal&ident="+ident+'&idl='+idlocal;
+  var xrequest = new XMLHttpRequest();
+  xrequest.open("GET",url,false);
+  xrequest.send(null);
+  var res   = xrequest.responseText;
+  var local = getMe('NombreComercial').value;
+
+  if(res){
+    alert("gPOS: el local está registrado" );
+    if(idlocal != 0)
+      location.href = 'modlocal.php?modo=editar&id='+idlocal; 
+    else
+      getMe('Identificacion').value = '';
+  }
+}
+
+function verficarExistenciaUsuario(ident){
+  
+  var iduser   = (getMe('id'))? getMe('id').value:0;
+  var url      = "services.php?modo=existeuser&ident="+ident+'&idu='+iduser;
+  var xrequest = new XMLHttpRequest();
+  xrequest.open("GET",url,false);
+  xrequest.send(null);
+  var res  = xrequest.responseText;
+  var user = getMe('Nombre').value;
+
+  if(res){
+    alert("gPOS: el usuario está registrado" );
+    if(iduser != 0)
+      location.href = 'modusers.php?modo=editar&id='+iduser; 
+    else
+      getMe('Identificacion').value = '';
+  }
+}

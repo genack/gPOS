@@ -56,7 +56,23 @@ class perfil extends Cursor {
 	function getPrecios(){
 	  return $this->get("Precios");
 	}
+
+	function getB2B(){
+	  return $this->get("B2B");
+	}
 	
+	function getServicios(){
+	  return $this->get("Servicios");
+	}
+
+	function getSuscripciones(){
+	  return $this->get("Suscripcion");
+	}
+	
+	function getSAT(){
+	  return $this->get("SAT");
+	}
+
 	//Formulario de modificaciones y altas
 	function formEntrada($action,$esModificar){
 				
@@ -73,7 +89,7 @@ class perfil extends Cursor {
 			"HIDDENDATA" => Hidden("id",$this->getId()),
 			"ACTION" => "$action?modo=$modo",
 			"CADMINISTRACION" => gCheck($this->is("Administracion")),
-			"CINFORMELOCAL" => gCheck($this->is("InformeLocal")),			
+			"CINFORMELOCAL" => gCheck($this->is("InformeLocal")),
 			"CINFORMES" => gCheck($this->is("Informes")),
 			"CPRODUCTOS" => gCheck($this->is("Productos")),
 			"CPROVEEDORES" => gCheck($this->is("Proveedores")),
@@ -81,6 +97,8 @@ class perfil extends Cursor {
 			"CCOMPRAS" => gCheck($this->is("Compras")),
 			"CCLIENTES" => gCheck($this->is("Clientes")),
 			"CTPV" => gCheck($this->is("TPV")),
+			"CB2B" => gCheck($this->is("B2B")),
+			"CPEDIDOSVENTA" => gCheck($this->is("PedidosVenta")),
 			"CVERSTOCKS" => gCheck($this->is("VerStocks")),
 			"CPRECIOS" => gCheck($this->is("Precios")),
 			"CVENTAS" => gCheck($this->is("Ventas")), 	
@@ -90,13 +108,16 @@ class perfil extends Cursor {
 			"CCAJAGENERAL" => gCheck($this->is("CajaGeneral")), 	
 			"CCAJATPV" => gCheck($this->is("CajaTPV")), 	
 			"CPRESUPUESTOS" => gCheck($this->is("Presupuestos")), 	
-			"CCOMPROBANTESCOMPRA" => gCheck($this->is("ComprobantesCompra")), 	
-			"CCOMPROBANTESVENTA" => gCheck($this->is("ComprobantesVenta")), 	
-			"CPROMOCIONES" => gCheck($this->is("Promociones")), 	
-			"CKARDEX" => gCheck($this->is("Kardex")), 	
+			"CCOMPROBANTESCOMPRA" => gCheck($this->is("ComprobantesCompra")),
+			"CCOMPROBANTESVENTA" => gCheck($this->is("ComprobantesVenta")),
+			"CPROMOCIONES" => gCheck($this->is("Promociones")),
+			"CKARDEX" => gCheck($this->is("Kardex")),
 			"CAJUSTES" => gCheck($this->is("Ajustes")), 	
 			"CVERAJUSTES" => gCheck($this->is("VerAjustes")),
 			"CALMACEN" => gCheck($this->is("Almacen")),
+			"CSAT" => gCheck($this->is("SAT")),
+			"CSUSCRIPCION" => gCheck($this->is("Suscripcion")),
+			"CSERVICIOS" => gCheck($this->is("Servicios")),
 			"TADMINISTRACION" => _("Administración"),
 			"TINFORMELOCAL" => _("Informe local"),			
 			"TINFORMES" =>  _("Informes"),
@@ -106,6 +127,8 @@ class perfil extends Cursor {
 			"TCOMPRAS" => _("Compras"),
 			"TCLIENTES" => _("Clientes"),
 			"TTPV" => _("TPV"),	
+			"TB2B" => _("B2B"),	
+			"TPEDIDOSVENTA" => _("Pedidos"),
 			"TVERSTOCKS" => _("Ver Stocks"),
 			"TPRECIOS" => _("Precios"),	
 			"TVENTAS" => _("Ventas"),	 	
@@ -121,7 +144,10 @@ class perfil extends Cursor {
 			"TKARDEX"  => _("Kardex"),	
 			"TAJUSTES"  => _("Ajustes"),	
 			"TALMACEN"  => _("Almacén"),	
-			"TVERAJUSTES"  => _("Ver Ajustes")
+			"TVERAJUSTES"  => _("Ver Ajustes"),
+			"TSERVICIOS"  => _("Servicios"),
+			"TSAT"  => _("SAT"),
+			"TSUSCRIPCION"  => _("Suscripción")
 		);
 		return $ot->makear($cambios);
 	}
@@ -171,7 +197,12 @@ function getPerfilPrecios( $id ){
 
 	$oPerfil  = new perfil;	
 	$oPerfil->Load( $idperfil );
-	return $oPerfil->getPrecios()."~".$oPerfil->getCajaTPV();
+	return $oPerfil->getPrecios()."~".
+	       $oPerfil->getCajaTPV()."~".
+	       $oPerfil->getB2B()."~".
+	       $oPerfil->getServicios()."~".
+	       $oPerfil->getSuscripciones()."~".
+	       $oPerfil->getSAT();
 }
 
 ?>

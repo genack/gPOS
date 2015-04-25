@@ -125,9 +125,9 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                       oncommand = "mostrarBusquedaAvanzada(this);"/>	 
 	    <menuitem type="checkbox" label="Marca" checked="false"
                       oncommand = "mostrarBusquedaAvanzada(this);"/>	      
-	    <menuseparator />
+	    <!-- menuseparator />
 	    <menuitem type="checkbox" label="Documento"  
-                      oncommand = "mostrarBusquedaAvanzada(this);"/>
+                      oncommand = "mostrarBusquedaAvanzada(this);"/ -->
           </menupopup>
         </menu>
       </vbox>
@@ -169,7 +169,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 <!-- Movimientos Listado-->
 
 <!-- Movimientos Listado-->
-<listbox flex="1" id="listadoMovimiento" 
+<!-- listbox flex="1" id="listadoMovimiento" 
 	 contextmenu="AccionesBusquedaMovimientoInventario" 
 	 onkeypress="if (event.keyCode==13) RevisarMovimientoSeleccionada()"  
 	 ondblclick="RevisarMovimientoSeleccionada()" >
@@ -207,8 +207,33 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <listheader label="Saldo" style="text-align:center;"/>
       <listheader label="" />
     </listhead>
-</listbox>
+</listbox -->
 
+<tree flex="1" id="listadoMovimiento" hidecolumnpicker="false" enableColumnDrag="true" contextmenu="AccionesBusquedaMovimientoInventario"  onkeypress="if (event.keyCode==13) RevisarMovimientoSeleccionada()"  ondblclick="RevisarMovimientoSeleccionada()" >
+
+    <treecols >
+      <treecol label=" # "  style="text-align:center;width:4em"  flex="0"/>
+      <treecol label="Almacén" flex="1"/>
+      <splitter class="tree-splitter" />
+      <treecol label="Fecha" flex="1"/>
+      <splitter class="tree-splitter" />
+      <treecol label="Producto" flex="6"/>
+      <splitter class="tree-splitter" />
+      <treecol label="Operación" flex="4"/>
+      <splitter class="tree-splitter" />
+      <treecol label="Documento" id="vlistDocumento"  hidden="true"  flex="1"/>
+      <splitter class="tree-splitter" />
+      <treecol label="Cantidad" flex="1"/>
+      <splitter class="tree-splitter" />
+      <treecol label="Costo" style="text-align:center;" flex="1"/>
+      <splitter class="tree-splitter" />
+      <treecol label="Saldo" style="text-align:center;" flex="1"/>
+      <!-- treecol label="" / -->
+    </treecols>
+ <treechildren id="my_tree_children" >
+
+  </treechildren>
+</tree>
 
 <spacer style="height: 4px"></spacer>
 

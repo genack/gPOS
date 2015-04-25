@@ -70,12 +70,13 @@ class traslado {
 		if (!$Origen or !$Destino) 
 		  return false;		  	
 
-		//Ventas
-		$this->_IdComprobante = registrarAlbaranOrigen($Destino,$Origen,$Motivo,$codigo);
 		//Compras
 		$this->_IdPedido      = ( $Motivo != '4' )? 
 		                        registrarAlbaranDestino($Destino,$Origen,$Motivo,
 								$codigo,'TrasLocal'):0;
+		//Ventas
+		$this->_IdComprobante = registrarAlbaranOrigen($Destino,$Origen,$Motivo,
+							       $codigo,$this->_IdPedido);
 	}
 
 	function TrasladoBrutal($Motivo) {		
@@ -199,7 +200,7 @@ function registrarImportesTraslado($totalimporte,$IdComprobante,$IdPedido,$Motiv
 	   query($sql);
 }
 
-function registrarAlbaranOrigen($Destino,$Origen,$Motivo,$NComprobante){
+function registrarAlbaranOrigen($Destino,$Origen,$Motivo,$NComprobante,$IdPedido){
 
                 global $UltimaInsercion;
 
@@ -234,8 +235,10 @@ function registrarAlbaranOrigen($Destino,$Origen,$Motivo,$NComprobante){
 		$Values   .= "'1',";
 		$Keys     .= " Destinatario,";
 		$Values   .= "'$Destinatario',";
-		$Keys     .= "IdCliente";
-		$Values   .= "'$Destino'";		
+		$Keys     .= "IdCliente,";
+		$Values   .= "'$Destino',";		
+		$Keys     .= "Traslado";
+		$Values   .= "'$IdPedido'";		
 		$sql       = "insert into ges_comprobantes (".$Keys." ) values (".$Values.")";
 		$res       = query($sql);
 
@@ -701,7 +704,8 @@ function registraImportes($IdPedido){
   $TotalImporte    = round($tImporte,2);
   $ImporteBase     = round(($tImporte*100/($IGV+100)),2);
   $ImporteImpuesto = $TotalImporte-$ImporteBase;
-  $ImportePago     = $TotalImporte+$detadoc[13]+$detadoc[14];
+  //$ImporteFlete    = ($detadoc[5] == 1)? $detadoc[13]:0;
+  $ImportePago     = $TotalImporte+$detadoc[14];
 
   $listacpKeysVal  = " ImporteImpuesto  ='".$ImporteImpuesto."'";
   $listacpKeysVal .= ",ImporteBase      ='".$ImporteBase."'";
@@ -752,13 +756,14 @@ function obtenerDetallePedidoAjuste($IdPedidoDet){
 	 return query($sql);
 }
 
-function obtenerDetalleVentaAjuste($IdComprobante){
+function obtenerDetalleVentaAjuste($IdComprobante,$ckeydet){
 
          $sql = 
 	   " select IdProducto,IdComprobanteDet,CostoUnitario,".
 	   "        IdPedidoDet,Cantidad ".
 	   " from   ges_comprobantesdet ".
-	   " where  IdComprobante = '".$IdComprobante."'";
+	   " where  IdComprobante = '".$IdComprobante."'".
+	   " and    IdComprobanteDet in (".$ckeydet.") ";
 
 	 return query($sql);
 }
@@ -813,18 +818,19 @@ function obtenerDocumentoComprobanteDet($idx,$kdxop){
 	  "       ges_comprobantestipo.IdTipoComprobante = ges_comprobantesnum.IdTipoComprobante ".
 	  $extra." = ges_comprobantes.IdCliente ".
 	  "where  ges_comprobantesdet.IdComprobanteDet = ".$idx;
-
+	//echo "kkkk--><br>".$sql;
 	$res = query($sql);
 	return Row($res);
 	
 }
 
 function obtenerDocumentoPedidoDet($idx,$kdxop){
+  //echo "<br>======".$kdxop."=======";
 	$esProv  = ($kdxop == "Compra");
 	$esLocal = ($kdxop == "Traslado Interno" || $kdxop == "Ajuste" || $kdxop == 'Inventario');
 	$extra   = ($esLocal)?"inner join ges_locales on ges_locales.IdLocal ":"";
         $extra   = ($esProv)?"inner join ges_proveedores on ges_proveedores.IdProveedor ":$extra;
-
+	//	echo "<br>:::::".$extra."::::";
 	$sql =
 	   "select concat( TipoComprobante,' Nro ',Codigo,'  ',NombreComercial) as Documento,".
 	   "       FechaVencimiento as fv,".
@@ -977,7 +983,7 @@ function DetallesCompra($IdPedido,$esSoloMoneda){
 	return $pedidos;
 }
 
-function DetallesCompraRecibir($IdPedido,$IdAlmacen){	
+function DetallesCompraRecibir($IdPedido,$IdAlmacen,$IdProveedor){	
 
          $sql = 
 	   "SELECT ges_productos.Referencia,".
@@ -990,7 +996,7 @@ function DetallesCompraRecibir($IdPedido,$IdAlmacen){
 	   "       ges_laboratorios.NombreComercial) as Producto,".
 	   "       ges_pedidosdet.Unidades as Cantidad,".
 	   "       ges_pedidosdet.CostoUnidad as Costo, ".
-	   "       ges_almacenes.CostoUnitario as CostoPromedio,".
+	   "       IF(ges_almacenes.Unidades > 0,ges_almacenes.CostoUnitario,0) as CostoPromedio,".
 	   "       ges_almacenes.PrecioVenta   As PVD,".
 	   "       ges_almacenes.PVDDescontado As PVDDcto,".
 	   "       ges_almacenes.PrecioVentaCorporativo As PVC,".
@@ -1012,7 +1018,10 @@ function DetallesCompraRecibir($IdPedido,$IdAlmacen){
 	   "       ges_productos.VentaMenudeo, ".
 	   "       ges_contenedores.Contenedor, ".
 	   "       ges_productos.UnidadesPorContenedor, ".
-	   "       ges_productos.UnidadMedida ".
+	   "       ges_productos.UnidadMedida, ".
+	   "       ges_productos.IdFamilia as IdFamilia, ".
+	   "       ges_productos.IdSubFamilia as IdSubFamilia, ".
+	   "       ges_almacenes.CostoOperativo as CostoOperativo ".
 	   
 	   "FROM   ges_pedidosdet ".
 	   "LEFT  JOIN ges_productos ON ges_pedidosdet.IdProducto = ges_productos.IdProducto ".
@@ -1036,6 +1045,8 @@ function DetallesCompraRecibir($IdPedido,$IdAlmacen){
 	 $t = 0;
 	 while($row = Row($res)){
 	   $nombre = "detalles_" . $t++;
+	   $row["MUSubFamilia"] = ObtenerMUSubFamilia($row["IdProducto"],$row["IdFamilia"],$row["IdSubFamilia"]);
+	   $row["COPOrigen"] = ($IdProveedor != 0)? obtenerCostoOperativoOrigen($IdProveedor,$row["IdProducto"]):0;
 	   $pedidos[$nombre] = $row; 		
 	 }		
 	 return $pedidos;
@@ -1324,8 +1335,28 @@ function sModificarCompra($xid,$campoxdato,$xdet=false,$xhead=false){
 	   " set    ".$KeysValue." ".
 	   " where  ".$IdKey." = ".$Id;	
 	 return query($sql); 
-}
 
+}
+function sModificarCompra2EliminarNS($xid){
+
+        $sql = 
+ 	  " select IdPedidoDet,IdProducto ".
+	  " from   ges_pedidosdet ".
+	  " where  IdPedido  = '".$xid."'".
+	  " and    Serie     IN (1,2)". 
+	  " and    Eliminado = '0'"; 
+	$res = query($sql);
+	if (!$res) return false;
+
+	while( $row = Row($res) ){
+	  $sql= 
+	    " update ges_productos_series ".
+	    " set    Eliminado = '1' ".
+	    " where  DocumentoEntrada   = '".$row["IdPedidoDet"]."'".
+	    " and    IdProducto         = '".$row["IdProducto"]."'";
+ 	  query($sql);
+	}
+}
 function sModificarVenta($xid,$campoxdato,$xdet=false,$xhead=false){
   
          $Tb         = ($xhead)?'ges_comprobantesdet':'ges_comprobantes';
@@ -1594,6 +1625,7 @@ function ConsolidaDetalleCompra($xid,$xdato=false){
 	       sModificarCompra($xid,
 				'TotalImporte      = '.$TotalImporte.
 				',ImportePendiente = '.$TotalImporte.
+				',ImportePago      = '.$TotalImporte.
 				',ImporteBase      = '.$ImporteBase.
 				',ImporteImpuesto  = '.$ImporteImpuesto,
 				false,
@@ -1664,7 +1696,18 @@ function getVencimientoFromIdProductoVenta($IdPedidoDet, $IdProducto){
 
 function actualizarEstadoDocumentoPedido($xid){
 
-	 $campoxdato = " EstadoDocumento = 'Confirmado'";
+         $sql = 
+	   " select IdMotivoAlbaran,TipoComprobante ".
+	   " from   ges_comprobantesprov ".
+	   " where  IdPedido = '$xid' ";
+	 $row = queryrow($sql);
+	 
+	 $esAlbaranInt    = ( $row["TipoComprobante"] == 'AlbaranInt' )? true:false;
+	 $esConsignacion  = ( $row["IdMotivoAlbaran"] == '2'          )? true:false;//2:Consignacion
+	 $EstadoDocumento = ( $esAlbaranInt   )? "Confirmado" : "Pendiente";
+	 $EstadoDocumento = ( $esConsignacion )? "Pendiente"  : $EstadoDocumento;
+
+	 $campoxdato = " EstadoDocumento = '".$EstadoDocumento."'";
 	 sModificarCompra( $xid,$campoxdato,false,false );
 }
 
@@ -1809,5 +1852,131 @@ function ValidarAjusteExistenciasDetalle($Ajustes,$Series,$idproducto,$esSerie,$
 	    return true;
 	  }
 	 return false;
+}
+
+function ObtenerMUSubFamilia($IdProducto,$IdFamilia,$IdSubFamilia){
+
+$sql = "SELECT MargenUtilidadVD, MargenUtilidadVC, Descuento ".
+         "FROM   ges_subfamilias ".
+         "WHERE ges_subfamilias.IdFamilia = '$IdFamilia' ".
+         "AND   ges_subfamilias.IdSubFamilia = '$IdSubFamilia' ";
+  
+  $res = query($sql);
+
+  $row = Row($res);
+  return $row["MargenUtilidadVD"]."~~".$row["MargenUtilidadVC"]."~~".$row["Descuento"];
+  
+}
+
+function obtenerCostoOperativoOrigen($IdProveedor,$IdProducto){
+  $sql = "SELECT CostoOperativo 
+          FROM ges_almacenes 
+          WHERE IdLocal = $IdProveedor 
+          AND IdProducto = $IdProducto ";
+
+  $row = queryrow($sql);
+
+  return $row["CostoOperativo"];
+}
+
+function verificarEstadoDocumento($IdPedido){
+  $sql = "SELECT EstadoDocumento FROM ges_comprobantesprov WHERE IdPedido = '$IdPedido'";
+  $row = queryrow($sql);
+
+  if($row["EstadoDocumento"] != 'Borrador')
+    return true;
+  else
+    return false;
+}
+
+function crearProforma($IdOrdenCompra,$IdCliente,$CodigoOC){
+  global $UltimaInsercion;
+
+  $IdLocal      = getSesionDato("IdTienda");
+  $IdUsuario    = CleanID(getSesionDato("IdUsuario"));
+  $TipoPresupuesto = 'Proforma';
+  $TipoVenta    = (getSesionDato("TipoVentaTPV") != 1)? getSesionDato("TipoVentaTPV"):'VD';
+  $Impuesto     = getSesionDato("IGV");
+
+  $mensaje      = 'Orden Compra cod -'.$CodigoOC.'-';
+  $vigencia     = getSesionDato("VigenciaPresupuesto");
+
+  // Serie presupuesto
+  $sql = "SELECT Serie FROM ges_presupuestos ".
+         "WHERE IdLocal = $IdLocal AND Eliminado = 0 ORDER BY IdPresupuesto DESC LIMIT 1 ";
+  $row = queryrow($sql);
+  $sreDocumento = ($row["Serie"])? $row["Serie"]:1;
+
+  // Nro Presupuesto
+  $sql = "SELECT MAX(NPresupuesto) as NPresupuesto FROM ges_presupuestos ".
+         "WHERE IdLocal = $IdLocal AND Serie = '$sreDocumento' AND Eliminado = 0 LIMIT 1 ";
+  $row = queryrow($sql);
+  $NroDocumento = ($row["NPresupuesto"])? $row["NPresupuesto"]+1:1;
+
+  //Tipo Cliente
+  $sql = "SELECT TipoCliente FROM ges_clientes ".
+         "WHERE IdCliente = $IdCliente AND Eliminado = 0 LIMIT 1 ";
+  $row = queryrow($sql);
+  $TipoCliente = $row["TipoCliente"];
+  //$TipoVenta = ($TipoCliente == 'Empresa' || $TipoCliente == 'Gobierno')? 'VC':$TipoVenta;
+
+  $esquema = 
+    "IdLocal, IdUsuario, NPresupuesto,TipoPresupuesto,".
+    "TipoVentaOperacion,FechaPresupuesto,".
+    "Impuesto, Status,IdCliente,".
+    "Observaciones,VigenciaPresupuesto,Serie";
+  
+  $datos = 
+    "'$IdLocal','$IdUsuario','$NroDocumento','$TipoPresupuesto',".
+    "'$TipoVenta',NOW(),'$Impuesto','Pendiente','$IdCliente',".
+    "'$mensaje','$vigencia','$sreDocumento'";
+  
+  $sql = "INSERT INTO ges_presupuestos (".$esquema.") VALUES (".$datos.")";
+  query($sql);
+  $IdPresupuesto = $UltimaInsercion;
+
+  $sql = "SELECT IdProducto, Unidades, Costo FROM ges_ordencompradet WHERE IdOrdenCompra = $IdOrdenCompra ";
+  $res = query($sql);
+  $xvalue = "";
+  $TotalImporte = 0;
+
+  while($row = Row($res)){
+    $IdProducto = $row["IdProducto"];
+    $Unidades   = $row["Unidades"];
+
+    $sql = "SELECT PrecioVenta, PrecioVentaCorporativo,CodigoBarras,Referencia ".
+           " FROM ges_almacenes ".
+           "INNER JOIN ges_productos ON ges_almacenes.IdProducto = ges_productos.IdProducto ".
+           " WHERE ges_almacenes.IdProducto = $IdProducto AND IdLocal = $IdLocal";
+    $row = queryrow($sql);
+
+
+    $Referencia   = $row["Referencia"];
+    $CodigoBarras = $row["CodigoBarras"];
+    $Precio       = $row["PrecioVenta"];
+    $PrecioCorp   = $row["PrecioVentaCorporativo"];
+    $Importe      = ($TipoVenta == 'VD')? round($Unidades*$Precio,2):round($Unidades*$PrecioCorp,2);
+
+    $TotalImporte = $TotalImporte + $Importe;
+
+    $xvalue .= "(NULL, ".$IdPresupuesto.",".$IdProducto.", ".$Unidades.",'".$CodigoBarras."','".$Referencia."',".$Precio.",".$Importe." ),";
+    
+  }
+
+  $xvalue = substr($xvalue,0,-1);
+  $sql   = "INSERT INTO ges_presupuestosdet (idpresupuestodet, idpresupuesto, idproducto, cantidad,codigobarras,referencia,precio,importe) VALUES ".$xvalue;
+  query($sql);
+
+  $ImporteNeto = ROUND((100*$TotalImporte/(100+$Impuesto)),2);
+  $ImporteImpuesto = $TotalImporte - $ImporteNeto;
+
+  $sql = "UPDATE ges_presupuestos SET ImporteNeto = $ImporteNeto, ".
+         "ImporteImpuesto = $ImporteImpuesto, TotalImporte = $TotalImporte ".
+         "WHERE IdPresupuesto = $IdPresupuesto ";
+
+  query($sql);
+
+  return "~".$sreDocumento."-".$NroDocumento;
+  
 }
 ?>

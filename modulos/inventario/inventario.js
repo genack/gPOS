@@ -38,6 +38,8 @@ var cEmpaques             = 0;
 var cUnidades             = 0;
 var cUnidxCont            = 0;
 var cUnidad               = 'unid';
+var cMUSubFamilia         = '';
+var cCostoOP              = 0;
 //var cImpuesto           = 0;
 var ilinealistamovimiento = 0;
 var ilinealistaalmacen    = 0;
@@ -58,6 +60,14 @@ var cInicioPagina   = 0;
 var cTotalFilas     = 0;
 var cFilasPagina    = 20;
 var cCadenaBusqueda = "";
+
+// Auxiliares para calculo de precios
+var yPVD  = 0;
+var yPVDD = 0;
+var sPVD  = 0;
+var yPVC  = 0;
+var yPVCD = 0;
+var sPVC  = 0;
 
 function VerMovimiento(){
     VaciarBusquedaMovimiento();
@@ -437,7 +447,7 @@ function RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 
     var tex = "";
     var cr = "\n";
-    var item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,Unidades,Costo,PVD,PVDD,PVC,PVCD,Producto,Almacen,ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,Vence;
+    var item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,Unidades,Costo,PVD,PVDD,PVC,PVCD,Producto,Almacen,ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,Vence,MUSubFamilia,CostoOperativo;
     var node,t,i;
     var totalProductos = 0;
     var totalStock     = 0;
@@ -479,6 +489,8 @@ function RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 	    Serie           = node.childNodes[t++].firstChild.nodeValue;
 	    Lote            = node.childNodes[t++].firstChild.nodeValue;
 	    Vence           = node.childNodes[t++].firstChild.nodeValue;
+	    CostoOperativo  = node.childNodes[t+2].firstChild.nodeValue;
+	    MUSubFamilia    = node.childNodes[t+3].firstChild.nodeValue;
 
 	    if ( Unidades >0   ) totalStock++; 
  	    if ( Unidades == 0 ) totalSinStock++; 
@@ -487,8 +499,9 @@ function RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 
             FuncionProcesaLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
 				       Unidades,Costo,PVD,PVDD,PVC,PVCD,Producto,Almacen,
-				       ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,Vence,
-				       totalStock,totalImporte,totalSinStock,totalProductos);
+				       ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,
+				       Vence,totalStock,totalImporte,totalSinStock,
+				       totalProductos,MUSubFamilia,CostoOperativo);
         }
     }
 }
@@ -496,10 +509,11 @@ function RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
 			 Cantidad,Costo,PVD,PVDD,PVC,PVCD,Producto,Almacen,
 			 ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,Vence,
-			 totalStock,totalImporte,totalSinStock,totalProductos){
+			 totalStock,totalImporte,totalSinStock,totalProductos,
+			 MUSubFamilia,CostoOperativo){
 
     var lista    = id("listadoAlmacen");
-    var xnumitem,xitem,xFechaMovimiento,xUnidades,xCosto,xPVD,xPVDD,xPVC,xPVCD,xProducto,xAlmacen,vCantidad,vExistencias,xResumenKardex,xSerie,xLote,xVence,xMenudeo,xUnidxCont,xCont;
+    var xnumitem,xitem,xFechaMovimiento,xUnidades,xCosto,xPVD,xPVDD,xPVC,xPVCD,xProducto,xAlmacen,vCantidad,vExistencias,xResumenKardex,xSerie,xLote,xVence,xMenudeo,xUnidxCont,xCont,xMUSubFamilia,xCostoOperativo;
     var vResto,vMenudeo,vExistencias,vCantidad,xclass;
 
     //Cantidad
@@ -595,7 +609,7 @@ function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
     xExistencias.setAttribute("style","text-align:right;font-weight:bold;");
 
     xCosto = document.createElement("listcell");
-    xCosto.setAttribute("label",formatDinero(Costo));
+    xCosto.setAttribute("label",formatDineroTotal(Costo));
     xCosto.setAttribute("id","costo_"+IdAlmacen);
     xCosto.setAttribute("style","text-align:right;font-weight:bold;");
 
@@ -623,6 +637,18 @@ function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
     xAlmacen.setAttribute("label", Almacen);
     xAlmacen.setAttribute("style","text-align:left;");
 
+    xMUSubFamilia = document.createElement("listcell");
+    xMUSubFamilia.setAttribute("value",MUSubFamilia);
+    xMUSubFamilia.setAttribute("collapsed","true");
+    xMUSubFamilia.setAttribute("id","musubfamilia_"+IdAlmacen);
+
+    xCostoOperativo = document.createElement("listcell");
+    xCostoOperativo.setAttribute("label",formatDineroTotal(CostoOperativo));
+    xCostoOperativo.setAttribute("collapsed","true");
+    xCostoOperativo.setAttribute("id","costooperativo_"+IdAlmacen);
+
+
+
     xitem.appendChild( xnumitem );
     xitem.appendChild( xAlmacen );
     xitem.appendChild( xFechaMovimiento );
@@ -645,6 +671,8 @@ function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
     xitem.appendChild( xCont );
     xitem.appendChild( xUnidxCont );
     xitem.appendChild( xIdArticulo );
+    xitem.appendChild( xCostoOperativo );
+    xitem.appendChild( xMUSubFamilia );
     lista.appendChild( xitem );	
 
     //totalStock,totalImporte,totalSinStock,
@@ -836,7 +864,8 @@ function continuarOperacionInventario(){
     id("btnAltaRapida").setAttribute("collapsed",false);
     id("wtitleInventario").setAttribute("collapsed",false);
     id("wtitleInventario").setAttribute("label","Inventario "+linvent+" > Stock Almacén");
-
+    id("listaPaginas").setAttribute('collapsed',true);
+    id("btnFinalizarInventario").setAttribute('collapsed',true);
 }
 
 function finalizaOperacionInventario(){
@@ -946,7 +975,8 @@ function mostrarOperacion(xval){
     var cbtnvolver  = "mostrarOperacion('invent')";
     var mbtnvolver  = "../../img/gpos_volver.png";
     var txtInvent   = 'Inventarios';
-
+    var xtitleInv   = true;
+    var xtitleAjt   = true;
     //nels
     var ltajust     = id("listadoMovimiento");
     var numltajust  = ltajust.itemCount;
@@ -955,6 +985,7 @@ function mostrarOperacion(xval){
 
     case 'Ajuste':
     case 'ajust':
+	xtitleAjt         = false;
 	xfecha            = false;
 	xajuste           = false;
 	xope              = 5;
@@ -974,33 +1005,6 @@ function mostrarOperacion(xval){
 	
 	break;
 
-    case 'Inventario':
-    case 'invent':
- 	xcmbinv         = false; 
-	xajuste         = true;
-	xmenualta       = false;
-	xfechainv       = false;
-	xope            = 6;
-	cInventario     = 'Inventario';
-	xlistkdxresumen = 'Listado de Ajustes Inventario';
-	cIdInventario   = acinvent[0];//cinvent
-	cIdPedido       = acinvent[1];//cinvent
-	cIdComprobante  = acinvent[2];//cinvent
-	cInventarioDate = ( acinvent[3] )? acinvent[3]:'';//fecha  inventario
-	xinventprint    = ( cIdInventario!=0 )? false:true;
-	txtInvent       = ( cIdInventario!=0 )? 'Inventario '+ltinvent.getAttribute('label'):txtInvent;
-	xcontinuar      = ( vinvent == cinvent )? false:true; 
-	xinventini      = ( numltinvent == 1 && cIdInventario == 0 )? false:true;
-	xinventario     = ( xinvent || !xinventini )? true:false;
-	xmenuopal       = ( xinvent )? false:true;
-	xtxtinvent      = ( !xinventini )? 'Inicial':'Periodico';
-	lbtnvolver      = ( vinvent == cinvent )? ' Continuar Inventario':' Nuevo Inventario '+xtxtinvent;
-	cbtnvolver      = ( vinvent == cinvent )? "continuarOperacionInventario()":"nuevaOperacionInventario('"+xtxtinvent+"')";
-	xbtnvolver      = ( vinvent == cinvent )? false:true;
-	xbtnvolver      = ( !xinventario       )? false:xbtnvolver;
-	xbtnvolver      = ( !xinventini        )? false:xbtnvolver;
-	mbtnvolver      = ( vinvent == cinvent )? "../../img/gpos_continuarinventario.png":"../../img/gpos_nuevoinventario.png";
-	break;
     }
 
     verKardexInventario();
@@ -1008,8 +1012,8 @@ function mostrarOperacion(xval){
 
     id("TotalMovimientos").value = 0;
     id("MovValorTotal").value    = 0.00;
-    id("ajust").setAttribute("collapsed",false);
-    id("invent").setAttribute("collapsed",false);
+    id("ajust").setAttribute("collapsed",xtitleAjt);
+    id("invent").setAttribute("collapsed",xtitleInv);
     id("fechaInventario").setAttribute("collapsed",xfechainv);
     id("fechaInventario").setAttribute("label",cInventarioDate.replace(/~/g,":"));
     id("wtitleInventario").setAttribute("collapsed",true);
@@ -1030,11 +1034,14 @@ function mostrarOperacion(xval){
     id("menuOperacionContinuar").setAttribute("collapsed",xcontinuar);
     id("menuOperacionFinalizar").setAttribute("collapsed",xcontinuar);
     id("btnFinalizarInventario").setAttribute("collapsed",xcontinuar);
-    id("btnImprimirInventarioPDF").setAttribute("collapsed",xinventprint);
-    id("btnImprimirInventarioCVS").setAttribute("collapsed",xinventprint);
+    //id("btnImprimirInventarioPDF").setAttribute("collapsed",xinventprint);
+    //id("btnImprimirInventarioCVS").setAttribute("collapsed",xinventprint);
     id("menuAlmacenFinalizarInventario").setAttribute("collapsed",xmenuopal);
     id("fechaHasta").setAttribute("collapsed",xfecha);
     id("fechaDesde").setAttribute("collapsed",xfecha);
+
+    var xval = (cTotalFilas > cFilasPagina)? false:true;
+    id("listaPaginas").setAttribute('collapsed',xval);
     
     BuscarMovimiento();
 }
@@ -1057,6 +1064,7 @@ function altarapidaArticulo(){
     id("btnVolver").setAttribute("collapsed",true);
     id("btnFinalizarInventario").setAttribute("collapsed",true);
     //id("btnVolver").setAttribute("oncommand","volverStock()");
+    id("btnAltaRapida").setAttribute("collapsed",true);
 }
 
 function modificarArticuloSeleccionada(){
@@ -1088,7 +1096,10 @@ function modificarArticuloSeleccionada(){
     cPVDD          = id("pvdd_"+idex.value).getAttribute("label");
     cPVC           = id("pvc_"+idex.value).getAttribute("label");
     cPVCD          = id("pvcd_"+idex.value).getAttribute("label");
+    cCostoOP       = id("costooperativo_"+idex.value).getAttribute("label");
     cPrecio        = parseFloat(cCosto*(parseFloat(cImpuesto)+100)/100).toFixed(2);
+    
+    cMUSubFamilia  = id("musubfamilia_"+idex.value).getAttribute("value");
 
     id("formAjustesExistencias").setAttribute("collapsed",false);
     id("btnVolver").setAttribute("collapsed",true);
@@ -1119,7 +1130,7 @@ function modificarArticuloSeleccionada(){
     id("xExistencias").value       = ctExistencias;
     id("xExistenciasFisico").value = cExistencias;  
     id("xValorCompra").value       = cCosto;  
-    id("xPrecioCompra").value      = cPrecio;  
+    id("xCostoOP").value           = cCostoOP;  
     id("xPVD").value               = cPVD;  
     id("xPVDD").value              = cPVDD;  
     id("xPVC").value               = cPVC;  
@@ -1128,6 +1139,7 @@ function modificarArticuloSeleccionada(){
     cAjusteExistencias             = 0;
     cSeries                        = false;
     cSeriesVence                   = false;
+    id("btnAltaRapida").setAttribute("collapsed",true);
 }
 
 function validaDatoMenudeo(xthis){
@@ -1314,7 +1326,8 @@ function quitaStock(xget){
 	           "&esserie="+esSerie+
 	           "&lotevence="+LoteVence+
 	           "&serievence="+cSeriesVence+
-                   "&xajustes="+cAjusteExistencias;
+                   "&xajustes="+cAjusteExistencias+
+	           "&xrkardex="+cResumenKardex;
 
     xrequest.open("POST",url,false);
     xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -1441,6 +1454,7 @@ function agregaStockAltaRapida(arProducto,xlist,xitem){
     //Actualiza Valores Formulario
     cAjusteExistencias = arProducto[cb+'_cantidad'];
     cCosto             = arProducto[cb+'_costo'];
+    cCostoOP           = arProducto[cb+'_costoop'];
     cPVD               = arProducto[cb+'_pvd'];
     cPVDD              = arProducto[cb+'_pvdd'];
     cPVC               = arProducto[cb+'_pvc'];
@@ -1518,7 +1532,9 @@ function agregaStock(xget){
 	           "&esserie="+esSerie+
 	           "&lotevence="+LoteVence+
 	           "&serievence="+cSeriesVence+
-                   "&xajuste="+cAjusteExistencias;
+                   "&xajuste="+cAjusteExistencias+
+	           "&xrkardex="+cResumenKardex+
+                   "&xcostoop="+cCostoOP;
 
     xrequest.open("POST",url,false);
     xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -1649,6 +1665,9 @@ function volverStock(){
     id("btnVolver").setAttribute("label",xbtnvolver);
     id("btnVolver").setAttribute("oncommand",cbtnvolver);
     id("NombreBusqueda").focus();
+    id("btnFinalizarInventario").setAttribute('collapsed',true);
+    if(cInventario == 'Inventario')
+	id("btnAltaRapida").setAttribute("collapsed",false);
 }
 
 function verKardexInventario(){
@@ -1689,56 +1708,106 @@ function totalAjusteExistencias(xval){
 function setCostoPrecios(xval,xdato){
     
     xdato = parseFloat(xdato);
-    //xdato = xdato.toFixed(2);
+    var IMP,xMUD,xMUC,xDSTO;
+    var aMUSubFam = cMUSubFamilia.split("~~");
+    var xMUDSF    = parseFloat(aMUSubFam[0]);
+    var xMUCSF    = parseFloat(aMUSubFam[1]);
+    var xDSTOSF   = parseFloat(aMUSubFam[2]);
+    var DSTOGR    = parseFloat(cDescuentoGral);
+    var MUGR      = parseFloat(cUtilidad);
+
+    xDSTO       = (xDSTOSF != 0)? xDSTOSF:DSTOGR;
+    xMUD        = (xMUDSF != 0)? xMUDSF:MUGR;
+    xMUC        = (xMUCSF != 0)? xMUCSF:MUGR;
+
+    var xCosto  = parseFloat(id("xValorCompra").value);  //cCosto
+    var xPrecio = parseFloat(id("xCostoOP").value);     //cCostoOP
+    cCosto      = xCosto;
+    cCostoOP    = xPrecio;
+    cPrecio     = parseFloat(xCosto*(parseFloat(cImpuesto)+100)/100).round(2);
+
+    var COP     = (COPImpuesto)? 0:xPrecio;
+    var MUD     = (xCosto + COP)*(xMUD/100);
+    var MUC     = (xCosto + COP)*(xMUC/100);
+
+    yPVD  = cPVD;
+    yPVDD = cPVDD;
+    yPVC  = cPVC;
+    yPVCD = cPVCD;
 
     switch (xval) {
 
     case 'costo':
-	cPrecio = parseFloat(xdato*(parseFloat(cImpuesto)+100)/100).toFixed(2);
-	cCosto  = xdato;
-
-	var xPVD = (cPrecio>cPVD)? parseFloat(cPrecio*(parseFloat(cUtilidad)+100)/100):cPVD;
-	cPVDD    = (xPVD != cPVD)? cPrecio:cPVDD;
-	cPVC     = (xPVD != cPVD)? xPVD:cPVC;
-	cPVCD    = (xPVD != cPVD)? cPrecio:cPVCD;
-	cPVD     = xPVD;
-	break;
-
+	id("xValorCompra").value = formatDineroTotal(xCosto);
     case 'precio':
-	cPrecio  = xdato;
-	cCosto   = (xdato*100/(parseFloat(cImpuesto)+100)).toFixed(2);
-	var xPVD = (cPrecio>cPVD)? parseFloat(cPrecio*(parseFloat(cUtilidad)+100)/100):cPVD;
-	cPVDD    = (xPVD != cPVD)? cPrecio:cPVDD;
-	cPVC     = (xPVD != cPVD)? xPVD:cPVC;
-	cPVCD    = (xPVD != cPVD)? cPrecio:cPVCD;
-	cPVD     = xPVD;
+	id("xCostoOP").value = formatDineroTotal(xPrecio);
+
+	yPVD     = xCosto + MUD + COP;
+	IMP      = (yPVD*cImpuesto/100).round(2);
+	yPVD     = (COPImpuesto)? (yPVD + IMP + xPrecio):(yPVD + IMP);
+	yPVD     = yPVD.round(2);
+	yPVDD    = (yPVD-(MUD*xDSTO/100)).round(2);
+	sPVD     = yPVD;
+	cPVD     = yPVD;
+	cPVDD    = yPVDD;
+
+	yPVC     = xCosto + MUC + COP;
+	IMP      = (yPVC*cImpuesto/100).round(2);
+	yPVC     = (COPImpuesto)? (yPVC + IMP + xPrecio):(yPVC + IMP);
+	yPVC     = yPVC.round(2);
+	yPVCD    = (yPVC-(MUC*xDSTO/100)).round(2);
+	sPVC     = yPVC;
+	cPVC     = yPVC;
+	cPVCD    = yPVCD;
+
 	break;
 
     case 'pvd':
-	cPVD    = ( xdato >= cPrecio)? xdato:cPrecio;
-	cPVDD   = ( cPVDD >= cPrecio && cPVDD <= cPVD )? cPVDD:cPVD;
+        var PVD  = parseFloat(id("xPVD").value);
+	PVD      = (PVD <= FormatPreciosTPV(sPVD))? sPVD:PVD;
+	yPVD     = PVD;
+	yPVDD    = (yPVD-(MUD*xDSTO/100)).round(2);
+	cPVD     = yPVD;
+	cPVDD    = yPVDD;
+
 	break;
 
     case 'pvdd':
-	cPVDD  = (xdato <= cPVD && xdato >= cPrecio )? xdato:cPVD;
+	var PVDD = parseFloat(id("xPVDD").value);
+	PVDD     = (PVDD < FormatPreciosTPV(sPVD) || PVDD > yPVD)? sPVD-(MUD*xDSTO/100):PVDD;
+	yPVDD    = PVDD;
+	cPVDD    = yPVDD;
+
 	break;
 
     case 'pvc':
-	cPVC    = (xdato >= cPrecio)? xdato:cPrecio;
-	cPVCD   = (cPVCD <= cPVC && cPVCD >= cPrecio)? cPVCD:cPVC;
+	var PVC  = parseFloat(id("xPVC").value);
+	PVC      = (PVC <= FormatPreciosTPV(sPVC))? sPVC:PVC;
+	yPVC     = PVC;
+	yPVCD    = (yPVC-(MUC*xDSTO/100)).round(2);
+	cPVC     = yPVC;
+	cPVCD    = yPVCD;
+
 	break;
 
     case 'pvcd':
-	cPVCD  = (xdato <= cPVC && xdato >= cPrecio)? xdato:cPVC;
+	var PVCD = parseFloat(id("xPVCD").value);
+	PVCD     = (PVCD < FormatPreciosTPV(sPVC) || PVCD > yPVC)? sPVC-(MUC*xDSTO/100):PVCD;
+	yPVCD    = PVCD;
+	cPVCD    = yPVCD;
+
 	break;
     }
 
-    id("xValorCompra").value  = formatDinero(cCosto);  
-    id("xPrecioCompra").value = formatDinero(cPrecio);  
-    id("xPVD").value          = formatDinero(cPVD);  
-    id("xPVDD").value         = formatDinero(cPVDD);  
-    id("xPVC").value          = formatDinero(cPVC); 
-    id("xPVCD").value         = formatDinero(cPVCD);
+    cPVD  = FormatPreciosTPV(yPVD);
+    cPVDD = FormatPreciosTPV(yPVDD);
+    cPVC  = FormatPreciosTPV(yPVC);
+    cPVCD = FormatPreciosTPV(yPVCD);
+
+    id("xPVD").value   = FormatPreciosTPV(yPVD);
+    id("xPVDD").value  = FormatPreciosTPV(yPVDD);
+    id("xPVC").value   = FormatPreciosTPV(yPVC);
+    id("xPVCD").value  = FormatPreciosTPV(yPVCD);
 }
 
 function exportarInventario(xval){

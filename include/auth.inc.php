@@ -122,8 +122,6 @@ function RegistrarMUTienda($id){
     setSesionDato("MargenUtilidad",$mu);	
 }
 
-
-
 function RegistrarUsuarioLogueado($id){
 			
 	$sql = "SELECT Nombre,IdPerfil,AdministradorWeb FROM ges_usuarios WHERE IdUsuario='$id'";
@@ -193,7 +191,7 @@ function identificacionLocalValidaMd5($identificador,$passmd5){
 function identificacionUsuarioValidoMd5($identificador,$passmd5){
 
 	global $_motivoFallo;
-	$idlocal = getSesionDato("IdTienda");
+	//$idlocal = getSesionDato("IdTienda");
 	//$randString = $_SESSION["CadenaAleatoria"];
 		
 		
@@ -202,7 +200,7 @@ function identificacionUsuarioValidoMd5($identificador,$passmd5){
 	if (!$datosValidos)
 		return false;		
 	
-	$sql = "SELECT IdUsuario, Password FROM ges_usuarios WHERE Identificacion = '$identificador' AND Eliminado=0 And IdLocal In ($idlocal,0)";
+	$sql = "SELECT IdUsuario,Password, concat( IdLocal,'',if( GrupoLocales like '', '', concat(',',GrupoLocales) )) as locales FROM ges_usuarios WHERE Identificacion = '$identificador' AND Eliminado=0";
 	$row = queryrow($sql);
 	if (!$row)
 		return false;
@@ -213,8 +211,9 @@ function identificacionUsuarioValidoMd5($identificador,$passmd5){
 		$_motivoFallo = "datos'$valido != $passmd5'";		
 		return false;		
 	}
-		
-		
+	//Carga datos locales permitidos
+	registraLocalesPermitidos($row["locales"]);
+	//Retorma Id
 	return $row["IdUsuario"];	
 }
 
@@ -310,5 +309,60 @@ function RegistrarMoneda(){
   setSesionDato("Moneda",$Moneda);
 }
 
- 
+function RegistrarValuacionPrecioTPV($id){
+    $id = CleanID($id);
+    $sql = "SELECT MetodoRedondeo,Descuento,COPImpuesto FROM ges_locales 
+            WHERE IdLocal = '$id'";
+    $row = queryrow($sql,"Obteniendo Redondeo Precio del local");
+
+    if($row){
+      setSesionDato("MetodoRedondeo",$row["MetodoRedondeo"]);
+      setSesionDato("DescuentoTienda",$row["Descuento"]);
+      setSesionDato("COPImpuesto",$row["COPImpuesto"]);
+    }
+}
+
+function RegistrarKeySyncTPV(){
+  $idlocal   = getSesionDato("IdTienda");
+  $idusuario = getSesionDato("IdUsuario");
+  $keysync   = MD5(date("Y-m-d H:i:s"));
+
+  $xset   = '';
+  $xset  .= "IdLocal = '$idlocal', ";
+  $xset  .= "KeySync = '$keysync', ";
+  $xset  .= "Preventa = 0, ";
+  $xset  .= "Proforma = 0, ";
+  $xset  .= "ProformaOnline = 0, ";
+  $xset  .= "Stock = 0, ";
+  $xset  .= "Cliente = 0, ";
+  $xset  .= "Promocion = 0, ";
+  $xset  .= "Mensaje = 0, ";
+  $xset  .= "Caja = 0, ";
+  $xset  .= "MetaProducto = 0 ";
+    
+  $sql = "UPDATE ges_synctpv SET $xset ".
+         "WHERE IdUsuario = $idusuario ";
+  query($sql);
+
+  setSesionDato("KeySync",$keysync);
+}
+
+function registraLocalesPermitidos( $xlocales ){
+  $xsqllocal = ( $xlocales == '0')? '':' idlocal in ( '.$xlocales.' ) and';
+
+  $sql = 
+    " select IdLocal,AdmitePassword,Identificacion ".
+    " from  ges_locales ".
+    " where $xsqllocal eliminado = 0";
+  $res = query($sql);
+  $ckAccess = Array();
+  $xsrt = '';
+
+  while($row= Row($res)) {
+    $ckAccess[ $row['Identificacion'] ] = $row['IdLocal'].":".$row['AdmitePassword'];
+    $ckAccess[ 'js' ] .= $xsrt.$row['Identificacion'].":".$row['AdmitePassword'];
+    $xsrt              = '~';
+  }
+  setSesionDato("LocalAccess",$ckAccess);
+}
 ?>

@@ -33,38 +33,65 @@ if ($codcliente==0){
                and     IdLocal       = '$IdLocal'
                and     Eliminado     = '0'";
 }else{
-  $sql = "Select *  
-               from  ges_comprobantes,ges_clientes 
+  $sql = "Select Destinatario  
+               from  ges_comprobantes
                where ges_comprobantes.IdComprobante = '$IdComprobante' 
                and   ges_comprobantes.IdCliente     = '$codcliente' 
                and   ges_comprobantes.IdLocal       = '$IdLocal' 
-               and   ges_comprobantes.IdCliente     = ges_clientes.IdCliente 
                and   ges_comprobantes.Eliminado     = '0'";
+  
+  $rs    = query($sql);
+  $comp  = Row($rs);
+  $dest  = $comp["Destinatario"];
+
+  $esmov = ($comp["Destinatario"] == 'Local')? " INNER JOIN ges_motivoalbaran ON ges_comprobantesnum.IdMotivoAlbaran = ges_motivoalbaran.IdMotivoAlbaran ":"";
+  $esmovalba = ($comp["Destinatario"] == 'Local')? " ges_motivoalbaran.MotivoAlbaran, ":"";
+
+  $xclien = ($dest == 'Local')? " (SELECT CONCAT(ges_locales.NombreLegal,'~~',ges_locales.DireccionFactura,'~~',ges_locales.NFiscal) FROM ges_locales WHERE ges_locales.IdLocal = ges_comprobantes.IdCliente) ":"";
+  $xclien = ($dest == 'Proveedor')? " (SELECT CONCAT(ges_proveedores.NombreLegal,'~~',ges_proveedores.Direccion,'~~',ges_proveedores.NumeroFiscal) FROM ges_proveedores WHERE ges_proveedores.IdProveedor = ges_comprobantes.IdCliente) ":$xclien;
+  $xclien = ($dest == 'Cliente')? " (SELECT CONCAT(IF(ges_clientes.TipoCliente = 'Empresa',ges_clientes.NombreLegal,ges_clientes.NombreComercial),'~~',ges_clientes.Direccion,'~~',ges_clientes.NumeroFiscal) FROM ges_clientes WHERE ges_clientes.IdCliente = ges_comprobantes.IdCliente) ":$xclien;
+
+  $sql = "SELECT
+                ges_usuarios.Nombre As Vendedor, 
+                ges_comprobantes.SerieComprobante,
+                ges_comprobantes.NComprobante,
+                DATE_FORMAT(ges_comprobantesnum.Fecha,'%d/%m/%Y %H:%i') as Fecha,
+                ges_comprobantes.TotalImporte,
+                ges_comprobantes.ImportePendiente,
+                ges_comprobantesstatus.Status, 
+                ges_comprobantes.IdComprobante,
+                ges_comprobantes.Destinatario,
+                ges_locales.NFiscal as RUC1,
+                CONCAT(ges_comprobantestipo.Serie,'-',ges_comprobantesnum.NumeroComprobante) as NumeroComprobante,
+                ges_comprobantestipo.TipoComprobante as TipoDocumento,
+                IF(Destinatario='$dest',$xclien,'') as Cliente, 
+                ges_comprobantes.IdCliente,
+                ges_locales.NombreLegal as Local, ges_comprobantes.IdLocal,
+                $esmovalba 
+                ges_comprobantes.FechaComprobante 
+    		FROM ges_comprobantes " .
+    		"LEFT JOIN ges_clientes ON ges_comprobantes.IdCliente = ges_clientes.IdCliente
+                INNER JOIN ges_comprobantesstatus ON ges_comprobantes.Status = ges_comprobantesstatus.IdStatus
+                INNER JOIN ges_locales ON ges_comprobantes.IdLocal = ges_locales.IdLocal
+                INNER JOIN ges_usuarios ON ges_comprobantes.IdUsuario = ges_usuarios.IdUsuario
+                INNER JOIN ges_comprobantesnum ON ges_comprobantesnum.IdComprobante = ges_comprobantes.IdComprobante
+                INNER JOIN ges_comprobantestipo ON  ges_comprobantestipo.IdTipoComprobante = ges_comprobantesnum.IdTipoComprobante 
+                $esmov
+                WHERE ges_comprobantes.Eliminado = 0
+                AND  ges_comprobantesnum.Eliminado = 0
+                AND  ges_comprobantesnum.Status = 'Emitido'
+                AND  ges_comprobantes.IdComprobante = '$IdComprobante'
+                AND  ges_comprobantes.IdLocal       = '$IdLocal'";
+ //AND  ges_comprobantestipo.TipoComprobante = 'AlbaranInt'";
 }
 $res       = query($sql);
 $lafila    = Row($res);
 
-//Cliente
-if ($codcliente==0){
-  $nombre    = "";
-  $nif       = "";
-  $direccion = "";
-}else{
-  $sql = "SELECT NombreComercial,
-                 NumeroFiscal,
-                 Direccion,
-                 NombreLegal,
-                 TipoCliente
-          FROM   ges_clientes 
-          WHERE  IdCliente='$codcliente'";
-  $res       = query($sql);
-  $row       = Row($res);
-  $nombre    = utf8_decode($row["NombreComercial"]);
-  $nif       = utf8_decode($row["NumeroFiscal"]);
-  $direccion = utf8_decode($row["Direccion"]);
-  $cliente   = utf8_decode($row["TipoCliente"]);
-  $nombre    = ($cliente == 'Empresa')? utf8_decode($row["NombreLegal"]):$nombre;
-}
+$acliente  = explode("~~",$lafila["Cliente"]);
+$nombre    = $acliente[0];
+$direccion = $acliente[1];
+$nif       = $acliente[2];
+$nombre    = str_replace('&#038;','&',$nombre);
 
 //Imprime Comrpobante
 //$pdf=new PDF();
@@ -98,6 +125,7 @@ $pdf->Ln(11);
 
     $pdf->SetX(37);
     //########## FECHA BOLETA
+
     list($anho,$mes,$dia)=explode('-',$lafila["FechaComprobante"]);
     $pdf->Cell(70,4,$dia);
     $pdf->SetX(47);
@@ -107,13 +135,14 @@ $pdf->Ln(11);
 
     $pdf->SetX(93);
     //########## FECHA BOLETA
+/*
     list($anho,$mes,$dia)=explode('-',$lafila["FechaComprobante"]);
     $pdf->Cell(70,4,$dia);
     $pdf->SetX(103);
     $pdf->Cell(70,4,$mes);
     $pdf->SetX(113);
     $pdf->Cell(70,4,$anho);
-
+*/
     $pdf->Ln(12);
 
     //########## DIRECCION				
@@ -264,7 +293,7 @@ $IdComprobante=$lafila["IdComprobante"];
 	  $acotmp    = getItemMetaProducto($row["MetaProducto"],$row["Serie"],$series,$codarticulo,71);
 
 	  $descripcion_0 =
-	    $codigobarras." ".
+	    //$codigobarras." ".
 	    $descripcion." ".
 	    $marca." ".
 	    $modelo." ".

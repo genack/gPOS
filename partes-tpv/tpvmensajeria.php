@@ -6,78 +6,83 @@
 	</listitem>	
 </listbox>
 	
-	<groupbox><caption label="Contenido:"/>
-	<toolbarbutton label="Ok" oncommand="mensajesModoRecepcion()"/>	
-	<label crop="end" value="texto" id="tituloVisual" style="max-width: 200px;font-weight: bold;color: blue"/>
-	<textbox multiline="true" readonly="true" value="texto aqui" flex="1" id="textoVisual" 
-		style="color: blue; background-color: ThreeDFace !important"/>
+	<groupbox><caption label="Mensaje"/>
+	<hbox pack="center" style="padding-top:0.5em">
+	  <image src="img/gpos_tpvmensaje.png"/>
+	  <label crop="end" value="texto" id="tituloVisual" style="font-size:1.2em; "/>
+	</hbox>
+
+	<textbox multiline="true" readonly="true" value="texto aqui" flex="1" id="textoVisual" />
+	<button label="Ok" oncommand="mensajesModoRecepcion()" style="text-align:center; font-size:1.2em;" image="img/gpos_aceptar.png"/>	
 </groupbox>	
 
 <groupbox>
-	<caption class="" crop="end" label="<?php echo _("Mensaje") ?>" id="tituloVisualMensaje"/>
+	<caption class="" crop="end" label="<?php echo _("Mensaje") ?>" id="tituloVisualMensaje" />
 	<vbox flex="1">
-	<menulist  id="localDestino">						
+	<caption id="localDestinoLabel" >Local </caption>
+	<menulist  id="localDestino">
 	<menupopup>
 	<menuitem label="<?php echo _("Elije local") ?>" style="font-weight: bold"/>
 		<?php echo genXulComboAlmacenes(false,"menuitem")  ?>
 	</menupopup>
 	</menulist>
-        <vbox>
-    	  <textbox id="tituloNuevoMensaje" onfocus="select()" collapsed="true"
+        <vbox id="boxtituloNuevoMensaje">
+	  <caption>Titulo </caption>
+    	  <textbox id="tituloNuevoMensaje" onfocus="select()" class="compacta"
                  onkeypress="return soloAlfaNumericoTPV(event)"/>
         </vbox>
-        <spacer style="height:0.5em"/>
+        <spacer style="height:0.2em"/>
 
         <vbox id="filaFechaEntregaProforma" collapsed="true">
-          <caption label="Entrega:"/>
+          <caption label="Entrega" />
           <grid>
-          <rows>
+          <rows >
           <row>
             <description>Fecha: </description>
-            <datepicker id="fechaEntregaProforma" type="popup" />
+            <datepicker id="fechaEntregaProforma" type="popup"  />
           </row>
           <row>
             <description>Hora : </description>
-            <timepicker id="horaEntregaProforma" type="popup" />
+            <timepicker id="horaEntregaProforma" type="popup"  />
           </row>
           <row>
             <description>Lugar: </description>
-	    <textbox id="lugarEntregaProforma" onfocus="select()" style="width:12.5em;"
-                 onkeypress="return soloAlfaNumericoTPV(event)" value=""/>
+	    <textbox id="lugarEntregaProforma"  onfocus="select()"  
+		     onkeypress="return soloAlfaNumericoTPV(event)" value=""/>
           </row>
           </rows>
           </grid>
         </vbox>
-        <spacer style="height:0.5em"/>
+        <spacer style="height:0.2em"/>
    	<vbox>
           <grid>
           <rows>
           <row id="adelantoProformabox" collapsed="true">
-            <caption label="Adelanto:"/>
-   	    <textbox id="adelantoProforma" onfocus="select()" style="width:10.5em;"
-                 onkeypress="return soloNumerosTPV(event,this.value)" value="0"/>
+            <caption label="Adelanto <?php echo $Moneda[1]['S']?>" style="font-size:1.2em"/>
+   	    <textbox id="adelantoProforma" class="compacta" onfocus="select()" style="text-align:right;"
+                 onkeypress="return soloNumerosTPV(event,this.value)" value="0.00"/>
           </row>
 
           <row id="vigenciaProformabox"  collapsed="true">
-            <caption label="Vigencia:"/>
-	    <textbox id="vigenciaProforma" onfocus="select()" style="width:10.5em;"
+            <caption label="Vigencia Días "  style="font-size:1.2em"/>
+	    <textbox id="vigenciaProforma" class="compacta" onfocus="select()" style="text-align:right;"
                  onkeypress="return soloNumerosTPV(event,this.value)" value=""/>
           </row>
           </rows>
           </grid>
           <vbox> 
-            <caption label="Mensaje:"/>
+	    <caption>Mensaje </caption>
 	    <textbox id="cuerpoNuevoMensaje" multiline="true"  rows="2" onfocus="select()"
-                 onkeypress="return soloAlfaNumericoTPV(event)" style="width:12.5em;" value="- "/>
+                 onkeypress="return soloAlfaNumericoTPV(event)" value="- "/>
           </vbox>
           <vbox id="vboxserieMProducto" collapsed="true">
-            <caption label="Serie MProducto:"/>
+             <description>Serie MProducto: </description>
 	    <textbox id="serieMProducto" onfocus="select()" value="" onchange="validaMProductoTicket()" collapsed="false" onkeypress="return soloAlfaNumericoTPV(event)" style="width:12.5em;"/>
           </vbox>
         </vbox>
 	<hbox>
-		<button id="EnviarMensajePrivado" image="<?php echo $_BasePath ?>/img/gpos_aceptar.png" label="<?php echo _(" Enviar") ?>" oncommand="EnviarMensajePrivado()"/>
-		<button id="CancelarMensajePrivado" image="<?php echo $_BasePath ?>/img/gpos_cancelar.png" label="<?php echo _(" Cancelar") ?>" oncommand="ToggleMensajes()"/>
+		<button id="EnviarMensajePrivado" image="img/gpos_aceptar.png" label="<?php echo _(" Enviar") ?>" oncommand="EnviarMensajePrivado()"/>
+		<button id="CancelarMensajePrivado" image="img/gpos_cancelar.png" label="<?php echo _(" Cancelar") ?>" oncommand="ToggleMensajes()"/>
 	</hbox>
 	</vbox>
 </groupbox>	

@@ -4,7 +4,7 @@ include("tool.php");
 
 SimpleAutentificacionAutomatica("visual-iframe");
 
-$tamPagina = 10;
+$tamPagina = 20;
 
 function AccionesSeleccion(){
 									
@@ -18,7 +18,7 @@ function ListarFamilias() {
 	if (!$ot){	
 		error(__FILE__ . __LINE__ ,"Info: template no encontrado");
 		return false; }
-		
+	$tamPagina = $ot->getPagina();		
 	$marcado = getSesionDato("CarritoFam");  
 	
 	//echo "ser: " . serialize($marcado). "<br>";
@@ -82,12 +82,17 @@ function ListarSubFamilias($IdPadre = 0) {
 	$indice = getSesionDato("PaginadorListaSubFam");
 	
 	$hayFamilias = $oFamilia->ListadoSub(false,$indice,$IdPadre);
-	
+
+	$oFam = new familia;
+	$oFam->Load($IdPadre);
+	$NomFamilia = $oFam->get("Familia");
+
 	if (!$hayFamilias){
 		echo gas("aviso","No hay familias disponibles");	
 	} else{
 		$ot->fijar("tTitulo",_("Lista de subfamilias"));
 		$ot->fijar("action",$action);
+		$ot->fijar("vFamilia",$NomFamilia);
 		
 		$ot->fijar("id",$IdPadre);
 		$ot->resetSeries(array("IdFamilia","Referencia","Nombre","tBorrar","tEditar",
@@ -102,7 +107,7 @@ function ListarSubFamilias($IdPadre = 0) {
 			$ot->fijarSerie("tCreaSub",_("Crear subfamilia"));
 			$ot->fijarSerie("tListaSub",_("Subfamilia"));
 			$ot->fijarSerie("IdFamilia",$oFamilia->get("IdFamilia"));
-			$ot->fijarSerie("Nombre",$oFamilia->get("SubFamilia"));														
+			$ot->fijarSerie("Nombre",$oFamilia->get("SubFamilia"));
 		}		
 		
 		$ot->paginador($indice,false,$num);
@@ -128,7 +133,7 @@ function MostrarFamiliaParaEdicion($id,$lang=false) {
 	echo $oFamilia->formEntrada($action,true);	
 }
 
-function MostrarSubFamiliaParaEdicion($id,$lang=false) {
+function MostrarSubFamiliaParaEdicion($id,$mud,$muc,$dsto,$tipocosto,$lang=false) {
 	global $action;
 	
 	if (!$lang)
@@ -141,7 +146,7 @@ function MostrarSubFamiliaParaEdicion($id,$lang=false) {
 		return false;	
 	}
 	
-	echo $oFamilia->formModificarSubfamilia($action);	
+	echo $oFamilia->formModificarSubfamilia($action,$mud,$muc,$dsto,$tipocosto);	
 }
 
 function ModificarFamilia($id,$nombre){
@@ -164,7 +169,7 @@ function ModificarFamilia($id,$nombre){
 	}	
 }
 
-function ModificarSubFamilia($id,$nombre){
+function ModificarSubFamilia($id,$nombre,$margenvd,$margenvc,$descuento){
 	$oFamilia = new familia;
 	if (!$oFamilia->LoadSub($id)){
 		error(__FILE__ . __LINE__ ,"W: no pudo mostrareditar '$id'");
@@ -174,7 +179,9 @@ function ModificarSubFamilia($id,$nombre){
 	//error( __FILE__ . __LINE__ ,"Info: s1 ". serialize($oFamilia));
 	
 	$oFamilia->set("SubFamilia",$nombre);
-
+	$oFamilia->set("MargenUtilidadVD",$margenvd);
+	$oFamilia->set("MargenUtilidadVC",$margenvc);
+	$oFamilia->set("Descuento",$descuento);
 	
 	if ($oFamilia->ModificacionSubfamilia() ){
 		return true;
@@ -326,6 +333,80 @@ function VaciarDatosFamiliasyAlmacen(){
 	query("DELETE FROM ges_subfamilias");
 }
 
+function ListaProductosxSubFamilia($IdFamilia,$IdSubFamilia,$mud,$muc,$dsto,$tipocosto){
+
+	//echo "::".$IdFamilia."::".$IdSubFamilia."::";
+        $COPImpuesto = getSesionDato("COPImpuesto");
+	$res = obtenerProductoxSubFamilia($IdFamilia,$IdSubFamilia);
+	$xout = "<table class='forma' width='750'>
+                 <tbody><tr><td><table></table></td></tr>
+                 <tr class='formaCabezaLista'>
+                 <td colspan=4>Productos</td>
+                 <td colspan=4 >Precios Anteriores</td>
+                 <td colspan=4 >Nuevos Precios</td>
+                 </tr>
+                 <tr class='formaCabezaLista' style='font-size:1em;'>
+                 <td ></td>
+                 <td >Ref</td>
+                 <td >CB</td>
+                 <td style='min-width:8em'>Nombre</td>
+                 <td >PVP</td>
+                 <td >PVP/D</td>
+                 <td >PVC</td>
+                 <td >PVC/D</td>
+                 <td >PVP</td>
+                 <td >PVP/D</td>
+                 <td >PVC</td>
+                 <td >PVC/D</td>
+                 </tr>";
+	
+	while($row=Row($res)){
+
+	  $Costo = ($tipocosto == 'CP')? $row["CostoPromedio"]:$row["UltimoCosto"];
+	  $COP       = ($COPImpuesto == 1)? 0:$row["CostoOperativo"];
+
+	  $MUD_Nuevo   = ($Costo+$COP)*$mud/100;
+	  $PD_Nuevo    = $Costo+$COP+$MUD_Nuevo;
+	  $IGV_Directo = $PD_Nuevo*$row["Impuesto"]/100;
+	  $PVD_Nuevo   = ($COPImpuesto == 1)? $PD_Nuevo+$IGV_Directo+$row["CostoOperativo"]:$PD_Nuevo+$IGV_Directo;
+	  $PVD_Nuevo  = ($mud != 0)? $PVD_Nuevo : $row["PrecioVenta"];
+	  $PVD_Nuevo  = FormatPreciosTPV($PVD_Nuevo);
+	  $PVDD_Nuevo = $PVD_Nuevo-($MUD_Nuevo*$dsto/100);
+	  $PVDD_Nuevo = ($mud != 0)? $PVDD_Nuevo:$row["PVDDescontado"];
+	  $PVDD_Nuevo = FormatPreciosTPV($PVDD_Nuevo);
+
+	  $MUC_Nuevo = ($Costo+$COP)*$muc/100;
+	  $PC_Nuevo  = $Costo+$COP+$MUC_Nuevo;
+	  $IGV_Corporativo = $PC_Nuevo*$row["Impuesto"]/100;
+	  $PVC_Nuevo = ($COPImpuesto == 1)? $PC_Nuevo+$IGV_Corporativo+$row["CostoOperativo"]:$PC_Nuevo+$IGV_Corporativo;
+
+	  $PVC_Nuevo  = ($muc != 0)? $PVC_Nuevo:$row["PrecioVentaCorporativo"];
+	  $PVC_Nuevo  = FormatPreciosTPV($PVC_Nuevo);
+	  $PVCD_Nuevo = $PVC_Nuevo-$MUC_Nuevo*$dsto/100;
+	  $PVCD_Nuevo = ($muc != 0)? $PVCD_Nuevo:$row["PVCDescontado"];
+	  $PVCD_Nuevo = FormatPreciosTPV($PVCD_Nuevo);
+
+	  $xout .= "<tr class='t f'><td width='16' class='iconproducto'><img src='img/gpos_productos.png'></td>".
+	    "<td class='referencia'>".$row["Referencia"]."</td>".
+	    "<td class='codigobarras'>".$row["CodigoBarras"]."</td>".
+	    "<td class='nombre'>".$row["Producto"]."</td>".
+	    "<td >".$row["PrecioVenta"]."</td>".
+	    "<td >".$row["PVDDescontado"]."</td>".
+	    "<td >".$row["PrecioVentaCorporativo"]."</td>".
+	    "<td >".$row["PVCDescontado"]."</td>".
+	    "<td >".$PVD_Nuevo."</td>".
+	    "<td >".$PVDD_Nuevo."</td>".
+	    "<td >".$PVC_Nuevo."</td>".
+	    "<td >".$PVCD_Nuevo."</td></tr>";
+
+	  //$xout .=  "<br>".$Costo;
+	}
+
+	$xout .= "</tbody></table>";
+	return $xout;
+}
+
+
 PageStart();
 
 //echo gas("cabecera",_("Gestion de Familias"));
@@ -357,9 +438,13 @@ switch($modo){
 		break;	
 	case "newsubfamilia":		
 		//$padre = CleanID($_POST["id"]);
-		$padre = getSesionDato("SubFamiliaDeFamilia");
-		$nombre = CleanText($_POST["Nombre"]);					
-		CrearSubFamilia($nombre,$padre);								
+		$padre     = getSesionDato("SubFamiliaDeFamilia");
+		$nombre    = CleanText($_POST["Nombre"]);
+		$margenvd  = CleanFloat($_POST["MargenUtilidadVD"]);
+		$margenvc  = CleanFloat($_POST["MargenUtilidadVC"]);
+		$descuento = CleanFloat($_POST["Descuento"]);
+
+		CrearSubFamilia($nombre,$margenvd,$margenvc,$descuento,$padre);
 		//Separador();
 		
 		setSesionDato("PaginadoActivoFamilia","PaginadorListaSubFam");
@@ -382,19 +467,39 @@ switch($modo){
 		PaginaBasica();	
 		break;
 	case "modsubfamilia":
-		$id 	= CleanID($_POST["id"]);
-		$nombre = CleanText($_POST["SubFamilia"]);			
-		ModificarSubFamilia(	$id,$nombre);
+		$id 	   = CleanID($_POST["id"]);
+		$nombre    = CleanText($_POST["SubFamilia"]);			
+		$margenvd  = CleanFloat($_POST["MargenUtilidadVD"]);
+		$margenvc  = CleanFloat($_POST["MargenUtilidadVC"]);
+		$descuento = CleanFloat($_POST["Descuento"]);
+		ModificarSubFamilia($id,$nombre,$margenvd,$margenvc,$descuento);
+
+		// Recula precio
+		$nuevo = isset($_POST["MargenUtilidad"]);
 		$padre = getSesionDato("SubFamiliaDeFamilia");
-		PaginaBasicaSubfamilia($padre);	
+
+		if($nuevo){
+		  $tipocosto = CleanText($_POST["menu"]);
+		  if($margenvd != 0 || $margenvc != 0 || $descuento != 0)
+		    actualizarPreciosVentaAlmacenxSubFamilia($id,$margenvd,$margenvc,$tipocosto,$descuento);
+		}
+
+
+		PaginaBasicaSubfamilia($padre);		
 		break;
 	case "editar":
 		$id = CleanID($_GET["id"]);
 		MostrarFamiliaParaEdicion($id);
 		break;
 	case "editarsubfamilia":
+	        $MUD   = isset($_GET["mud"])? CleanText($_GET["mud"]):'MUD';
+		$MUC   = isset($_GET["muc"])? CleanText($_GET["muc"]):'MUC';
+		$DSTO  = isset($_GET["dsto"])? CleanText($_GET["dsto"]):'DSTO';
+		$TipoCosto = isset($_GET["tipocosto"])? CleanText($_GET["tipocosto"]):'CP';
+
 		$id = CleanID($_GET["id"]);
-		MostrarSubFamiliaParaEdicion($id);
+		setSesionDato("IdSubFamilia",$id);
+		MostrarSubFamiliaParaEdicion($id,$MUD,$MUC,$DSTO,$TipoCosto);
 		break;
 	case "pagmenos":
 		$paginador = getSesionDato("PaginadoActivoFamilia");
@@ -441,6 +546,8 @@ switch($modo){
 		PaginaBasicaSubfamilia($padre);
 		//echo "usando paginado " . getSesionDato("PaginadoActivoFamilia") . "<br>";
 		break;
+
+
 }
 
 PageEnd();

@@ -29,17 +29,23 @@ if ($codcliente==0){
   $nif       = "";
   $direccion = "";
 }else{
-  $sql =
-    "SELECT NombreComercial,".
-    "       NumeroFiscal, ".
-    "       Direccion ".
+  $sql=
+    "SELECT NombreComercial as 'nombre', ".
+    "       NumeroFiscal as 'nif', ".
+    "       Direccion, ".
+    "       NombreLegal, ".
+    "       TipoCliente ".
     "FROM   ges_clientes ".
     "WHERE  IdCliente='".$codcliente."'";
-  $res       = query($sql);
-  $row       = Row($res);
-  $nombre    = utf8_decode($row["NombreComercial"]);
-  $nif       = utf8_decode($row["NumeroFiscal"]);
-  $direccion = utf8_decode($row["Direccion"]);
+  $res = query($sql);
+  $row = Row($res);
+  $nombre    = utf8_decode($row["nombre"]);
+  $nif       = $row["nif"];
+  $direccion = utf8_decode($row["Direccion"]); 
+  $cliente   = utf8_decode($row["TipoCliente"]);
+  $nombre    = ($cliente == 'Empresa')? utf8_decode($row["NombreLegal"]):$nombre;
+  $nombre    = str_replace('&#038;','&',$nombre);
+
 }
 
 //Presupuesto
@@ -271,7 +277,7 @@ $sql =
 	  $acotmp    = getItemMetaProducto($row["MetaProducto"],$row["Serie"],$series,$codarticulo,64);
 
 	  $descripcion_0 =
-	    $codigobarras." ".
+	    //$codigobarras." ".
 	    $descripcion." ".
 	    $marca." ".
 	    $modelo." ".

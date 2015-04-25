@@ -1,12 +1,15 @@
 <?php
 
-function CrearSubFamilia($nombre,$padre){
+function CrearSubFamilia($nombre,$margenvd=0,$margenvc=0,$descuento=0,$padre){
 	$oFamilia = new familia;
 
 	$oFamilia->CreaSubfamilia();
-	
+
 	$oFamilia->set("SubFamilia",$nombre,FORCE);
 	$oFamilia->set("IdFamilia",$padre);
+	$oFamilia->set("MargenUtilidadVD",$margenvd,FORCE);
+	$oFamilia->set("MargenUtilidadVC",$margenvc,FORCE);
+	$oFamilia->set("Descuento",$descuento,FORCE);
 		
 	if ($oFamilia->AltaSubfamilia($padre)){
 		//if(isVerbose())	
@@ -29,8 +32,8 @@ function CrearFamilia($nombre){
 		
 	if ($oFamilia->Alta()){	
 		//if(isVerbose())
-		//	echo gas("aviso",_("Nuevo familia registrado"));			
-		CrearSubFamilia("...",$oFamilia->get("IdFamilia"));
+		//	echo gas("aviso",_("Nuevo familia registrado"));
+	  CrearSubFamilia("...",0,0,0,$oFamilia->get("IdFamilia"));
 		return true;							
 	} else {
 		//echo gas("aviso",_("No se ha podido registrar el nuevo familia"));
@@ -115,17 +118,42 @@ class familia extends Cursor {
 	}
 	
 	//Formulario de modificaciones y altas
-	function formModificarSubfamilia($action){
+	function formModificarSubfamilia($action,$mud,$muc,$dsto,$tipocosto){
 		$ot = getTemplate("ModificarSubFamilia");
 		if (!$ot){		return false;		}
 								
 		//$comboidiomas = genComboIdiomas($this->get("IdIdioma"));
 		//$comboperfiles = genComboPerfiles($this->get("IdPerfil"));
-									
+		$xcheck = ($mud != 'MUD')? 'checked="checked"':'';
+		$xmutc  = ($mud != 'MUD')? 'visible':'hidden';
+		$xcp   = ($tipocosto == 'CP')? 'selected':'';
+		$xuc   = ($tipocosto == 'UC')? 'selected':'';
+		$xmud  = ($mud != 'MUD')? CleanFloat($mud):$this->get("MargenUtilidadVD");
+		$xmuc  = ($muc != 'MUC')? CleanFloat($muc):$this->get("MargenUtilidadVC");
+		$xdsto = ($dsto != 'DSTO')? CleanFloat($dsto):$this->get("Descuento");
+		$xlist = ListaProductosxSubFamilia($this->get("IdFamilia"),$this->get("IdSubFamilia"),$xmud,$xmuc,$xdsto,$tipocosto);
+
+		$oFam = new familia;
+		$oFam->Load($this->get("IdFamilia"));
+		$NomFamilia = $oFam->get("Familia");
+
 		$cambios = array(	
-			"tTitulo" => _("Modificando subfamilia"),	
+			"tTitulo" => _("Modificando ").$NomFamilia."/".$this->get("SubFamilia"),	
 			"tSubFamilia" => _("Nombre"),	
 			"vSubFamilia" => $this->get("SubFamilia"),
+			"vIdFamilia" => $this->get("IdFamilia"),
+			"tMargenUtilidadVD" => _("Margen de Utilidad VP"),	
+			"vMargenUtilidadVD" => $xmud,
+			"tMargenUtilidadVC" => _("Margen de Utilidad VC"),	
+			"vMargenUtilidadVC" => $xmuc,
+			"tDescuento" => _("Descuento"),	
+			"vDescuento" => $xdsto,
+			"vLista" => $xlist,
+			"vIdBase" => $this->getId(),
+			"vRecalcular" => $xcheck,
+			"vCP" => $xcp,
+			"vUC" => $xuc,
+			"vMUTC" => $xmutc,
 			"action" => $action,
 			"HIDDENDATA" => Hidden("id",$this->getId()) . Hidden("IdFamilia",$this->get("IdFamilia"))
 		);
@@ -274,7 +302,7 @@ class familia extends Cursor {
 			
 			$listaKeys .= " $key";
 			$listaValues .= " '$value_s'";
-			$coma = true;															
+			$coma = true;						
 		}
 	
 		$sql = "INSERT INTO ges_subfamilias ( $listaKeys ) VALUES ( $listaValues )";
@@ -298,9 +326,10 @@ class familia extends Cursor {
 		WHERE
 		IdIdioma = '$lang'
 		AND IdFamilia = '$IdFamilia'
-		AND Eliminado = 0";
+		AND Eliminado = 0
+                ORDER BY SubFamilia ASC ";
 		
-		$res = $this->queryPagina($sql, $min, 10);
+		$res = $this->queryPagina($sql, $min, 20);
 		if (!$res) {
 			$this->Error(__FILE__ . __LINE__ ,"Info: fallo el listado");
 		}	
@@ -319,9 +348,10 @@ class familia extends Cursor {
 		ges_familias				
 		WHERE
 		IdIdioma = '$lang'
-		AND Eliminado = 0";
+		AND Eliminado = 0
+                ORDER BY Familia ASC ";
 		
-		$res = $this->queryPagina($sql, $min, 10);
+		$res = $this->queryPagina($sql, $min, 20);
 		if (!$res) {
 			$this->Error(__FILE__ . __LINE__ ,"Info: fallo el listado");
 		}	
@@ -351,9 +381,15 @@ class familia extends Cursor {
 	}
 	
 	function ModificacionSubfamilia(){
-		$nombre = $this->get("SubFamilia");
+		$nombre    = $this->get("SubFamilia");
+		$margenvd  = $this->get("MargenUtilidadVD");
+		$margenvc  = $this->get("MargenUtilidadVC");
+		$descuento = $this->get("Descuento");
 		$id = $this->getId();
-		$sql = "UPDATE ges_subfamilias SET SubFamilia='$nombre' WHERE Id='$id'";
+		$sql = "UPDATE ges_subfamilias SET SubFamilia='$nombre',
+                               MargenUtilidadVD='$margenvd', MargenUtilidadVC='$margenvc',
+                               Descuento='$descuento' 
+                        WHERE Id='$id'";
 		$res = query($sql);
 		if (!$res){
 			error(__FILE__ . __LINE__ , "E: no pudo modificar nombre de familia");
@@ -367,5 +403,21 @@ class familia extends Cursor {
 	}
 }
 
+function ObtenerDataSubFamilia(){
+  $sql = "SELECT IdFamilia, IdSubFamilia, MargenUtilidadVD, MargenUtilidadVC, Descuento ".
+         "FROM ges_subfamilias ".
+         "WHERE ges_subfamilias.Eliminado = 0 ";
+  
+  $res = query($sql);
+  if (!$res) return false;
+  $subfamilias = array();
+  $t = 0;
+  while($row = Row($res)){
+    $nombre = "SubFamilia_" . $t++;
+    $subfamilias[$nombre] = $row;
 
+  }
+  
+  return $subfamilias;
+}
 ?>

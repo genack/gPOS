@@ -11,6 +11,7 @@ function ResetRetrys(){
 }
 
 var itacolor = 0 ;//Indice de Talla/Color
+var elAltaRapida = new Array();
 
 function xNuevaTallaColor(){
 
@@ -42,6 +43,7 @@ function xNuevaTallaColor(){
         var vpvdd         = id("xPVDD").value;
         var vpvc          = id("xPVC").value;
         var vpvcd         = id("xPVCD").value;
+        var vcostoop      = id("xCostoOP").value;
 	//Buscando color seleccionado
 	var idex = 0;
 	var el;
@@ -121,6 +123,9 @@ function xNuevaTallaColor(){
 	var xcosto = document.createElement("label");
         xcosto.setAttribute("value",vcosto);		
 
+	var xcostoop = document.createElement("label");
+        xcostoop.setAttribute("value",vcostoop);		
+
         //Precios Venta
 	var xpvd = document.createElement("label");
         xpvd.setAttribute("value",vpvd);		
@@ -183,6 +188,7 @@ function xNuevaTallaColor(){
 	var xcondventa = document.createElement("label");
         xcondventa.setAttribute("value",condventa);	
         xcondventa.setAttribute("collapsed","true");
+
 		
 	firma = "tacolor_"+itacolor;itacolor++;
         xlistitem.value = firma;
@@ -191,6 +197,7 @@ function xNuevaTallaColor(){
 	xtalla.setAttribute("id",firma+ "_talla");
 	xcolor.setAttribute("id",firma+ "_color");
 	xcosto.setAttribute("id",firma+ "_costo");
+	xcostoop.setAttribute("id",firma+ "_costoop");
 	xunid.setAttribute("id",firma+ "_unid");
 
 	xpvd.setAttribute("id",firma+ "_pvd");
@@ -216,6 +223,7 @@ function xNuevaTallaColor(){
 	xlistitem.appendChild( xalias );
     	xlistitem.appendChild( xunid );
 	xlistitem.appendChild( xcosto );
+	xlistitem.appendChild( xcostoop );
 	xlistitem.appendChild( xpvd );
 	xlistitem.appendChild( xpvdd );
 	xlistitem.appendChild( xpvc );
@@ -236,6 +244,8 @@ function xNuevaTallaColor(){
 
 	xlistadoTacolor.appendChild( xlistitem );		
 	id("CB").value = parseInt(actualCOD) + 1;
+
+        //setTimeout("ordenaListaTaColor()",200);
 	
 	setTimeout("RegenCB()",50);
 }
@@ -319,6 +329,7 @@ function AltaProducto(){
 	idtalla      = id( firma + t + "_talla" ).getAttribute("tooltipText");
 	idcolor      = id( firma + t + "_color" ).getAttribute("tooltipText")
 	costo        = id( firma + t + "_costo"  ).value;	
+	costoop      = id( firma + t + "_costoop"  ).value;	
 	unidades     = id( firma + t + "_unid"  ).value;	
 	vfv          = id( firma + t + "_fv"  ).value;	
 	vlt          = id( firma + t + "_lt"  ).value;	
@@ -366,7 +377,8 @@ function AltaProducto(){
 	data = data + "&vPVC="+ pvc;
 	data = data + "&vPVCD="+ pvcd;				
 	data = data + "&vModo="+ cModo;				
-	data = data + "&UnidadMedida="+ unids;				
+	data = data + "&UnidadMedida="+ unids;
+	data = data + "&CostoOP="+ escape(costoop);
 
 	xrequest.open("POST",url,false);
 	xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -375,7 +387,7 @@ function AltaProducto(){
 	var res = xrequest.responseText;
 	if(!parseInt(res)) 
 	    alert(po_servidorocupado+'\n\n -'+res+'-');	
-	
+
 	//Inventario	
 	if(esInventario)
 	{
@@ -383,6 +395,7 @@ function AltaProducto(){
 	    aProducto[cb+'_idproducto'] = res;
 	    aProducto[cb+'_cantidad']   = unidades;
 	    aProducto[cb+'_costo']      = costo;
+	    aProducto[cb+'_costoop']    = costoop;
 	    aProducto[cb+'_pvd']        = pvd;
 	    aProducto[cb+'_pvdd']       = pvdd;
 	    aProducto[cb+'_pvc']        = pvc;
@@ -394,7 +407,7 @@ function AltaProducto(){
 
 	t++;
     }
-    
+
     if (t>0) 
     {
 	var aviso = new String( po_sehandadodealtacodigos );
@@ -405,6 +418,7 @@ function AltaProducto(){
 	if(!esInventario){
 	    resetAllDatos('aAltaRapida');
 	    parent.xwebcoreCollapsed(false,true);
+	    parent.cSolapaLista = '';
 	}
 
 	if(esInventario)
@@ -489,8 +503,9 @@ function changeNewProductoAlias(IdProductoAlias,label,xid){
 
 function changeFamYSub(idsubfamilia,idfamilia,texsubfamilia, texfamilia ){
 	if (!texsubfamilia || texsubfamilia == "undefined" )
- 		texsubfamilia = "...";
+ 		texsubfamilia = "";
 
+        texsubfamilia = (trim(texsubfamilia) == '...')? "":texsubfamilia;
 	var famsub = "" + texfamilia + " - " + texsubfamilia;
 	id("FamSub").value = famsub;
 	id("Descripcion").value = texfamilia + " " + texsubfamilia;
@@ -586,6 +601,7 @@ function quitarTacolorSelect(){
 	changeEditHeadDatos('false');
     itacolor--;
 
+    setTimeout("ordenaListaTaColor()",100);
 }
 
 function VaciarTacolores(){
@@ -939,63 +955,202 @@ function volverPresupuestos(){
     }
 }
 
+var xPVD  = 0;
+var xPVDD = 0;
+var sPVD  = 0;
+var xPVC  = 0;
+var xPVCD = 0;
+var sPVC  = 0;
+
 function setCostoPreciosAltaRapida(xval,xdato){
 
+    var MUD,MUC,IMP,COP,xDSTO,xMUD,xMUC;
+    
     if(!xdato.value)	return xdato.value=0;
     var sdato   = parseFloat(xdato.value);
     var xCosto  = parseFloat(id("Costo").value);
-    var xPrecio = parseFloat(id("xPrecioCompra").value);
-    var xPVD    = parseFloat(id("xPVD").value);
-    var xPVDD   = parseFloat(id("xPVDD").value);
-    var xPVC    = parseFloat(id("xPVC").value);
-    var xPVCD   = parseFloat(id("xPVCD").value);
+    var xPrecio = parseFloat(id("xCostoOP").value);
 
+    var xkey    = enviar["IdFamilia"]+"-"+enviar["IdSubFamilia"];
+
+    if(!aSubFamilia[xkey]){
+	CargarDataSubFamilias();
+	if(!aSubFamilia[xkey])	return;
+    }
+
+    xDSTO       = (aSubFamilia[xkey].dsto != 0)? aSubFamilia[xkey].dsto:DSTOGR;
+    xMUD        = (aSubFamilia[xkey].mud != 0)? aSubFamilia[xkey].mud:MUGR;
+    xMUC        = (aSubFamilia[xkey].muc != 0)? aSubFamilia[xkey].muc:MUGR;
+    xDSTO       = parseFloat(xDSTO);
+    xMUD        = parseFloat(xMUD);
+    xMUC        = parseFloat(xMUC);
+
+    COP         = (COPImpuesto)? 0:xPrecio;
+    MUD         = (xCosto + COP)*(xMUD/100);
+    MUC         = (xCosto + COP)*(xMUC/100);
 
     switch (xval) {
 
     case 'costo':
-	xPrecio  = parseFloat(sdato*(parseFloat(cImpuesto)+100)/100).toFixed(2);
-	xCosto   = sdato;
-	xPVD     = ( xPrecio > xPVD  )? parseFloat(xPrecio*(parseFloat(cUtilidad)+100)/100).toFixed(2):xPVD;
-	xPVDD    = ( xPVD    < xPVDD )? xPrecio:xPVD;
-	xPVC     = ( xPrecio > xPVC  )? xPVD:xPVC;
-	xPVCD    = ( xPVC    < xPVCD )? xPVD:xPVC;
-
-	break;
-
+	id("Costo").value = formatDineroTotal(xCosto);
     case 'precio':
-	xPrecio  = sdato;
-	xCosto   = (sdato*100/(parseFloat(cImpuesto)+100)).toFixed(2);
-	xPVD     = ( xPrecio > xPVD  )? parseFloat(xPrecio*(parseFloat(cUtilidad)+100)/100).toFixed(2):xPVD;
-	xPVDD    = ( xPVD    < xPVDD )? xPrecio:xPVD;
-	xPVC     = ( xPrecio > xPVC  )? xPVD:xPVC;
-	xPVCD    = ( xPVC    < xPVCD )? xPVD:xPVC;
+	id("xCostoOP").value = formatDineroTotal(xPrecio);
+
+	xPVD     = xCosto + MUD + COP;
+	IMP      = (xPVD*cImpuesto/100).round(2);
+	xPVD     = (COPImpuesto)? (xPVD + IMP + xPrecio):(xPVD + IMP);
+	xPVD     = xPVD.round(2);
+	xPVDD    = (xPVD-(MUD*xDSTO/100)).round(2);
+	sPVD     = xPVD;
+	sPVDD    = xPVDD;
+
+	xPVC     = xCosto + MUC + COP;
+	IMP      = (xPVC*cImpuesto/100).round(2);
+	xPVC     = (COPImpuesto)? (xPVC + IMP + xPrecio):(xPVC + IMP);
+	xPVC     = xPVC.round(2);
+	xPVCD    = (xPVC-(MUC*xDSTO/100)).round(2);
+	sPVC     = xPVC;
+	sPVCD    = xPVCD;
+
 	break;
 
     case 'pvd':
-	xPVD    = ( sdato >= xPrecio)? sdato:xPrecio;
- 	xPVDD   = ( xPVDD >= xPrecio && xPVDD <= xPVD )? xPVDD:xPVD;
+        var PVD  = parseFloat(id("xPVD").value);
+	PVD      = (PVD <= FormatPreciosTPV(sPVD))? sPVD:PVD;
+	xPVD     = PVD;
+	xPVDD    = (xPVD-(MUD*xDSTO/100)).round(2);
+
 	break;
 
     case 'pvdd':
-	xPVDD  = (sdato <= xPVD && sdato >= xPrecio )? sdato:xPVD;
+	var PVDD = parseFloat(id("xPVDD").value);
+	PVDD     = (PVDD < FormatPreciosTPV(sPVDD) || PVDD > xPVD)? sPVD-(MUD*xDSTO/100):PVDD;
+	xPVDD    = PVDD;
 	break;
 
     case 'pvc':
-	xPVC    = (sdato >= xPrecio)? sdato:xPrecio;
-	xPVCD   = (xPVCD <= xPVC && xPVCD >= xPrecio)? xPVCD:xPVC;
+	var PVC  = parseFloat(id("xPVC").value);
+	PVC      = (PVC <= FormatPreciosTPV(sPVC))? sPVC:PVC;
+	xPVC     = PVC;
+	xPVCD    = (xPVC-(MUC*xDSTO/100)).round(2);
 	break;
 
     case 'pvcd':
-	xPVCD  = (sdato <= xPVC && sdato >= xPrecio)? sdato:xPVC;
+	var PVCD = parseFloat(id("xPVCD").value);
+	PVCD     = (PVCD < FormatPreciosTPV(sPVCD) || PVCD > xPVC)? sPVC-(MUC*xDSTO/100):PVCD;
+	xPVCD    = PVCD;
 	break;
     }
     
-    id("Costo").value         = xCosto;  
-    id("xPrecioCompra").value = xPrecio;  
-    id("xPVD").value          = xPVD;  
-    id("xPVDD").value         = xPVDD;  
-    id("xPVC").value          = xPVC; 
-    id("xPVCD").value         = xPVCD;
+    id("xPVD").value          = FormatPreciosTPV(xPVD);  
+    id("xPVDD").value         = FormatPreciosTPV(xPVDD);  
+    id("xPVC").value          = FormatPreciosTPV(xPVC); 
+    id("xPVCD").value         = FormatPreciosTPV(xPVCD);
 
+}
+
+function CargarDataSubFamilias(){
+
+    var url = "../../services.php?modo=obtenerdatasubfamilia";
+    var xIdFamilia,xIdSubFamilia,xMUD,xMUC,xDSTO,node,t,i;
+    var obj = new XMLHttpRequest();
+    obj.open("GET",url,false);
+    obj.send(null);
+
+    if (!obj.responseXML)
+        return alert(po_servidorocupado);
+
+    var xml = obj.responseXML.documentElement;
+    for (i=0; i<xml.childNodes.length; i++) {
+        node = xml.childNodes[i];
+        if (node){
+            t = 0;
+            xIdFamilia 	     = node.childNodes[t++].firstChild.nodeValue;
+            xIdSubFamilia    = node.childNodes[t++].firstChild.nodeValue;
+	    xMUD             = node.childNodes[t++].firstChild.nodeValue;
+	    xMUC             = node.childNodes[t++].firstChild.nodeValue;
+	    xDSTO            = node.childNodes[t++].firstChild.nodeValue;
+	    xKey             = xIdFamilia+"-"+xIdSubFamilia;
+	    sSF(xKey,xMUD,xMUC,xDSTO);
+	}
+    }
+}
+
+function sSF(xKey,xMUD,xMUC,xDSTO){
+    
+
+  if( !aSubFamilia[xKey] ){
+	var subfam      = new Object();
+	subfam.mud        = xMUD; 
+	subfam.muc        = xMUC; 
+	subfam.dsto       = xDSTO; 
+
+      aSubFamilia[xKey] = subfam;
+  }else{
+      	aSubFamilia[xKey].mud   = xMUD; 
+	aSubFamilia[xKey].muc   = xMUC; 
+	aSubFamilia[xKey].dsto  = xDSTO; 
+  }
+
+}
+
+function ordenaListaTaColor(){
+
+    var lista = id("listadoTacolor");
+    n = lista.itemCount;
+    if(n==0) return; 
+    for (var i = 0; i < n; i++) {
+	var zlistitem  = lista.getItemAtIndex(i);
+	var zfirma    = zlistitem.getAttribute('id');
+	var zcod     = id(zfirma+"_cod");
+	var ztalla   = id(zfirma+"_talla");
+	var zcolor   = id(zfirma+"_color");
+	var zcosto   = id(zfirma+"_costo");
+	var zcostoop = id(zfirma+"_costoop");
+	var zunid    = id(zfirma+"_unid");
+
+	var zpvd = id(zfirma+ "_pvd");
+	var zpvdd = id(zfirma+ "_pvdd");
+	var zpvc = id(zfirma+ "_pvc");
+	var zpvcd = id(zfirma+ "_pvcd");
+    
+	var zalias = id(zfirma+ "_alias");
+	var zfv = id(zfirma+ "_fv");
+	var zlt = id(zfirma+ "_lt");
+	var zmenudeo = id(zfirma+ "_menudeo");
+	var zunidxcont = id(zfirma+ "_unidxcont");
+	var zidcont = id(zfirma+ "_idcont");
+	var zcantcont = id(zfirma+ "_cantcont");
+	var zcantcontunid = id(zfirma+ "_cantcontunid");
+	var zaliasuno = id(zfirma+ "_aliasuno");
+	var zaliasdos = id(zfirma+ "_aliasdos");
+	var zcondventa = id(zfirma+ "_condventa");
+	
+	zfirma = "tacolor_"+i;
+	zlistitem.setAttribute("id",zfirma); 
+	zcod.setAttribute("id",zfirma+ "_cod");
+	ztalla.setAttribute("id",zfirma+ "_talla");
+	zcolor.setAttribute("id",zfirma+ "_color");
+	zcosto.setAttribute("id",zfirma+ "_costo");
+	zcostoop.setAttribute("id",zfirma+ "_costoop");
+	zunid.setAttribute("id",zfirma+ "_unid");
+
+	zpvd.setAttribute("id",zfirma+ "_pvd");
+	zpvdd.setAttribute("id",zfirma+ "_pvdd");
+        zpvc.setAttribute("id",zfirma+ "_pvc");
+        zpvcd.setAttribute("id",zfirma+ "_pvcd");
+
+	zalias.setAttribute("id",zfirma+ "_alias");
+        zfv.setAttribute("id",zfirma+ "_fv");
+        zlt.setAttribute("id",zfirma+ "_lt");
+        zmenudeo.setAttribute("id",zfirma+ "_menudeo");
+        zunidxcont.setAttribute("id",zfirma+ "_unidxcont");
+        zidcont.setAttribute("id",zfirma+ "_idcont");
+        zcantcont.setAttribute("id",zfirma+ "_cantcont");
+        zcantcontunid.setAttribute("id",zfirma+ "_cantcontunid");
+	zaliasuno.setAttribute("id",zfirma+ "_aliasuno");
+	zaliasdos.setAttribute("id",zfirma+ "_aliasdos");
+	zcondventa.setAttribute("id",zfirma+ "_condventa");
+
+    }
 }

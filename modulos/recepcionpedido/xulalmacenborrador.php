@@ -12,6 +12,11 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
   <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js" />
   <script>//<![CDATA[
   var IGV = <?php echo getSesionDato("IGV"); ?>;
+  var cMargenUtilidad = <?php echo $MargenUtilidad; ?>;
+  var cDescuentoGral  = <?php echo $DescuentoGral ?>;
+  var cMetodoRedondeo = "<?php echo $MetodoRedondeo ?>";
+  var cImpuestoIncluido = <?php echo $COPImpuesto ?>;
+
   //]]></script>
   <?php $Moneda = getSesionDato("Moneda"); getMonedaJS($Moneda); ?>
 
@@ -193,9 +198,10 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  <label value="Producto"/>
 	  <label value="Cantidad"/>
 	  <label value="Costo"/>
-	  <label value="MUD"/>
-	  <label value="PVD"/>
-	  <label value="PVD/D"/>
+	  <label value="COP"/>
+	  <label value="MUP"/>
+	  <label value="PVP"/>
+	  <label value="PVP/D"/>
 	  <label value="MUC"/>
 	  <label value="PVC"/>
 	  <label value="PVC/D"/>
@@ -216,6 +222,19 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 <spacer style="height: 4px"></spacer>
 <hbox id="busquedaCompraFooter">
   <spacer flex="4"/>
+  <button id="TipoCosto" type="menu" 
+	  label="  Tipo Costo" collapsed="true" <?php gulAdmite("Precios") ?> >
+    <menupopup>
+      <menuitem id="tipo_costopromedio" label="Costo Promedio" value="CP" checked="true"
+                oncommand="ActualizarTipoCosto(this.value,this.id)">
+      </menuitem>
+      <?php if(getSesionDato("esAlmacenCentral")){?>
+      <menuitem id="tipo_ultimocosto" label="Último Costo" value="UC" checked="false"
+	        oncommand="ActualizarTipoCosto(this.value,this.id)">
+      </menuitem>
+      <?php } ?>
+    </menupopup>
+  </button>
   <button id="actualizarLPV" type="menu" 
 	  label="  Aplicar Precios" collapsed="true" <?php gulAdmite("Precios") ?> >
   <menupopup>
@@ -232,7 +251,9 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 </hbox>
 
 <script>//<![CDATA[
+
   VerCompra();
+
    <?php
      if($locales)
        if(getSesionDato("esAlmacenCentral"))

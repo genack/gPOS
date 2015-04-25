@@ -10,10 +10,10 @@ $espopup = $_GET["espopup"];
 <meta charset="utf-8">
 <style type="text/css">
        div#xBox {
-            /*background-image: url("../img/gpos_cargandoTPV.png");*/
+            background-image: url("../img/gpos_marcagua.png");
+            background-position: left bottom;
             background-repeat: no-repeat;
-            background-position: center top; 
-	    background-size: 339px 342px;
+            /* background-size: 339px 342px; */
             width: calc(100%);
             height: 80%;
             margin-top: 6%;

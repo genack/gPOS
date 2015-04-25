@@ -49,6 +49,7 @@ switch($modo){
     $Codigo            = CleanText($_GET["codigo"]);
     $EstadoPagoVenta   = CleanText($_GET["estadopagoventa"]);
     $Cobranza          = CleanText($_GET["cobranza"]);
+    $CodigoComprobante = CleanText($_GET["codcomprobante"]);
 
     $Consulta          = "SELECT * FROM $Tabla WHERE (IdListado = '$Id')";
     $row               = queryrow($Consulta);
@@ -70,7 +71,7 @@ switch($modo){
 				    $Prioridad,$Facturacion,$EstadoSuscripcion,
 				    $TipoSuscripcion,$TipoPagoSuscripcion,
 				    $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta,
-				    $Cobranza);
+				    $Cobranza,$CodigoComprobante);
 
     }
     $NombreArchivo = '"'.$NombreArchivo.'"';
@@ -151,7 +152,8 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
 		     $TipoOperacion,$TipoOpCjaGral,$PeriodoVenta,$NombreCliente,
 		     $TipoCliente,$IdMarca,$CondicionVenta,$EstadoOS,$Prioridad,
 		     $Facturacion,$EstadoSuscripcion,$TipoSuscripcion,$TipoPagoSuscripcion,
-		     $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta,$Cobranza) {
+		     $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta,$Cobranza,
+		     $CodigoComprobante) {
 
   $Moneda = getSesionDato("Moneda");
   
@@ -171,6 +173,9 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
     $g_periodo = "$PeriodoVenta(FechaComprobante)";
 
   $EstadoPagoVenta = str_replace('%%',"'%%'",$EstadoPagoVenta);
+
+  $TipoVenta = getSesionDato("TipoVentaTPV");
+  $Precio    = ($TipoVenta == 'VD')? 'PrecioVenta':'PrecioVentaCorporativo';
 
   $cod = str_replace("%IDIDIOMA%",$IdLang,$cod);
   $cod = str_replace("%DESDE%",		$Desde,$cod);
@@ -216,6 +221,8 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
   $cod = str_replace("'%IMPORTE%'",$EstadoPagoVenta,$cod);
   $cod = str_replace("%COBRANZA%",$Cobranza,$cod);
   $cod = str_replace("%SML%",$Moneda[1]['S'],$cod);
+  $cod = str_replace("%COBRANZA%",$CodigoComprobante,$cod);
+  $cod = str_replace("'%TIPOVENTA%'",$Precio,$cod);
 
   if($esTPVOP)
     $cod = str_replace("%TIPOVENTA%",	$esTPVOP,$cod);

@@ -37,6 +37,7 @@ if ($codcliente==0){
   $direccion = utf8_decode($row["Direccion"]); 
   $cliente   = utf8_decode($row["TipoCliente"]);
   $nombre    = ($cliente == 'Empresa')? utf8_decode($row["NombreLegal"]):$nombre;
+  $nombre    = str_replace('&#038;','&',$nombre);
 }
 
 $sql =
@@ -225,7 +226,7 @@ $IdComprobante=$lafila["IdComprobante"];
 
 	  //PRODUCTO
 	  $descripcion_0 =
-	    $codigobarras." ".
+	    //$codigobarras." ".
 	    $descripcion." ".
 	    $marca." ".
 	    $modelo." ".

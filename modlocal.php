@@ -83,7 +83,8 @@ function ModificarLocal($id,$nombre,
 			$margen,$tipomargen,$igv,$ipc,
 			$vigencia,$garantia,$nfiscal,$MensajePromo,
 			$moneda0,$moneda0plural,$moneda0simbolo,
-			$moneda1,$moneda1plural,$moneda1simbolo){
+			$moneda1,$moneda1plural,$moneda1simbolo,$descuento,
+			$metodoredondeo,$esCOPImpuesto,$cuentabancaria2,$esPass){
 	$oLocal = new local;
 	if (!$oLocal->Load($id)){
 		error(__FILE__ . __LINE__ ,"W: no pudo mostrareditar '$id'");
@@ -102,7 +103,7 @@ function ModificarLocal($id,$nombre,
 	$oLocal->set("Email",$email,FORCE);
 	$oLocal->set("PaginaWeb",$paginaweb,FORCE);
 	$oLocal->set("CuentaBancaria",$cuentabancaria,FORCE);
-	if($pass != 'locales')
+	if($pass != 'localess')
 	  $oLocal->set("Password",md5($pass),FORCE);
 	$oLocal->set("Identificacion",$identificacion,FORCE);
 	$oLocal->set("IdTipoNumeracionFactura",$IdTipoNumeracionFactura,FORCE);
@@ -117,7 +118,12 @@ function ModificarLocal($id,$nombre,
 	$oLocal->set("TipoMargenUtilidad",$tipomargen,FORCE);
 	$oLocal->set("Impuesto",$igv,FORCE);
 	$oLocal->set("Percepcion",$ipc,FORCE);
-	
+	$oLocal->set("Descuento",$descuento,FORCE);
+	$oLocal->set("MetodoRedondeo",$metodoredondeo,FORCE);
+	$oLocal->set("COPImpuesto",$esCOPImpuesto,FORCE);
+	$oLocal->set("CuentaBancaria2",$cuentabancaria2,FORCE);
+	$oLocal->set("AdmitePassword",$esPass,FORCE);
+
 	if ($esCentral){
 		setAlmacenCentral($id);	
 		$oLocal->set("AlmacenCentral",1,FORCE);
@@ -126,17 +132,18 @@ function ModificarLocal($id,$nombre,
 	}
 			
 	if ($oLocal->Modificacion()){
-	  if(isVerbose())
-	    echo gas("aviso",_("Local modificado"));	
+	  //if(isVerbose())
+	  echo gas("aviso",_("Local modificado, Reinicie sesión para aplicar cambios"));
 
-	  invalidarSesion("ListaTiendas");
-	  unset($_SESSION["tLOCAL_$id"]);
+	  //invalidarSesion("ListaTiendas");
+	  //unset($_SESSION["tLOCAL_$id"]);
 	  
 	  $idlocalactivo = getSesionDato("IdTienda");
 
-	  if($id==$idlocalactivo)
+	  if($id==$idlocalactivo){
 	    RegistrarIGVTienda($id);
-
+	    RegistrarValuacionPrecioTPV($id);
+	  }
 	  return true;
 
 	} else {
@@ -170,12 +177,10 @@ function FormularioAlta() {
 
 
 
-function CrearLocal($nombre,
-			$nombrelegal,$direccion,
-			$poblacion,$codigopostal,
-			$telefono,$fax,
-			$movil, $email,
-		    $paginaweb,$cuentabancaria,$pass,$identificacion,$idpais,$idioma,$margen,$tipomargen,$igv,$ipc){
+function CrearLocal($nombre,$nombrelegal,$direccion,$poblacion,$codigopostal,
+		    $telefono,$fax,$movil,$email,$paginaweb,$cuentabancaria,
+		    $pass,$identificacion,$idpais,$idioma,$margen,$tipomargen,
+		    $igv,$ipc,$esPass){
 	$oLocal = new local;
 
 	$oLocal->Crea();
@@ -199,9 +204,14 @@ function CrearLocal($nombre,
 	$oLocal->set("TipoMargenUtilidad",$tipomargen,FORCE);
 	$oLocal->set("Impuesto",$igv,FORCE);
 	$oLocal->set("Percepcion",$ipc,FORCE);
+	$oLocal->set("AdmitePassword",$esPass,FORCE);
 	
 	if ($oLocal->Alta()){
 		invalidarSesion("ListaTiendas");
+		$alm = new almacenes;
+		$arrayTodos = array_keys($alm->listaTodosConNombre());
+		
+		$_SESSION["ArrayTiendas"] = $arrayTodos;
 		
 		//TODO: aqui tenemos una ligadura fuerte entre un modulo y la aplicación.
 		// esto se debe automatizar para que la ligadura sea debil.		
@@ -241,7 +251,7 @@ PageStart();
 
 
 switch($modo){
-	case "newsave":		
+	case "newsave":
 	        $nombre         = CleanText($_POST["NombreComercial"]);
 		$nombrelegal    = CleanText($_POST["NombreLegal"]);
 		$direccion      = CleanText($_POST["DireccionFactura"]);
@@ -261,13 +271,18 @@ switch($modo){
 		$tipomargen     = CleanText($_POST["TipoMargenUtilidad"]);
 		$igv            = CleanText($_POST["IGV"]);
 		$ipc            = CleanText($_POST["Percepcion"]);
+		$esPass 	= (isset($_POST["ConContrasenia"]))? ($_POST["ConContrasenia"] =='on'):false;
+		$esPass         = ($esPass)? 1:0;
+		$existe         = verficarExistenciaLocal($identificacion,0);
+		if($existe) return FormularioAlta();
+		
+		if($esPass)
+		  if(strlen($pass) < 8) return FormularioAlta();
 
-		CrearLocal($nombre,
-			$nombrelegal,$direccion,
-			$poblacion,$codigopostal,
-			$telefono,$fax,
-			$movil, $email,
-			   $paginaweb,$cuentabancaria,$pass,$identificacion,$idpais,$ididioma,$margen,$tipomargen,$igv,$ipc);
+		CrearLocal($nombre,$nombrelegal,$direccion,$poblacion,$codigopostal,
+			   $telefono,$fax,$movil,$email,$paginaweb,$cuentabancaria,
+			   $pass,$identificacion,$idpais,$ididioma,$margen,$tipomargen,
+			   $igv,$ipc,$esPass);
 			
 		PaginaBasica();	
 		break;	
@@ -309,6 +324,17 @@ switch($modo){
 		$moneda1 			= CleanText($_POST["Moneda1"]);
 		$moneda1simbolo			= CleanText($_POST["MonedaSimbolo1"]);
 		$moneda1plural 			= CleanText($_POST["MonedaPlural1"]);
+		$descuento 			= CleanText($_POST["Descuento"]);
+		$metodoredondeo			= CleanText($_POST["MetodoRedondeo"]);
+		$esCOPImpuesto 			= (isset($_POST["esCOPImpuesto"]))? ($_POST["esCOPImpuesto"] =='on'):false;
+		$esCOPImpuesto                  = ($esCOPImpuesto)? 1:0;
+		$cuentabancaria2                = (isset($_POST["CuentaBancaria"]))? CleanText($_POST["CuentaBancaria2"]):"";
+		$esPass 	                = (isset($_POST["ConContrasenia"]))? ($_POST["ConContrasenia"] =='on'):false;
+		$esPass                         = ($esPass)? 1:0;
+		$existe = verficarExistenciaLocal($identificacion,$id);
+		if($existe) return MostrarLocalParaEdicion($id);
+		if($esPass)
+		  if(strlen($pass) < 8) return MostrarLocalParaEdicion($id);
 
 		ModificarLocal($id,$nombre,
 			       $nombrelegal,$direccion,
@@ -323,9 +349,10 @@ switch($modo){
 			       $margen,$tipomargen,$igv,$ipc,
 			       $vigencia,$garantia,$nfiscal,$promocion,
 			       $moneda0,$moneda0plural,$moneda0simbolo,
-			       $moneda1,$moneda1plural,$moneda1simbolo);
+			       $moneda1,$moneda1plural,$moneda1simbolo,$descuento,
+			       $metodoredondeo,$esCOPImpuesto,$cuentabancaria2,$esPass);
 		PaginaBasica();	
-		//actualizaPrecioAlmacen($id,$tipomargen,$margen);
+
 		break;
 	case "editar":
 		$id = CleanID($_GET["id"]);
@@ -335,13 +362,13 @@ switch($modo){
 		$id = CleanID($_GET["id"]);
 		BorrarTienda($id);
 		PaginaBasica();			
-		break;		
+		break;
 	default:
 		ListarLocales();
 		OperacionesConLocales();
 		break;		
 }
-//Nels: función inicialización ges_comprobantestipo
+
 function getTiposComprobantes(){
   $sql ="SHOW COLUMNS FROM ges_comprobantestipo LIKE 'TipoComprobante'";
   $res=query($sql);

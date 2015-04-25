@@ -267,24 +267,14 @@ $sql =
         $item = 1;
 
         while ( $row = Row($res) ) { 
-	  $pdf->SetX(17); 
-	  $pdf->Cell(1);
 	  $codarticulo=$row["IdProducto"];
-	  $pdf->SetFont('Arial','',9);
 
 	  // IMPRIME LINE
 	  $cantidad=$row["Cantidad"];
 	  // CANTIDAD
 
-
 	  // UNID MEDIDA
           $cantunidmed = utf8_decode($row["UnidadMedida"]);
-
-	  // IMPRIME LINE
-	  //$pdf->Cell(20,4, $cantunidmed ,'LR',0,'C');	
-
-	  $pdf->SetFont('Arial','',9);
-	  // CADENA TEXT DESCRIPCION 
 
 	  // TEXT DESCRIPCION
           $codigobarras = $row["CodigoBarras"];
@@ -318,20 +308,20 @@ $sql =
 	  //META PRODUCTO ITEM
 	  $itemmprod = array();
 	  $acotmp    = array();
-	  $acotmp    = getItemMetaProducto($row["MetaProducto"],$row["Serie"],$series,$codarticulo,74);
+	  $acotmp    = getItemMetaProducto($row["MetaProducto"],$row["Serie"],$series,$codarticulo,55);
 
 	  $descripcion_0 =
-	    $codigobarras." ".
+	    //$codigobarras." ".
 	    $descripcion." ".
 	    $marca." ".
 	    $modelo." ".
 	    $detalle." ".
 	    $laboratorio." ".
-	    $seriestext." ***";
+	    $seriestext." ";
 	  
 	  //PRODUCTO ITEM
 	  $acotado = array();
-	  $acotado = getItemProducto($descripcion_0,74);
+	  $acotado = getItemProducto($descripcion_0,55);
 	  
 	  //  PRECIO
 	  $precio=$row["Precio"];
@@ -347,6 +337,10 @@ $sql =
 	  $importe=number_format($importe,2);
 
 	  // IMPRIME LINE
+	  $pdf->SetX(17); 
+	  $pdf->Cell(1);
+	  $pdf->SetFont('Arial','',9);
+
 	  $pdf->Cell(6,4,$item,'LR',0,'C');	
 	  $pdf->Cell(109,4,$acotado[0],'LR',0,'L');
           $pdf->Cell(18,4,$cantidad.' '.$cantunidmed ,'LR',0,'C');	
@@ -357,6 +351,7 @@ $sql =
 	  //TEXT EXTRA LINE run
 	  foreach ($acotado as $key=>$line){
 	    if($key>0 && $key < 27 ){
+	      $pdf->SetX(17); 
 	      $pdf->Cell(1);
 	      $pdf->Cell(6,4,"",'LR',0,'C');
 	      $pdf->Cell(109,4,$line,'LR',0,'L');
@@ -372,7 +367,7 @@ $sql =
 	  //TEXT META PRODUCTO
 	  foreach ($acotmp  as $key=>$linemp){
 	    if( $key < 20 ){
-	      $pdf->SetFont('Arial','',7.5);
+	      $pdf->SetX(17); 
 	      $pdf->Cell(1);
 	      $pdf->Cell(6,4,"",'LR',0,'C');
 	      $pdf->Cell(109,4,$linemp,'LR',0,'L');
@@ -382,7 +377,6 @@ $sql =
 	      $pdf->Ln(4);
 	      $contador++;
 	      $acotadoext = 0;
-	      //$pdf->SetFont('Arial','',8);
 	    }
 	  }
 

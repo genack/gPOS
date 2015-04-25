@@ -11,7 +11,12 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
     <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/precios/preciostpv.js" />
     <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js" />
     <script>//<![CDATA[
-    var IGV = <?php echo getSesionDato("IGV"); ?>;
+    var cImpuestoGral = <?php echo getSesionDato("IGV"); ?>;
+    var cMargenUtilidad = <?php echo $MargenUtilidad; ?>;
+    var cDescuentoGral  = <?php echo $DescuentoGral ?>;
+    var cMetodoRedondeo = "<?php echo $MetodoRedondeo ?>";
+    var cImpuestoIncluido = <?php echo $COPImpuesto ?>;
+
     //]]></script>
     <?php $Moneda = getSesionDato("Moneda"); getMonedaJS($Moneda); ?>
 
@@ -25,9 +30,9 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
   <hbox  style="background-color: #d7d7d7;padding:3px;"  pack="center">
     <?php if(getSesionDato("esAlmacenCentral")){?>
-    <menulist id="listLocales" label="Locales" oncommand="cambiarLocales(0)">
+    <menulist id="listLocales" label="Locales" >
       <menupopup id="combolocales">
-	<menuitem label="Local Actual" value="1" selected="true"/>
+	<menuitem label="Local Actual" value="1" oncommand="cambiarLocales(<?php echo $IdLocal?>)" selected="true"/>
       </menupopup>
     </menulist>
     <?php } ?>
@@ -71,8 +76,8 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
     <toolbarseparator />
     <menu label="Bloques"   style="color: #000">
       <menupopup>
-	<menuitem type="checkbox" label="Ventas B2C" checked="true" oncommand = "ocultar('ventaDirecta');"/>
-	<menuitem type="checkbox" label="Ventas B2B"  oncommand = "ocultar('ventaCorporativa');"/>
+	<menuitem type="checkbox" label="Ventas Personales" checked="true" oncommand = "ocultar('ventaDirecta');"/>
+	<menuitem type="checkbox" label="Ventas Corporativas"  oncommand = "ocultar('ventaCorporativa');"/>
 	<menuitem type="checkbox" label="Almacén" checked="true"
                   oncommand = "ocultar('detalleProductos');"/>
       </menupopup>
@@ -132,10 +137,12 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	    <grid >
 	      <columns>
 		<column/>
+		<column/>
 	      </columns>
 	      <rows id="costo_productos">
 		<row>
 		  <caption label="Costo"/>
+		  <caption label="COP"/>
 		</row>
 	      </rows>
 	    </grid>
@@ -143,7 +150,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	</hbox>
 	<hbox> 
 	  <groupbox id="ventaDirecta" >
-	    <caption label="Venta B2C"/>
+	    <caption label="Venta Personal"/>
 	    <grid >
 	      <columns>
 		<column/>
@@ -154,10 +161,10 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	      </columns>
 	      <rows id="detalle_directo">
 		<row>
-		  <caption label="MU"/>
+		  <caption label="MUP"/>
 		  <caption label="IGV"/>
-		  <caption label="PV"/>
-		  <caption label="PV/D"/>
+		  <caption label="PVP"/>
+		  <caption label="PVP/D"/>
 		  <!--label value="."/-->
 		</row>
 	      </rows>
@@ -166,7 +173,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	</hbox>
 	<hbox> 
 	  <groupbox id="ventaCorporativa" hidden="true" >
-	    <caption label="Venta B2B"/>
+	    <caption label="Venta Corporativa"/>
 	    <grid >
 	      <columns>
 		<column/>
@@ -177,10 +184,10 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	      </columns>
 	      <rows id="detalle_corporativo">
 		<row>
-		  <caption label="MU"/>
-		  <caption label ="IGV"/>
-		  <caption label="PV"/>
-		  <caption label="PV/D"/>
+		  <caption label="MUC"/>
+		  <caption label="IGV"/>
+		  <caption label="PVC"/>
+		  <caption label="PVC/D"/>
 		  <!--label value="."/-->
 		</row>
 	      </rows>
@@ -237,7 +244,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
      if($locales)
        if(getSesionDato("esAlmacenCentral"))
-	 echo "iniComboLocales('".$locales."');";
+	 echo "iniComboLocalesPrecios('".$locales."');";
 
      if ($codigo == '')
        $codigo = 'CB/Ref.';

@@ -613,7 +613,9 @@ function AgnadirCarritoCompras($id,$unidades=1) {
 	$actual[$id]    = ( isset( $actual[$id] ))? $actual[$id] + $unidades:$unidades;	
 	$costes[$id]    = ( isset( $costes[$id] ))? $costes[$id]:getCosteDefectoProducto($id);
 	$descuento      = ( isset( $dsctos[$id][0]) )? $dsctos[$id][0]:0;
+	$dsctos[$id][0] = 0;
 	$dsctos[$id][1] = $actual[$id]*$costes[$id]-$descuento;
+	$dsctos[$id][2] = 0;
 
 	setSesionDato("CarritoCompras",$actual);
 	setSesionDato("CarroCostesCompra",$costes);

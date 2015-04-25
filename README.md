@@ -20,14 +20,14 @@ Instalación
 
 4. Borre la carpeta install por seguridad.
 
-5. Modifique las contraseñas por defecto del local `Local:almacen, Contraseña:almacen`, del usuario `Usuario : admin, Contraseña : admin`, de mantenimiento `Usuario:soporte, Contraseña: soporte`. Otros locales registrados `local:localuno, contraseña:localuno, local:localdos, contraseña:localdos`.
+5. Modifique las contraseñas por defecto del usuario `Usuario : admin, Contraseña : admin`, de mantenimiento `Usuario:soporte, Contraseña: soporte`.
 
 (*) El instalador xulremoto no funciona con XAMPP y SO Windows. Use el plugin [Remote XUL Manager](https://addons.mozilla.org/es/firefox/addon/remote-xul-manager/) para registrar `tudominio` remoto.
 
 Documentación
 -------------
 
-* [Manual de usuario](http://genack.net/genack/services/formacion/gpos/inicio)
+* [Manual de usuario](https://genack.net/servicios/formacion/gpos/inicio)
 
 
 Contribución

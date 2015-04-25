@@ -196,3 +196,46 @@ hbox toolbarbutton.media{
     border:0px;
     color:#FFF;
 }
+listitem:hover{ 
+                border-top: 1px dotted #AA0000;
+                border-bottom: 1px dotted #AA0000;
+ }
+#busquedaDetallesVenta,
+#listadoOrdenServicioDetalle,
+#busquedaListaServicios,
+#busquedaCompraDetalle,
+#listadoMovimiento,
+#listadoAlmacen,
+#formAjustesExistencias,
+#boxmovimientos,
+#boxexistencias,
+#busquedaDetallesOrdenCompra,
+#busquedaDetallesCompra,
+#listaMovimientos,
+#busquedaDetallesPago,
+#busquedaDetallesPedidosVenta,
+#listadoPromocion,
+#xboxprecios,
+#listaPagoDocumento,
+#busquedaDetallesCobro,
+#listadoTicket{ 
+            background-image: url("../img/gpos_marcagua.png");
+            background-position: left bottom;
+            background-repeat: no-repeat;
+ }
+#listaMovimientos{ 
+            background-image: url("../img/gpos_marcagua.png");
+                   /* background-position: center center; */
+            background-position: left bottom;
+            background-size: 172px 137px;
+            background-repeat: no-repeat;
+ }
+#nombrelocal,
+#passlocal{
+            border:0px solid;
+            height:2.2em;
+            font-size: 11.5px;
+ }
+.nopasswd_local{ 
+                 margin-top:2.1em
+                 }

@@ -244,6 +244,9 @@ function DetectaActivos($cod){
 	if(strpos($cod,'%COBRANZA%') > 0){
 	        $a .= "Cobranza,";
 	}	
+	if(strpos($cod,'%CODIGOCOMPROBANTE%') > 0){
+	        $a .= "CodigoComprobante,";
+	}	
 
 	return $a;
 }
@@ -263,7 +266,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  <?php echo $outItems; ?>
 	</menupopup>
       </menulist>
-      <button image="../../img/gpos_listados.png" label="Listar" oncommand="CambiaListado()"/>
+      <button id="btnListado" image="../../img/gpos_listados.png" label="Listar" oncommand="CambiaListado()"/>
     </hbox>
 
     <hbox align="start" pack="center" style="background-color: #d7d7d7;padding:3px">
@@ -780,6 +783,14 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	</vbox>
       </hbox>
 
+      <hbox id="getCodigoComprobante" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Código:"/>
+	  <textbox class="media" id="CodigoComprobante" value=""/>
+	</vbox>
+      </hbox>
+
     </hbox>
   </groupbox>
 
@@ -791,8 +802,13 @@ var IdLocalActual = <?php echo intval(getSesionDato("IdTienda")); ?>;
 var esTPVOP  = "<?php echo getSesionDato("TipoVentaTPV"); ?>";
 function id(nombre) { return document.getElementById(nombre); };
 
+function ActivarCambioListado(xval){
+  id("btnListado").setAttribute("disabled",xval);
+}
 
 function CambiaListado() {
+        ActivarCambioListado(true);
+	setTimeout("ActivarCambioListado(false)",5000);
 	var idlista 	= id("esListas").value;
 
 	if(!idlista || idlista == 0) return;
@@ -846,6 +862,7 @@ function CambiaListado() {
 	        "&prolongacion="+escape(id("Prolongacion").value)+
 	        "&idcliente="+escape(id("IdCliente").value)+
 	        "&cobranza="+escape(id("Cobranza").value)+
+	        "&codcomprobante="+escape(id("CodigoComprobante").value)+
 	        "&codigo="+escape(Codigo)+
 	        "&estadopagoventa="+escape(id("EstadoPagoVenta").value)+
 	        "&estpvop="+escape(esTPVOP)+
@@ -914,6 +931,7 @@ function SetActive( val, Categoria ){
 	id("getCodigo").setAttribute("collapsed","true");
 	id("getEstadoPagoVenta").setAttribute("collapsed","true");
 	id("getCobranza").setAttribute("collapsed","true");
+	id("getCodigoComprobante").setAttribute("collapsed","true");
 
 	for( t=0;t<dinterface.length;t++){
 	        dinterface[t] = dinterface[t].replace(/^\s+/,'').replace(/\s+$/,'');

@@ -432,7 +432,7 @@ function CambioAuxliaresDeInterface(){
 function Comando_CerrarCaja(){
     
 
-	var p = confirm(po_quierecerrar);
+	var p = confirm('gPOS: '+po_quierecerrar);
 	if (!p) return;//Abortado por decision del usuario 
 
 	Comando_ArqueoCaja();
@@ -440,18 +440,22 @@ function Comando_CerrarCaja(){
 	//Guardamos datos actuales arqueo como actual
 	// ..y creamos el siguiente.	 
 	Local.IdArqueoActual = ActualizarDatosDeCierre();	
-    
+        parent.Local.esCajaCerrada  = 1;
+
         //Quitamos presupuestos preventa del dia
         setStatusPresupuestoCierreCaja('CleanPreventa');
-
+        //parent.id("botonImprimir").setAttribute("disabled",true);
+        //parent.habilitabotonvender(1,true);
         //Recargamos 		
         // No descomentar ActualizarComboArqueos();
-	document.location = "arqueo2.php?r="+Math.random();
-	
+	//document.location = "arqueo2.php?r="+Math.random();
+        esRecibidaListaArqueos = true; 
+        onLoadFormulario();
+
 }
 
 function setStatusPresupuestoCierreCaja(Opcion){
-    var cadena, filas, resultado, Opcion;
+    var cadena, filas, resultado;
     var xrequest = new XMLHttpRequest();
     var url = 
 	"../../services.php?"+
@@ -477,22 +481,24 @@ function setStatusPresupuestoCierreCaja(Opcion){
 
 
 function Comando_AbrirCaja(){
-var p = confirm("Desea Abrir Caja?");
+        var p = confirm("gPOS:  Desea Abrir Caja?");
 	if (!p) return;//Abortado por decision del usuario 
 	//Comando_ArqueoCaja();
 
 	//Guardamos datos actuales arqueo como actual
 	// ..y creamos el siguiente.	 
 	Local.IdArqueoActual = ActualizarDatosDeApertura();	
-    
         // Hbilita boton imprimir
-        parent.habilitabotonimprimir();		
+        //parent.id("botonImprimir").removeAttribute("disabled");
+        //parent.habilitabotonvender(0,true);
 	//Recargamos 		
         // No descomentar ActualizarComboArqueos();
 
-	document.location = "arqueo2.php?r="+Math.random();
-
-	
+        // Asociar preventa 
+        setStatusPresupuestoCierreCaja('AsociarPreventa');	
+       //document.location = "arqueo2.php?r="+Math.random();
+        esRecibidaListaArqueos = true; 
+        onLoadFormulario();
 }
 function OLD_Comando_CerrarCaja(){
 
@@ -765,8 +771,8 @@ function onLoadFormulario(){
 function DemonioPrimeraApertura(){
 	
 	if (esRecibidaListaArqueos) {
-	 	//cargamos el ultimo arqueo que tenemos.
-		CargarArqueoSeleccionado(0);
+	    //cargamos el ultimo arqueo que tenemos.
+	    CargarArqueoSeleccionado(0);
 	    habilitabotones(); 		 	
 	}else {
 		//aun no se ha cargado la lista de arqueos..
@@ -807,7 +813,10 @@ function parseMoney (cadena) {
 function log(text){
   id("log").setAttribute("value", text + "\n" + id("log").getAttribute("value")  );
 }
-
+function habilitaventa(){
+    var xval    = (esCajaSol == 0)? 1:0;
+    parent.habilitabotonvender(xval);
+}
 function habilitabotones(){
 
     var estado  = id("estadoCajaTexto").getAttribute("value");
@@ -816,6 +825,7 @@ function habilitabotones(){
     var xarqueo = false;
     var xbtnop  = (esCajaSol == 0)? true:false;
     var utilcja = true;
+
 
     if(estado == "CERRADA" || estado == "--OFF--"){
 	xcerrar = true;
@@ -833,6 +843,7 @@ function habilitabotones(){
 
     id("row_utilidadventacajatitle").setAttribute("collapsed",utilcja);
     id("row_utilidadventacaja").setAttribute("collapsed",utilcja);
+    habilitaventa();
 }
 
 function CleanFormOperacion(){

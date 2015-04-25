@@ -106,7 +106,7 @@ $numlines = CleanInt($_POST["numlines"]);
 for($t=0;$t<$numlines;$t++) 
   {
     $firma = "line_".$t."_";
-    $codigo = $_POST[$firma . "cod"];
+    $codigo = ( isset($_POST[$firma . "cod"]) )? $_POST[$firma . "cod"]:false;
 
     if ($codigo) 
       {
@@ -258,7 +258,7 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal,$IdCliente,$modoTi
 	    $Codigo     = getNextId('ges_comprobantesprov','IdComprobanteProv');
 
 	    //Ventas
-	    $IdComprobante = registrarAlbaranOrigen($Destino,$Origen,$Motivo,$Codigo);
+	    $IdComprobante = registrarAlbaranOrigen($Destino,$Origen,$Motivo,$Codigo,0);
 
 	    //Compras...
 	    $IdPedido   = registrarAlbaranDestino($Destino,$Origen,$Motivo,$Codigo,

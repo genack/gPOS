@@ -82,7 +82,14 @@ class usuario extends Cursor {
 		$comboidiomas  = genComboIdiomas($this->get("IdIdioma"));
 		$comboperfiles = genComboPerfiles($this->get("IdPerfil"));
 		$combolocales  = genComboLocales($this->get("IdLocal"));
-
+		$esTodos       = ($this->get("IdLocal") == 0)? "style='visibility:hidden'":"style='visibility:visible'";
+		$locales       = "";
+		$idglocales    = $this->get("GrupoLocales");
+		if($idglocales){
+		  $locales     = obtnerGrupoLocales($idglocales);
+		}
+		$locales = ($esModificar)? $locales:'';
+		
 		$cambios = array(	
 			"tFechaNacim" => _("Fecha nacim."),
 			"vFechaNacim" => $this->get("FechaNacim"),
@@ -110,6 +117,9 @@ class usuario extends Cursor {
 			"vComision"=>$this->get("Comision"),
 			"vTelefono"=>$this->get("Telefono"),		
 			"ACTION" => "$action?modo=modsave",
+			"tGrupoLocales" => _("Grupo Locales"),
+			"sGrupoLocales" => $esTodos,
+			"vGrupoLocales" => $locales,
 			"HIDDENDATA" => Hidden("id",$this->getId())
 		);
 
@@ -124,6 +134,8 @@ class usuario extends Cursor {
 		$comboidiomas = genComboIdiomas();
 		$combolocales  = genComboLocales();
 		$comboperfiles = genComboPerfiles();
+
+		$esTodos       = ($this->get("IdLocal") == 0)? "style='visibility:hidden'":"style='visibility:visible'";
 		
 		$cambios = array(	
 			"tFechaNacim" => _("Fecha nacim."),
@@ -146,8 +158,11 @@ class usuario extends Cursor {
 			"comboPerfiles" => $comboperfiles,			
 			"vNombre" => $this->getNombre(),
 			"vIdentificacion" => $this->get("Identificacion"),
-			"vPassword"=>$this->get("Password"),
+			//"vPassword"=>$this->get("Password"),
+			//"vPassword"=>$this->get("Password"),
 			"TEXTNOMBRE" => _("Nombre perfil"),
+			"tGrupoLocales" => _("Grupo Locales"),
+			"sGrupoLocales" => $esTodos,
 			"ACTION" => "$action?modo=newsave",
 		);
 
@@ -188,5 +203,47 @@ class usuario extends Cursor {
 		
 }
 
+function obtnerGrupoLocales($idglocales){
+  $sql = "SELECT Identificacion FROM ges_locales WHERE IdLocal IN ($idglocales) AND Eliminado = 0 ";
+  $res = query($sql);
+  $locales = "";
+  $str = '';
+  while($row = Row($res)){
+    $locales .= $str.$row['Identificacion'];
+    $str = ',';
+  }
+  $locales = strtolower($locales);
+  return $locales;
+}
+
+function obtnerIdLocales($glocales,$idlocal){
+  $locales = explode(',',$glocales);
+  $str = '';
+  $i = 0;
+  $alocales = '';
+  foreach($locales as $key){
+    $alocales .= $str."'".$locales[$i]."'";
+    $str = ',';
+    $i++;
+  }
+  $sql = "SELECT IdLocal FROM ges_locales WHERE Identificacion IN ($alocales) AND Eliminado = 0 ";
+  $res = query($sql);
+  $locales = "";
+  $str = '';
+  while($row = Row($res)){
+    if($idlocal != $row['IdLocal']){
+      $locales .= $str.$row['IdLocal'];
+      $str = ',';
+    }
+  }
+
+  return $locales;
+}
+
+function verficarExistenciaUsuario($ident,$iduser){
+ $sql = "SELECT Identificacion FROM ges_usuarios WHERE Identificacion = '$ident' AND IdUsuario <> $iduser ";
+  $row = queryrow($sql);
+  return $row["Identificacion"];
+}
 
 ?>

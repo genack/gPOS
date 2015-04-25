@@ -449,6 +449,7 @@ switch($modo){
 		$PVC           = CleanDinero($_GET["xpvc"]);
 		$PVCD          = CleanDinero($_GET["xpvcd"]);
 		$Ajustes       = CleanCadena($_GET["xajustes"]);
+		$xrKardex      = CleanCadena($_GET["xrkardex"]);
 		$SerieVence    = CleanCadena($_GET["serievence"]);
 		$Series        = CleanCadena($_POST["numerosdeserie"]);
 		$esSerie       = ( $_GET["esserie"] == "true" )? true:false;
@@ -468,6 +469,32 @@ switch($modo){
 		$Origen        = $IdLocal; 
 		$Codigo        = getNextId('ges_comprobantes','NComprobante');
  		$campoxdato    = " EstadoDocumento = 'Pendiente' ";
+		$vrKardex      = getResumenKardex2Producto($IdProducto,$IdLocal);
+		$mensajens     = '';
+
+		//Control cambios Remotos
+		if ( !( $vrKardex == $xrKardex )) {
+		  echo "\n Operación cancelada por tener cambios remotos en kardex:\n".
+		       "-  Para continuar carge nuevamente la busqueda.";
+		  return;
+		}
+
+		//Control NS activo
+		if( getSerie2Producto($IdProducto) ) 
+		  if( !$esSerie ) 
+		    $mensajens = 'Habilitado';
+		if( $esSerie ) 
+		  if( !getSerie2Producto($IdProducto) ) 
+		    $mensajens = 'Deshabilitado';
+		  
+		if( $mensajens != ''){
+		  echo 
+		    "\n  Operación cancelada por tener cambios en el producto - ".
+		    $mensajens." Números Serie- \n".
+		    "     -  Para continuar carge nuevamente la busqueda.";
+		  return;
+		}
+		
 
 		//Control si Inventario es Pendiente => IdInventrario != 0
 		if ( $esPendInvent && $xIdInvent == 0 )  return;
@@ -475,10 +502,10 @@ switch($modo){
 		//Valida Kardex pedido detalle
 		if( ValidarAjusteExistenciasDetalle($Ajustes,$Series,$IdProducto,
 						    $esSerie,$Origen) ) return;
-
 		//Ventas AlbaranInt
-		$IdComprobante = ($esPedido)? $xIdComprobante:registrarAlbaranOrigen($Destino,$Origen,
-										     $Motivo,$Codigo);
+		$IdComprobante = ($esPedido)? $xIdComprobante:
+		                              registrarAlbaranOrigen($Destino,$Origen,
+								     $Motivo,$Codigo,0);
 		//Ajustes 
 		//$Ajuste -> ~IdPedidoDet:Cantidad:Precio
 		//$Series -> ~IdPedidoDet:Series,Series		
@@ -486,20 +513,26 @@ switch($modo){
 		$nAjustes = count($aAjustes);
 		$aSeries  = explode("~",$Series);
 		$nSeries  = count($aSeries);
-		
+		$xkeydet  = Array();
+		$ckeydet  = '';
+		$xsrt     = '';
+
 		for( $i=0; $i < $nAjustes ; $i++)
 		  {
-
 		    $Ajuste      = explode(":",$aAjustes[$i]);
 		    $IdPedidoDet = $Ajuste[0];
 		    $Cantidad    = $Ajuste[1];
-
+		    
 		    //Venta AlbaranInt Detalle
-		    registrarDetalleTrasladoSalida($IdProducto,$Cantidad,$Costo,
-						   $Precio,$IdComprobante,
-						   $IdPedidoDet,$esSerie,
-						   $LoteVence);
-		    //Series 
+		    $xkey = registrarDetalleTrasladoSalida($IdProducto,$Cantidad,$Costo,
+							   $Precio,$IdComprobante,
+							   $IdPedidoDet,$esSerie,
+							   $LoteVence);
+		    //Salva id detalle
+		    $xkeydet[$xkey] = $IdPedidoDet;
+		    $ckeydet       .= $xsrt.$xkey;
+		    $xsrt           = ',';  
+ 		    //Series 
 		    if($esSerie)
 		      {
 
@@ -527,7 +560,7 @@ switch($modo){
 
 		//Kardex Salida
 		registrarAjusteSalidaKardex($IdComprobante,$IdLocal,$Operacion,
-					    $IdOpeAjuste,$IdInventario,$xObs);
+					    $IdOpeAjuste,$IdInventario,$xObs,$xkeydet,$ckeydet);
 
 		//Ventas Precios
 		registrarPreciosVentaAlmacen($PVD,$PVDD,$PVC,$PVCD,$IdArticulo);
@@ -552,6 +585,7 @@ switch($modo){
 		$PVC           = CleanDinero($_GET["xpvc"]);
 		$PVCD          = CleanDinero($_GET["xpvcd"]);
 		$Cantidad      = CleanFloat($_GET["xajuste"]);
+		$xrKardex      = CleanCadena($_GET["xrkardex"]);
 		$SerieVence    = CleanCadena($_GET["serievence"]);
 		$Series        = CleanCadena($_POST["numerosdeserie"]);
 		$esSerie       = ( $_GET["esserie"] == "true" )? true:false;
@@ -572,7 +606,33 @@ switch($modo){
 		$Codigo        = getNextId('ges_comprobantesprov','IdComprobanteProv');
  		$campoxdato    = " EstadoPago='Exonerado',EstadoDocumento='Confirmado',".
 		                 " ImportePendiente=0";
+		$vrKardex      = getResumenKardex2Producto($IdProducto,$IdLocal);
+ 		$CostoOP       = CleanDinero($_GET["xcostoop"]);
+		$mensajens     = '';
 
+		//Control cambios Remotos
+		if ( !( $vrKardex == $xrKardex )) {
+		  echo "Operación cancelada por tener cambios remotos en kardex:\n".
+		       "-  Para continuar carge nuevamente la busqueda.";
+		  return;
+		}
+
+		//Control NS activo
+		if( getSerie2Producto($IdProducto) ) 
+		  if( !$esSerie ) 
+		    $mensajens = 'Habilitado';
+		if( $esSerie ) 
+		  if( !getSerie2Producto($IdProducto) ) 
+		    $mensajens = 'Deshabilitado';
+		  
+		if( $mensajens != ''){
+		  echo 
+		    "\n  Operación cancelada por tener cambios en el producto - ".
+		    $mensajens." Números Serie- \n".
+		    "     -  Para continuar carge nuevamente la busqueda.";
+		  return;
+		}
+			
 		//Control si Inventario es Pendiente => IdInventrario != 0
 		if ( $esPendInvent && $xIdInvent == 0 )  return;
 
@@ -616,6 +676,9 @@ switch($modo){
 		
 		//Ventas Precios
 		registrarPreciosVentaAlmacen($PVD,$PVDD,$PVC,$PVCD,$IdArticulo);
+
+		//Registro Costo Operativo
+		guardarCostoOperativo($CostoOP,$IdProducto,$IdLocal);
 
 		//Retorna IdInventario, IdPedido & IdComprobante
 		echo "1~".$IdInventario."~".$IdPedido."~".$IdComprobante;

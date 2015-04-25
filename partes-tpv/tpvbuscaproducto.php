@@ -35,7 +35,9 @@
   <textbox id="NOM"  size="20" onfocus="select()" class="compacta" flex="1" 
 	   onkeypress=" if (event.which == 13) focuslistaProductos(); else agnadirPorNombre();" />
   <spacer style="width: 10px"/>
-  <toolbarbutton image="img/gpos_tpvsynch_pause.png" id="syncTPV" oncommand="pushSyncTPV()"/>
+  <toolbarbutton image="img/gpos_tpv_lista_compacta.png" id="gridListarTPV" oncommand="gridListarProductosTPV()"/>
+  <spacer style="width: 10px"/>
+  <toolbarbutton class="sync_pause" id="syncTPV" oncommand="pushSyncTPV()"/>
   <toolbarbutton image="img/gpos_tpvsynch_off.png" id="syncTPVOff"  collapsed="true" oncommand="Demon_CargarNuevosMensajes()"/>
   <spacer style="width: 10px"/>
   <toolbarbutton image="img/gpos_tpvnetwork_on.png" id="bolaMundo" oncommand="Demon_CargarNuevosMensajes()" />

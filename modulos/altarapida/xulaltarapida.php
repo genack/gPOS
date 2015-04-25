@@ -2,7 +2,6 @@
 
 include("../../tool.php");
 
-
 SimpleAutentificacionAutomatica("visual-xulframe");
 header("Content-type: application/vnd.mozilla.xul+xml");
 
@@ -11,8 +10,6 @@ header("Content-type: application/vnd.mozilla.xul+xml");
 echo '<?xml version="1.0" encoding="UTF-8"?>';
 echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';
 echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
-
-
 
 define("TALLAJE_DEFECTO",5);
 $TallajeDefecto = "Varios";
@@ -45,12 +42,20 @@ $btnVaciar   = ($esInvent)? "parent.volverStock()":"volverPresupuestos()";
 $lbtnVaciar  = ($esInvent)? " Volver Stock":" Volver Presupuestos";
 $ibtnVaciar  = ($esInvent)? "$_BasePath"."img/gpos_volver.png":"$_BasePath"."img/gpos_volver.png";
 
+$DSTOGR      = getSesionDato("DescuentoTienda");
+$MUGR        = getSesionDato("MargenUtilidad");
+$COPImpuesto = getSesionDato("COPImpuesto");
+$MetodoRedondeo = getSesionDato("MetodoRedondeo");
+
 ?>
 
 <window id="CompraVista" title="Alta Rápida" 
 	xmlns:html="http://www.w3.org/1999/xhtml"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/cadenas.js.php?a=4"/>
+  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js"/>
+  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/altarapida/altarapida.js?a=4"/>
 <!--  no-visuales -->
 <?php include("altarapidamenu.php"); ?>
 <!--  no-visuales -->
@@ -323,15 +328,15 @@ $ibtnVaciar  = ($esInvent)? "$_BasePath"."img/gpos_volver.png":"$_BasePath"."img
 		<textbox style="text-align:right; width:6em;" class="media" id="Costo" 
 			 onfocus="this.select()" value="0" 
 			 onkeypress="return soloNumeros(event,this.value)"
-			 onblur="setCostoPreciosAltaRapida('costo',this)"/>
+			 onchange="setCostoPreciosAltaRapida('costo',this)"/>
 	      </row>
 
 	      <row>
-		<caption label="Precio Compra" />
-		<textbox style="text-align:right; width:6em;" id="xPrecioCompra" 
+		<caption label="Costo Operativo" />
+		<textbox style="text-align:right; width:6em;" id="xCostoOP" 
 			 onfocus="this.select()" 
 			 onkeypress="return soloNumeros(event,this.value)" value="0"
-			 onblur="setCostoPreciosAltaRapida('precio',this)" />
+			 onchange="setCostoPreciosAltaRapida('precio',this)" />
 	    </row>
 
 
@@ -341,31 +346,31 @@ $ibtnVaciar  = ($esInvent)? "$_BasePath"."img/gpos_volver.png":"$_BasePath"."img
 	   <grid>
 	     <rows>
 	       <row>
-		 <caption label="PVD" />
+		 <caption label="PVP" />
 		 <textbox id="xPVD" onfocus="this.select()" style="text-align:right; width:6em;"
 			  onkeypress="return soloNumeros(event,this.value)" value="0"
-			  onblur="setCostoPreciosAltaRapida('pvd',this)"/>
+			  onchange="setCostoPreciosAltaRapida('pvd',this)"/>
 	       </row>
 
 	       <row>
-		 <caption label="PVD/Dcto." />
+		 <caption label="PVP/Dcto." />
 		 <textbox id="xPVDD" onfocus="this.select()" style="text-align:right; width:6em;"
 			  onkeypress="return soloNumeros(event,this.value)" value="0"
-			  onblur="setCostoPreciosAltaRapida('pvdd',this)"/>
+			  onchange="setCostoPreciosAltaRapida('pvdd',this)"/>
 	       </row>
 
 	       <row>
 		 <caption label="PVC" />
 		 <textbox id="xPVC" onfocus="this.select()" style="text-align:right; width:6em;"
 			  onkeypress="return soloNumeros(event,this.value)" value="0"
-			  onblur="setCostoPreciosAltaRapida('pvc',this)"/>
+			  onchange="setCostoPreciosAltaRapida('pvc',this)"/>
 	       </row>
 
 	       <row>
 		 <caption label="PVC/Dcto." />
 		 <textbox id="xPVCD" onfocus="this.select()" style="text-align:right; width:6em;"
 			  onkeypress="return soloNumeros(event,this.value)" value="0"
-			  onblur="setCostoPreciosAltaRapida('pvcd',this)"/>
+			  onchange="setCostoPreciosAltaRapida('pvcd',this)"/>
 	       </row>
 	     </rows>
 	   </grid>
@@ -385,6 +390,8 @@ $ibtnVaciar  = ($esInvent)? "$_BasePath"."img/gpos_volver.png":"$_BasePath"."img
 	    <splitter class="tree-splitter" />
 	    <listcol flex="1" />
 	    <splitter class="tree-splitter" />
+	    <listcol flex="1" />
+ 	    <splitter class="tree-splitter" />
 	    <listcol flex="1" />
  	    <splitter class="tree-splitter" />
 	    <listcol flex="1" />
@@ -411,6 +418,7 @@ $ibtnVaciar  = ($esInvent)? "$_BasePath"."img/gpos_volver.png":"$_BasePath"."img
 	    <listheader label="<?php echo $txtalias;?>" />
 	    <listheader label="Cantidad" />
 	    <listheader label="Costo" />
+	    <listheader label="Costo OP" />
 	    <listheader label="PVD" />
 	    <listheader label="PVDD" />
 	    <listheader label="PVC" />
@@ -454,10 +462,14 @@ var enviar = new Array();
   var cModo        = <?php echo "'".$modo."'"; ?>;
   var esInventario = (cModo=='altainventario')? true:false;
   var aProducto    = Array();
+  var MUGR         = <?php echo $MUGR;?>;
+  var DSTOGR       = <?php echo $DSTOGR;?>;
+  var COPImpuesto  = <?php echo $COPImpuesto;?>;
+  var cMetodoRedondeo = "<?php echo $MetodoRedondeo;?>";
+  var aSubFamilia  = Array();
+  setTimeout("CargarDataSubFamilias()", 200);
 //]]></script>
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/cadenas.js.php?a=4"/>
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js"/>
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/altarapida/altarapida.js?a=4"/>
+
 
 </hbox>
 

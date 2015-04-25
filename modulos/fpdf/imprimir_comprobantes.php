@@ -93,6 +93,7 @@ $Usuario      = utf8_decode($row["Usuario"]);
 $Observaciones= utf8_decode($row["Observaciones"]);
 $ImportePago  = $row["ImportePago"];
 $ImporteFlete = $row["ImporteFlete"];
+$IdPedidosDetalle = $row["IdPedidosDetalle"];
 
 //PDF ESTRUCTURA
 $pdf=new PDF();
@@ -266,7 +267,7 @@ $pdf->Ln(2);
 	  "INNER JOIN ges_marcas       ON ges_productos.IdMarca  = ges_marcas.IdMarca ".
 	  "INNER JOIN ges_contenedores ON ges_productos.IdContenedor = ges_contenedores.IdContenedor ".
           "INNER JOIN ges_pedidos       ON ges_pedidosdet.IdPedido  = ges_pedidos.IdPedido ".
-	  "WHERE ges_pedidosdet.IdPedido IN (".$idcod.") ".
+	  "WHERE ges_pedidosdet.IdPedido IN (".$IdPedidosDetalle.") ".
 	  "AND   ges_productos_idioma.IdIdioma = 1 ".
 	  "AND   ges_detalles.IdIdioma           = 1 ".
 	  "AND   ges_modelos.IdIdioma          = 1 ".
@@ -318,7 +319,7 @@ $pdf->Ln(2);
 	  }
 
 	  $descripcion_0 =
-	    $codigobarras." ".
+	    //$codigobarras." ".
 	    $descripcion."".
 	    $contund." ".
 	    $detcant." ".

@@ -575,6 +575,7 @@ class articulo extends Cursor {
 		$restriccion_oferta     = '';
 		$restriccion_obsoletos  = '';			
 		$restriccion_reservados = '';
+		$extrafrom              = '';
 
 		$Idioma = getSesionDato("IdLenguajeDefecto");
 		
@@ -584,8 +585,13 @@ class articulo extends Cursor {
 		if ($idalias)
 		  $and_producto .= "AND (IdProductoAlias0 = '".$idalias."' OR IdProductoAlias1 ='".$idalias."')";
 		else{
-		  if ($nombre)
-		    $and_producto .= "AND ges_productos_idioma.Descripcion  LIKE '%".$nombre."%' ";
+		  if ($nombre){
+		    $xnombre    = explode("|", $nombre);
+		    $and_producto .= " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre[0]."%' ";
+		    $and_producto .= ( isset( $xnombre[1] ) )? " AND ( ges_marcas.Marca  LIKE '%".$xnombre[1]."%' OR ges_modelos.Color  LIKE '%".$xnombre[1]."%' OR ges_detalles.Talla LIKE '%".$xnombre[1]."%' )  OR ges_productos.RefProvHab  LIKE '%".$xnombre[1]."%' ": "";
+		    $extrafrom .= ( isset( $xnombre[1] ) )? " INNER JOIN ges_marcas ON ges_marcas.IdMarca = ges_productos.IdMarca  INNER JOIN ges_modelos ON ges_modelos.IdColor = ges_productos.IdColor  INNER JOIN ges_detalles ON ges_detalles.IdTalla = ges_productos.IdTalla ":"";
+		    
+		  }
 		}    		
  
 		$restriccion_base = "";
@@ -642,7 +648,8 @@ class articulo extends Cursor {
 			FROM (((ges_almacenes  INNER JOIN ges_locales ON ges_almacenes.IdLocal
 			= ges_locales.IdLocal ) INNER JOIN ges_productos ON
 			ges_almacenes.IdProducto = ges_productos.IdProducto ) INNER JOIN
-			ges_productos_idioma ON ges_productos.IdProdBase = 	ges_productos_idioma.IdProdBase) INNER JOIN ges_contenedores ON ges_productos.IdContenedor = ges_contenedores.IdContenedor			
+			ges_productos_idioma ON ges_productos.IdProdBase = 	ges_productos_idioma.IdProdBase) INNER JOIN ges_contenedores ON ges_productos.IdContenedor = ges_contenedores.IdContenedor
+                        $extrafrom			
 			WHERE
 			$restriccion_local 
 			$restriccion_base
@@ -1143,10 +1150,10 @@ function registrarAjusteEntradaKardex($IdPedido,$IdPedidoDet,$IdAlmacenRecepcion
 
 function registrarAjusteSalidaKardex($IdComprobante,$Origen,$Operacion=1,
 				     $IdKardexAjusteOperacion=0,
-				     $IdInventario=0,$Obs=false){
+				     $IdInventario=0,$Obs=false,$xkeydet,$ckeydet){
     $productos = new producto;
     $almacenes = new almacenes;
-    $res       = obtenerDetalleVentaAjuste($IdComprobante);
+    $res       = obtenerDetalleVentaAjuste($IdComprobante,$ckeydet);
     
     while( $row= Row($res) ) 
       {
@@ -1157,19 +1164,23 @@ function registrarAjusteSalidaKardex($IdComprobante,$Origen,$Operacion=1,
 	$IdPedidoDet      = $row['IdPedidoDet'];
 	$IdComprobanteDet = $row['IdComprobanteDet'];
 	$existencias      = $almacenes->obtenerExistenciasKardex($id,$Origen);
-	
-	registrarSalidaKardexFifo($id,$Cantidad,$Costo,$Operacion,
-				  $Origen,$IdPedidoDet,$IdComprobanteDet,
-				  $existencias,$IdKardexAjusteOperacion,
-				  $IdInventario,$Obs);
 
-	$almacenes->actualizarCosto($id,$Origen);
-	//$productos->actualizarCosto($id,$Costo);
-	actualizaResumenKardex($id,$Origen);
-
-	if($IdInventario)
-	  $almacenes->actualizaEstadoInventario($Origen,$id);
-      } 
+	if( isset( $xkeydet[$IdComprobanteDet] ) )
+	  if( $xkeydet[ $IdComprobanteDet ] == $IdPedidoDet )
+	    {
+	      registrarSalidaKardexFifo($id,$Cantidad,$Costo,$Operacion,
+					$Origen,$IdPedidoDet,$IdComprobanteDet,
+					$existencias,$IdKardexAjusteOperacion,
+					$IdInventario,$Obs);
+	      
+	      $almacenes->actualizarCosto($id,$Origen);
+	      //$productos->actualizarCosto($id,$Costo);
+	      actualizaResumenKardex($id,$Origen);
+	      
+	      if($IdInventario)
+		$almacenes->actualizaEstadoInventario($Origen,$id);
+	    }
+      }
     //echo 1; 
 }
 
@@ -1466,7 +1477,9 @@ function obtenerKardexMovimientos($idlocal,$desde,$hasta,$xope,$xfamilia,
 
          $desde  = CleanFechaES($desde);
 	 $hasta  = CleanFechaES($hasta);
-	 $extra  = ( $xnombre )? " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre."%' ":"";
+	 $anombre    = ($xnombre)? explode("|", $xnombre):"";
+	 $extra  = ( isset($anombre[0])  )? " AND ges_productos_idioma.Descripcion  LIKE '%".$anombre[0]."%' ":"";
+	 $extra .= ( isset($anombre[1])  )? " AND ( ges_marcas.Marca  LIKE '%".$anombre[1]."%' OR ges_modelos.Color  LIKE '%".$anombre[1]."%' OR ges_detalles.Talla LIKE '%".$anombre[1]."%' )  OR ges_productos.RefProvHab  LIKE '%".$anombre[1]."%' ":"";
 	 $extra .= ( $xmarca   != "0" )? " AND ges_marcas.IdMarca = '".$xmarca."' ":"";
 	 $extra .= ( $xfamilia != "0" )? " AND ges_familias.IdFamilia = '".$xfamilia."' ":"";
 	 $extra  = ( $xcodigo )? " AND ges_productos.CodigoBarras LIKE '".$xcodigo."' ":$extra;
@@ -1564,10 +1577,12 @@ function obtenerKardexMovimientosInventario($idlocal,$desde,$hasta,$xfamilia,
          $desde   = CleanFechaES($desde);
 	 $hasta   = CleanFechaES($hasta);
 	 $fecha   = " AND  FechaMovimiento>= '$desde' AND  FechaMovimiento<= ADDDATE('$hasta',1) ";
+	 $anombre    = ($xnombre)? explode("|", $xnombre):"";
 
 	 $extra  = ( $esInvent )? " AND ges_kardex.IdInventario = '".$xinvent."' ":"";
 	 $extra .= ( $esInvent )? "":$fecha;
-	 $extra .= ( $xnombre  )? " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre."%' ":"";
+	 $extra .= ( isset($anombre[0])  )? " AND ges_productos_idioma.Descripcion  LIKE '%".$anombre[0]."%' ":"";
+	 $extra .= ( isset($anombre[1])  )? " AND ( ges_marcas.Marca  LIKE '%".$anombre[1]."%' OR ges_modelos.Color  LIKE '%".$anombre[1]."%' OR ges_detalles.Talla LIKE '%".$anombre[1]."%' )  OR ges_productos.RefProvHab  LIKE '%".$anombre[1]."%' ":"";
 	 $extra .= ( $xmarca   != "0" )? " AND ges_marcas.IdMarca = '".$xmarca."' ":"";
 	 $extra .= ( $xfamilia != "0" )? " AND ges_familias.IdFamilia = '".$xfamilia."' ":"";
 	 $extra  = ( $xcodigo  )? " AND ges_productos.CodigoBarras LIKE '".$xcodigo."' ":$extra;
@@ -1664,14 +1679,16 @@ function obtenerKardexMovimientosInventario($idlocal,$desde,$hasta,$xfamilia,
 
 function obtenerKardexInventarioAlmacen($idlocal,$xfamilia,$xmarca,$xstock,
 					$xnombre,$xcodigo,$esInvent){
-	   
+
+         $anombre    = ($xnombre)? explode("|", $xnombre):"";	   
 	 $extra  = ( $xmarca   != "0" )? " AND ges_marcas.IdMarca = '".$xmarca."' ":"";
 	 $extra .= ( $xfamilia != "0" )? " AND ges_familias.IdFamilia = '".$xfamilia."' ":"";
 	 $extra .= ( $xstock   == "1" )? " AND ges_almacenes.Unidades > 0 ":"";
 	 $extra .= ( $xstock   == "2" )? " AND ges_almacenes.Unidades = 0 ":"";
 	 $extra .= ( $xstock   == "3" )? " AND ges_almacenes.EstadoInventario = 1 ":"";
 	 $extra .= ( ( $xstock != "3" ) && $esInvent )? " AND ges_almacenes.EstadoInventario = 0 ":"";
-	 $extra .= ( $xnombre )? " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre."%' ":"";
+	 $extra .= ( isset($anombre[0])  )? " AND ges_productos_idioma.Descripcion  LIKE '%".$anombre[0]."%' ":"";
+	 $extra .= ( isset($anombre[1])  )? " AND ( ges_marcas.Marca  LIKE '%".$anombre[1]."%' OR ges_modelos.Color  LIKE '%".$anombre[1]."%' OR ges_detalles.Talla LIKE '%".$anombre[1]."%' )  OR ges_productos.RefProvHab  LIKE '%".$anombre[1]."%' ":"";
 	 $extra  = ( $xcodigo )? " AND ges_productos.CodigoBarras LIKE '".$xcodigo."' ":$extra;
 	 $extra .= ( $idlocal  != "0" )? " AND ges_almacenes.IdLocal = '".$idlocal."' ":"";
 	 $sql    = 
@@ -1697,7 +1714,10 @@ function obtenerKardexInventarioAlmacen($idlocal,$xfamilia,$xmarca,$xstock,
 	   "       ges_productos.VentaMenudeo, ".
 	   "       ges_productos.Serie, ".
 	   "       ges_productos.Lote, ".
-	   "       ges_productos.FechaVencimiento ".
+	   "       ges_productos.FechaVencimiento, ".
+	   "       ges_productos.IdFamilia, ".
+	   "       ges_productos.IdSubFamilia, ".
+	   "       ges_almacenes.CostoOperativo ".
 	   "FROM   ges_almacenes ".
 	   "LEFT   JOIN ges_productos ON ges_almacenes.IdProducto = ges_productos.IdProducto ".
 	   "INNER  JOIN ges_productos_idioma ON ges_productos.IdProdBase = ges_productos_idioma.IdProdBase ".
@@ -1722,8 +1742,9 @@ function obtenerKardexInventarioAlmacen($idlocal,$xfamilia,$xmarca,$xstock,
 
 	 while($row = Row($res))
 	   {
-	     $nombre                 = "Operacion_" . $t++;
-	     $OrdenKardex[$nombre]   = $row; 
+	     $nombre               = "Operacion_" . $t++;
+	     $row["MUSubFamilia"]  = ObtenerMUSubFamilia($row["IdProducto"],$row["IdFamilia"],$row["IdSubFamilia"]);
+	     $OrdenKardex[$nombre] = $row; 
 	     
 	   }	
 	 return $OrdenKardex;
@@ -2146,4 +2167,149 @@ function validaKardexPedidoDet($idpedidodet){
 	 return $row["EstadoDetalle"]; 
 	 
 }
+
+function FormatPreciosTPV($numero){
+  $MetodoRedondeo = getSesionDato("MetodoRedondeo");
+
+  switch($MetodoRedondeo){
+  case 'SR':
+    $precio = round($numero,2);
+    break;
+  case 'RDE':
+    $precio = round($numero,1);
+    break;
+  case 'RIE':
+    $entero = floor($numero);
+    $resto  = $numero - $entero;
+
+    if($resto == 0)
+      $precio = $numero;
+    if($resto < 0.5 && $resto > 0.0)
+      $precio = $entero+0.5;
+    if($resto >= 0.5)
+      $precio = round($numero, 0, PHP_ROUND_HALF_UP);
+    break;
+  }
+  return $precio;
+}
+
+function actualizarPreciosVentaAlmacenxSubFamilia($idsubfam,$md,$mc,$tipocosto,$descuento){
+  $subfam = new familia;
+  $subfam->LoadSub($idsubfam);
+  $idsubfamilia = $subfam->get("IdSubFamilia");
+  $idfamilia    = $subfam->get("IdFamilia");
+
+  $IdLocal  = getSesionDato("IdTienda");
+  $mu_gral  = getSesionDato("MargenUtilidad");
+  $dto_gral = getSesionDato("DescuentoTienda");
+  $cop_ipto = getSesionDato("COPImpuesto");
+
+  $sql = "SELECT IdProducto,IdSubFamilia,Costo
+          FROM ges_productos 
+          WHERE  ges_productos.IdSubFamilia = '$idsubfamilia' 
+          AND    ges_productos.IdFamilia = '$idfamilia' 
+          AND    ges_productos.Eliminado = 0 
+          AND    ges_productos.Servicio = 0 ";
+  $res = query($sql);
+
+  while($row = Row($res)){
+    $UC  = $row["Costo"]; // Ultimo Costo
+    $IdProducto = $row["IdProducto"];
+
+    $sql1  = "SELECT CostoUnitario, PrecioVenta, PrecioVentaCorporativo,
+              Impuesto,CostoOperativo 
+              FROM ges_almacenes 
+              WHERE  ges_almacenes.IdProducto = '$IdProducto' 
+              AND    ges_almacenes.IdLocal = '$IdLocal'";
+
+    $row1  = queryrow($sql1);
+    
+    $CP    = $row1["CostoUnitario"];
+    $PVD   = $row1["PrecioVenta"];
+    $PVC   = $row1["PrecioVentaCorporativo"];
+    $COP   = ($cop_ipto == 1)? 0:$row1["CostoOperativo"];
+    $Impuesto = $row1["Impuesto"];
+
+    // Calculado nuevos precios
+    $descuento = ($descuento == 0)? $dto_gral:$descuento;
+    $DSTO  = $descuento/100;
+    $Costo = ($tipocosto == 'CP')? $CP : $UC;
+    $md    = ($md == 0)? $mu_gral:$md;
+    $MUD   = ($Costo+$COP)*($md/100) ;
+    $PV1   = $Costo + $COP + $MUD;
+
+    if($md != 0){
+      $PVD   = $PV1 + $PV1*($Impuesto/100); 
+      $PVD   = ($cop_ipto == 1)? ($PV1 + $COP)+($PV1 + $COP)*($Impuesto/100):$PVD;
+      $PVD   = round($PVD,1);
+      $PVD   = FormatPreciosTPV($PVD);
+      $PVDD  = round($PVD-$MUD*$DSTO,1); 
+      $PVDD  = FormatPreciosTPV($PVDD);
+      actualizarPreciosVentaxSubFamilia($IdProducto,$PVD,$PVDD,$IdLocal,'VD');
+    }
+
+    $mc    = ($mc == 0)? $mu_gral:$mc;
+    $MUC   = ($Costo+$COP)*($mc/100) ;
+    $PV2   = $Costo + $COP + $MUC;
+
+    if($mc != 0){
+      $PVC   = $PV2 + $PV2*($Impuesto/100);
+      $PVC   = ($cop_ipto == 1)? ($PV2 + $COP)+($PV2 + $COP)*($Impuesto/100):$PVC;
+      $PVC   = round($PVC,1);
+      $PVC   = FormatPreciosTPV($PVC);
+      $PVCD  = round($PVC-$MUC*$DSTO,1); 
+      $PVCD  = FormatPreciosTPV($PVCD);
+      actualizarPreciosVentaxSubFamilia($IdProducto,$PVC,$PVCD,$IdLocal,'VC');
+    }
+  }
+}
+
+function actualizarPreciosVentaxSubFamilia($idproducto,$pv,$pvd,$idlocal,$tv){
+  $table1 = ($tv == 'VD')? 'PrecioVenta':'PrecioVentaCorporativo';
+  $table2 = ($tv == 'VD')? 'PVDDescontado':'PVCDescontado';
+  $sql = 
+    "UPDATE ges_almacenes ".
+    "SET    $table1   = '".$pv."', ".
+    "$table2   = '".$pvd."' ".
+    "WHERE  IdProducto = '".$idproducto."' ".
+    "AND    IdLocal = '".$idlocal."'";
+  $res = query($sql);
+}
+
+function obtenerProductoxSubFamilia($IdFamilia,$IdSubFamilia){
+  $IdLocal = getSesionDato("IdTienda");
+
+  $sql = "SELECT  ges_almacenes.IdProducto, ges_productos.CodigoBarras, ".
+	   "       ges_productos.Referencia, ".
+	   "       CONCAT(ges_productos_idioma.Descripcion,' ', ".
+	   "       ges_marcas.Marca, ' ', ".
+	   "       ges_detalles.Talla, ' ', ".
+	   "       ges_modelos.Color, ' ', ".
+	   "       ges_laboratorios.NombreComercial) as Producto, ".
+           "       ges_productos.Costo as UltimoCosto, ".
+           "       ges_almacenes.CostoOperativo, ".
+           "       ges_almacenes.CostoUnitario as CostoPromedio, ".
+           "       ges_almacenes.PrecioVenta, ".
+           "       ges_almacenes.PrecioVentaCorporativo, ".
+           "       ges_almacenes.PVDDescontado, ".
+           "       ges_almacenes.PVCDescontado, ".
+           "       ges_almacenes.Impuesto, ".
+           "       ges_almacenes.Unidades ".  
+         "FROM     ges_almacenes ".
+         "INNER JOIN ges_productos ON ges_almacenes.IdProducto = ges_productos.IdProducto ".
+         "INNER JOIN ges_productos_idioma ON ges_productos.IdProdBase = ges_productos_idioma.IdProdBase ".
+         "INNER JOIN ges_marcas ON ges_productos.IdMarca = ges_marcas.IdMarca ".
+         "INNER JOIN ges_modelos ON ges_productos.IdColor = ges_modelos.IdColor ".
+         "INNER JOIN ges_detalles ON ges_productos.IdTallaje = ges_detalles.IdTallaje ".
+         "INNER JOIN ges_laboratorios ON ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
+         "WHERE ges_productos.Eliminado = 0 ".
+         "AND   ges_productos.Servicio = 0 ".
+         "AND   ges_almacenes.IdLocal = '$IdLocal' ".
+         "AND   ges_productos.IdFamilia = '$IdFamilia' ".
+         "AND   ges_productos.IdSubFamilia = '$IdSubFamilia' ".
+         "GROUP BY ges_almacenes.IdProducto ";
+  $res = query($sql);
+  return $res;
+}
+
 ?>

@@ -21,6 +21,7 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  $eslTBox    = ($escKBox)? false:true;
  $eslTBoxtx  = ($eslTBox)? 'false':'true';
  $escKBoxtx  = ($escKBox)? 'false':'true';
+$item        = 0;
 ?> 
 
 <script>//<![CDATA[
@@ -33,10 +34,10 @@ var cOpEntrada   = "<?php echo $opentrada;?>";
 
 <popup  id="oe-date-picker-popup" position="after_start" oncommand="RecibeCalendario( this )" value=""/>
 <popup id="accionesNS" class="media">
-  <menuitem class="menuitem-iconic" image="<?php echo $_BasePath; ?>img/remove16.gif" 
+  <menuitem class="menuitem-iconic" image="<?php echo $_BasePath; ?>img/gpos_barcode.png" 
+            label="Editar"  oncommand="quitareditarns()"/>
+  <menuitem class="menuitem-iconic" image="<?php echo $_BasePath; ?>img/gpos_cancelar.png" 
             label="Quitar"  oncommand="quitarns()"/>
-  <!-- <menuitem class="menuitem-iconic" image="<?php echo $_BasePath; ?>img/remove16.gif" 
-            label="Modificar Fecha Garantia"  oncommand="modifecha()"  /> -->
 </popup>
 
 <vbox  align="center"  pack="center" collapsed="<?php echo $vtitulo; ?>">
@@ -76,7 +77,7 @@ var cOpEntrada   = "<?php echo $opentrada;?>";
           <row collapsed="<?php echo $eslTBoxtx; ?>">
 	    <caption label="NS"/>
 	    <textbox id="lasseries" value=" " hidden="true"/>
-	    <textbox id="numerodeserie"  
+	    <textbox id="numerodeserie"  onfocus="select()"
 		     onkeypress="if (event.which == 13) 
 		     acciones('<?php echo $unidades; ?>',<?php echo $id; ?>,
 		              '<?php echo $validarSeries; ?>',event);

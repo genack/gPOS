@@ -1,7 +1,11 @@
 <?php
 
 	include("tool.php");
-//return validaSuscripcones2facturar();
+
+        #Valida Suscripciones
+        #return validaSuscripcones2facturar(); 
+        //checkSuscripciones();
+
         if (!getSesionDato("IdTienda")){
 	  session_write_close();
 	  header( "Location: ".$_BasePath."/config");
@@ -16,17 +20,24 @@
 	  header("Location: xulentrar.php?modo=avisoUsuarioIncorrecto");
 	  exit();
 	}
+        //Valida usuario tipo venta VC/VD
+        if ($_GET["t"]=='rc'){	 
+	    session_write_close();
+	    header("Location: xulentrar.php?modo=avisoUsuarioIncorrecto");
+	    exit();
+	}
+
 
         //xmodulos 
         //set global variable
-        setTipoVenta($_GET["t"]); 	
+        setTipoVenta('rd'); 	
         $TipoVenta   = getSesionDato("TipoVentaTPV");
         $GiroEmpresa = getSesionDato("GlobalGiroNegocio");
         $esPopup     = ( isset($_GET["espopup"]) )? CleanText($_GET["espopup"]):'off';
         $esPopup     = ( $esPopup == 'on' )? 'true':'false';
         
         //TPV corporativo
-        $TipoVentaText = ( $TipoVenta=='VC' )? " B2B":" B2C";
+        $TipoVentaText = " PERSONAL";
 
 	if (!$IdLocalActivo){
 		session_write_close();
@@ -83,8 +94,8 @@
         echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 ?>
 	
-<window id="window-tpv"  xml:lang="es" 
-        title="<?php echo 'gPOS '.$tNombreEmpresa.' // TPV '.$TipoVentaText;?>"
+<window id="window-tpv"  xml:lang="es" onload="accionInicioTPV();"
+        title="<?php echo 'gPOS '.$tNombreEmpresa.' // TPV '.$TipoVentaText.' '.$NombreLocalActivo;?>"
         xmlns:html="http://www.w3.org/1999/xhtml"        
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">        
 
@@ -192,7 +203,7 @@
 
 <!-- ficha Arqueo de caja -->
 <vbox>
-<iframe id="frameArqueo" flex="1" src="<?php echo $_BasePath; ?>modulos/arqueo/arqueo2.php"/>
+<iframe id="frameArqueo" name="frameArqueo" flex="1" src="<?php echo $_BasePath; ?>modulos/arqueo/arqueo2.php"/>
 <button class="media"  image="img/gpos_volver.png" label="Volver TPV" oncommand="VerTPV()" collapsed="false"/>
 </vbox>
 <!-- ficha Arqueo de caja -->
@@ -221,6 +232,7 @@ var Global                  = new Object();
 var modospago               = new Array();
 var po_nombreclientecontado = "<?php echo addslashes($NombreClienteContado) ?>";
 var po_ticketde             = "<?php echo addslashes(_("Ticket de "). $NombreEmpresa) ?>";
+var cktextid                = "NOM,NombreClienteBusqueda,buscaCliente,NombreComercial,NumeroFiscal,NombreLegal,buscapedido";
 
  Local.numeroDeSerie 	    = <?php echo CleanID($numSerieTicketLocalActual) ?>;
  Local.motd 		    = "<?php echo addslashes($MOTDActivo) ?>";
@@ -235,12 +247,36 @@ var po_ticketde             = "<?php echo addslashes(_("Ticket de "). $NombreEmp
  Local.nombreDependiente    = "<?php echo addslashes($NombreDependienteDefecto)?>";
  Local.IdDependiente        = "<?php echo CleanID($IdDependienteDefecto)?>";
  Local.Negocio 		    = "<?php echo addslashes($NombreEmpresa) ?>";
+ Local.NegocioTipoVenta     = "<?php echo addslashes($tNombreEmpresa) ?>";
  Local.promoMensaje	    = "<?php echo addslashes($MensajePromo) ?>";
  Local.TPV                  = "<?php echo $TipoVenta; ?>";
  Local.Giro                 = "<?php echo $GiroEmpresa; ?>";
  Local.Imprimir             = true;
-
+ Local.esPrecios            = "<?php echo ( Admite('Precios'))? 1:0; ?>";
+ Local.esCajaTPV            = "<?php echo ( Admite('CajaTPV'))? 1:0; ?>";
+ Local.esB2B                = "<?php echo ( Admite('B2B'))? 1:0; ?>";
+ Local.esSuscripcion        = "<?php echo ( Admite('Suscripcion'))? 1:0; ?>";
+ Local.esServicios          = "<?php echo ( Admite('Servicios'))? 1:0; ?>";
+ Local.esSAT                = "<?php echo ( Admite('SAT'))? 1:0; ?>";
+ Local.ocupado              = true;
+ Local.esCajaCerrada        = "<?php echo cajaescerrado(); ?>";
+ Local.esSyncPreventa       = false;
+ Local.esSyncProforma       = false;
+ Local.esSyncProOnline      = false;
+ Local.esSyncMensajes       = false;
+ Local.esSyncClientes       = false;
+ Local.esSyncClientesPost   = false;
+ Local.esSyncStock          = false;
+ Local.esSyncStockPost      = false;
+ Local.esSyncMProducto      = false;
+ Local.esSyncCaja           = false;
+ Local.esSyncPromociones    = false; 
+ Local.textValue            = '~'; 
+ Local.textActive           = false; 
+ Local.textId               = cktextid.split(','); 
+ Local.textOcupado          = false; 
  Local.diasLimiteDevolucion = 7;
+ Local.productos            = 0;
 
  Global.fechahoy = "<?php 
 	$cad = "%A %d del %B, %Y";
@@ -320,7 +356,7 @@ CargarbtnSalir();
  document.gClonedListboxPanel = document.getElementById('listaPanelProductos').cloneNode(true);
 
 //]]></script>
-<script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tpv.js?ver=49/r<?php echo rand(0,99999999); ?>"/>
-<script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/ordenservicio/ordenservicio.js?ver=49/r<?php echo rand(0,99999999); ?>"/>
+<script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tpv.js?ver=49/r<?php echo rand(0,99999999); ?>" async="async"/>
+
 </window>
 

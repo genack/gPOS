@@ -36,9 +36,16 @@
      <menuitem label="<?php echo _("Revisar Detalle") ?>" oncommand="RevisarVentaSeleccionada()"/>
      <menuitem id="VentaRealizadaAbonar" label="<?php echo _("Abonar") ?>" oncommand="VentanaAbonos()"/>
      <menuseparator />
-     <menuitem id="VentaRealizadaImprimir" label="<?php echo _("Imprimir") ?>" oncommand="ReimprimirVentaSeleccionada()"/>
-     <menuitem id="VentaSuscripcionImprimir" label="<?php echo _("Imprimir Suscripción") ?>" oncommand="ReimprimirVentaSuscripcion()" collapsed="true"/>
-     <menuitem id="VentaRealizadaDevolver" label="<?php echo _("Devolver") ?>" oncommand="DevolverVentaSeleccionada()"/>
+     <menu id="VentaRealizadaImprimir" label="<?php echo _("Imprimir") ?>">
+       <menupopup> 
+         <menuitem label="<?php echo _("Comprobante") ?>" 
+                   oncommand="ReimprimirVentaSeleccionada(1)"/>
+         <menuitem id="VentaSuscripcionImprimir" label="<?php echo _("Suscripción") ?>"
+                   oncommand="ReimprimirVentaSuscripcion()" collapsed="true"/>
+       </menupopup>
+     </menu>
+     <menuseparator />
+     <menuitem id="VentaRealizadaDevolver" label="<?php echo _("Devolver") ?>" oncommand="habilitaDevolucionVentaSeleccionada()"/>
      <menuseparator />
      <menuitem id="VentaRealizadaBoletar" label="<?php echo _("Boletar")?>" oncommand="BoletarNroDocumento('Boletar')" />
      <menuitem id="VentaRealizadaFacturar" label="<?php echo _("Facturar")?>" oncommand="FacturarNroDocumento('Facturar')" />
@@ -53,10 +60,12 @@
 
   </popup>   
 <popup id="AccionesDetallesVentas" class="media">
+     <menuitem id="menuDevolverProducto" image="img/gpos_tpv_ventas.png"  label="<?php echo _("Devolver") ?>" oncommand="cargarProducto2Devolver()" collapsed="true"/>
+     <menuitem id="VentaGarantiaComprobante" label="<?php echo _("Garantía") ?>" oncommand="verGarantiaComprobante()"/>
+
+     <menuseparator />
      <menuitem id="VentaRealizadaDetalleNS" label="<?php echo _("Ver Números de Serie") ?>" oncommand="verNSVentaSeleccionada()"/>
      <menuitem id="VentaRealizadaDetalleMProducto" label="<?php echo _("Ver Detalle Meta Producto") ?>" oncommand="verDetMPSeleccionada()"/>
-
-
   </popup> 
 
   <popup id="accionesTicket" class="media">
@@ -123,10 +132,10 @@
   </popup>
   <popup id="AccionesclientPickArea"> 
     <menuitem  label="<?php echo _("Usar Seleccionado") ?>" 
-               oncommand="cargarCliente('sel')"/>
+    oncommand="cargarCliente('sel')"/>
     <menuseparator />
     <menuitem  label="<?php echo _("Modificar") ?>" 
-               oncommand="VerClienteId()"/>
+    oncommand="VerClienteId()"/>
   </popup>
 </popupset>
 	  

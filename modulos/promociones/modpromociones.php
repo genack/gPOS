@@ -224,6 +224,7 @@ switch($modo) {
 
   case "syncPromociones":
     $xlocal = CleanID($_GET["xlocal"]);
+    $xsync  = setSyncTPV('Promocion');
     echo getPromocionesSyncAlmacen($xlocal);
     exit();
     break;

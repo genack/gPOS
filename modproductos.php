@@ -482,7 +482,7 @@ function VaciarDatosProductosyAlmacen(){
 
 
 function ClonarProducto($id,$idcolor,$idtalla,$referencia=false,$codigobarras,
-			$refprovhab,$coste,$ventamenudeo,$unidadesxcontenedor,
+			$refprovhab,$coste,$precioventa,$ventamenudeo,$unidadesxcontenedor,
 			$unidadmedida,$idcontenedor,$referencia,$idalias0,$idalias1,
 			$condventa) {
 	global $action;
@@ -499,6 +499,7 @@ function ClonarProducto($id,$idcolor,$idtalla,$referencia=false,$codigobarras,
 	$oProducto->set("CodigoBarras",$codigobarras,FORCE);
 	$oProducto->set("RefProvHab",$refprovhab,FORCE);
 	$oProducto->set("Costo",$coste,FORCE);
+	$oProducto->setPrecioVenta($precioventa);
 	$oProducto->set("IdContenedor",$idcontenedor,FORCE);
 	$oProducto->set("UnidadMedida",$unidadmedida,FORCE);
 	$oProducto->set("VentaMenudeo",$ventamenudeo,FORCE);
@@ -514,8 +515,9 @@ function ClonarProducto($id,$idcolor,$idtalla,$referencia=false,$codigobarras,
 		$alm->ApilaProductoTodos($oProducto);
 		return true;
 	} else {
-		$oProducto->regeneraCB();
-		echo $oProducto->formClon($action,true);
+	  echo gas("aviso",_("No se pudo realizar la copia. <br/> - Reintente con diferentes caracteristicas Modelo ó Detalle -"));
+	  $oProducto->regeneraCB();
+	  echo $oProducto->formClon($action,true);
 	}
 		
 	return false;			
@@ -715,6 +717,7 @@ switch($modo){
 		}
 		break;
 	case "salvaclon":
+
 		$id 	       = CleanID($_POST["id"]);
 		$idalias0      = CleanID($_POST["IdProductoAlias0"]);
 		$idalias1      = CleanID($_POST["IdProductoAlias1"]);
@@ -723,8 +726,9 @@ switch($modo){
 		$condventa     = CleanText($_POST["CondicionVenta"]);
 		$codigobarras  = CleanCB($_POST["CodigoBarras"]);
 		$refprovhab    = CleanCB($_POST["RefProvHab"]);
-		$referencia = CleanReferencia($_POST["Referencia"]);
+		$referencia    = CleanReferencia($_POST["Referencia"]);
 		$coste         = CleanFloat($_POST["Coste"]);
+		$precioventa   = CleanFloat($_POST["PrecioVenta"]);
 		$idcontenedor  = CleanID($_POST["IdContenedor"]);
 		$ventamenudeo  = (isset($_POST["VentaMenudeo"]))?CleanID($_POST["VentaMenudeo"]=='on'):false;
 		$unidxcont     = CleanID($_POST["UnidadesPorContenedor"]);
@@ -733,20 +737,19 @@ switch($modo){
 		$txtDetalle   = $txtMoDet[2];
 
 		if (ClonarProducto($id,$idcolor,$idtalla,false,$codigobarras,
-				   $refprovhab,$coste,$ventamenudeo,
+				   $refprovhab,$coste,$precioventa,$ventamenudeo,
 				   $unidxcont,$unidadmedida,$idcontenedor,
 				   $referencia,$idalias0,$idalias1,$condventa)){
 		  echo gas("aviso",_("Creado nuevo $txtModelo/$txtDetalle"));	
 		  //Separador();
 		  //$_SESSION["IdUltimoCambioProductos"] = $id;			
 		  PaginaBasica();				
-		} 
-		else 
-		  echo gas("aviso",_("No se pudo realizar copia, reintente con diferentes caracteristicas"));
+		}
 		break;	
 	case "clonar":
 		$id     = CleanID( $_GET["id"] );
-		$idBase = (isset($_SESSION["IdUltimoCambioProductos"]))? CleanID( $_SESSION["IdUltimoCambioProductos"] ):0;
+		$idBase = CleanID( $_GET["idBase"] );
+		//$idBase = (isset($_SESSION["IdUltimoCambioProductos"]))? CleanID( $_SESSION["IdUltimoCambioProductos"] ):0;
 		$volver = (isset($_GET["volver"]))? Clean($_GET["volver"]):"";
 		MostrarProductoParaClonado($id,$idBase,false,$volver);
 		break;
@@ -793,7 +796,7 @@ switch($modo){
 		if (!productoEnAlmacen($id)){		
 			BorrarProducto($id);
 		} else {
-			echo gas("nota",_("No se puede borrar porque aun hay existencias. Primero vacie en almacenes.") );
+			echo gas("aviso",_("No se puede borrar porque aun hay existencias. <br/> - Primero libere el stock en Almacen > Ajustes -") );
 		} 				
 		//Separador();
 		PaginaBasica();	

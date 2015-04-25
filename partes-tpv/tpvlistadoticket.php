@@ -13,14 +13,11 @@
 		    oncommand="selTipoPresupuesto(1)" />
 	  <menuitem id="t_proforma" type="checkbox" label="TICKET PROFORMA" 
 		    oncommand="selTipoPresupuesto(2)" />
-	  <menuitem id="t_ponline" type="checkbox" label="TICKET ONLINE"  
-		    oncommand="selTipoPresupuesto(3)" collapsed="true"/>
+	  <menuitem id="t_proformaonline" type="checkbox" label="TICKET ONLINE"  
+		    oncommand="selTipoPresupuesto(3)" />
 	  <menuseparator />
 	  <menuitem id="t_mproducto" type="checkbox" label="TICKET MPRODUCTO"  
 		    oncommand="selTipoPresupuesto(4)" />
-	  <menuitem id="t_ponline" type="checkbox" label="TICKET SERVICIO"  
-		    oncommand="selTipoPresupuesto(5)"  collapsed="true"/>
-
 	</menupopup>
       </menu>
       <textbox id="buscapedido" collapsed="true" size="9" value="Nro" onfocus="if(this.value=='Nro')this.value='';select();" onblur="if(this.value=='')this.value='Nro';" class="nro"  onkeypress=" if (event.which == 13) buscarNroTicket(); return soloNumerosEnterosTPV(event,this.value);" />
@@ -33,6 +30,12 @@
 
       <menulist label="Elije ticket...." flex="1" id="SelProforma" collapsed="true"  class="listado">
       <menupopup id="itemsProforma">
+	<menuitem id="0" style="width:14em" label="Elije ticket...."/>      
+      </menupopup>
+      </menulist>
+
+      <menulist label="Elije ticket...." flex="1" id="SelProformaOnline" collapsed="true"  class="listado">
+      <menupopup id="itemsProformaOnline">
 	<menuitem id="0" style="width:14em" label="Elije ticket...."/>      
       </menupopup>
       </menulist>

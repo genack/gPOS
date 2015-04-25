@@ -102,7 +102,7 @@
 	  if( count($arr) > 0 )
 	    return implode($arr,"~"); 
 	  else 
-	    return 0;
+	    return '-NS';
 	}
 
         function registraSalidaSeriesPedidoDet($IdProducto,$IdComprobante,
@@ -255,6 +255,20 @@
 	    "        DocumentoSalida  = '".$IdComprobante."'". 
 	    " where  IdProducto       = '".$IdProducto."'".
 	    " and    DocumentoEntrada = '".$IdPedidoDet."'".
+	    " and    NumeroSerie      in ('".$Serie."')".
+	    " and    Eliminado        = 0 ";
+	  query($sql);
+	}
+
+        function liberarReservaSalidaNumeroSerie($IdProducto,$IdComprobante,$Serie,
+						 $IdPedidoDet){
+	  $Serie = str_replace(",", "','", $Serie);
+	  $sql   = 
+	    " update ges_productos_series". 
+	    " set    DocumentoSalida  = '0'". 
+	    " where  IdProducto       = '".$IdProducto."'".
+	    " and    DocumentoEntrada = '".$IdPedidoDet."'".
+	    " and    DocumentoSalida  = '".$IdComprobante."'".
 	    " and    NumeroSerie      in ('".$Serie."')".
 	    " and    Eliminado        = 0 ";
 	  query($sql);
@@ -452,7 +466,7 @@
 
 	  $aSeries = explode(";",$Series);
 	  $nSeries = count($aSeries);
-	  $xset    = "OperacionSalida='AjusteExist',Estado='Salida',Disponible=0,";	       
+	  $xset    = "OperacionSalida='AjusteExist',Estado='Salida',Disponible=0,Eliminado=1,";	       
 	  for( $i=0; $i < $nSeries ; $i++)
 	    {
 	      registrarSalidaNumeroSerie($IdProducto,$IdComprobante,$aSeries[$i],
@@ -590,6 +604,68 @@
 	    }
 	  if(  $ns != 'N/S:' )
 	    return $ns;
+	}
+
+        function validaIntegridadSeries($xid){
+	  $sql =
+	    " SELECT ges_pedidosdet.Serie as SerieDet, IdPedidoDet, ges_pedidosdet.Unidades,".
+	    " ges_pedidosdet.IdProducto, ges_productos.Serie as SerieProd ".
+	    " FROM   ges_pedidosdet ".
+	    " INNER JOIN ges_productos ON ges_pedidosdet.IdProducto=ges_productos.IdProducto".
+	    " WHERE  IdPedido                 = '".$xid."'".
+	    " AND    ges_pedidosdet.Eliminado = '0'";
+	  $res=query($sql);
+
+	  while($row = Row($res)){
+	    if($row['SerieDet'] == 2) return true; // Por registro de comprobante
+	    if($row['SerieDet'] != 0){
+	      if(getCantidadSeries($row["IdPedidoDet"],
+				   $row["IdProducto"],
+				   $row["Unidades"])){
+		$sql = "UPDATE ges_pedidosdet SET Serie = 2 ".
+		       " WHERE IdPedidoDet = ".$row["IdPedidoDet"];
+		query($sql);
+		return true;
+	      }
+	    }
+	    if($row["SerieDet"] == 0 && $row["SerieProd"] == 1){
+	      $sql = "UPDATE ges_pedidosdet SET Serie = 2 ".
+		     " WHERE IdPedidoDet = ".$row["IdPedidoDet"];
+	      query($sql);
+	      return true;
+	    }
+	    if($row["SerieDet"] == 1 && $row["SerieProd"] == 0){
+	      $sql = "UPDATE ges_pedidosdet SET Serie = 0 ".
+		     " WHERE IdPedidoDet = ".$row["IdPedidoDet"];
+	      query($sql);
+		
+	      $sql = 
+		  " update ges_productos_series ".
+		  " set    Eliminado = 1 ".
+		  " WHERE  IdProducto        = '".$row["IdProducto"]."'".
+		  " and    DocumentoEntrada  = '".$row["IdPedidoDet"]."'"; 
+	      query($sql);		
+	    }
+	  }
+	}
+
+        function getCantidadSeries($IdPedidoDet,$IdProducto,$Unidades){
+	  $sql =
+	    " SELECT COUNT(NumeroSerie) as Cantidad ".
+	    " FROM   ges_productos_series ".
+	    " WHERE  DocumentoEntrada  = '".$IdPedidoDet."'".
+	    " AND    IdProducto        = '".$IdProducto."' ".
+	    " AND    Estado            = 'Pedido' ".
+	    " AND    Eliminado         = '0'" .
+	    " GROUP BY DocumentoEntrada ";
+	  $row=queryrow($sql);
+	  return ($row["Cantidad"] == $Unidades)? false:true;
+	}
+        function obtenerSeriesProductoPresupuesto($xidproducto,$xidlocal){
+
+	  $rkdx   = getResumenKardex2Producto($xidproducto,$xidlocal);
+	  $nserie = getPedidoDet2Kardex('Serie',$rkdx,$xidproducto,$xidlocal);
+	  return $nserie;
 	}
 
 ?>

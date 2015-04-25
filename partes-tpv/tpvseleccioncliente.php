@@ -85,13 +85,13 @@
 			   style="text-transform:uppercase;"  id="NombreLegal"/>
 		</row>
 		<row>
-		  <caption label="Direccion"/>
-		  <textbox class="xdireccion" onkeyup="validaCliente(this)" id="Direccion"/>
-		</row>
-		<row>
 		<caption id="txtNFiscal" label="DNI"/>
 		<textbox class="xnif"  onchange="validaCliente(this)" maxlength="8"
 			 onkeypress="return soloNumerosTPV(event,this.value)"  id="NumeroFiscal"/>
+		</row>
+		<row>
+		  <caption label="Dirección"/>
+		  <textbox class="xdireccion" onkeyup="validaCliente(this)" id="Direccion"/>
 		</row>
 		<row>
 		<caption label="Email"/>
@@ -100,6 +100,10 @@
 		<row>
 		  <caption label="Telefono"/>
 		  <textbox id="Telefono1" onkeypress="return soloNumerosTPV(event,this.value)"/>
+		</row>
+		<row id="mtxtFechaNacimiento">
+		  <caption label="Fecha Nacim."/>
+		  <datepicker id="FechaNacimiento" type="popup" />
 		</row>
 		<row>
 		  <caption label="Comentarios"/>
@@ -150,14 +154,14 @@
 			 style="text-transform:uppercase;" id="visNombreLegal"/>
 		</row>
 		<row>
-		<caption label="Direccion"/>
-		<textbox class="xdireccion" onkeyup="validaCliente(this)" 
-			 style="text-transform:uppercase;" id="visDireccion"/>
-		</row>
-		<row>
 		<caption id="vistxtNFiscal" label="RUC"/>
 		<textbox class="xnif" onchange="validaCliente(this)" maxlength="11"
 			 onkeypress="return soloNumerosTPV(event,this.value)"  id="visNumeroFiscal"/>
+		</row>
+		<row>
+		<caption label="Dirección"/>
+		<textbox class="xdireccion" onkeyup="validaCliente(this)" 
+			 style="text-transform:uppercase;" id="visDireccion"/>
 		</row>
 		<row>
 		<caption label="Email"/>
@@ -166,6 +170,10 @@
 		<row>
 		  <caption label="Telefono"/>
 		  <textbox id="visTelefono1" onkeypress="return soloNumerosTPV(event,this.value)" />
+		</row>
+		<row id="vismtxtFechaNacimiento">
+		  <caption label="Fecha Nacim."/>
+		  <datepicker id="visFechaNacimiento" type="popup" />
 		</row>
 		<row>
 		  <caption  label="Comentarios"/>

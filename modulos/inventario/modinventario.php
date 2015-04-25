@@ -10,9 +10,13 @@ if (!getSesionDato("IdTienda")){
 $IdLocal = getSesionDato("IdTienda");
 $locales = getLocalesPrecios($IdLocal);
 $modo    = CleanText($_GET["modo"]);
+$DescuentoGral  = getSesionDato("DescuentoTienda");
+$MetodoRedondeo = getSesionDato("MetodoRedondeo");
+$COPImpuesto    = getSesionDato("COPImpuesto");
 
 switch($modo) {
-	case "verInventario":
+	case "verAjuste":
+	  $xload    = "ajust";
 	  $IdLocal = (isset($_GET["xlocal"]))? CleanID($_GET["xlocal"]):$IdLocal;
 	  include("xulinventario.php"); 
 	  break;

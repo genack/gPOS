@@ -67,7 +67,8 @@ function ModificarPerfil($id,$nombre,
 			 $Presupuestos,$ComprobantesCompra,
 			 $ComprobantesVenta,$Promociones,
 			 $Kardex,$Ajustes,
-			 $VerAjustes,$Almacen){
+			 $VerAjustes,$Almacen,$B2B,$PedidosVenta,$Sat,
+			 $Suscripcion,$Servicios){
 
 	$oPerfil = new perfil;
 	if (!$oPerfil->Load($id)){
@@ -101,6 +102,11 @@ function ModificarPerfil($id,$nombre,
 	$oPerfil->set("Ajustes",$Ajustes,FORCE);
 	$oPerfil->set("VerAjustes",$VerAjustes,FORCE);
 	$oPerfil->set("Almacen",$Almacen,FORCE);
+	$oPerfil->set("B2B",$B2B,FORCE);
+	$oPerfil->set("PedidosVenta",$PedidosVenta,FORCE);
+	$oPerfil->set("Servicios",$Servicios,FORCE);
+	$oPerfil->set("SAT",$Sat,FORCE);
+	$oPerfil->set("Suscripcion",$Suscripcion,FORCE);
 
 	if ($oPerfil->Save() ){
 		//if(isVerbose())
@@ -132,11 +138,54 @@ function FormularioAlta() {
 	echo $oPerfil->formEntrada($action,false);	
 }
 
-function CrearPerfil($nombre){
+function CrearPerfil($nombre,$Admin,$Informes,$InformeLocal,
+		     $Productos,$Compras,
+		     $Stocks,$Clientes,
+		     $TPV,$Proveedores,$VerStocks,
+		     $Precios,$Ventas,$Finanzas,
+		     $Cobros,$Pagos,$CajaGeneral,$CajaTPV,
+		     $Presupuestos,$ComprobantesCompra,
+		     $ComprobantesVenta,$Promociones,
+		     $Kardex,$Ajustes,
+		     $VerAjuste,$Almacen,$B2B,$PedidosVenta,$Sat,
+		     $Suscripcion,$Servicios){
 	$oPerfil = new perfil;
 
 	$oPerfil->Crea();
 	$oPerfil->setNombrePerfil($nombre);
+	//$oPerfil->setNombre($nombre);
+	$oPerfil->set("Administracion",$Admin,FORCE);
+	$oPerfil->set("Informes",$Informes,FORCE);
+	$oPerfil->set("InformeLocal",$InformeLocal,FORCE);
+	$oPerfil->set("Productos",$Productos,FORCE);
+	$oPerfil->set("Compras",$Compras,FORCE);
+	$oPerfil->set("Stocks",$Stocks,FORCE);
+	$oPerfil->set("Clientes",$Clientes,FORCE);
+	$oPerfil->set("TPV",$TPV,FORCE);	
+	$oPerfil->set("Proveedores",$Proveedores,FORCE);
+	$oPerfil->set("VerStocks",$VerStocks,FORCE);
+	$oPerfil->set("Precios",$Precios,FORCE);
+	$oPerfil->set("Ventas",$Ventas,FORCE);
+	$oPerfil->set("Finanzas",$Finanzas,FORCE);
+	$oPerfil->set("Cobros",$Cobros,FORCE);
+	$oPerfil->set("Pagos",$Pagos,FORCE);
+	$oPerfil->set("CajaGeneral",$CajaGeneral,FORCE);
+	$oPerfil->set("CajaTPV",$CajaTPV,FORCE);
+	$oPerfil->set("Presupuestos",$Presupuestos,FORCE);
+	$oPerfil->set("ComprobantesCompra",$ComprobantesCompra,FORCE);
+	$oPerfil->set("ComprobantesVenta",$ComprobantesVenta,FORCE);
+	$oPerfil->set("Promociones",$Promociones,FORCE);
+	$oPerfil->set("Kardex",$Kardex,FORCE);
+	$oPerfil->set("Ajustes",$Ajustes,FORCE);
+	$oPerfil->set("VerAjustes",$VerAjuste,FORCE);
+	$oPerfil->set("Almacen",$Almacen,FORCE);
+	$oPerfil->set("B2B",$B2B,FORCE);
+	$oPerfil->set("PedidosVenta",$PedidosVenta,FORCE);
+	$oPerfil->set("Servicios",$Servicios,FORCE);
+	$oPerfil->set("SAT",$Sat,FORCE);
+	$oPerfil->set("Suscripcion",$Suscripcion,FORCE);
+
+
 	if ($oPerfil->Alta()){
 		//if(isVerbose())
 			echo gas("aviso",_("Nuevo perfil registrado"));	
@@ -182,17 +231,7 @@ switch($modo){
 		break;	
 
 	case "newsave":		
-	        $nombre = CleanText($_POST["NombrePerfil"]);			
-		CrearPerfil($nombre);
-		Separador();
-		PaginaBasica();	
-		break;	
-	case "alta":
-		FormularioAlta();	
-		break;
-	case "modsave":
-		$id 			= CleanID($_POST["id"]);
-		$nombre 		= CleanTo($_POST["NombrePerfil"]," ");
+	        $nombre                 = CleanText($_POST["NombrePerfil"]);
 		$Admin 			= checkPOST("Administracion");
 		$InformeLocal 		= checkPOST("InformeLocal");
 		$Informes 		= checkPOST("Informes");
@@ -201,6 +240,7 @@ switch($modo){
 		$Stocks 		= checkPOST("Stocks");
 		$Clientes 		= checkPOST("Clientes");
 		$TPV 			= checkPOST("TPV");
+		$B2B 			= checkPOST("B2B");
 		$Proveedores 	        = checkPOST("Proveedores");
 		$VerStocks 		= checkPOST("VerStocks");
 		$Precios 		= checkPOST("Precios");
@@ -218,7 +258,63 @@ switch($modo){
 		$Ajustes 		= checkPOST("Ajustes");
 		$VerAjuste 		= checkPOST("VerAjustes");
 		$Almacen 		= checkPOST("Almacen");
-		
+		$PedidosVenta 		= checkPOST("PedidosVenta");
+		$Sat   		        = checkPOST("Sat");
+		$Suscripcion 		= checkPOST("Suscripcion");
+		$Servicios 		= checkPOST("Servicios");
+
+		CrearPerfil($nombre,
+			    $Admin,$Informes,$InformeLocal,
+			    $Productos,$Compras,
+			    $Stocks,$Clientes,
+			    $TPV,$Proveedores,$VerStocks,
+			    $Precios,$Ventas,$Finanzas,
+			    $Cobros,$Pagos,$CajaGeneral,$CajaTPV,
+			    $Presupuestos,$ComprobantesCompra,
+			    $ComprobantesVenta,$Promociones,
+			    $Kardex,$Ajustes,
+			    $VerAjuste,$Almacen,$B2B,$PedidosVenta,$Sat,
+			    $Suscripcion,$Servicios);
+		Separador();
+		PaginaBasica();	
+		break;	
+	case "alta":
+		FormularioAlta();	
+		break;
+	case "modsave":
+		$id 			= CleanID($_POST["id"]);
+		$nombre 		= CleanTo($_POST["NombrePerfil"]," ");
+		$Admin 			= checkPOST("Administracion");
+		$InformeLocal 		= checkPOST("InformeLocal");
+		$Informes 		= checkPOST("Informes");
+		$Productos 		= checkPOST("Productos");
+		$Compras 		= checkPOST("Compras");
+		$Stocks 		= checkPOST("Stocks");
+		$Clientes 		= checkPOST("Clientes");
+		$TPV 			= checkPOST("TPV");
+		$B2B 			= checkPOST("B2B");
+		$Proveedores 	        = checkPOST("Proveedores");
+		$VerStocks 		= checkPOST("VerStocks");
+		$Precios 		= checkPOST("Precios");
+		$Ventas 		= checkPOST("Ventas");
+		$Finanzas 		= checkPOST("Finanzas");
+		$Cobros 		= checkPOST("Cobros");
+		$Pagos  		= checkPOST("Pagos");
+		$CajaGeneral 		= checkPOST("CajaGeneral");
+		$CajaTPV 		= checkPOST("CajaTPV");
+		$Presupuestos 		= checkPOST("Presupuestos");
+		$ComprobantesCompra	= checkPOST("ComprobantesCompra");
+		$ComprobantesVenta      = checkPOST("ComprobantesVenta");
+		$Promociones 		= checkPOST("Promociones");
+		$Kardex 		= checkPOST("Kardex");
+		$Ajustes 		= checkPOST("Ajustes");
+		$VerAjuste 		= checkPOST("VerAjustes");
+		$Almacen 		= checkPOST("Almacen");
+		$PedidosVenta 		= checkPOST("PedidosVenta");
+		$Sat   		        = checkPOST("Sat");
+		$Suscripcion 		= checkPOST("Suscripcion");
+		$Servicios 		= checkPOST("Servicios");
+
 		ModificarPerfil(
 			$id,$nombre,
 			$Admin,$Informes,$InformeLocal,
@@ -230,7 +326,8 @@ switch($modo){
 			$Presupuestos,$ComprobantesCompra,
 			$ComprobantesVenta,$Promociones,
 			$Kardex,$Ajustes,
-			$VerAjuste,$Almacen		
+			$VerAjuste,$Almacen,$B2B,$PedidosVenta,$Sat,
+			$Suscripcion,$Servicios
 			);
 		Separador();
 		PaginaBasica();	

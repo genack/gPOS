@@ -48,7 +48,7 @@ StartXul(_("Elije Tipo Servicio"));
 
     echo "<groupbox> <caption label='Buscar Tipo Servicio'/>";
     echo "<hbox>";
-    echo "<textbox  flex='1'   id='buscatiposervicio' onkeyup='BuscarTipoServicio();   if (event.which == 13) agnadirDirecto(); javascript:this.value=this.value.toUpperCase();' onkeypress='return soloAlfaNumerico(event)' />";
+    echo "<textbox  flex='1'   id='buscatiposervicio' onkeyup='BuscarTipoServicio();   if (event.which == 13) agnadirDirecto(); ' onkeypress='return soloAlfaNumerico(event)' />";
     echo "</hbox>";
     echo "<vbox flex='1' id='boxnuevo' collapsed='true'>";
     echo "<checkbox id='esSAT' label='Servicio de Asistencia Técnica'  type='checkbox' checked='false' />";

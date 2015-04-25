@@ -282,6 +282,8 @@ function AddLineaDetallesVenta(CodBar, Nombre,Talla, Color, unidades, Descuento,
     var vdetalle  = ( vence!='false')? vdetalle+'FV. '+vence + ' ' : vdetalle;
     var vdetalle  = ( lote !='false' )? vdetalle+'LT. '+lote  + ' ' : vdetalle;
     var vdetalle  = ( servicio  == 1)? '**SERVICIO**' : vdetalle;
+
+    var NombreProducto = Nombre+" "+Marca+" "+Color+" "+Talla+" "+Lab;
     
     xitem = document.createElement("listitem");
     xitem.value = IdComprobanteVentaDet;
@@ -305,7 +307,7 @@ function AddLineaDetallesVenta(CodBar, Nombre,Talla, Color, unidades, Descuento,
     xNombre.setAttribute("id","xdetalleventa_nombre_"+IdComprobanteVentaDet);
     
     xTalla = document.createElement("listcell");
-    xTalla.setAttribute("label", Nombre+" "+Marca+" "+Color+" "+Talla+" "+Lab);
+    xTalla.setAttribute("label", NombreProducto);
     xTalla.setAttribute("id","xdetalleventa_concepto_"+IdComprobanteVentaDet);
     
     xColor = document.createElement("listcell");
@@ -342,7 +344,7 @@ function AddLineaDetallesVenta(CodBar, Nombre,Talla, Color, unidades, Descuento,
     xPV.setAttribute("id","xdetalleventa_pv_"+IdComprobanteVentaDet)
     
     xDetalle = document.createElement("listcell");
-    xDetalle.setAttribute("label",vdetalle);
+    xDetalle.setAttribute("label",( vdetalle.length > 30 )? vdetalle.slice(0,30)+ '....':vdetalle);
 
     xSerie = document.createElement("listcell");
     xSerie.setAttribute("value",serie);
@@ -747,8 +749,15 @@ function menuContextualVentasRealizadas(xval){
 	var esAbonar =  ( id("venta_pendiente_"+xval).getAttribute("label") > 0 )? true:false
 	if ( esAbonar ) id("VentaRealizadaAbonar").removeAttribute("disabled");
     }
+    
+    var aAlbaInt  = id("venta_tipodoc_"+xval).getAttribute("label").split(" ");
+    var AlbaInt   = trim(aAlbaInt[0]);
+    var esAlbaInt = (AlbaInt == 'AlbaranInt')? true:false;
 
-    id("mheadImprimir").setAttribute('disabled',true);
+    id("mheadImprimir").setAttribute('collapsed',esAlbaInt);
+    if(!esFinanzas)
+	id("mheadImprimirInt").setAttribute('collapsed',!esAlbaInt);
+
     var esSuscrip = (cIdSuscripcionVenta == 0)? true:false;
     var esImprimir = (id("venta_tipodoc_"+xval).getAttribute("label") != 'Ticket')?true:false
     if(esImprimir) id("mheadImprimir").removeAttribute('disabled');
@@ -819,7 +828,7 @@ function obtenerTipoComprobanteVenta(num){
     
 }
 
-function  ReimprimirVentaSeleccionada(){
+function  ReimprimirVentaSeleccionada(xval){
     //VaciarDetallesVentas();
     var idex = id("busquedaVentas").selectedItem;
 
@@ -832,6 +841,8 @@ function  ReimprimirVentaSeleccionada(){
         var comprobante = 1;
     else
         var comprobante = 0;
+
+    res[0] = (xval == 2)? 'Albaran':res[0];
     t_RecuperaTicket(num,res[0]);
 }
 
