@@ -27,7 +27,7 @@ Instalación
 Documentación
 -------------
 
-* [Manual de usuario](https://genack.net/servicios/formacion/gpos/inicio)
+* [Manual de usuario](http://genack.net/servicios/formacion/gpos/inicio)
 
 
 Contribución
