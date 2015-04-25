@@ -24,6 +24,24 @@ Instalación
 
 (*) El instalador xulremoto no funciona con XAMPP y SO Windows. Use el plugin [Remote XUL Manager](https://addons.mozilla.org/es/firefox/addon/remote-xul-manager/) para registrar `tudominio` remoto.
 
+Migración
+---------
+
+Migrar de la versión v2.0 a v3.0.*
+
+1. Saque copia de seguridad de su base de datos
+
+2. Sincroniza tu instalación 
+
+    Si usas github: `(git pull)`
+
+    En caso contrario descargue y reempláze sus archivos.
+
+3. Carque el fichero `esquema/update_db.sql`
+
+    `mysql -uuser -ppass -e 'use dbname; source update_db.sql;'`
+
+
 Documentación
 -------------
 
