@@ -952,6 +952,7 @@ function volverPresupuestos(){
 
 	resetAllDatos('cAltaRapida');
 	parent.xwebcoreCollapsed(false,true);
+	parent.cSolapaLista = '';
     }
 }
 

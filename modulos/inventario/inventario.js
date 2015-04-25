@@ -771,13 +771,6 @@ function salirKardexProducto(){
     id("btnFinalizarInventario").setAttribute("collapsed",xcontinuar);
 }
 
-function BuscarOperacionLocal(xid){
-
-    window.location.href='modinventario.php?'+
-	                 'modo=verInventario&'+
-	                 'xlocal='+xid;
-}
-
 function nuevaOperacionAjuste(){
 
     BuscarAlmacen();
@@ -939,6 +932,7 @@ function xlistboxInventario(xlist){
     id("btnbuscar").setAttribute("oncommand",xope);
     id("idfamilia").setAttribute("oncommand",xope);
     id("idmarca").setAttribute("oncommand",xope);
+    id("FiltroMovimientoLocal").setAttribute("oncommand",xope);
     id("resumenAlmacen").setAttribute("collapsed",xresualma);
     id("listadoAlmacen").setAttribute("collapsed",xlistalma);
     id("resumenMovimiento").setAttribute("collapsed",xresukardex);

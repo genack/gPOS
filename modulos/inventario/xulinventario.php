@@ -11,15 +11,14 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
   <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/inventario/inventario.js" />
   <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js" />
   <script>//<![CDATA[
-  var cImpuesto = <?php echo getSesionDato("IGV"); ?>;
-  var cIdLocal  = <?php echo getSesionDato("IdTienda"); ?>;
-  var cUtilidad = <?php echo getSesionDato("MargenUtilidad"); ?>;
+  var cImpuesto       = <?php echo $Impuesto ?>;
+  var cIdLocal        = <?php echo $IdLocal; ?>;
+  var cUtilidad       = <?php echo $MagenUtilidad; ?>;
   var cDescuentoGral  = <?php echo $DescuentoGral ?>;
   var cMetodoRedondeo = "<?php echo $MetodoRedondeo ?>";
   var COPImpuesto     = <?php echo $COPImpuesto ?>;
-
   //]]></script>
-  <?php $Moneda = getSesionDato("Moneda"); getMonedaJS($Moneda); ?>
+  <?php getMonedaJS($Moneda); ?>
 
 <!--  no-visuales -->
 <?php include("../kardex/kardex.php"); ?>
@@ -51,8 +50,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <?php if(getSesionDato("esAlmacenCentral")){?>
       <description>Local:</description>
       <hbox>
-	<menulist id="FiltroMovimientoLocal" label="FiltrosMovimientoLocal"  
-		  oncommand="BuscarOperacionLocal(this.value)">
+	<menulist id="FiltroMovimientoLocal" label="FiltrosMovimientoLocal" oncommand="BuscarMovimiento()">
 	  <menupopup id="combolocales">
 	    <?php echo genXulComboAlmacenes($IdLocal,"menuitem") ?>
 	  </menupopup>

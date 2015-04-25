@@ -6,18 +6,19 @@ if (!getSesionDato("IdTienda")){
   exit();
 }
 
-//$modo=recibirProductosAlmacen
-$IdLocal = getSesionDato("IdTienda");
-$locales = getLocalesPrecios($IdLocal);
-$modo    = CleanText($_GET["modo"]);
+$IdLocal        = getSesionDato("IdTienda");
+$locales        = getLocalesPrecios($IdLocal);
+$modo            = CleanText($_GET["modo"]);
 $DescuentoGral  = getSesionDato("DescuentoTienda");
 $MetodoRedondeo = getSesionDato("MetodoRedondeo");
 $COPImpuesto    = getSesionDato("COPImpuesto");
+$Moneda         = getSesionDato("Moneda"); 
+$MagenUtilidad  = getSesionDato("MargenUtilidad");
+$Impuesto       = getSesionDato("IGV");
 
 switch($modo) {
 	case "verAjuste":
 	  $xload    = "ajust";
-	  $IdLocal = (isset($_GET["xlocal"]))? CleanID($_GET["xlocal"]):$IdLocal;
 	  include("xulinventario.php"); 
 	  break;
 }

@@ -9842,7 +9842,6 @@ function checkDevolucionDetalle(xaccion){
     id("menuDevolverProducto").setAttribute("collapsed",xaccion);
     id("btnsDevolucion").setAttribute("collapsed",xaccion);
     id("btnreturndetventa").setAttribute("collapsed",xnoaccion);
-    id("VentaGarantiaComprobante").setAttribute("collapsed",xnoaccion);
 
     //Limpia 
     if ( cEsDevolucionDetalle ) 
@@ -11259,7 +11258,6 @@ function menuContextualVentasRealizadas(xval,xvaldet,esGarantia){
     id("VentaRealizadaCambioAnularNro").setAttribute("disabled",true);
     id("VentaRealizadaDetalleNS").setAttribute("disabled",true);
     id("VentaRealizadaDetalleMProducto").setAttribute("disabled",true);
-    id("VentaGarantiaComprobante").setAttribute("disabled",true);
 
     var esSuscripcionVenta = (cIdSuscripcionVenta == 0)? true:false;
     id("VentaSuscripcionImprimir").setAttribute("collapsed",esSuscripcionVenta);
@@ -11300,16 +11298,6 @@ function menuContextualVentasRealizadas(xval,xvaldet,esGarantia){
     if ( esCambioNro ) id("VentaRealizadaCambioAnularNro").removeAttribute("disabled");
     if ( esSeries )    id("VentaRealizadaDetalleMProducto").removeAttribute("disabled");
     if ( esSeries )    id("VentaRealizadaDetalleNS").removeAttribute("disabled");
-    if ( esGarantia ) id("VentaGarantiaComprobante").removeAttribute("disabled");
-}
-
-function verGarantiaComprobante(){
-    if(servicios.length == 0) 
-	return alert("gPOS: Registre por lo menos un servicio para garantías en: \n\n "+
-                     "      * Admin > Compras > Productos > Nuevo Producto" );
-
-    VerServicios();
-    RecibirGarantiaProducto();
 }
 
 /*+++++++++++++++++++++++++++++ VENTAS  ++++++++++++++++++++++++++++++++++*/

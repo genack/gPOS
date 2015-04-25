@@ -61,7 +61,6 @@
   </popup>   
 <popup id="AccionesDetallesVentas" class="media">
      <menuitem id="menuDevolverProducto" image="img/gpos_tpv_ventas.png"  label="<?php echo _("Devolver") ?>" oncommand="cargarProducto2Devolver()" collapsed="true"/>
-     <menuitem id="VentaGarantiaComprobante" label="<?php echo _("Garantía") ?>" oncommand="verGarantiaComprobante()"/>
 
      <menuseparator />
      <menuitem id="VentaRealizadaDetalleNS" label="<?php echo _("Ver Números de Serie") ?>" oncommand="verNSVentaSeleccionada()"/>
