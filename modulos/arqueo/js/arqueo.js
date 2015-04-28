@@ -449,7 +449,7 @@ function Comando_CerrarCaja(){
         //Recargamos 		
         // No descomentar ActualizarComboArqueos();
 	//document.location = "arqueo2.php?r="+Math.random();
-        esRecibidaListaArqueos = true; 
+        esRecibidaListaArqueos = false; 
         onLoadFormulario();
 
 }
@@ -497,7 +497,7 @@ function Comando_AbrirCaja(){
         // Asociar preventa 
         setStatusPresupuestoCierreCaja('AsociarPreventa');	
        //document.location = "arqueo2.php?r="+Math.random();
-        esRecibidaListaArqueos = true; 
+        esRecibidaListaArqueos = false; 
         onLoadFormulario();
 }
 function OLD_Comando_CerrarCaja(){

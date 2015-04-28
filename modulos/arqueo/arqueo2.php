@@ -274,7 +274,7 @@ $TipoVenta = CleanText(getSesionDato("TipoVentaTPV"));
   </groupbox> 
 
 <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/cadenas.js.php?ver=1/r<?php echo rand(0,99999999); ?>"/>
-<script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/arqueo/js/arquero.js?ver=1/r<?php echo rand(0,99999999); ?>"/>
+<script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/arqueo/js/arqueo.js?ver=1/r<?php echo rand(0,99999999); ?>"/>
 
 <script>//<![CDATA[
 
