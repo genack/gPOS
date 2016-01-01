@@ -22,9 +22,8 @@ Instalación
 
 3. En su navegador Firefox dentro de la barra de direcciones escribe `http://tudominio/gpos/`.
 
-3.1 Luego el navegador Firefox valida el `tudominio` remoto(*), permita ejecutar el instalador del xulremoto. Esto es solo la primera vez que ingresas al Software.
-
-3.2 Despues la preferencia xpinstall.signatures.required tenemos que cambiarla a true.
+  * Luego el navegador Firefox valida el `tudominio` remoto(*), permita ejecutar el instalador del xulremoto. Esto es solo la      primera vez que ingresas al Software.
+  * Despues la preferencia xpinstall.signatures.required tenemos que cambiarla a true.
 
 4. Borre la carpeta install por seguridad.
 
