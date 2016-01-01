@@ -1,15 +1,9 @@
 <?php
 SimpleAutentificacionAutomatica("visual-xulframe");
-header("Content-type: application/vnd.mozilla.xul+xml");
-echo '<?xml version="1.0" encoding="UTF-8"?>';
-echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';
-echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
+StartXul('Movimientos Kardex',$predata="",$css='');
+StartJs($js='modulos/kardex/kardex.js?v=3.1');
 ?>
-<window id="MovimientoVista" title="Movimientos Kardex"
-	xmlns:html="http://www.w3.org/1999/xhtml"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/kardex/kardex.js" />
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js" />
+
   <script>//<![CDATA[
   var IGV = <?php echo getSesionDato("IGV"); ?>;
   //]]></script>
@@ -20,13 +14,12 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
 
 <!-- Movimientos Encabezado-->
-<vbox> 
+<vbox class="box"> 
   <hbox pack="center" >
-    <caption style="font-size: 14px;font-weight: bold;">
+    <caption class="h1">
       <?php echo _("Kardex") ?>
     </caption>
   </hbox>
-  <spacer style="height:4px"/>
 </vbox> 
 
 <!-- Web Extra -->
@@ -35,8 +28,8 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 </hbox>
 
 <!-- Movimientos Busqueda-->
-<vbox id="busquedaMovimiento">
-  <hbox align="start" pack="center" style="background-color: #d7d7d7;padding:3px;">
+<vbox id="busquedaMovimiento" class="box">
+  <hbox align="start" pack="center" >
     <vbox>
       <?php if(getSesionDato("esAlmacenCentral")){?>
       <description>Local:</description>
@@ -85,7 +78,8 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <description>Producto:</description>
       <textbox onfocus="select()" id="NombreBusqueda" style="width: 21em"
 	       onkeyup="if (event.which == 13) BuscarMovimiento()" 
-               onkeypress="return soloAlfaNumerico(event);"/>
+               onkeypress="return soloAlfaNumerico(event);" 
+	       placeholder=" nombre | marca ó modelo ó detalle..."/>
     </vbox>
     <vbox id="vboxFamilia" collapsed="true">
       <description>Familia:</description>
@@ -113,9 +107,9 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                onkeypress="return soloNumerosEnteros(event,this.value);"/>
     </vbox>
 
-    <vbox style="margin-top:1.2em">
+    <vbox style="margin-top:1em">
         <menu>
-          <toolbarbutton image="<?php echo $_BasePath; ?>img/gpos_busqueda_avanzada.png" />
+          <toolbarbutton image="<?php echo $_BasePath; ?>img/gpos_busqueda_avanzada.png" style="min-height: 2.7em;"/>
           <menupopup >
 	    <menuitem type="checkbox" label="Operacion" checked="false"
                       oncommand = "mostrarBusquedaAvanzada(this);"/>	 
@@ -132,8 +126,8 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
         </menu>
       </vbox>
 
-    <vbox style="margin-top:.9em">
-      <button id="btnbuscar" label=" Buscar "  
+    <vbox style="margin-top:1.2em">
+      <button id="btnbuscar" class="btn" label=" Buscar "  
 	      image="<?php echo $_BasePath; ?>img/gpos_buscar.png" 
               oncommand="BuscarMovimiento()"/>
     </vbox>
@@ -149,12 +143,10 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
   </hbox>
 </vbox>
 
-<spacer style="height:5px"/>
-
 <!-- Movimientos Resumen -->
-<vbox id="resumenMovimiento">
+<vbox id="resumenMovimiento" class="box"> 
   <hbox flex="1">
-    <caption style="font-size:10px; font-weight: bold;" label="<?php echo _("Movimientos") ?>" />
+    <caption class="box" label="<?php echo _("Movimientos") ?>" />
     <hbox  flex="1" pack="center" collapsed="true">
       <label value="Movimientos:"/>
       <description id="TotalMovimientos" value="" />
@@ -235,7 +227,6 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
   </treechildren>
 </tree>
 
-<spacer style="height: 4px"></spacer>
 
 <script>//<![CDATA[
   VerMovimiento();

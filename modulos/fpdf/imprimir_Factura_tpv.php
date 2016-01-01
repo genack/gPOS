@@ -52,7 +52,7 @@ $lafila=Row($res);
 
 //$pdf=new PDF();
 $pdf = new PDF ( 'P' , 'mm' , array ( 210 , 297 ));
-
+$pdf->AddFont('Lucida','','lucida.php');
 $pdf->Open();
 $pdf->AddPage();
 $pdf->Ln(2);
@@ -65,13 +65,12 @@ $pdf->Ln(2);
     $pdf->SetTextColor(0);
     $pdf->SetDrawColor(0,0,0);
     $pdf->SetLineWidth(.2);
-    $pdf->SetFont('Arial','B',10);	
+    $pdf->SetFont('Lucida','',8);	
     $pdf->SetX( 130);
     $pdf->Ln(40);					
 
 // Datos Cliente 
 
-    $pdf->SetFont('Arial','B',10);	
     $pdf->SetX(27); 
     // NOMBRE   
     $pdf->Cell(130,4,$nombre);
@@ -96,7 +95,8 @@ $pdf->Ln(2);
 
     $pdf->SetX(171);
     // FECHA FACTURA
-    list($anho,$mes,$dia)=explode('-',$lafila["FechaComprobante"]);
+    $xdate = explode(" ",$lafila["FechaComprobante"]);
+    list($anho,$mes,$dia)=explode('-',$xdate[0]);
     $pdf->Cell(70,4,$dia);
     $pdf->SetX(182);
     $pdf->Cell(70,4,$mes);
@@ -124,7 +124,7 @@ $pdf->SetFillColor(255,255,255);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(255,255,255);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Arial','',9);
+$pdf->SetFont('Lucida','',8);
 
 $IdComprobante=$lafila["IdComprobante"];
         $contador       = 1;
@@ -170,20 +170,14 @@ $IdComprobante=$lafila["IdComprobante"];
 
         $res = query($sql);
         while ( $row = Row($res) ) { 
-	  $pdf->Cell(1);
+
 	  $codarticulo = $row["IdProducto"];
 
-	  // IMPRIME LINE
 	  $cantidad = $row["Cantidad"];
-	  // CANTIDAD
-	  $pdf->Cell(20,4,$cantidad,'LR',0,'C');	
-	  $pdf->SetFont('Arial','',9);
 	  //UNID MEDIDA
           $cantunidmed = $row["UnidadMedida"];
-	  
-	  $pdf->Cell(16,4, $cantunidmed ,'LR',0,'C');	
 
-	  $pdf->SetFont('Arial','B',9);
+
 	  //CADENA TEXT DESCRIPCION 
 
 	  //### TEXT DESCRIPCION
@@ -259,12 +253,18 @@ $IdComprobante=$lafila["IdComprobante"];
 	  //BRUTO NETO
 	  $totalneto=$totalneto+$importe;
 	  //$importe=$importe+$importe*$igv/100;
- 	  $importe=round($importe * 100) / 100; 
-	  $importe=number_format($importe,2);
+ 	  $importe = round($importe * 100) / 100; 
+	  $importe = number_format($importe,2);
+	  $precio  = round((($importe/$cantidad))*100)/100;
+	  $precio  = number_format($precio,2);
 
 	  // IMPRIME LINE
+	  $pdf->Cell(1);
+	  $pdf->Cell(20,4,$cantidad,'LR',0,'C');	
+	  $pdf->SetFont('Lucida','',8);
+	  $pdf->Cell(16,4, $cantunidmed ,'LR',0,'C');	
 	  $pdf->Cell(109,4,$acotado[0],'LR',0,'L');
-	  $pdf->Cell(20,4,$precio."".$dcto,'LR',0,'R');
+	  $pdf->Cell(20,4,$precio,'LR',0,'R');
 	  $pdf->Cell(25,4,$importe,'LR',0,'R');
 	  $pdf->Ln(4);	
 
@@ -316,7 +316,7 @@ $IdComprobante=$lafila["IdComprobante"];
 	}
 
 //################### MENSAJE FOOTER 
-          $pdf->SetFont('Arial','',8);
+          $pdf->SetFont('Lucida','',8);
 	  $pdf->Cell(1);
           $pdf->Cell(20,4,"",'LR',0,'C');
           $pdf->Cell(16,4,"",'LR',0,'C');
@@ -348,7 +348,7 @@ $IdComprobante=$lafila["IdComprobante"];
 	  $pdf->Ln(9);	
 
 //#######################  final de la Factura
-    $pdf->SetFont('Arial','B',10);	
+    $pdf->SetFont('Lucida','',10);	
     $pdf->SetX(27);	
     $pdf->Cell(300,4,utf8_decode($totaletras));
 //###################### Imprime Letras
@@ -361,7 +361,7 @@ $pdf->SetFillColor(255,255,255);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(255,255,255);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Arial','B',8);
+$pdf->SetFont('Lucida','',8);
 
 $pdf->Ln(2);
 
@@ -369,7 +369,7 @@ $pdf->SetFillColor(255,255,255);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(255,255,255);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Arial','',10);
+$pdf->SetFont('Lucida','',10);
 	
 $pdf->Cell(1);
 

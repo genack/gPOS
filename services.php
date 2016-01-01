@@ -22,7 +22,7 @@ switch($modo) {
 		exit();	
 		break;	
 	case "buscaproducto":	
-		$nombre = $_REQUEST["nombre"];
+	        $nombre = CleanText($_REQUEST["nombre"]);
 		echo VolcarGeneracionJSParaProductos($nombre,false,false); 
 		break;	
 	
@@ -52,11 +52,106 @@ switch($modo) {
 		$pago_efectivo 	= CleanFloat($_GET["pago_efectivo"]);
 		$pago_bono 	= CleanFloat($_GET["pago_bono"]);
 		$pago_tarjeta 	= CleanFloat($_GET["pago_tarjeta"]);
-		$concepto       = CleanText($_GET["pago_concepto"]);;
-		$newpendiente   = OperarPagoSobreTicket($id,$pago_efectivo, $pago_bono, $pago_tarjeta,$concepto);
-		echo $newpendiente;//Cantidad pendiente o cero.				
+		$concepto       = CleanText($_GET["pago_concepto"]);
+		$entregado      = CleanInt($_GET["entregado"]); 
+		$fechaentrega   = CleanCadena($_GET["fechaentrega"]);
+		$fechapago      = CleanCadena($_GET["fechapago"]);
+		$modalidadpago  = CleanID($_GET["modalidadpago"]);
+		$IdUsuario      = CleanID($_GET["iduser"]);
+
+		$idcuenta       = (isset($_GET["xidnrocta"]))? CleanID($_GET["xidnrocta"]):0;
+		$codoperacion   = (isset($_GET["xcodop"]))? CleanText($_GET["xcodop"]):"";
+		$nrodocumento   = (isset($_GET["xnrodoc"]))? CleanText($_GET["xnrodoc"]):"";
+		$observacion    = (isset($_GET["xobs"]))? CleanText($_GET["xobs"]):"";
+
+		$doccobro        = Array();
+		$doccobro["id"]  = $idcuenta;
+		$doccobro["op"]  = $codoperacion;
+		$doccobro["doc"] = $nrodocumento;
+		$doccobro["obs"] = $observacion;
+
+		//error~fechapago~fechacaja~montodebe 
+
+		//Codigo Validacion
+		setCodAutorizacionComprobante($id,'');
+
+		if($modalidadpago == 1 && $pago_efectivo > 0.01){
+		  $validacaja     = ValidarFechaAperturaCaja($fechapago);
+		  if( $validacaja != 1){
+		    echo $validacaja."~0";//error~fechapago~fechacaja~montodebe 
+		    return;
+		  }
+		}
+
+		if($doccobro["op"]){
+		  if(verificarCodigoOperacion($codoperacion,$idcuenta)){
+		    echo "~0~0~0~".$codoperacion;
+		    return;
+		  }
+		}
+
+		$newpendiente  = OperarPagoSobreTicket($id,$pago_efectivo, $pago_bono,
+						       $pago_tarjeta,$concepto,$fechapago,
+						       $modalidadpago,$doccobro,$IdUsuario);
+		if($entregado) 
+		  ActualizarReservaEntregado($id,$fechaentrega);
+
+		echo "~0~0~".$newpendiente."~0";
 		break;
-	
+
+	case "realizarAbonoBrutal":
+		$IdCliente  = CleanID($_GET["IdCliente"]);
+		$xmonto     = CleanFloat($_GET["xmonto"]);
+		$xdebe      = getImportePendienteCliente( $IdCliente );
+
+		setCodAutorizacionCliente($IdCliente,'');
+
+		if( $xmonto > 0 && $xmonto <= $xdebe ){
+		  realizarAbonoBrutalCliente( $IdCliente,$xmonto );
+		  echo "1~".getImportePendienteCliente( $IdCliente )."~";
+		} else
+		  echo "2~";
+
+		break;
+
+         case "realizarAsignacionCreditoBrutal":
+		$IdCliente     = CleanID($_GET["IdCliente"]);
+		$xmonto        = CleanFloat($_GET["xmonto"]);
+		$xconcepto     = CleanText($_GET["xconcepto"]);
+		$IdLocal       = CleanID( getSesionDato("IdTienda") );
+		$idDependiente = CleanID( $_GET["dependiente"] );
+		
+		setCodAutorizacionCliente($IdCliente,'');
+
+		if( $xmonto > 0 ){
+
+		  //Registra monto en cliente credito
+		  registrarMovimientoCreditoCliente($IdCliente,$xmonto,0,$IdLocal,
+						    0,$idDependiente,$xconcepto);
+
+		  //Ingresar monto a caja
+		  $xconcepto = "Asignación de nota crédito cliente ".obtenerNombreCliente($IdCliente);
+		  $TipoVenta = getSesionDato("TipoVentaTPV");
+		  $arqueo    = new movimiento;
+		  $IdArqueo  = $arqueo->GetArqueoActivo($IdLocal);
+		  $FechaCaja = $arqueo->getAperturaCaja($IdLocal,$TipoVenta);
+
+		  
+		  EntregarOperacionCaja($IdLocal,$xmonto,$xconcepto,0,'Ingreso',
+					$FechaCaja,$IdArqueo,$TipoVenta);
+		  echo "1~";
+		  
+		} else
+		  echo "2~";
+
+		break;
+
+	case "EntregarReserva":
+		$id = CleanID($_GET["IdComprobante"]);
+		$fecha = CleanCadena($_GET["xfecha"]);
+		echo ActualizarReservaEntregado($id,$fecha);
+		break;
+
 	case "numeroSiguienteDeFacturaParaNuestroLocal":	
 		$IdLocalActivo = getSesionDato("IdTienda");
 		$moticket = $_GET["moticket"];
@@ -65,6 +160,10 @@ switch($modo) {
 		exit();	
 		break;	
 	case "altaproducto":
+
+	        $cModo    = CleanCadena($_POST["vModo"]);
+		$esInvent = ( $cModo == 'altainventario' )? true:false;
+
 		if ( $id = AltaDesdePostProducto(ALTA_MUDA) ) {
 
 			$unidades = CleanInt($_POST["Unidades"]);
@@ -81,18 +180,45 @@ switch($modo) {
 			$vfv      = ($vfv=='')? false:date("d-m-Y", strtotime($vfv));
 			$vlt      = ($vlt=='')? false:$vlt;
 			$importe  = $unidades*$costo;
-			
+			$almacen  = ( isset($_POST["Almacen"]) )? CleanInt($_POST["Almacen"]):0;
+
 			if(!$esInvent)
 			  AgnadirCarritoComprasDirecto($id,$unidades,$costo,
 						       $vfv,$vlt,0,
 						       $importe,0);
 			//Ventas Precios
-			registrarPreciosVentaAlmacenProducto($PVD,$PVDD,$PVC,$PVCD,$id);
-			$IdLocal = CleanID(getSesionDato("IdTienda"));
-			guardarCostoOperativo($costoop,$id,$IdLocal);
-			echo $id;
+			registrarPreciosVentaAlmacenProducto($PVD,$PVDD,$PVC,$PVCD,$costoop,$id);
+			
+			echo ";".$id.";".getDatosArticuloExtra($id,$almacen);
+
 		}  else {
-			echo "0";
+
+		  if(!$esInvent)
+		    {
+		      if ( $id = getIdClonProducto() )
+			{
+			  $unidades = CleanInt($_POST["Unidades"]);
+			  $costo    = CleanFloat($_POST["CosteSinIVA"]);
+			  $costoop  = CleanFloat($_POST["CostoOP"]);
+			  $vfv      = CleanCadena($_POST["vFV"]);
+			  $vlt      = CleanCadena($_POST["vLT"]);
+			  $vfv      = ($vfv=='')? false:date("d-m-Y", strtotime($vfv));
+			  $vlt      = ($vlt=='')? false:$vlt;
+			  $PVD      = CleanCadena($_POST["vPVD"]);
+			  $PVDD     = CleanCadena($_POST["vPVDD"]);
+			  $PVC      = CleanCadena($_POST["vPVC"]);
+			  $PVCD     = CleanCadena($_POST["vPVCD"]);
+			  
+			  $importe  = $unidades*$costo;
+			  AgnadirCarritoComprasDirecto($id,$unidades,$costo,$vfv,$vlt,0,$importe,0);
+
+			  //Ventas Precios
+			  registrarPreciosVentaAlmacenProducto($PVD,$PVDD,$PVC,$PVCD,$costoop,$id);
+			}
+		    }
+
+		  
+		  echo "~0";
 		}
 		exit();
 		break;
@@ -149,25 +275,33 @@ switch($modo) {
 		$modofactura      = CleanText($_GET["modofactura"]);
 		$modoboleta       = CleanText($_GET["modoboleta"]);
 		$modoticket       = CleanText($_GET["modoticket"]);
-		$mododevolucion   = CleanText($_GET["mododevolucion"]);
 		$modoalbaran      = CleanText($_GET["modoalbaran"]);
 		$modoalbaranint   = CleanText($_GET["modoalbaranint"]);
 		$modoconsulta     = CleanText($_GET["modoconsulta"]);		
 		$modoventa        = CleanText($_GET["modoventa"]);		
 		$forzarfacturaid  = CleanID($_GET["forzarfactura"]);
-		$forzarid         = CleanText($_GET["forzarid"]);		
-		
+		$forzarid         = CleanText($_GET["forzarid"]);
+		$usuario          = (isset($_GET["usuario"]))? CleanText($_GET["usuario"]):'todos';
+		$modoreserva      = (isset($_GET["modoreserva"]))? CleanText($_GET["modoreserva"]):'todos';
+		$modocaja         = (isset($_GET["modocaja"]))? CleanText($_GET["modocaja"]):'todos';
+		$tipoproducto     = (isset($_GET["tipoprod"]))? CleanText($_GET["tipoprod"]):'todos';
+
 		$esSoloFactura    = ($modofactura == "factura");
 		$esSoloBoleta     = ($modoboleta == "boleta");
 		$esSoloTicket     = ($modoticket == "ticket");
-		$esSoloDevolucion = ($mododevolucion == "devolucion");
 		$esSoloAlbaran    = ($modoalbaran == "albaran");
 		$esSoloAlbaranInt = ($modoalbaranint == "albaranint");
-		$esSoloPendientes = ($modoconsulta == "pendientes");
+
+		$esSoloPendientes = ($modoconsulta == "pen");
+		$esSoloFinalizados = ($modoconsulta == "end");
+
 		$esSoloCesion     = ($modoserie == "cedidos");	
+		$esSoloContado    = ($modoserie == "contado");	
 		$esSoloSuscripcion = ($modosuscripcion == "suscripcion");	
 		$TipoVenta        = ($modoventa == "tpv")? getSesionDato("TipoVentaTPV"):false;
 		$forzaridsuscripcion = ($idsuscripcion != 0 )? $idsuscripcion:0;
+		$esSoloReserva    = ($modoreserva == 'reservados');
+		$esSoloCaja       = ($modocaja == 'caja');
 		 		
 		if (!$hasta or $hasta == ""){
 			$mm    = intval(date("m"));
@@ -178,11 +312,12 @@ switch($modo) {
 		if (!$desde or $desde == "") $desde = "1900-01-01";
 
 					
-		$datos = VentasPeriodo($local,$desde,$hasta,$esSoloPendientes,$esSoloFactura,
-				       $esSoloBoleta,$esSoloDevolucion,$esSoloAlbaran,
+		$datos = VentasPeriodo($local,$desde,$hasta,$esSoloPendientes,$esSoloFinalizados,
+				       $esSoloContado,$esSoloFactura,$esSoloBoleta,$esSoloAlbaran,
 				       $esSoloAlbaranInt,$esSoloTicket,$nombre,$esSoloCesion,
 				       $esSoloSuscripcion,$forzarfacturaid,$TipoVenta,$forzarid,
-				       $forzaridsuscripcion);
+				       $forzaridsuscripcion,$usuario,$esSoloReserva,$esSoloCaja,
+				       $tipoproducto);
 		VolcandoXML( Traducir2XML($datos),"ventas");
 		exit();
 		break;
@@ -691,7 +826,7 @@ switch($modo) {
  		$detadoc[3]=false;
 		//$detadoc[4]=false;
 		$detadoc[5]==1;
-		$detadoc[6]==false;
+		$detadoc[6]==1;
 		$detadoc[7]==false;
 		$detadoc[8]==false;
 		$detadoc[9]==false;
@@ -700,6 +835,7 @@ switch($modo) {
 		$detadoc[12]==false;
 		$detadoc[13]==0;
 		$detadoc[14]==0;
+		$detadoc[15]=='';
 	      }
 	      setSesionDato('detadoc',$detadoc);
 	      exit();	
@@ -727,6 +863,14 @@ switch($modo) {
 	      $ndoc   = CleanText($_GET["ndoc"]);
 	      $detadoc    = getSesionDato('detadoc');
 	      $detadoc[3] = $ndoc;
+	      setSesionDato('detadoc',$detadoc);
+
+	      exit();	
+	      break;
+
+        case "setalbadocCompra":
+	      $detadoc     = getSesionDato('detadoc');
+	      $detadoc[15] = CleanText($_GET["ndoc"]);
 	      setSesionDato('detadoc',$detadoc);
 
 	      exit();	
@@ -803,13 +947,12 @@ switch($modo) {
 	      break;
 
  	case "mostrarCompra":
-		$modocontado   = CleanText($_GET["modocontado"]);
-		$modocredito   = CleanText($_GET["modocredito"]);
 		$filtrodocumento = CleanText($_GET["filtrodocumento"]);
 		$filtrocompra  = CleanText($_GET["filtrocompra"]);
 		$filtromoneda  = CleanText($_GET["filtromoneda"]);
 		$filtropago    = CleanText($_GET["filtropago"]);
 		$filtroespagos = (isset($_GET["filtroespagos"]))?CleanText($_GET["filtroespagos"]):'';
+		$filtroformapago = CleanText($_GET["filtroformapago"]);
 		$forzaid       = CleanText($_GET["forzaid"]);
 		$xrecibir      = (isset($_GET["xrecibir"]))? CleanText($_GET["xrecibir"]):'';
 		$esRecibir     = ($xrecibir=='true')?true:false;
@@ -818,24 +961,18 @@ switch($modo) {
 		$hasta         = date("Y-m-d", strtotime( CleanFechaES($_GET["hasta"]) ));
 		$emision       = CleanText($_GET["emision"]);
 		$nombre        = CleanText($_GET["nombre"]);
-		$esSoloContado = ($modocontado == "contado");
-		$esSoloCredito = ($modocredito == "credito");
 		$esSoloDocumento = trim($filtrodocumento);
 		$esSoloMoneda  = trim($filtromoneda);
 		$esSoloLocal   = trim($filtrolocal);  
 		$esSoloCompra  = trim($filtrocompra);  
 		$esSoloPagos   = trim($filtropago);  
 		$esPagos       = ($filtroespagos == "Pagos");
-		$mm            = intval(date("m"));
-		$dd            = intval(date("d"));
-		$aaaa          = intval(date("Y"));
-		if (!$hasta or $hasta == "") $hasta = "$aaaa-$mm-$dd";
-		if (!$desde or $desde == "") $desde = "1900-01-01";
+		$esFormaPago   = trim($filtroformapago);
 
 		$datos = CompraPeriodo($filtrolocal,$desde,$hasta,$emision,$nombre,
-				       $esSoloContado,$esSoloCredito,$esSoloMoneda,
-				       $esSoloLocal,$esSoloCompra,$forzaid,
-				       $esSoloDocumento,$esRecibir,$esSoloPagos,$esPagos);
+				       $esSoloMoneda,$esSoloLocal,$esSoloCompra,$forzaid,
+				       $esSoloDocumento,$esRecibir,$esSoloPagos,$esPagos,
+				       $esFormaPago);
 		VolcandoXML( Traducir2XML($datos),"PedidosCompras");
 		exit();
 		break;
@@ -972,15 +1109,8 @@ switch($modo) {
  		//$campoxdato = " EstadoDocumento = 'Pendiente' ";
 		$Operacion  = CleanID($_GET["xoperacion"]);//1:Compras 3:Traslado interno
 
-		if(verificarEstadoDocumento($xid)) {
-		  echo 'Registro~';
-		  return;
-		}
-
-		if(validaIntegridadSeries($xid)) {
-		  echo 'Series~';
-		  return;
-		}
+		if( verificarEstadoDocumento($xid) ){ echo 'Registro~'; return; }
+		if( validaIntegridadSeries($xid) ) {  echo 'Series~'; return; }
 
 		registrarPedidoKardexFifo($xid,$xdato,$IdLocal,$Operacion,false,false,false);
 		actualizarStatusPedido($xid,'2');
@@ -995,7 +1125,8 @@ switch($modo) {
 					CleanCadena($_GET["tipocomprobante"]),
 					CleanID($_GET["IdComprobante"]),
 					CleanCadena($_GET["accion"]),
-					CleanInt($_GET["Serie"]));
+					CleanInt($_GET["Serie"]),
+					CleanID($_GET["IdUser"]));
 	       
 	   exit();				
 	   break;
@@ -1005,7 +1136,8 @@ switch($modo) {
 				   CleanCadena($_GET["ltAlbaran"]),
 				   CleanCadena($_GET["cliAlbaran"]),
 				   CleanInt($_GET["Serie"]),
-				   CleanID($_GET["cidcomprobante"]));
+				   CleanID($_GET["cidcomprobante"]),
+				   CleanID($_GET["IdUser"]));
 
 	   exit();				
 	   break;
@@ -1014,20 +1146,29 @@ switch($modo) {
 				     CleanCadena($_GET["tipocomprobante"]),
 				     CleanCadena($_GET["IdComprobante"]),
 				     CleanCadena($_GET["accion"]),
-				     CleanInt($_GET["Serie"]));
+				     CleanInt($_GET["Serie"]),
+				     CleanID($_GET["IdUser"]));
 	   exit();	
 	   break;
 
          case "ModificarNumeroComprobante":
+	   //Codigo Validacion
+	   setCodAutorizacionComprobante(CleanID($_GET["IdComprobante"]),'');
+
 	   ModificarNumeroComprobante(CleanInt($_GET["nro"]),
 				      CleanCadena($_GET["tipocomprobante"]),
 				      CleanID($_GET["IdComprobante"]),
 				      CleanCadena($_GET["accion"]),
-				      CleanInt($_GET["Serie"]));
+				      CleanInt($_GET["Serie"]),
+				      CleanID($_GET["IdUser"]));
 	   exit();	
 	   break;
 
          case "ModificarFechaEmicionComprobante":
+
+	   //Codigo Validacion
+	   setCodAutorizacionComprobante(CleanID($_GET["IdComprobante"]),'');
+
 	   ModificarFechaEmicionComprobante(CleanCadena($_GET["fecha"]),
 					    CleanCadena($_GET["tipocomprobante"]),
 					    CleanID($_GET["IdComprobante"]),
@@ -1039,15 +1180,20 @@ switch($modo) {
          case "DevolverComprobanteTPV":
 	   $IdComprobante = CleanID($_GET["comprobante"]);
 	   $Items         = CleanText($_GET["items"]);
+	   $devolvermodo  = CleanText($_GET["devolvermodo"]);
 	   $Monto         = CleanDinero($_GET["montocomprobante"]);
 	   $Pendiente     = CleanDinero($_GET["pendientecomprobante"]);
 	   $Concepto      = CleanText($_GET["concepto"]);
 	   $iDependiente  = CleanID($_GET["dependiente"]);
 	   $Monto         = $Monto - $Pendiente; 
 
+	   //Codigo Validacion
+	   setCodAutorizacionComprobante($IdComprobante,'');
+
 	   //Obtenemos cantidad devuelta
 	   $Presupuesto  = DevolverComprobanteTPV($IdComprobante,$Monto,
-						  $iDependiente,$Concepto,$Items);
+						  $iDependiente,$Concepto,
+						  $Items,$devolvermodo);
 	   echo $Presupuesto;
 	   exit();
  	   break;
@@ -1063,6 +1209,10 @@ switch($modo) {
          case "setIdClienteDocumento":
 	   $iduser = CleanID($_GET["iduser"]);
 	   $id = CleanID($_GET["id"]);
+
+	   //Codigo Validacion
+	   setCodAutorizacionComprobante($id,'');
+
 	   echo setIdClienteDocumento($iduser,$id); 
     	   exit();
  	   break;
@@ -1100,6 +1250,7 @@ switch($modo) {
 	   $IdLocal       = CleanID(getSesionDato("IdTienda"));
 	   $IdUsuario     = CleanID(getSesionDato("IdUsuario"));
 	   $IdMoneda      = 1;
+	   $IdCliente     = CleanID($_GET["idc"]);
 
 	   $mov           = new movimientogral;
 	   $FechaApertura = $mov->getAperturaCajaGral($IdMoneda,$IdLocal);
@@ -1117,7 +1268,7 @@ switch($modo) {
 	   $IdArqueo      = $mov->getIdArqueoEsCerrado($IdMoneda,$IdLocal);
 
 	   if(!$IdArqueo){
-	     echo 'cjacda';
+	     echo '~cjacda~';
 	     return;
 	   }
      
@@ -1128,9 +1279,9 @@ switch($modo) {
 
 	   $campo        = 'ImportePendiente';
 	   $Pendiente    = obtnerPendienteComprobante($IdComprobante);
-	   $newpendiente = actualizarPendienteComprobante($IdComprobante,$Pendiente,
-							  $cantidad);
-	   echo $newpendiente;//Cantidad pendiente o cero.				
+	   $newimporte   = $Pendiente - $cantidad;
+	   $newpendiente = actualizarPendienteComprobante($IdComprobante,$newimporte,$IdCliente);
+	   echo "~~".$newpendiente;//Cantidad pendiente o cero.				
 	   break;
 
 	case "mostrarDetallesCobro":
@@ -1264,6 +1415,89 @@ switch($modo) {
 	   $CodigoOC      = CleanText($_GET["xidc"]);
 	   echo crearProforma($IdOrdenCompra,$IdCliente,$CodigoOC);
 	   break;
+
+        case "cuentasbancarias":
+	   $IdProv   = CleanID($_GET["idprov"]);
+	   $estodo   = ($_GET["todo"] == 1)? true:false;
+	   $cuentas  = genArrayCuentaBancaria($IdProv,$estodo);
+	   
+	   foreach ($cuentas as $key=>$value) {
+	     echo "$value=$key\n";
+	   }			  
+	   break;
+
+        case "codigoAutorizacionTPV":
+	  $xid      = CleanID( $_GET["xid"] );
+	  $xaccion  = CleanText( $_GET["xaccion"] );
+	  if( Admite('Precios') )
+	    echo ckCodigoAutorizacionTPV($xid,$xaccion,false);
+
+	  break;
+        case "validaCodigoAutorizacionTPV":
+	  $xid      = CleanID( $_GET["xid"] );
+	  $xcod  = CleanText( $_GET["xcod"] );
+
+	  echo ckCodigoAutorizacionTPV($xid,'val',$xcod);
+	  break;
+        case "validaCodigoAutorizacionClienteTPV":
+	  $xid      = CleanID( $_GET["xid"] );
+	  $xcod  = CleanText( $_GET["xcod"] );
+
+	  echo ckCodigoAutorizacionTPV($xid,'valcliente',$xcod);
+	  break;
+
+	case "partidas":
+	  $IdLocal = (isset($_GET["xidl"]))? CleanID($_GET["xidl"]):0;
+	  $IdLocal = ($IdLocal == 0)? getSesionDato("IdTienda"):$IdLocal;
+	  $operacion = CleanText($_GET["xop"]);
+	  $tipocaja  = CleanText($_GET["cja"]);
+
+	  $partida  = genArrayPartidas($operacion,$tipocaja,$IdLocal);
+	  
+	  foreach ($partida as $key=>$value) {
+	    echo "$value=$key\n";
+	  }
+	  break;
+	case "ModificaFechaPago":
+	  $id = CleanID($_GET["IdComprobante"]);
+	  $fecha = CleanCadena($_GET["xfecha"]);
+	  echo ModificarFechaPagoComprobante($id,$fecha);
+	  break;
+	case "verificarnumerofical":
+	  $nfiscal  = CleanText($_GET["xnfiscal"]);
+	  $Id       = CleanID($_GET["xid"]);
+	  $Tipo   = CleanText($_GET["xtipo"]);
+	  if($Tipo == 'Cliente')
+	    $xdato    = buscarNumeroFiscal($nfiscal,$Id);
+	  if($Tipo == 'Proveedor')
+	    $xdato    = buscarNumeroFiscalProv($nfiscal,$Id);
+	  if($Tipo == 'Subsidiario')
+	    $xdato    = buscarNumeroFiscalSubs($nfiscal,$Id);
+	  echo $xdato;
+	  break;
+	case "ModificaEstadoReserva":
+	  $id = CleanID($_GET["IdComprobante"]);
+	  $reserva = CleanCadena($_GET["xreserva"]);
+	  echo ModificarEstadoReservaComprobante($id,$reserva);
+	  break;				
+
+	case "syncDashBoard":
+	  $Desde      = date("Y-m-d");
+	  $nuevafecha = strtotime ( '+30 day' , strtotime ( $Desde ) ) ;
+	  $nuevafecha = date ( 'Y-m-d' , $nuevafecha );
+	  $Hasta      = $nuevafecha;
+	  $Estado     = 'PorVencer';
+	  $IdLocal    = getSesionDato("IdTienda");
+
+	  checkSuscripciones();	 
+	  obtenerVencimientosDashBoard($IdLocal,$Desde,$Hasta,$Estado);
+	    
+	  echo syncDashBoard();
+	  break;				
+
+	case "actualizarDashBoard":
+	  updateDashBoard();
+	  break;				
 }
 
 ?>

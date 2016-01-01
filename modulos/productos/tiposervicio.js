@@ -19,10 +19,91 @@ function BuscarTipoServicio(){
             xnuevo.setAttribute('collapsed','false');
 }
 
+function loadfocus(){
+    document.getElementById('buscatiposervicio').focus();
+}
+
 function agnadirDirecto(){
     var theList=document.getElementById('TipoServicio');
     if(theList.selectedIndex == -1){
         return;
     }
-    theList.onclick();
+    theList.ondblclick();
 }
+
+function soloAlfaNumerico(e){ 
+    key = e.keyCode || e.which;
+    tecla = String.fromCharCode(key).toLowerCase();
+    letras = ' abcdefghijklmnopqrstuvwxyz0123456789-';
+    especiales = [8, 13, 9];
+    tecla_especial = false
+    for(var i in especiales){
+        if(key == especiales[i]){
+            tecla_especial = true;
+            break;
+        }
+    }
+    
+    if(letras.indexOf(tecla)==-1) { 
+        if(!tecla_especial){
+            return false;
+        }
+    }
+}
+
+function UsarNuevo() {
+    var talla, url;
+    var nuevocolor = document.getElementById('buscatiposervicio');
+    var essat      = document.getElementById('esSAT');
+
+    if (nuevocolor)
+        talla = nuevocolor.value;
+
+    if (!talla || talla == '')
+        return;
+    url = 'seltiposervicio.php';
+    url = url +'?modo=salvatiposervicio';
+    url = url + '&tiposervicio=' + talla;
+    url = url + '&essat=' + essat.checked;
+
+    document.location.href = url;			
+}
+
+function EliminarTipoServicio() {
+
+    var xtiposervicio = document.getElementById('TipoServicio').selectedItem;
+    if( ! xtiposervicio ) return;
+    var idtiposervicio     = xtiposervicio.value;
+    var txttiposervicio    = xtiposervicio.label;
+    if( confirm('gPOS:\n'+
+		'       Desea eliminar servicio:\n'+
+		'             - '+txttiposervicio+' -') ) {
+	url = 'seltiposervicio.php';
+	url = url + '?modo=eliminatiposervicio';
+	url = url + '&txt=' + txttiposervicio;
+	url = url + '&xid=' + idtiposervicio;
+	document.location.href = url;				  			
+    }
+}
+
+function ModificarTipoServicio() {
+
+    var xtiposervicio = document.getElementById('TipoServicio').selectedItem;
+    if( ! xtiposervicio ) return;
+    var idtiposervicio     = xtiposervicio.value;
+    var txttiposervicio    = xtiposervicio.label;
+    var newtxttiposervicio = '';
+    if( newtxttiposervicio = prompt('gPOS:\n'+
+			     '       Modifique  servicio:',
+			     txttiposervicio) ) {
+
+	if ( txttiposervicio == newtxttiposervicio || newtxttiposervicio == '' ) return;
+
+	url = 'seltiposervicio.php';
+	url = url + '?modo=modificatiposervicio';
+	url = url + '&txt=' + newtxttiposervicio;
+	url = url + '&xid=' + idtiposervicio;
+	document.location.href = url;				  			
+    }
+}
+

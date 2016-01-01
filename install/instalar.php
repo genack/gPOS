@@ -65,6 +65,7 @@ switch($modo){
       $giroNegocioDato = $_POST["gironegocio"];
       $adminEmailDato = $_POST["adminemail"];
       $passModulos = $_POST["passmodulos"];
+      $dbinicio = isset($_POST["dbinicio"])? true:false;
 
       webAssert($nombreBase,"","No se proporciono nombre de base de datos",true);
       webAssert($usuario,"","No se proporciono usuario de base de datos",true);
@@ -80,8 +81,30 @@ switch($modo){
       webAssert(function_exists("mysql_query"),"","Su version de PHP no reune las caractersticias minimas: Soporte MySQL",true);
       webAssert(function_exists("mysql_error"),"","Su version de PHP no reune las caractersticias minimas: Soporte MySQL",true);
       webAssert(function_exists("fwrite"),"","Su version de PHP no reune las caractersticias minimas",true);
-      webAssert(function_exists("htmlentities"),"","Su version de PHP no reune las caractersticias minimas",true);				
-						
+      webAssert(function_exists("htmlentities"),"","Su version de PHP no reune las caractersticias minimas",true);
+
+
+      if($dbinicio){
+	$bigdbinicio = "";
+	switch($giroNegocioDato){
+	case "PINF":
+	  $pathdbinicio = dirname(__FILE__) . "/../esquema/dbinicio_pinf.sql";
+	  break;
+	case 'BTCA':
+	  $pathdbinicio = dirname(__FILE__) . "/../esquema/dbinicio_btca.sql";
+	  break;
+	case 'BTQE':
+	  $pathdbinicio = dirname(__FILE__) . "/../esquema/dbinicio_btqe.sql";
+	  break;
+	case 'MMKT':
+	  $pathdbinicio = dirname(__FILE__) . "/../esquema/dbinicio_mmkt.sql";
+	  break;
+	}
+	
+	if (file_exists($pathdbinicio)) 
+	  $bigdbinicio = file_get_contents($pathdbinicio);
+      }
+
       $pathTablas   = dirname(__FILE__) . "/../esquema/tablas.sql";
       $pathFunction = dirname(__FILE__) . "/../esquema/funciones.sql";
       $pathInserts  = dirname(__FILE__) . "/../esquema/datos.sql";
@@ -173,9 +196,22 @@ switch($modo){
 	}
       }
 
+      if($dbinicio && $bigdbinicio !=""){
+	IniciaTarea("Cargando base de datos inicial");
+	$querys = split_queris($bigdbinicio);
+	
+	foreach($querys as $query){
+	  if ($query and $query != "\n"){
+	    $result = mysql_query($query);
+	    $query_s = htmlentities($query);
+	    webAssert($result,".","E: problema al iniciar datos: $cr <font color=red>$query_s</font>  ".mysql_error($link));
+	  }
+	}
+      }
+
       IniciaTarea("Creando xulremoto");
    
-        $xdomain    = bootstrapDomain($baseurlDato);
+        $xdomain    = $baseurlDato;//bootstrapDomain();
         $xjsOut     = bootStrapJS($xdomain);
         $path       = 'bootstrap.js';
         $filehandle = fopen($path, "w");	

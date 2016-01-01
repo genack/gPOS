@@ -5,7 +5,8 @@ include("tool.php");
 SimpleAutentificacionAutomatica("visual-iframe");
 
 global $tamPagina;
-$tamPagina = 100;
+
+$tamPagina  = ( getSesionDato("GlobalGiroNegocio") == 'BTQE')? 200: 100;
 
 function AutoOpen(){
 
@@ -186,9 +187,7 @@ function ListarAlmacen($referencia,$donde,$marcadotrans=false,$cb=false,$idbase=
   $jsOut    .= "cListAlmacen();";	
   $jsOut    .= $paginador;
   
-  echo "<center>";
   echo jsBody($jsOut);
-  echo "</center>";					
   
 }
 
@@ -234,18 +233,6 @@ function OperacionesConSeleccion(){
 function ListarSeleccion($marcadotrans){
 
  	global $action;
-        echo '<center> 
-              <table class="listado" border="0">
-                <tbody>
-                 <tr class="formaCabeza">
-                   <td height="16" colspan="4">
-                    <div class="formaTituloCarrito"> Carrito Almacén</div>
-                   </td>
-                 </tr> 
-                </tbody>
-              </table> 
-              </center>';
-	
 	//Creamos template
 	$ot       = getTemplate("ListadoMultiAlmacenSeleccion");
 			
@@ -334,7 +321,8 @@ function ListarSeleccion($marcadotrans){
 	      setSesionDato("CarritoMover",$Trans);	
 	    }
 	}	
-	$ot->fijar("vPrecio",$tbPrecio);	
+	$ot->fijar("vPrecio",$tbPrecio);
+	$ot->fijar("tTotalSeleccionados",count(getSesionDato("CarritoTrans")));
 	$ot->paginador($indice,false,$num);	
 	$ot->fijar("action",$action );
 	
@@ -523,16 +511,12 @@ switch($modo){
 		
 PageStart();
 
-echo gas("cabecera",_("Stock"));
+$xaccion = ($modo == "seleccion" )? " - Carrito Almacén":" - Buscar Productos";
 
-$CarritoTraspasoCant = count(getSesionDato("CarritoTrans"));
-$xdisplay = ($CarritoTraspasoCant > 0)? 'display:block':'display:none';
-  
-echo "<center>
-<div id='boxCarritoTraspasoCant' style=".$xdisplay.">
-<p> <input id='CarritoTraspasoCant' type='text' value='".$CarritoTraspasoCant."' style='width:1.5em'/> Producto(s) Seleccionado(s)</p>
-</div>
-</center>";
+echo gas("cabecera",_("Gestión de Stock $xaccion"));
+
+
+echo "<script> if( parent.document.getElementById('CarritoTraspasoCant') ) parent.document.getElementById('CarritoTraspasoCant').value ='".count(getSesionDato("CarritoTrans"))."' </script>";
 
 
 switch($modo) {
@@ -797,6 +781,7 @@ switch($modo){
 		  break;
 
 		case "2"://Consignacion
+		case "10"://Traslado y Recepcion
 		case "5"://Traslado
 
 		  if($Origen == $Destino)
@@ -824,8 +809,8 @@ switch($modo){
                             <ul class='auxmenu'>
                              <li class='lh' style='font-weight: bold;padding:.5em;font-size:13px'>
                                  Se ha realizado su alta</li>
-                             <li class='lh' style='font-size:14px;'>Albaran - ".$tMotivo."</li>
-                             <li class='lh' style='font-size:13px;'>Local ".$nomdes."</li>
+                             <li class='lhstock' style='font-size:14px;'>Albaran - ".$tMotivo."</li>
+                             <li class='lhstock' style='font-size:13px;'>Local ".$nomdes."</li>
                              <li class='auxitem'>
                                 <input class='btn item' type='button' value='Ver Albaran' 
                                        onclick='parent.lanzarVentasGeneral()'>
@@ -863,8 +848,8 @@ switch($modo){
 
 	        $marcadotrans = getSesionDato("CarritoTrans");
 
-		if (!count($marcadotrans))
-		  echo gas("aviso",_("Carrito vacio"));
+		/* if (!count($marcadotrans)) */
+		/*   echo gas("aviso",_("Carrito vacio")); */
 
 		if (isset($_POST["borraseleccion"]) and $_POST["borraseleccion"]){
 			$_SESSION["CarritoTrans"]=array();

@@ -22,8 +22,9 @@ function ListarClientes() {
 	$oCliente = new cliente;
 
 	$indice = getSesionDato("PaginadorCliente");
+	$nombre = getSesionDato("FiltraNombreCliente");
 
-	$hayClientes = $oCliente->Listado(false, $indice);
+	$hayClientes = $oCliente->Listado(false, $indice, $nombre);
 
 	if (!$hayClientes) {
 		echo gas("aviso", "No hay cliente disponibles");
@@ -62,10 +63,14 @@ function MostrarClienteParaEdicion($id, $lang) {
 		return false;
 	}
 	
-	if ($oCliente->esEmpresa())
+	if (!$oCliente->esParticular()){
 		$ot = getTemplate("ModificarCliente");
-	else
+		$esnfiscal = 'RUC';
+	}
+	else{
 		$ot = getTemplate("ModificarClienteParticular");
+		$esnfiscal = 'DNI';
+	}
 		
 	if (!$ot) {
 		error(__FILE__.__LINE__, "Info: template no encontrado");
@@ -75,7 +80,7 @@ function MostrarClienteParaEdicion($id, $lang) {
 	$ot->fijar("vIdCliente", $id);
 	$ot->fijar("tTitulo", _("Modificando cliente"));
 	
-	if ($oCliente->esEmpresa())
+	if (!$oCliente->esParticular())
 		$ot->campo(_("Nombre comercial"), "NombreComercial", $oCliente);
 	else
 		$ot->campo(_("Nombre"), "NombreComercial", $oCliente);
@@ -83,7 +88,7 @@ function MostrarClienteParaEdicion($id, $lang) {
 	
 	$ot->fijar("tModPagoHabitual", _("Modo pago hab."));
 	$ot->fijar("vIdModPagoHabitual", $oCliente->get("IdModPagoHabitual"));	
-	$ot->fijar("comboModPagoHabitual", genComboModPagoHabitual( $oCliente->get("IdModPagoHabitual")));
+	$ot->fijar("comboModPagoHabitual", genComboModalidadPago( $oCliente->get("IdModPagoHabitual")));
 
 	$ot->fijar("tIdLocal",_("Tienda"));
 	$ot->fijar("comboIdLocal", genComboAlmacenes( $oCliente->get("IdLocal")));
@@ -106,7 +111,7 @@ function MostrarClienteParaEdicion($id, $lang) {
 	$ot->campo(_("Cargo"), "Cargo", $oCliente);
 	$ot->campo(_("Email"), "Email", $oCliente);
 	$ot->campo(_("Cuenta bancaria"), "CuentaBancaria", $oCliente);
-	$ot->campo(_("Número fiscal"), "NumeroFiscal", $oCliente);
+	$ot->campo(_("Número fiscal ($esnfiscal)"), "NumeroFiscal", $oCliente);
 	$ot->campo(_("Comentarios"), "Comentarios", $oCliente);	
 	
 	//$ot->campo(_("Fecha nac."), "FechaNacim", $oCliente);
@@ -142,7 +147,7 @@ function FormularioAlta() {
 		
 	$ot->fijar("tModPagoHabitual", _("Modo pago hab."));
 	$ot->fijar("vIdModPagoHabitual", $oCliente->get("IdModPagoHabitual"));	
-	$ot->fijar("comboModPagoHabitual", genComboModPagoHabitual( $oCliente->get("IdModPagoHabitual")));
+	$ot->fijar("comboModPagoHabitual", genComboModalidadPago(1));
 
 	$ot->fijar("tIdPais",_("País"));
 	$ot->fijar("vIdPais", $oCliente->get("IdPais"));
@@ -159,7 +164,7 @@ function FormularioAlta() {
 	$ot->campo(_("Cargo"), "Cargo", $oCliente);
 	$ot->campo(_("Email"), "Email", $oCliente);
 	$ot->campo(_("Cuenta bancaria"), "CuentaBancaria", $oCliente);
-	$ot->campo(_("Número fiscal"), "NumeroFiscal", $oCliente);
+	$ot->campo(_("Número fiscal (RUC)"), "NumeroFiscal", $oCliente);
 	$ot->campo(_("Comentarios"), "Comentarios", $oCliente);
 
 	echo $ot->Output();
@@ -183,7 +188,7 @@ function FormularioAltaParticular() {
 	
 	$ot->fijar("tModPagoHabitual", _("Modo pago hab."));
 	$ot->fijar("vIdModPagoHabitual", $oCliente->get("IdModPagoHabitual"));	
-	$ot->fijar("comboModPagoHabitual", genComboModPagoHabitual( $oCliente->get("IdModPagoHabitual")));
+	$ot->fijar("comboModPagoHabitual",  genComboModalidadPago(1));
 
 	$ot->fijar("tIdPais",_("País"));
 	$ot->fijar("vIdPais", $oCliente->get("IdPais"));
@@ -200,7 +205,7 @@ function FormularioAltaParticular() {
 	$ot->campo(_("Cargo"), "Cargo", $oCliente);
 	$ot->campo(_("Email"), "Email", $oCliente);
 	$ot->campo(_("Cuenta bancaria"), "CuentaBancaria", $oCliente);
-	$ot->campo(_("Número fiscal"), "NumeroFiscal", $oCliente);
+	$ot->campo(_("Número fiscal (DNI)"), "NumeroFiscal", $oCliente);
 	$ot->campo(_("Comentarios"), "Comentarios", $oCliente);
  	//modalidad de pago habitual?
 	echo $ot->Output();
@@ -310,16 +315,22 @@ PageStart();
 echo gas("cabecera", _("Gestión de Clientes"));
 
 switch ($modo) {
+	case "buscarclientes":
+		setSesionDato("PaginadorCliente",0);
+		$nombre = CleanText(GET("Nombre"));
+		setSesionDato("FiltraNombreCliente",$nombre);
+		PaginaBasica();
+		break;
 	case "modcliente":
 		$id 		= CleanID($_POST["IdCliente"]);
 		$comercial 	= CleanText($_POST["NombreComercial"]);
 		$legal 		= (isset($_POST["NombreLegal"]))? CleanText($_POST["NombreLegal"]):'';
-		$direccion	= CleanText($_POST["Direccion"]);
+		$direccion	= CleanCadena($_POST["Direccion"]);
 		$poblacion 	= CleanText($_POST["Localidad"]);
 		$cp 		= CleanCP($_POST["CP"]);
 		$email 		= (isset($_POST["Email"]))? CleanEmail($_POST["Email"]):'';
-		$telefono1 	= CleanTelefono($_POST["Telefono1"]);
-		$telefono2 	= (isset($_POST["Telefono2"]))? CleanTelefono($_POST["Telefono2"]):'';
+		$telefono1 	= CleanText($_POST["Telefono1"]);
+		$telefono2 	= (isset($_POST["Telefono2"]))? CleanText($_POST["Telefono2"]):'';
 		$contacto 	= (isset($_POST["Contacto"]))? CleanText($_POST["Contacto"]):'';
 		$cargo 		= (isset($_POST["Cargo"]))? CleanText($_POST["Cargo"]):'';
 		$cuentabancaria = CleanCC($_POST["CuentaBancaria"]);
@@ -347,12 +358,12 @@ switch ($modo) {
 	case "newcliente" :
 	        $comercial 	= (isset($_POST["NombreComercial"]))? CleanText($_POST["NombreComercial"]):'';
 	        $legal 		= (isset($_POST["NombreLegal"]))? CleanText($_POST["NombreLegal"]):'';
-		$direccion	= CleanText($_POST["Direccion"]);
+		$direccion	= CleanCadena($_POST["Direccion"]);
 		$poblacion 	= CleanText($_POST["Localidad"]);
 		$cp		= CleanCP($_POST["CP"]);
 		$email 		= (isset($_POST["Email"]))? CleanEmail($_POST["Email"]):'';
-		$telefono1 	= CleanTelefono($_POST["Telefono1"]);
-		$telefono2 	= (isset($_POST["Telefono2"]))? CleanTelefono($_POST["Telefono2"]):'';
+		$telefono1 	= CleanText($_POST["Telefono1"]);
+		$telefono2 	= (isset($_POST["Telefono2"]))? CleanText($_POST["Telefono2"]):'';
 		$contacto 	= (isset($_POST["Contacto"]))? CleanText($_POST["Contacto"]):'';
 		$cargo 		= (isset($_POST["Cargo"]))? CleanText($_POST["Cargo"]):'';
 		$cuentabancaria = CleanCC($_POST["CuentaBancaria"]);
@@ -366,8 +377,9 @@ switch ($modo) {
 		$IdLocal        = '';
 				
 		CrearCliente($comercial, $legal, $direccion, $poblacion, $cp, $email, 
-			$telefono1, $telefono2, $contacto, $cargo, 			
-			     $cuentabancaria, $numero, $comentario,$tipocliente,$IdModPagoHabitual,$idpais,$paginaweb,$nace,$IdLocal);
+			     $telefono1, $telefono2, $contacto, $cargo, $cuentabancaria, 
+			     $numero, $comentario, $tipocliente, $IdModPagoHabitual, 
+			     $idpais, $paginaweb, $IdLocal, $nace);
 		//Separador();
 		PaginaBasica();
 		break;
@@ -377,7 +389,8 @@ switch ($modo) {
 	case "altaparticular" :
 		FormularioAltaParticular();
 		break;		
-	case "listar" :
+	case "lista" :
+		setSesionDato("FiltraNombreCliente",'');
 		PaginaBasica();
 		break;
 	case "pagmenos":

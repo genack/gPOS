@@ -44,7 +44,8 @@ function exportMysqlToCsv($query,$filename,$xtitulo=false) {
   $csv_enclosed   = '"'; 
   $csv_escaped    = "\\"; 
   $sql            = $query; // Gets the data from the database
-  $result         = mysql_query($sql);
+  //$result         = mysql_query($sql);
+  $result         = query($sql);
   $fields_cnt     = mysql_num_fields($result); 
   $schema_insert  = ''; 
   
@@ -94,5 +95,13 @@ function exportMysqlToCsv($query,$filename,$xtitulo=false) {
   header("Expires: 0");
   echo $out; 
 }
+
+function generarclaveAlfaNumeria($baselong){ 
+       $basecadena="[^A-Z0-9]"; 
+       return substr(preg_replace($basecadena, "", md5(rand())) . 
+       preg_replace($basecadena, "", md5(rand())) . 
+       preg_replace($basecadena, "", md5(rand())), 
+       0, $baselong); 
+} 
 
 ?>

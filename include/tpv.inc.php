@@ -25,6 +25,11 @@
 	    $NombreLocalActivo	= CleanTo( $localActivo->get("NombreComercial")," " );
 	    $MOTDActivo 	= CleanTo( $localActivo->get("MensajeMes")," " );
 	    $PROMActivo 	= CleanTo( $localActivo->get("MensajePromocion")," " );
+	    $WEBActivo     	= CleanTo( $localActivo->get("PaginaWeb")," " );
+	    $MOVILActivo     	= CleanTo( $localActivo->get("Movil")," " );
+	    $TELFActivo     	= CleanTo( $localActivo->get("Telefono")," " );
+	    $DIRActivo     	= CleanTo( $localActivo->get("DireccionFactura")," " );
+	    $POBLActivo     	= CleanTo( $localActivo->get("Poblacion")," " );
 	  }
 
 	//--------------------------------------------------
@@ -76,12 +81,14 @@
         $NombreDependienteDefecto = false;
         $IdDependienteDefecto     = false;
 
+        $userlocal  = getSesionDato("UsuarioLocal");
+
         $sql = 
 	  "select IdUsuario, ".
 	  "       Nombre, ".
 	  "       IdPerfil ".
 	  "from   ges_usuarios ".
-	  "where  Eliminado=0 AND IdLocal IN (".$IdLocalActivo.",0) ";			
+	  "where  Eliminado=0 AND IdLocal IN (".$IdLocalActivo.",0,".$userlocal.") AND Estado='Activo'";
 
         $res = query($sql);
 
@@ -121,7 +128,10 @@
 		    }
 		  
 		  $dependientes[$nombre] = $IdUsuario;
-		  //error(__LINE__,"Info: entro id '$IdUsuario', nombre '$nombre'");	
+		  //error(__LINE__,"Info: entro id '$IdUsuario', nombre '$nombre'");
+		  if($IdUsuario <= 2 && ($IdDependienteDefecto > 2 || !$IdDependienteDefecto))
+		    continue;
+
 		  $numDependientes       = $numDependientes + 1;
 		}		
 	      }	
@@ -143,6 +153,8 @@
         foreach ( $dependientes as $nombre => $IdUsuario)
 	  {
 	    $check = ($sesname == $nombre)? 'true':'false';
+	    if($IdDependienteDefecto >= 3 && $IdUsuario <= 2)
+	      continue;
 
 	    //error(__LINE__ , "Info: salio n $nombre, id $IdUsuario");
 	    $out .= "<menuitem id='dep_". $t ."' image='chrome://mozapps/skin/profile/Zprofileicon.gif' type='radio' name='radio' label='$nombre' value='$IdUsuario' checked='$check' />\n"; 

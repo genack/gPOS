@@ -1,4 +1,8 @@
 
+    <html:div id='box-popup' class='box-popup-off'><html:span class='closepopup' onclick='closepopup()'></html:span>
+    <html:iframe id='windowpopup' name='windowpopup' src='about:blank' width='100%' style='border: 0' height='100%'  onload='if(this.src != "about:blank" ) loadFocusPopup()'></html:iframe> 
+    </html:div>
+
 <command id="quitaArticulo" oncommand="QuitarArticulo()"   disabled='false'  label="<?php echo _(" Quitar artículo") ?>"/>  
 
 <popupset>
@@ -40,12 +44,26 @@
        <menupopup> 
          <menuitem label="<?php echo _("Comprobante") ?>" 
                    oncommand="ReimprimirVentaSeleccionada(1)"/>
+         <menuitem label="<?php echo _("Ticket detallado") ?>" 
+                   oncommand="imprimirFormatoDetalladoTicketSeleccionada()"/>
+         <menuitem label="<?php echo _("Ticket de Pago") ?>" 
+                   oncommand="imprimirFormatoImporteVentaSeleccionada()"/>
          <menuitem id="VentaSuscripcionImprimir" label="<?php echo _("Suscripción") ?>"
                    oncommand="ReimprimirVentaSuscripcion()" collapsed="true"/>
        </menupopup>
      </menu>
      <menuseparator />
-     <menuitem id="VentaRealizadaDevolver" label="<?php echo _("Devolver") ?>" oncommand="habilitaDevolucionVentaSeleccionada()"/>
+
+     <menu id="VentaRealizadaDevolver" label="<?php echo _("Devolver") ?>">
+       <menupopup> 
+        <menuitem label="<?php echo _("Efectivo") ?>" 
+        oncommand="habilitaDevolucionVentaSeleccionada('efectivo')"/>
+        <menuitem label="<?php echo _("Nota de Crédito") ?>" 
+        oncommand="habilitaDevolucionVentaSeleccionada('credito')"/>
+       </menupopup>
+     </menu>
+
+     <menuitem id="VentaRealizadaEntregarReserva" label="<?php echo _("Entregar reserva") ?>" oncommand="EntregarReservas()"/>
      <menuseparator />
      <menuitem id="VentaRealizadaBoletar" label="<?php echo _("Boletar")?>" oncommand="BoletarNroDocumento('Boletar')" />
      <menuitem id="VentaRealizadaFacturar" label="<?php echo _("Facturar")?>" oncommand="FacturarNroDocumento('Facturar')" />
@@ -53,18 +71,28 @@
      <menuseparator />
      <menuitem id="VentaRealizadaCambioCliente" label="<?php echo _("Cambiar cliente")?>" oncommand="CambiarClienteDocumento()"  <?php gulAdmite("Administracion") ?> />
      <menuseparator />
-     <menuitem id="VentaRealizadaCambioNro" label="<?php echo _("Modificar Nro.")?>" oncommand="ModificarNroDocumento('Modificar')"  <?php gulAdmite("Administracion") ?> /> 
-     <menuitem id="VentaRealizadaAnularNro" label="<?php echo _("Anular Nro.")?>" oncommand="ModificarNroDocumento('Anular')"  <?php gulAdmite("Administracion") ?> />
-     <menuitem id="VentaRealizadaCambioAnularNro" label="<?php echo _("Modificar y anular Nro.")?>" oncommand="ModificarNroDocumento('Modificar_y_Anular')"  <?php gulAdmite("Administracion") ?> />
-     <menuitem id="VentaRealizadaAnularNro" label="<?php echo _("Modificar Fecha Emisión")?>" oncommand="ModificarNroDocumento('Modificar_FechaEmision')"  <?php gulAdmite("Administracion") ?> />
+
+     <menuitem id="VentaRealizadaAnularNro" label="<?php echo _("Anular Nro.")?>" oncommand="ModificarNroDocumento('Anular')" />
+     <menu id="VentaVarios" label="<?php echo _("Modificar") ?>">
+       <menupopup> 
+     <menuitem id="VentaRealizadaCambioNro" label="<?php echo _("Serie-Nro")?>" oncommand="ModificarNroDocumento('Modificar')" /> 
+         <menuitem id="VentaRealizadaCambioAnularNro" label="<?php echo _("Anular Serie-Nro")?>" oncommand="ModificarNroDocumento('Modificar_y_Anular')" />
+         <menuitem id="VentaRealizadaAnularNro" label="<?php echo _("Fecha Emisión")?>" oncommand="ModificarNroDocumento('Modificar_FechaEmision')"  />
+         <menuitem id="VentaRealizadaFechaPago" label="<?php echo _("Fecha Pago")?>" oncommand="ModificarNroDocumento('Modificar_FechaPago')"  />
+         <menuitem id="VentaEstadoReserva" label="<?php echo _("Estado Reserva")?>" oncommand="formModificarEstadoReserva()" />
+       </menupopup>
+     </menu>
+     <menuseparator />
+     <menuitem id="ckCodigoAutorizacion" label="<?php echo _("Código de Autorización")?>" oncommand="ckCodigoAutorizacion('ck',false,false,false)"  <?php gulAdmite("Administracion") ?> />
 
   </popup>   
 <popup id="AccionesDetallesVentas" class="media">
      <menuitem id="menuDevolverProducto" image="img/gpos_tpv_ventas.png"  label="<?php echo _("Devolver") ?>" oncommand="cargarProducto2Devolver()" collapsed="true"/>
+     <menuitem id="VentaGarantiaComprobante" label="<?php echo _("Garantía") ?>" oncommand="verGarantiaComprobante()"/>
 
      <menuseparator />
      <menuitem id="VentaRealizadaDetalleNS" label="<?php echo _("Ver Números de Serie") ?>" oncommand="verNSVentaSeleccionada()"/>
-     <menuitem id="VentaRealizadaDetalleMProducto" label="<?php echo _("Ver Detalle Meta Producto") ?>" oncommand="verDetMPSeleccionada()"/>
+     <menuitem id="VentaRealizadaDetalleMProducto" label="<?php echo _("Ver Detalle MixProducto") ?>" oncommand="verDetMPSeleccionada()"/>
   </popup> 
 
   <popup id="accionesTicket" class="media">
@@ -87,13 +115,16 @@
     <menuseparator />	      
     <menuitem id="ticketModificarPrecio" label="<?php echo _(" Modificar precio") ?>" 
     class="menuitem-iconic" image="img/gpos_tpv_ventas.png" 
-    oncommand="ModificarPrecio()" <?php gulAdmite("Precios") ?> />
+    oncommand="ModificarPrecio(false)" <?php gulAdmite("Precios") ?> />
     <menuitem id="ticketModificarDescuento" label="<?php echo _(" Modificar descuento") ?>" 
     class="menuitem-iconic" image="img/gpos_tpv_ventas.png" 
-    oncommand="ModificarDescuento(<?php jsAdmite("Precios",false) ?>)"/>
+    oncommand="ModificarDescuento(<?php jsAdmite("Precios",false) ?>,false)"/>
+    <menuitem id="ticketModificarImporte" label="<?php echo _(" Modificar importe") ?>" 
+    class="menuitem-iconic" image="img/gpos_tpv_ventas.png" 
+    oncommand="ModificarImporte()" <?php gulAdmite("Precios") ?> />
     <menuseparator />
     <menuitem class="menuitem-iconic" image="img/gpos_tpvservicios.png" 
-	      label="<?php echo _(" Agregar Outsourcing") ?>"
+	      label="<?php echo _(" Agregar Servicio") ?>"
     oncommand="ServicioParaFila()"/>	   
     <menuitem class="menuitem-iconic" image="img/gpos_tpvservicios.png" 
 	      label="<?php echo _(" Modificar Concepto") ?>"
@@ -105,7 +136,7 @@
     <menuitem id="preventaNumerosSeries" label="<?php echo _(" Mostrar Números Serie") ?>" 
     class="menuitem-iconic" image="img/gpos_barcode.png" disabled="true"
     oncommand="mostrarseries('mostrar',0)"/>
-    <menuitem id="preventaDetalleMProducto" label="<?php echo _(" Mostrar MProducto") ?>"
+    <menuitem id="preventaDetalleMProducto" label="<?php echo _(" Mostrar MixProductos") ?>"
     class="menuitem-iconic" image="img/gpos_tpvreferencia.png" disabled="true"
     oncommand="mostrardetalleMProducto('mostrar',0)"/>
     <menuseparator />
@@ -132,9 +163,24 @@
   <popup id="AccionesclientPickArea"> 
     <menuitem  label="<?php echo _("Usar Seleccionado") ?>" 
     oncommand="cargarCliente('sel')"/>
-    <menuseparator />
+
     <menuitem  label="<?php echo _("Modificar") ?>" 
     oncommand="VerClienteId()"/>
+    <menuitem  label="<?php echo _("Suscripción") ?>" id="cargarSuscripcion"
+    oncommand="cargarSuscripcion()" <?php gulAdmite("Suscripcion") ?> />
+    <menuitem  label="<?php echo _("Abonar Efectivo") ?>" id="cargarVentaAbono"
+    oncommand="AbonarPorCliente()"  <?php gulAdmite("CajaTPV") ?> />
+    <menuitem  label="<?php echo _("Asignar Crédito ") ?>" id="cargarVentaAbonoCredito"
+    oncommand="AsignarCreditoPorCliente()"  <?php gulAdmite("CajaTPV") ?> />
+    <menuitem id="ckCodigoAutorizacionCliente" label="<?php echo _("Código de Autorización")?>" oncommand="ckCodigoAutorizacionCliente('ckcliente',false)"  <?php gulAdmite("Administracion") ?> />
+
+  </popup>
+  <popup id="AccionesBusquedaCobrosVenta">
+    <menuitem label="<?php echo _("Eliminar") ?>" 
+              oncommand="ModificarCobrosVenta('1')"
+              <?php gulAdmite("Cobros") ?>/>
+    <menuseparator />
+    <menuitem id="mheadImprimir" label="<?php echo _("Imprimir") ?>" oncommand="ImprimirCobroSeleccionadaVenta()"/>
   </popup>
 </popupset>
 	  

@@ -71,18 +71,15 @@ function BuscarCompra(){
     var hasta   = id("FechaBuscaCompraHasta").value;
     var nombre  = id("NombreProveedorBusqueda").value;
 
-    if ((!hasta || hasta == "DD-MM-AAAA") &&  (!desde || desde == "DD-MM-AAAA") && (!nombre))return;
-
-    var modocontado     = (id("modoConsultaCompraContado").checked)?"contado":"todos";
-    var modocredito     = (id("modoConsultaCompraCredito").checked)?"credito":"todos";
     var filtrodocumento = id("FiltroCompraDocumento").value;
     var filtrocompra    = id("FiltroCompra").value;
     var filtromoneda    = id("FiltroCompraMoneda").value;
     var filtrolocal     = id("FiltroCompraLocal").value;
     var filtrocodigo    = id("busquedaCodigoSerie").value
     var forzaid         = (filtrocodigo != '' )?filtrocodigo:false;
-    RawBuscarCompraRecibir(desde,hasta,emision,nombre,modocontado,modocredito,filtrodocumento,
-			   filtrocompra,filtrolocal,filtromoneda,forzaid,AddLineaCompra);
+    var filtroformapago = "Todos";
+    RawBuscarCompraRecibir(desde,hasta,emision,nombre,filtrodocumento,filtrocompra,
+			   filtrolocal,filtromoneda,forzaid,filtroformapago,AddLineaCompra);
     if(forzaid) buscarPorCodigo(filtrocodigo);
     document.getElementById("busquedaCompraFooter").setAttribute("collapsed",true);
 }
@@ -110,22 +107,22 @@ function buscarPorCodigo(elemento){
     //id("busquedaCodigoSerie").value='';
 }
 
-function RawBuscarCompraRecibir(desde,hasta,emision,nombre,modocontado,modocredito,filtrodocumento,
-				filtrocompra,filtrolocal,filtromoneda,forzaid,FuncionProcesaLinea){
+function RawBuscarCompraRecibir(desde,hasta,emision,nombre,filtrodocumento,filtrocompra,
+				filtrolocal,filtromoneda,forzaid,filtroformapago,
+				FuncionProcesaLinea){
 
     var url = "../../services.php?modo=mostrarCompra&desde=" + escape(desde)
         //+ "&modoconsulta=" + escape(modo)
         + "&hasta=" + escape(hasta)
-        + "&nombre=" + escape(nombre)
+        + "&nombre=" + trim(nombre)
         + "&emision=" + escape(emision)
-        + "&modocontado=" + escape(modocontado)
-        + "&modocredito=" + escape(modocredito)
 	+ "&filtrodocumento=" + escape(filtrodocumento)
         + "&filtrocompra=" + escape(filtrocompra)
         + "&filtromoneda=" + escape(filtromoneda)
         + "&filtrolocal=" + escape(filtrolocal)
         + "&filtropago=Todos"
         + "&forzaid=" + forzaid
+        + "&filtroformapago="+escape(filtroformapago)
         + "&xrecibir=" +true;
 
     var obj = new XMLHttpRequest();
@@ -537,6 +534,7 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     var fclkNS  = 'sNSProductosAlmacenBorrador('+IdProducto+','+Cantidad+','+cIdPedido+','+IdPedidoDet+')';
     var telemt  = (NS!='0')?'button':'description';//Elemento Detalle
     var tprint  = (NS!='0')?'label':'value';
+    var xdetclass = (NS!='0')? 'res-item btn':'res-item';
     var lvNS    = (NS=='2')?'***N/S***':'N/S';
     var oclkNS  = (telemt=='button')?fclkNS:'';
     var Detalle = '';
@@ -624,17 +622,19 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     //row0.setAttribute('style','background-color:'+bgdt);
     idetallesCompra++;
 
-    xitem = document.createElement('label');
+    xitem = document.createElement('description');
     xitem.setAttribute('value',numitem+'.');
     xitem.setAttribute('readonly','true');
-    xitem.setAttribute('style','padding-top:5px;text-align:center;width:0.5em');
+    xitem.setAttribute('style','text-align:center;width:0.5em');
+    xitem.setAttribute('class','res-item');
     xitem.setAttribute("size","1");
 
     xProducto = document.createElement('description');//Producto 
     xProducto.setAttribute('id','NMP_'+IdPedidoDet);
     xProducto.setAttribute('value',Producto);
     xProducto.setAttribute('readonly','true');
-    xProducto.setAttribute('style','border:1px solid #BEBDBC;width:35em;background-color: #BEBDBC;');
+    xProducto.setAttribute('style','width:35em');
+    xProducto.setAttribute('class','res-item');
 
     xIdProducto = document.createElement('textbox');//IdProducto
     xIdProducto.setAttribute('value',IdProducto);
@@ -644,13 +644,15 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xCantidad = document.createElement('description');//Unidades
     xCantidad.setAttribute('value',tCantidad);
     xCantidad.setAttribute('readonly','true');
-    xCantidad.setAttribute('style','border:1px solid #BEBDBC;width:10em;background-color: #BEBDBC;font-weight:bold;');
+    xCantidad.setAttribute('style','width:10em;');
+    xCantidad.setAttribute('class','res-item');
     xCantidad.setAttribute('id','CD_'+IdPedidoDet);
 
     xCP = document.createElement('description');//CP
     xCP.setAttribute('value',CP);
     xCP.setAttribute('readonly','true');
-    xCP.setAttribute('style','border:1px solid #BEBDBC;width:3.2em;background-color: #BEBDBC;font-weight:bold;');
+    xCP.setAttribute('style','width:3.2em;');
+    xCP.setAttribute('class','res-item');
     xCP.setAttribute('id','CP_'+IdPedidoDet);
     xCP.setAttribute("size","5");
 
@@ -662,6 +664,7 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xCOP.setAttribute('onchange','validarCOP('+IdPedidoDet+')');
     xCOP.setAttribute('onfocus','this.select()');
     xCOP.setAttribute('style','width:4em;font-weight:bold;');
+    xCOP.setAttribute('class','res-item');
     xCOP.setAttribute("size","5");
 
 
@@ -669,7 +672,8 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xMUD.setAttribute('value',MUD.toFixed(2));
     xMUD.setAttribute('label',MUD.toFixed(2));
     xMUD.setAttribute('readonly','true');
-    xMUD.setAttribute('style','border:1px solid #BEBDBC;width:4em;background-color: #BEBDBC;');
+    xMUD.setAttribute('style','width:4em;');
+    xMUD.setAttribute('class','res-item');
     xMUD.setAttribute('id','MUD_'+IdPedidoDet);
     xMUD.setAttribute("size","5");
 
@@ -681,6 +685,7 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xPVD.setAttribute('onblur','validarPVD('+IdPedidoDet+')');
     xPVD.setAttribute('onfocus','this.select()');
     xPVD.setAttribute('style','width:4em;font-weight:bold;');
+    xPVD.setAttribute('class','res-item');
     xPVD.setAttribute('oninput','actualizarCantidades('+IdPedidoDet+')');
     xPVD.setAttribute("size","5");
 
@@ -690,6 +695,7 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xPVDD.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xPVDD.setAttribute('onfocus','this.select()');
     xPVDD.setAttribute('style','width:4em;');
+    xPVDD.setAttribute('class','res-item');
     xPVDD.setAttribute('onblur','validarPVDD('+IdPedidoDet+')');
     xPVDD.setAttribute("size","5");
 
@@ -697,7 +703,8 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xMUC.setAttribute('value',MUC.toFixed(2));
     xMUC.setAttribute('label',MUC.toFixed(2));
     xMUC.setAttribute('readonly','true');
-    xMUC.setAttribute('style','border:1px solid #BEBDBC;width:3.2em;background-color: #BEBDBC;');
+    xMUC.setAttribute('style','width:3.2em;');
+    xMUC.setAttribute('class','res-item');
     xMUC.setAttribute('id','MUC_'+IdPedidoDet);
     xMUC.setAttribute("size","5");
 
@@ -708,6 +715,7 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xPVC.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xPVC.setAttribute('onblur','validarPVC('+IdPedidoDet+')');
     xPVC.setAttribute('style','width:4em;font-weight:bold;');
+    xPVC.setAttribute('class','res-item');
     xPVC.setAttribute('oninput','actualizarCantidades('+IdPedidoDet+')');
     xPVC.setAttribute('onfocus','this.select()');
     xPVC.setAttribute("size","5");
@@ -717,6 +725,7 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xPVCD.setAttribute('id','PVCD_'+IdPedidoDet);
     xPVCD.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xPVCD.setAttribute('style','width:4em;');
+    xPVCD.setAttribute('class','res-item');
     xPVCD.setAttribute('onblur','validarPVCD('+IdPedidoDet+')');
     xPVCD.setAttribute('onfocus','this.select()');
     xPVCD.setAttribute("size","5");
@@ -735,7 +744,8 @@ function AddLineaDetallesCompraRecibir(numitem,Referencia,IdProducto,CodigoBarra
     xDetalle = document.createElement( telemt );//Unidades
     xDetalle.setAttribute(tprint,Detalle);
     xDetalle.setAttribute('readonly','true');
-    xDetalle.setAttribute('style','border:1px solid #BEBDBC;width:14em;background-color: #BEBDBC;');
+    xDetalle.setAttribute('style','width:14em;');
+    xDetalle.setAttribute('class',xdetclass);
     xDetalle.setAttribute('id','DT_'+IdPedidoDet);
     xDetalle.setAttribute('onclick',oclkNS);
     xDetalle.setAttribute("size","2");

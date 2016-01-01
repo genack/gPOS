@@ -1,6 +1,7 @@
 <?php
-
-session_start();
+require("tool.php");
+actualizarLoginLog();
+//session_start();
 session_unset();
 session_destroy();
 

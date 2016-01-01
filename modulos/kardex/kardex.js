@@ -103,7 +103,7 @@ function RawBuscarMovimiento(desde,hasta,nombre,codigo,filtrooperacion,marca,fam
         + "&hasta=" + escape(hasta)
 	+ "&familia=" + escape(familia)
         + "&marca=" + escape(marca)
-        + "&xnombre=" + escape(nombre)
+        + "&xnombre=" + trim(nombre)
         + "&xcodigo=" + escape(codigo)
         + "&xope=" + escape(filtrooperacion)
         + "&xmov=" + escape(filtromovimiento)

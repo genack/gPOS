@@ -80,22 +80,23 @@ function BuscarCompra(){
     VaciarBusquedaCompra();
     VaciarDetallesCompra();
     volverComprobantes(0);
-    var emision = id("FechaBuscaCompraEmision").selected;
     var desde   = id("FechaBuscaCompra").value;
     var hasta   = id("FechaBuscaCompraHasta").value;
     var nombre  = id("NombreProveedorBusqueda").value;
 
-    if ((!hasta || hasta == "DD-MM-AAAA") &&  (!desde || desde == "DD-MM-AAAA") && (!nombre))return;
-
-    var modocontado     = (id("modoConsultaCompraContado").checked)?"contado":"todos";
-    var modocredito     = (id("modoConsultaCompraCredito").checked)?"credito":"todos";
     var filtrodocumento = id("FiltroCompraDocumento").value;
     var filtrocompra    = id("FiltroCompra").value;
     var filtromoneda    = id("FiltroCompraMoneda").value;
     var filtrolocal     = id("FiltroCompraLocal").value;
     var filtrocodigo    = id("busquedaCodigoSerie").value
     var forzaid         = (filtrocodigo != '' )?filtrocodigo:false;
-    RawBuscarCompra(desde,hasta,emision,nombre,modocontado,modocredito,filtrodocumento,filtrocompra,filtrolocal,filtromoneda,forzaid,AddLineaCompra);
+    var filtroformapago = id("FiltroFormaPago").value;
+
+    var filtrofecha   = id("FiltroFecha").value;
+    var emision = (filtrofecha == 'Facturacion')? true:false;
+
+    RawBuscarCompra(desde,hasta,emision,nombre,filtrodocumento,filtrocompra,
+		    filtrolocal,filtromoneda,forzaid,filtroformapago,AddLineaCompra);
 
 }
 
@@ -125,21 +126,22 @@ function buscarPorPedido(elemento){
     alert('gPOS:\n   - El código " '+elemento+' " no está en la lista.');
 }
 
-function RawBuscarCompra(desde,hasta,emision,nombre,modocontado,modocredito,filtrodocumento,filtrocompra,filtrolocal,filtromoneda,forzaid,FuncionProcesaLinea){
+function RawBuscarCompra(desde,hasta,emision,nombre,filtrodocumento,filtrocompra,
+			 filtrolocal,filtromoneda,forzaid,filtroformapago,
+			 FuncionProcesaLinea){
 
     var url = "../../services.php?modo=mostrarCompra&desde=" + escape(desde)
         //+ "&modoconsulta=" + escape(modo)
         + "&hasta=" + escape(hasta)
-        + "&nombre=" + escape(nombre)
+        + "&nombre=" + trim(nombre)
         + "&emision=" + escape(emision)
-        + "&modocontado=" + escape(modocontado)
-        + "&modocredito=" + escape(modocredito)
 	+ "&filtrodocumento=" + escape(filtrodocumento)
         + "&filtrocompra=" + escape(filtrocompra)
         + "&filtromoneda=" + escape(filtromoneda)
         + "&filtrolocal=" + escape(filtrolocal)
         + "&filtropago=Todos"
         + "&filtroespagos=Comprobantes"
+        + "&filtroformapago="+escape(filtroformapago)
         + "&forzaid=" + forzaid;
     
     var obj = new XMLHttpRequest();
@@ -471,8 +473,8 @@ function RevisarCompraSeleccionada(){
     cPago         = id("pago_"+idex.value).getAttribute("value");
     cEmision      = id("emision_"+idex.value).getAttribute("value");
     cPercepcion   = id("percepcion_"+idex.value).getAttribute("value");
-    clPercepcion  = id("percepcion_"+idex.value).getAttribute("label");
-    clFlete       = id("flete_"+idex.value).getAttribute("label");
+    clPercepcion  = id("percepcion_"+idex.value).getAttribute("value");
+    clFlete       = id("flete_"+idex.value).getAttribute("value");
     cObs          = id("obs_"+idex.value).getAttribute("value");
     clPercepcion  = clPercepcion.replace(cMoneda[1]['S'],'');
     clFlete       = clFlete.replace(cMoneda[1]['S'],'');
@@ -963,8 +965,8 @@ function ModificarCompra(xocs,xdet){
 	if(xrest) return alert(amsj+cCodigo+' -'+cEstado+'-,'+
 			       ' debe tener estado -Borrador- ó -Pendiente-');
 	//Lista Proveedores
-	selProveedorAux();
- 
+	closepopup();
+  
 	//Dato Global IdProveedor Select
 	if(!ProveedorPost) return;
 	if(cProveedor == ProveedorPost) return;
@@ -1466,6 +1468,10 @@ function ModificarComprobante(){
     listcomp.setAttribute("collapsed","true");  
     formcomp.setAttribute("collapsed","false");  
 
+    id("boxTitleComprobante").setAttribute("collapsed","true");
+    id("comprobantesBusqueda").setAttribute("collapsed","true");
+    id("boxResumenComprobante").setAttribute("collapsed","true");
+
 }
 
 function ModificarComprobanteDetalle(){
@@ -1505,6 +1511,10 @@ function ModificarComprobanteDetalle(){
     //Muestra Formuario
     listcomp.setAttribute("collapsed","true");  
     formdetcomp.setAttribute("collapsed","false");  
+
+    id("boxTitleComprobante").setAttribute("collapsed","true");
+    id("comprobantesBusqueda").setAttribute("collapsed","true");
+    id("boxResumenComprobante").setAttribute("collapsed","true")
 }
 
 function volverComprobantes(xcheck){
@@ -1516,6 +1526,10 @@ function volverComprobantes(xcheck){
     formcomp.setAttribute("collapsed","true");  
     boxdetcomp.setAttribute("collapsed","true");  
     formdetcomp.setAttribute("collapsed","true");
+
+    id("boxTitleComprobante").setAttribute("collapsed","false");
+    id("comprobantesBusqueda").setAttribute("collapsed","false");
+    id("boxResumenComprobante").setAttribute("collapsed","false")
 
     if(xcheck == 1) validarFechaCambio(0);   // Fecha Comprobante
     if(xcheck == 2) validarFechaCambio(1);   // Fecha Comprobante detalle
@@ -1738,3 +1752,7 @@ function validarFechaCambio(xfecha){
 	break;
     }
 }
+
+/*+++++++popup div++++++++++*/
+function CogeProvHab() { popup('../../modulos/proveedores/selproveedor.php?modo=proveedorpost','proveedorhab');  }
+function loadProvHab() { ModificarCompra(5); }

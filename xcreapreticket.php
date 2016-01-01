@@ -209,17 +209,17 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal,$IdCliente,$modoTi
     $sreDocumento = ( $codDocumento[0] != $IdArqueoCaja )? $IdArqueoCaja:$codDocumento[0];
     $nroDocumento = ( $codDocumento[0] != $IdArqueoCaja )? 1:$codDocumento[1];
     $TipoVenta    = getSesionDato("TipoVentaTPV");
-
+    $IdUsuarioRegistro  = ($IdPresupuesto != '0')? getIdUsuarioRegistroPresupuesto( $IdPresupuesto ):$idDependiente;
     //PreVenta...
     $esquema = 
-      " IdLocal, IdUsuario,".
+      " IdLocal, IdUsuario, IdUsuarioRegistro,".
       " NPresupuesto, TipoPresupuesto,".
       " TipoVentaOperacion, FechaPresupuesto,".
       " ImporteNeto, ImporteImpuesto,".
       " Impuesto, TotalImporte, ".
       " Status, IdCliente, ModoTPV, Serie ";
     $datos   = 
-      " '$IdLocal', '$idDependiente',".
+      " '$IdLocal', '$idDependiente', '$IdUsuarioRegistro',".
       " '$nroDocumento', '$textDoc',".
       " '$TipoVenta', NOW(),".
       " '$ImporteNeto', '$IvaImporte',".
@@ -249,12 +249,19 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal,$IdCliente,$modoTi
     //Numero Pre-Venta...
     return $nroDocumento;
 }
+function getIdUsuarioRegistroPresupuesto($IdPresupuesto){
 
+  $row = queryrow( " select IdUsuarioRegistro ".
+		   " from   ges_presupuestos  ".
+		   " where  IdPresupuesto = '".$IdPresupuesto."'" );
+  return $row["IdUsuarioRegistro"];
+
+}
 function setIdCPPresupuesto($IdPresupuesto,$IdComprobante){
-     
+  
   $sql = 
     " UPDATE ges_presupuestos ".
-    " SET    IdCP = '".$IdComprobante."'".
+    " SET    IdCP = '".$IdComprobante."' ".
     " WHERE  IdPresupuesto   = '".$IdPresupuesto."'";
   query($sql);	
 

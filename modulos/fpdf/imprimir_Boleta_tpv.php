@@ -63,7 +63,7 @@ if ($codcliente==0){
 //$pdf=new PDF();
 //$pdf= new PDF (P,mm,array(211,211));
 $pdf = new PDF ( 'P' , 'mm' , array ( 210 , 297 ));
-
+$pdf->AddFont('Lucida','','lucida.php');
 $pdf->Open();
 $pdf->AddPage();
 
@@ -77,7 +77,7 @@ $pdf->Ln(2);
     $pdf->SetTextColor(0);
     $pdf->SetDrawColor(0,0,0);
     $pdf->SetLineWidth(.2);
-    $pdf->SetFont('Arial','B',10);	
+    $pdf->SetFont('Lucida','',8);	
 
 //colum 2
     $pdf->SetX( 130);
@@ -85,9 +85,6 @@ $pdf->Ln(2);
     $pdf->Ln(38);
 
 // Datos Cliente 
-
-
-    $pdf->SetFont('Arial','B',10);	
     $pdf->SetX(27); 
     //NOMBRE   
     $pdf->Cell(130,4,$nombre);
@@ -112,7 +109,8 @@ $pdf->Ln(2);
 
     $pdf->SetX(174);
     //FECHA BOLETA
-    list($anho,$mes,$dia)=explode('-',$lafila["FechaComprobante"]);
+    $xdate = explode(" ",$lafila["FechaComprobante"]);
+    list($anho,$mes,$dia)=explode('-',$xdate[0]);
     $pdf->Cell(70,4,$dia);
     $pdf->SetX(183);
     $pdf->Cell(70,4,$mes);
@@ -133,7 +131,6 @@ $pdf->SetFillColor(255,255,255);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(255,255,255);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Arial','B',8);
 	
 $pdf->Ln(6);
 			
@@ -142,7 +139,7 @@ $pdf->SetFillColor(255,255,255);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(255,255,255);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Arial','',8);
+$pdf->SetFont('Lucida','',8);
 $IdComprobante=$lafila["IdComprobante"];
 
 $contador=1;
@@ -183,24 +180,14 @@ $sql =
 
     $res=query($sql);
     while ( $row = Row($res) ) { 
-
-      $pdf->Cell(1);
       $codarticulo=$row["IdProducto"];
 
-      // IMPRIME LINE
-      $cantidad=$row["Cantidad"];
       //CANTIDAD
-      $pdf->Cell(24,4,$cantidad,'LR',0,'C');	
+      $cantidad=$row["Cantidad"];
 
-      $pdf->SetFont('Arial','',9);
       //UNID MEDIDA
       $cantunidmed = $row["UnidadMedida"];
-      
-      $pdf->Cell(16,4, $cantunidmed ,'LR',0,'C');	
 
-      $pdf->SetFont('Arial','',9);
-      //CADENA TEXT DESCRIPCION 
-      
       //TEXT DESCRIPCION
       $codigobarras = $row["CodigoBarras"];
       $descripcion = utf8_decode($row["descripcion"]);
@@ -270,13 +257,19 @@ $sql =
 	$dcto="x".$row["Descuento"]."%";
       //$totaldcto=$totaldcto+$dcto;
       //IMPORTE
-      $importe=$row["Importe"];
-      $importe=round($importe * 100) / 100; 
-      $importe=number_format($importe,2);
+      $importe = $row["Importe"];
+      $importe = round($importe * 100) / 100; 
+      $importe = number_format($importe,2);
+      $precio  = round((($importe/$cantidad))*100)/100;
+      $precio  = number_format($precio,2);
 
       // IMPRIME LINE
+      $pdf->Cell(1);
+      $pdf->Cell(24,4,$cantidad,'LR',0,'C');	
+      $pdf->SetFont('Lucida','',8);
+      $pdf->Cell(16,4, $cantunidmed ,'LR',0,'C');	
       $pdf->Cell(96,4,utf8_decode($acotado[0]),'LR',0,'L');
-      $pdf->Cell(16,4,$precio."".$dcto,'LR',0,'R');
+      $pdf->Cell(16,4,$precio,'LR',0,'R');
       $pdf->Cell(26,4,$importe,'LR',0,'R');
       $pdf->Ln(4);	
 
@@ -298,7 +291,7 @@ $sql =
       //TEXT META PRODUCTO
       foreach ($acotmp  as $key=>$linemp){
 	if( $key < 20 ){
-	  $pdf->SetFont('Arial','',7.5);
+	  $pdf->SetFont('Lucida','',8);
 	  $pdf->Cell(1);
 	  $pdf->Cell(24,4,"",'LR',0,'C');
 	  $pdf->Cell(16,4,"",'LR',0,'C');	
@@ -308,7 +301,7 @@ $sql =
 	  $pdf->Ln(4);
 	  $contador++;
 	  $acotadoext = 0;
-	  $pdf->SetFont('Arial','',8);
+	  $pdf->SetFont('Lucida','',8);
 	}
       }
       //CONTADOR
@@ -328,14 +321,14 @@ $sql =
       }
 
 //################### MENSAJE FOOTER 
-          $pdf->SetFont('Arial','',8);
+          $pdf->SetFont('Lucida','',8);
 	  $pdf->Cell(1);
           $pdf->Cell(24,4,"",'LR',0,'C');
           $pdf->Cell(16,4,"",'LR',0,'C');
-	  //$pdf->Cell(96,4,'____________________________________________________________________________________','LR',0,'C');	
+	  $pdf->Cell(96,4,'____________________________________________________________________________________','LR',0,'C');	
 	  $pdf->Cell(16,4,"",'LR',0,'C');
 	  $pdf->Cell(26,4,"",'LR',0,'C');
-          $pdf->Ln(2);	
+          $pdf->Ln(3);	
           //############## LINEA 2
 	  $pdf->Cell(1);
           $pdf->Cell(24,4,"",'LR',0,'C');
@@ -360,28 +353,19 @@ $sql =
 	  $pdf->Ln(6);	
 
 //#######################  final de la Boleta
-    $pdf->SetFont('Arial','B',10);	
+    $pdf->SetFont('Lucida','',9);	
     $pdf->SetX(27);	
     $pdf->Cell(300,4,utf8_decode($totaletras));
 //###################### Imprime Letras
 $pdf->Ln(7);	
 
 $pdf->Cell(1);
-
-//####################################  IMPORTE FINAL DESGLOZADO	
-$pdf->SetFillColor(255,255,255);
-$pdf->SetTextColor(0);
-$pdf->SetDrawColor(255,255,255);
-$pdf->SetLineWidth(.2);
-$pdf->SetFont('Arial','B',8);
-
 $pdf->Ln(4);
-
 $pdf->SetFillColor(255,255,255);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(255,255,255);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Arial','',10);
+$pdf->SetFont('Lucida','',9);
 	
 $pdf->Cell(1);
 

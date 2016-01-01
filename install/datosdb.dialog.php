@@ -39,10 +39,18 @@
 <label for="nombreNegocio">Nombre comercial del negocio</label><br />
 <input id="nombreNegocio" value="gPOS" style="width: 20em" class="textinput" type="text" name="nombreNegocio"><br />
 
-<select name="gironegocio" id="gironegocio" style="display:none">
+<br>Giro del negocio</br>
+
+<label for="giroNegocio">Tipo de negocio de la aplicación</label><br />
+<select name="gironegocio" id="gironegocio">
   <option value="PINF" selected>Productos Informáticos</option>
+  <option value="BTCA">Botica</option>
+  <option value="BTQE">Boutique</option>
+  <option value="MMKT">MiniMarket</option>
 </select>
 <br/>
+
+<label><input id='dbinicio' name='dbinicio' type='checkbox' >Cargar base de datos inicial</label></br>
 
 <br/>
 <label for="adminemail">Email del contacto administrador</label><br />

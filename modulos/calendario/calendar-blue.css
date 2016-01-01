@@ -2,8 +2,8 @@
 
 div.calendar { position: relative; }
 
-.calendar, .calendar table {
-  border: 1px solid #878484;
+.calendar table {
+  border: 1px solid #aaa;
   font-size: 11px;
   color: #000;
   cursor: default;
@@ -18,13 +18,27 @@ div.calendar { position: relative; }
 
 /* Header part -- contains navigation buttons and day names. */
 
-.calendar .button { /* "<<", "<", ">", ">>" buttons have this class */
-  text-align: center;    /* They are the navigation buttons */
-  padding: 2px;          /* Make the buttons seem like they're pressing */
+.calendar .xbutton { /* "<<", "<", ">", ">>" buttons have this class */
+  height: 25px;
+  padding: 0 5px;
+  color: #555;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 22px;
+  letter-spacing: .1rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border-radius: 4px;
+  border: 1px solid  #33c3f0;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
 .calendar .nav {
-  background: #778 url(menuarrow.gif) no-repeat 100% 100%;
+  background: #fff url(menuarrow.gif) no-repeat 100% 100%;
 }
 
 .calendar thead .title { /* This holds the current "month, year" */
@@ -36,8 +50,6 @@ div.calendar { position: relative; }
 }
 
 .calendar thead .headrow { /* Row <TR> containing navigation buttons */
-  background: #778;
-  color: #fff;
 }
 
 .calendar thead .daynames { /* Row <TR> containing the day names */

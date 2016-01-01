@@ -472,6 +472,9 @@ switch($modo){
 		$vrKardex      = getResumenKardex2Producto($IdProducto,$IdLocal);
 		$mensajens     = '';
 
+		$vrKardex      = str_replace(" ","",$vrKardex);
+		$xrKardex      = str_replace(" ","",$xrKardex);
+
 		//Control cambios Remotos
 		if ( !( $vrKardex == $xrKardex )) {
 		  echo "\n Operación cancelada por tener cambios remotos en kardex:\n".
@@ -588,17 +591,17 @@ switch($modo){
 		$xrKardex      = CleanCadena($_GET["xrkardex"]);
 		$SerieVence    = CleanCadena($_GET["serievence"]);
 		$Series        = CleanCadena($_POST["numerosdeserie"]);
-		$esSerie       = ( $_GET["esserie"] == "true" )? true:false;
+		$esSerie       = ( $_GET["esserie"] == "true" );
 		$LoteVence     = CleanCadena($_GET["lotevence"]);
 		$xObs          = CleanText($_POST["xobservacion"]);
 		$OpeAjuste     = CleanText($_GET["xopeajuste"]);// >IdKardexAjusteOperacion
 		$xIdInvent     = CleanID($_GET["xidinventario"]);//>IdInventario
 		$tipInvent     = CleanText($_GET["xtipoinventario"]);//TipoInventario(inicial,final,etc)
-		$esAjuste      = ( $_GET["xinventario"] == "Ajuste" )? true:false;
-		$esInvent      = ( $_GET["xinventario"] == "Inventario" )? true:false;
-		$esPendInvent  = ( $_GET["xestinvent"] == "Pendiente" )? true:false;//EstadoInventario
-		$esNewInvent   = ( $esInvent && !$esPendInvent )? true:false;
-		$esPedido      = ( $esPendInvent && $xIdPedido!=0 )? true:false;
+		$esAjuste      = ( $_GET["xinventario"] == "Ajuste" );
+		$esInvent      = ( $_GET["xinventario"] == "Inventario" );
+		$esPendInvent  = ( $_GET["xestinvent"] == "Pendiente" );//EstadoInventario
+		$esNewInvent   = ( $esInvent && !$esPendInvent );
+		$esPedido      = ( $esPendInvent && $xIdPedido!=0 );
 		$Motivo        = ( $esAjuste )? 7:8;//7:Ajuste,8:Inventario>IdMotivoAlbaran
 		$Operacion     = ( $esAjuste )? 5:6;//5:Ajuste,6:Inventario>IdKardexOperacion
 		$Destino       = $IdLocal;
@@ -609,13 +612,16 @@ switch($modo){
 		$vrKardex      = getResumenKardex2Producto($IdProducto,$IdLocal);
  		$CostoOP       = CleanDinero($_GET["xcostoop"]);
 		$mensajens     = '';
+		$vrKardex      = str_replace(" ","",$vrKardex);
+		$xrKardex      = str_replace(" ","",$xrKardex);
 
-		//Control cambios Remotos
+		// Una nuevo pedido no necesita un control en ResumenKardex 
+		//Control nuevos ingresos de pedidos remotos
 		if ( !( $vrKardex == $xrKardex )) {
-		  echo "Operación cancelada por tener cambios remotos en kardex:\n".
-		       "-  Para continuar carge nuevamente la busqueda.";
+		  echo "\n Operación cancelada por tener cambios remotos en kardex:\n".
+		      "-  Para continuar carge nuevamente la busqueda";
 		  return;
-		}
+		} 
 
 		//Control NS activo
 		if( getSerie2Producto($IdProducto) ) 

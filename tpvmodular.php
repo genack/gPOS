@@ -4,7 +4,7 @@
 
         #Valida Suscripciones
         #return validaSuscripcones2facturar(); 
-        //checkSuscripciones();
+        #checkSuscripciones();
 
         if (!getSesionDato("IdTienda")){
 	  session_write_close();
@@ -21,23 +21,29 @@
 	  exit();
 	}
         //Valida usuario tipo venta VC/VD
-        if ($_GET["t"]=='rc'){	 
+        if (esTipoVenta($_GET["t"]=='rc')){
+
+	  if( !Admite("B2B") ){
 	    session_write_close();
 	    header("Location: xulentrar.php?modo=avisoUsuarioIncorrecto");
 	    exit();
+	  }
+
 	}
 
 
         //xmodulos 
         //set global variable
-        setTipoVenta('rd'); 	
+        setTipoVenta($_GET["t"]); 	
         $TipoVenta   = getSesionDato("TipoVentaTPV");
         $GiroEmpresa = getSesionDato("GlobalGiroNegocio");
         $esPopup     = ( isset($_GET["espopup"]) )? CleanText($_GET["espopup"]):'off';
         $esPopup     = ( $esPopup == 'on' )? 'true':'false';
         
         //TPV corporativo
-        $TipoVentaText = " PERSONAL";
+        $TipoVentaText = ( $TipoVenta=='VC' )? " CORPORATIVO":" PERSONAL";
+        $esCheckVC     = ( $TipoVenta=='VC' )? 'checked="true"':'';
+        $esCheckVD     = ( $TipoVenta=='VD' )? 'checked="true"':'';
 
 	if (!$IdLocalActivo){
 		session_write_close();
@@ -69,14 +75,6 @@
 
 	$pvpUnidad = _("PV/U");
 
-	$modosDePago = array( 
-				0=> _("EFECTIVO"),
-				1=> _("TARJETA"),
-				2=> _("TRANSFERENCIA"),
-				3=> _("GIRO"),
-				4=> _("ENVIO"), 
-				5=> _("BONO")
-				);
 	$statusServicios = array(
 		'Pdte Envio' 	=> _("Pdte Envío"),
 		'Enviado'		=> _("Enviado"),
@@ -86,12 +84,12 @@
 
 	$NombreEmpresa  = $_SESSION["GlobalNombreNegocio"];  
         $tNombreEmpresa = ($NombreEmpresa =='gPOS')?'': $NombreEmpresa;
-        $MensajePromo   = ( $PROMActivo !='')? $PROMActivo:getParametro("MensajePromocion");
+        $MensajePromo   = ( $PROMActivo !='')? $PROMActivo : getParametro("MensajePromocion");
 
         echo str_replace("@","?",'<@xml version="1.0" encoding="UTF-8"@>');
 	echo str_replace("@","?",'<@xml-stylesheet href="chrome://global/skin/" type="text/css"@>');
-	echo str_replace("@","?",'<@xml-stylesheet href="css/xultpv.css" type="text/css"@>');
-        echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
+	echo str_replace("@","?",'<@xml-stylesheet href="css/xultpv.css?v=2" type="text/css"@>');
+        echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css?v=2" type="text/css"?>';
 ?>
 	
 <window id="window-tpv"  xml:lang="es" onload="accionInicioTPV();"
@@ -103,13 +101,17 @@
 <?php include("partes-tpv/tpvnovisuales.php"); ?>
 <!--  no-visuales -->  
 
+<!--  no-visuales -->  
+<?php include("modulos/ordenservicio/ordenservicio.php"); ?>
+<!--  no-visuales -->  
+
 <!-- dependiente / cliente -->
 <?php include("partes-tpv/tpvdependientecliente.php"); ?>
 <!-- dependiente / cliente -->
 
 <?php $Moneda = getSesionDato("Moneda"); getMonedaJS($Moneda);?>
 
-<hbox flex="1">
+<hbox flex="1" class="box">
 
 <deck id="modoVisual" flex="1">
    
@@ -131,29 +133,28 @@
 
 	<!-- total y salir -->
 	<hbox style="background-color: black" align="center">
-	  <caption  orient="vertical" style="color: #0f0;background-color: black">
+	  <caption class="boxtotal" orient="vertical">
 	    <label value="Sub Total"/>
 	    <label value="Descuento"/>
 	  </caption>
-	  <caption  orient="vertical" style="color: #0f0;background-color: black">
+	  <caption class="boxtotal" orient="vertical">
 	    <label value=":"/>
 	    <label value=":"/>
 	  </caption>
-	  <caption orient="vertical"   style="color: #0f0;background-color: black">
+	  <caption class="boxtotal" orient="vertical" >
 	    <label  id="SubTotalLabel" value = " <?php echo $Moneda[1]['S']?> 0.00"/>
 	    <label  id="DescuentoLabel" value = " <?php echo $Moneda[1]['S']?> 0.00"/>
 	  </caption>
 	  <toolbarseparator />
-	  <caption  label="TOTAL :"  class="grande" style="color: #0f0;background-color: black"/>
-	  <caption  id="TotalLabel"  class="grande" style="color: #0f0;background-color: black"  label=" <?php echo $Moneda[1]['S']?> 0.00"/>
+	  <caption  label="TOTAL :"  class="grande boxtotal" style="color: #0f0;background-color: black"/>
+	  <caption  id="TotalLabel"  class="grande boxtotal" style="color: #0f0;background-color: black"  label=" <?php echo $Moneda[1]['S']?> 0.00"/>
 
 	  <spacer flex="1"/>
 	  <toolbarbutton id="ticketPromocionSeleccionado" image="img/gpos_tpvpromocion.png"
 			 style="color: #fff; font-size: 13px"  collapsed="true"
 			 oncommand="mostrarTicketPromocion()" label=""></toolbarbutton>
 	  <toolbarbutton oncommand="MostrarUsuariosForm()">	
-	    <caption  style="color: #0f0;background-color: black" id="tCliente"  
-		      label="<?php echo $NombreClienteContado ?>" class="media" />
+	    <caption id="tCliente" label="<?php echo $NombreClienteContado ?>" class="boxtotal cliente" />
 	  </toolbarbutton>
 	</hbox>
 	<!-- total y salir -->	
@@ -202,9 +203,9 @@
 <!-- ficha Query Abono -->
 
 <!-- ficha Arqueo de caja -->
-<vbox>
-<iframe id="frameArqueo" name="frameArqueo" flex="1" src="<?php echo $_BasePath; ?>modulos/arqueo/arqueo2.php"/>
-<button class="media"  image="img/gpos_volver.png" label="Volver TPV" oncommand="VerTPV()" collapsed="false"/>
+<vbox style="padding:1em">
+<iframe id="frameArqueo" name="frameArqueo" flex="1" src="<?php echo $_BasePath; ?>modulos/arqueo/arqueo.php"/>
+<button class="media btn"  image="img/gpos_volver.png" label="Volver TPV" oncommand="VerTPV()" collapsed="false"/>
 </vbox>
 <!-- ficha Arqueo de caja -->
 
@@ -217,7 +218,6 @@
 <!-- panel botones derecho y mesajeria -->
 <?php include("partes-tpv/tpvpanelderecho.php"); ?>
 <!-- panel botones derecho y mesajeria -->
-
 
 </hbox>
 
@@ -232,7 +232,7 @@ var Global                  = new Object();
 var modospago               = new Array();
 var po_nombreclientecontado = "<?php echo addslashes($NombreClienteContado) ?>";
 var po_ticketde             = "<?php echo addslashes(_("Ticket de "). $NombreEmpresa) ?>";
-var cktextid                = "NOM,NombreClienteBusqueda,buscaCliente,NombreComercial,NumeroFiscal,NombreLegal,buscapedido";
+var cktextid                = "NOM,NombreClienteBusqueda,NombreBusqueda,buscaCliente,NombreComercial,NumeroFiscal,NombreLegal,buscapedido";
 
  Local.numeroDeSerie 	    = <?php echo CleanID($numSerieTicketLocalActual) ?>;
  Local.motd 		    = "<?php echo addslashes($MOTDActivo) ?>";
@@ -249,15 +249,23 @@ var cktextid                = "NOM,NombreClienteBusqueda,buscaCliente,NombreCome
  Local.Negocio 		    = "<?php echo addslashes($NombreEmpresa) ?>";
  Local.NegocioTipoVenta     = "<?php echo addslashes($tNombreEmpresa) ?>";
  Local.promoMensaje	    = "<?php echo addslashes($MensajePromo) ?>";
+ Local.NegocioDireccion	    = "<?php echo addslashes($DIRActivo) ?>";
+ Local.NegocioMovil	    = "<?php echo addslashes($MOVILActivo) ?>";
+ Local.NegocioTelef	    = "<?php echo addslashes($TELFActivo) ?>";
+ Local.NegocioWeb	    = "<?php echo addslashes($WEBActivo) ?>";
+ Local.NegocioPoblacion     = "<?php echo addslashes($POBLActivo) ?>";
  Local.TPV                  = "<?php echo $TipoVenta; ?>";
  Local.Giro                 = "<?php echo $GiroEmpresa; ?>";
  Local.Imprimir             = true;
+ Local.Reservar             = 0;
  Local.esPrecios            = "<?php echo ( Admite('Precios'))? 1:0; ?>";
  Local.esCajaTPV            = "<?php echo ( Admite('CajaTPV'))? 1:0; ?>";
  Local.esB2B                = "<?php echo ( Admite('B2B'))? 1:0; ?>";
  Local.esSuscripcion        = "<?php echo ( Admite('Suscripcion'))? 1:0; ?>";
  Local.esServicios          = "<?php echo ( Admite('Servicios'))? 1:0; ?>";
  Local.esSAT                = "<?php echo ( Admite('SAT'))? 1:0; ?>";
+ Local.esStock              = "<?php echo ( Admite('Stocks'))? 1:0; ?>";
+ Local.esAdmin              = "<?php echo ( Admite('Precios'))? true:false; ?>";
  Local.ocupado              = true;
  Local.esCajaCerrada        = "<?php echo cajaescerrado(); ?>";
  Local.esSyncPreventa       = false;
@@ -277,6 +285,21 @@ var cktextid                = "NOM,NombreClienteBusqueda,buscaCliente,NombreCome
  Local.textOcupado          = false; 
  Local.diasLimiteDevolucion = 7;
  Local.productos            = 0;
+ Local.Impuesto             = parseFloat( <?php echo getSesionDato("IGV") ?> );
+ Local.Utilidad             = parseFloat( <?php echo getSesionDato("MargenUtilidad") ?> );
+ Local.MPUtilidad           = Local.Utilidad;
+ Local.CodigoAutorizacion   = new Array();
+ Local.CodigoAutorizacionCliente   = new Array();
+ Local.ImprimirFormatoTicket = false;
+ Local.AbonoImporte          = 0;
+ Local.AbonoBebe             = 0;
+ Local.AbonoPendiente        = 0;
+ Local.AbonoClienteImporte   = 0;
+ Local.AbonoClientePendiente = 0;
+ Local.AbonoClienteDebe      = 0;
+ Local.CreditoClienteImporte = 0;
+ Local.CreditoClienteEntregado = 0;
+ Local.CreditoClienteTotal    = 0;
 
  Global.fechahoy = "<?php 
 	$cad = "%A %d del %B, %Y";
@@ -294,22 +317,6 @@ var cktextid                = "NOM,NombreClienteBusqueda,buscaCliente,NombreCome
  //NOTA: activa funciones avanzadas 
  Global.AdministradorDeFacturasPresente = "<?php echo $_SESSION["EsAdministradorFacturas"] ?>";
 
-<?php
-$vEFECTIVO = 0;
-	foreach( $modosDePago as $value=>$label ){
-		echo "modospago[$value] = '$label';\n";
-		if ($label=="BONO"){
-			$vBONO = $value;	
-		}else if ($label=="EFECTIVO"){
-			$vEFECTIVO = $value;	
-		}		
-	}
-	
-?>
-
-var vBONO     = parseInt(<?php echo intval($vBONO) ?>,10);
-var vEFECTIVO = parseInt(<?php echo intval($vEFECTIVO) ?>,10);
-var vIGV      = <?php echo getSesionDato("IGV") ?>;
 var esPopup   = <?php echo $esPopup ?>;
 
 function generadorCargado(){
@@ -343,6 +350,7 @@ function CargarCBFocus(){
 }
 function CargarbtnSalir(){
       if( esPopup ) document.getElementById("botonsalirtpv").setAttribute("oncommand","SalirTPV()");
+      if( !esPopup ) document.getElementById("botonsalirtpv").setAttribute("collapsed","true");
 }
 
 //Cargara los productos cuando sea posible.
@@ -356,7 +364,8 @@ CargarbtnSalir();
  document.gClonedListboxPanel = document.getElementById('listaPanelProductos').cloneNode(true);
 
 //]]></script>
-<script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tpv.js?ver=49/r<?php echo rand(0,99999999); ?>" async="async"/>
+
+<script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tpv.js?ver=3.1/r<?php echo rand(0,99999999); ?>" async="async"/>
 
 </window>
 

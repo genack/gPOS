@@ -89,6 +89,9 @@ class usuario extends Cursor {
 		  $locales     = obtnerGrupoLocales($idglocales);
 		}
 		$locales = ($esModificar)? $locales:'';
+		$estado  = $this->get("Estado");
+		$xactivo = ($estado == 'Activo')? 'selected':'';
+		$xinactivo = ($estado == 'Inactivo')? 'selected':'';
 		
 		$cambios = array(	
 			"tFechaNacim" => _("Fecha nacim."),
@@ -113,6 +116,9 @@ class usuario extends Cursor {
 			"vIdentificacion" => $this->get("Identificacion"),
 			//"vPassword"=>$this->get("Password"),
 			"vPassword"=> _("usuarios"),
+			"tEstado"=> _("Estado"),
+			"vActivo"=> $xactivo,
+			"vInactivo"=> $xinactivo,
 			"vDireccion"=>$this->get("Direccion"),
 			"vComision"=>$this->get("Comision"),
 			"vTelefono"=>$this->get("Telefono"),		
@@ -245,5 +251,20 @@ function verficarExistenciaUsuario($ident,$iduser){
   $row = queryrow($sql);
   return $row["Identificacion"];
 }
+
+function obtenrUsuariosActivos(){
+   $sql = "SELECT COUNT(IdUsuario) as Usuarios FROM ges_usuarios 
+           WHERE Estado = 'Activo' AND Eliminado = 0  AND IdUsuario > 2";
+  $row = queryrow($sql);
+  return $row["Usuarios"];
+}
+
+function obtenerUsuariosPermitidos(){
+   $sql = "SELECT Usuarios FROM ges_parametros 
+           WHERE Eliminado = 0 ";
+  $row = queryrow($sql);
+  return $row["Usuarios"];
+}
+
 
 ?>

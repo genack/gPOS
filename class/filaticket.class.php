@@ -118,7 +118,13 @@ class filaTicket {
 	      $xnseries    = ( isset( $axrow[2] ) )? $axrow[2] : false;
 	      $xnseries    = ( isset( $axrow[2] ) )? str_replace(";",",",$xnseries) : false;
 	      //$importe     = ($this->importe)/$unidades;
-	      $importe     = $unidades*$this->unidadimporte;
+	      //$importe     = $unidades*$this->precio;
+	      $importe     = $this->importe;
+	      if( count( $aPedidoDet ) > 1 )
+		{
+		  $xprecio     = ($this->importe)/$this->unidades;
+		  $importe     = $unidades*$xprecio;
+		}
 
 	      //ComprobanteDet...
 	      $Keys    = "IdComprobante,";

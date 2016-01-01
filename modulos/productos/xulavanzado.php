@@ -48,7 +48,8 @@ function GeneraXul($retorno) {
  $txtModelo  = $txtMoDet[1];
  $txtDetalle = $txtMoDet[2];
 
-?>	
+?>
+<vbox class="box" flex="1">	
 <grid> 
 <columns> 
   <column flex="1"/><column flex="1"/>
@@ -135,7 +136,8 @@ function GeneraXul($retorno) {
  </row>
 </rows>
 </grid>
-<button  image="img/gpos_buscar.png"  label='<?php echo _("Buscar") ?>' oncommand="buscar()"/>
+<button  image="img/gpos_buscar.png"  label='<?php echo _("Buscar") ?>' oncommand="buscar()" class="btn"/>
+</vbox>
 
 <script><![CDATA[
 function id(nombre) { return document.getElementById(nombre) };

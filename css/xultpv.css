@@ -1,188 +1,63 @@
-
-
-
-treecol,treechildren {
-	  /*font-size: 100%*/ 	
-	  /*font-size: 110%;*/  
-	  };
-
-
-treechildren::-moz-tree-row(selected) { 
-	/*background-color: #FFFFAA;*/ 
-	/*color: black;*/
-	}
-treechildren::-moz-tree-row(odd) { 
-	/*background-color: #EEEEEE;*/
-	/*border:1px solid green;*/ 
-}
-
-treechildren::-moz-tree-row(odd, selected) { 
-	/*background-color: #FFFFAA;*/
-	/*border:1px solid yellow;*/
-}
-
 treechildren::-moz-tree-cell-text(selected) { 
 	/*color: #000000;*/
 	 /*border:1px solid blue;
 	 color: white;*/
 	 font-weight: bold;
 }
-
-treechildren::-moz-tree-cell-text(odd, selected) { 
-	/*color: #000000;*/
-	/*border:1px solid red;*/ 
-}
-
-
-treechildren:-moz-tree-cell(colum_0) {
-  
-  /*background-color: #ccc;*/
-/*  background-color: Window;*/  
-  /*  -moz-appearance: menuitem;
-	-moz-appearance: toolbarbutton;*/
-}
-
-treechildren:-moz-tree-cell(separador) {
-  /*background-color: Window;*/  
-}
-
-
-
-
-treechildren:-moz-tree-cell(colum_1) {
-    /*background-color: Window;*/
-	/*background-color: #ccc;
-	background-color: Window;*/
-}
 treechildren:-moz-tree-cell(celda) {  
    border-right: 1px solid #ccc;
 }
-treechildren:-moz-tree-cell(separador) {  
-    /*background-color: Window;
-	text-align: center;*/
-}
-
-
 treechildren:-moz-tree-cell(firstLine) {  
     /*background-color: red;*/	
 	border-top: 2px solid #ccc;
 }
 
+.listado {font-size: 13px;}
+.listado listhead {font-size: 14px;}
 
-.listado {
-	font-size: 13px;
-}
+menu#onlistTicket{font-size: 1.05rem!important;font-weight: 400; }
+menu#onlistTicket label{ color:#aa0000!important;font-weight: 400; }
+menu#onlistTicket menupopup label{ color:#33C3F0!important; }
 
-.listado listhead {
-	font-size: 14px;
-}
+radio label{ font-size: 1.05rem!important; color:#33AAF0!important; font-style: italic;}
+radio[selected="true"] label{ color:#aa0000!important; font-weight: 400;}
 
-menu#onlistTicket{ 
-	font-size: 13px;
-        font-weight: bold;
- }
-
-radiogroup#rgModosTicket{ 
-	font-size: 14px;
-
- }
-
-radiogroup#rgModosTicket radio[selected="true"] {
-	font-size: 14px;
-        font-weight: bold;
-}
-
-.compacta {
-	font-size: 14px;
-}
-
-.sencilla {
-	font-size: 13px;
-}
-
-.nro {
-       font-size: 12px;
-       width : 100px;   
-       text-align: center;
-       }
-
-.media {
-	font-size: 18px;
-}
+.compacta {font-size: 14px; width: 40px!important;}
+.sencilla {font-size: 13px;}
+.nro { font-size: 12px; width : 100px;text-align: center;}
+.cliente,
+.media {font-size: 1.2rem; font-weight:400;} 
 #SubsidiarioListaServicios .media{ font-size: 11px; }
-.xnormal {
-	font-size: 15px;
-}
 
-.xnormalmine {
-	font-size: 12px;
-}
+.xnormal {font-size: 15px;}
+.xnormalmine {font-size: 12px;}
+.xmedia {font-size: 1.6rem; margin-top: 30px;}
+.grande {font-size: 2rem}
+.xnombre {font-size: 13px; width : 320px; text-align: left; margin-top: 2px;}
+.xdireccion {font-size: 13px;width : 320px;text-align: left; margin-top: 2px;}
+.xmail { font-size: 13px; width : 320px; text-align: left; margin-top: 2px;}
+.salir { font-size: 18px;}
+.sync_pause{ list-style-image: url("../img/gpos_tpvsynch_pause.png");}
+.sync_run{ list-style-image: url("../img/gpos_tpvsynch_run.png");}
 
-.xmedia {
-          font-size: 30px;
-          margin-top: 30px;
-}
+#listSuscripcionLinea{ height:150px;}
+#listComprobantesSuscripcion{ height:80px;}
 
-.grande {
-	font-size: 30px
-}
+textbox.grande { font-size: 2rem!important; }
+textbox.serie  { width : 90px; margin-top: 5px; }
+textbox.numero { width : 150px; margin-top: 5px; }
+radio.rmedia   { font-size: 1.3rem; font-weight:400;}
+caption.xbase-grande-cambio,
+caption.xbase-grande{ font-size: 2rem; text-align: center!important; border-bottom: 1px solid #eee!important;  font-style: normal!important;}
+.red label{ color:#C91918!important;}
+.red-core label{ color:#aa0000!important;}
+caption.boxtotal,
+caption.boxtotal label{ color: #00e000!important; background-color: black;  }
 
-.xgrande {
-           font-size: 40px;
-           width : 230px;   
-           text-align: center;
-           margin-top: 5px;
-}
+caption.mensajetpv,
+caption.mensajetpv label{ font-size: 1rem!important; color:#aa0000!important;font-style: italic; }
+caption.xtitle,
+caption.xtitle label{ font-size: 1.4rem!important; color:#aa0000!important;font-weight: 400!important; } 
+vbox.xvbox{ padding: 0 1em 0 1em }
 
-
-.xnombre {
-           font-size: 13px;
-           width : 320px;   
-           text-align: left;
-           margin-top: 2px;
-}
-
-.xdireccion {
-           font-size: 13px;
-           width : 320px;   
-           text-align: left;
-           margin-top: 2px;
-}
-
-.xnif {
-           font-size: 14px;
-           width : 320px;   
-           text-align: left;
-           margin-top: 2px;
-}
-
-.xmail {
-           font-size: 13px;
-           width : 320px;   
-           text-align: left;
-           margin-top: 2px;
-}
-
-.ygrande {
-           font-size: 40px;
-           text-align: center;
-           width : 90px;   
-           margin-top: 5px;
-}
-
-.salir {
-	font-size: 18px
-}
-
-listitem:hover{ 
-                border-top: 1px dotted #AA0000;
-                border-bottom: 1px dotted #AA0000;
- }
-
-.sync_pause{ 
-          list-style-image: url("../img/gpos_tpvsynch_pause.png");
-          }
-
-.sync_run{ 
-          list-style-image: url("../img/gpos_tpvsynch_run.png");
-          }
+textbox#NOM{ min-width:10em; }

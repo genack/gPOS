@@ -1,17 +1,17 @@
 <groupbox flex="1">
-<vbox flex="1" align="center" pack="center" style="background-color: #eee">
-<caption class="media"  label="Peticion Ticket" id="etiquetaTicket" style="background-color: #eee"/>
+<vbox flex="1" align="center" pack="center" >
+<caption class="xtitle"  label="Peticion Ticket" id="etiquetaTicket" />
 
-<groupbox style="background-color: -moz-dialog">
+<groupbox >
 <grid>
   <columns><column/><column/></columns>
 	<rows>
-	    <row>
+	    <!--  row>
 	     <caption class="grande" label=" "/>
-	    </row>
+	    </row -->
 		<row>		
 		<caption class="grande" label="<?php echo _("TOTAL") ?>"/>
-		<caption id="peticionTotal" class="grande"  label="0,00"/>
+		<caption class="xbase-grande" id="peticionTotal"   label="0,00"/>
 		</row>
 		<row id="Fila-peticionEntrega">
 		<caption class="grande" label="<?php echo _("ENTREGA") ?>" style="padding-top:0.6em"/>
@@ -21,36 +21,32 @@
 		</row>
 		<row>
 		<caption class="grande" label="<?php echo _("CAMBIO") ?>"/>
-		<caption id="peticionPendiente" class="grande" label="0,00"/>
+		<caption class="xbase-grande-cambio red" id="peticionPendiente" label="0,00"/>
 		<textbox id="peticionCambioEntregado" collapsed="true" value="0"/>
 		</row>	
 		<spacer style="height: 8px"/>
 		<row id="Pagos_1" collapsed="true">		
 		<caption class="media" label="<?php echo _("EFECTIVO") ?>"/>
-		<textbox id="peticionEfectivo" class="media"  value="0,00" onkeyup="ActualizaPeticion()" onkeypress="ActualizaPeticion();return soloNumerosTPV(event,this.value)"/>
+		<textbox id="peticionEfectivo" class="grande"  value="0,00" onkeyup="ActualizaPeticion()" onkeypress="ActualizaPeticion();return soloNumerosTPV(event,this.value)"/>
 		</row>			
 		<row id="Pagos_2" collapsed="true">
 		<caption class="media" label="<?php echo _("BONO") ?>"/>
-		<textbox id="peticionBono" class="media"  value="0,00" onkeyup="ActualizaPeticion()" onkeypress="ActualizaPeticion();return soloNumerosTPV(event,this.value)"/>
+		<textbox id="peticionBono" class="grande"  value="0,00" onkeyup="ActualizaPeticion()" onkeypress="ActualizaPeticion();return soloNumerosTPV(event,this.value)"/>
 		</row>			
 		<row id="Pagos_3" collapsed="true">
 		<caption class="media" label="<?php echo _("TARJETA") ?>"/>
-		<textbox id="peticionTarjeta" class="media"  value="0,00" onkeyup="ActualizaPeticion()" onkeypress="ActualizaPeticion(); return soloNumerosTPV(event,this.value)"/>
+		<textbox id="peticionTarjeta" class="grande"  value="0,00" onkeyup="ActualizaPeticion()" onkeypress="ActualizaPeticion(); return soloNumerosTPV(event,this.value)"/>
 		</row>			
 		<row id="Pagos_4" collapsed="true">
 		<caption class="media" label="<?php echo _("TRANSFERENCIA") ?>"/>
-		<textbox id="peticionTransferencia" class="media"  value="0,00" onkeyup="ActualizaPeticion()" onkeypress="ActualizaPeticion(); return soloNumerosTPV(event,this.value)"/>
+		<textbox id="peticionTransferencia" class="grande"  value="0,00" onkeyup="ActualizaPeticion()" onkeypress="ActualizaPeticion(); return soloNumerosTPV(event,this.value)"/>
 		</row>			
 		
 		<row id="Pago_Modo">
 		<caption class="grande" label="<?php echo _("PAGO") ?>" style="padding-top:0.6em"/>
-		<menulist class="grande" id="modoDePagoTicket">
+		<menulist class="grande" id="modoDePagoTicket" oncommand="validarPagoCliente()">
 		<menupopup>
-		<?php
-	foreach( $modosDePago as $value=>$label ){
-		echo "<menuitem value='$value' label='$label'/>\n";
-	}
-		?>
+		<?php echo genXulComboModalidadPago('1','menuitem') ?>
 		</menupopup>
 		</menulist>
 		</row>
@@ -58,7 +54,7 @@
 
 		<row id="Pagos_0">		
 		<box/>
-		<button image="img/gpos_tpvmultipagos.png" flex="1" class="media" 
+		<button image="img/gpos_tpvmultipagos.png" flex="1" class="media btn" 
 			label=" Multipagos" oncommand="ModoMultipago()"/>
 		</row>			
 
@@ -68,7 +64,7 @@
 		?>		
 		<row id="Admintic_0">		
 		<box/>
-		<button image="img/gpos_tpvmultipagos.png" flex="1" class="media"
+		<button image="img/gpos_tpvmultipagos.png" flex="1" class="media btn"
 			label=" Personalizar" oncommand="ModoPersonalizado()" collapsed="true" />
 		</row>	
 		<row id="Admintic_1"  collapsed="true">
@@ -99,25 +95,24 @@
 		?>		
 		<row>
 		  <groupbox>
-		    <caption label="" />
 		    <radiogroup id="comprobante" collapsed="false">
-		      <radio id="radioproforma" class="media" label="Proforma"
+		      <radio id="radioproforma" class="rmedia" label="Proforma"
 			     oncommand="tipocomprobante(5);"/>
-		      <radio id="radioticket" class="media" label="Ticket" selected="true" 
+		      <radio id="radioticket" class="rmedia" label="Ticket" selected="true" 
 			     oncommand="tipocomprobante(0);" accesskey="T"/>
-		      <radio id="radiofactura" class="media" label="Factura"
+		      <radio id="radiofactura" class="rmedia" label="Factura"
 			     oncommand="tipocomprobante(2);" accesskey="F"/>
-		      <radio id="radioboleta" class="media" label="Boleta"  
+		      <radio id="radioboleta" class="rmedia" label="Boleta"  
 			     oncommand="tipocomprobante(1);" accesskey="B"/>
-		      <radio id="radioalbaran" class="media" label="Albaran"
+		      <radio id="radioalbaran" class="rmedia" label="Albaran"
 			     oncommand="tipocomprobante(4);" accesskey="A"/>
 		    </radiogroup>
 		  </groupbox>
 		  <groupbox id="gruponb">
 		    <caption  class="xmedia" id="TextoDocumentoTPV" label="Serie - Nro. de Boleta" />
 		    <hbox>
-		      <textbox  class="ygrande" id="SerieNDocumento" value="1"  onchange="validaSerie()" onBlur="validaSerie()" onfocus="select()" onkeypress="return soloNumerosTPV(event,this.value)"/> 
-		      <textbox class="xgrande" id="NumeroDocumento" value=""  onchange="validarNroDocumento()" onBlur="validarNroDocumento()" onfocus="select()" onkeypress="if (event.which == 13) ImprimirTicket();return soloNumerosTPV(event,this.value)" /> 
+		      <textbox  class="grande serie" id="SerieNDocumento" value="1"  onchange="validaSerie()" onBlur="validaSerie()" onfocus="select()" onkeypress="return soloNumerosTPV(event,this.value)"/> 
+		      <textbox class="grande numero" id="NumeroDocumento" value=""  onchange="validarNroDocumento()" onBlur="validarNroDocumento()" onfocus="select()" onkeypress="if (event.which == 13) ImprimirTicket();return soloNumerosTPV(event,this.value)" /> 
 		    </hbox>
 		  </groupbox>
 		  <textbox id="idDocTPV" value="1" collapsed="true"/> 
@@ -125,14 +120,14 @@
 		
 		<row>
 		<box>
-                  <checkbox id="checkimprimir" class="Compacta" label="Imprimir" 
-                            checked="true" style="padding-left:3em;"
-                            oncommand="CambiarModoImpresion(this.checked)"/>
-
+                  <checkbox id="checkreservar" class="Compacta red-core" label="Reservar" 
+                            checked="false" oncommand="CambiarModoReserva(this.checked)" tooltiptext="Marcar el comprobante para una busqueda posterior"/>
+                  <checkbox id="checkimprimir" class="Compacta red-core" label="Imprimir" tooltiptext="Lanzar la ventada de impresión"
+                            checked="true" oncommand="CambiarModoImpresion(this.checked)"/>
                 </box>
 		<hbox>		
-		<button flex="1" id="BotonAceptarImpresion" image="img/gpos_imprimir.png" class="media" label="  Aceptar  " oncommand="ImprimirTicket()"/>
-		<button flex="1" id="BotonCancelarImpresion" image="img/gpos_vaciarcompras.png" class="media" label="  Cancelar  " oncommand="CerrarPeticion()"/>
+		<button flex="1" id="BotonAceptarImpresion" image="img/gpos_imprimir.png" class="media btn" label="  Aceptar  " oncommand="ImprimirTicket()"/>
+		<button flex="1" id="BotonCancelarImpresion" image="img/gpos_vaciarcompras.png" class="media btn" label="  Cancelar  " oncommand="CerrarPeticion()"/>
 		</hbox>
 		</row>	
 		<row>

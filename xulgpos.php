@@ -17,7 +17,7 @@ $NombreTiendaDefecto   = getNombreComercialLocal(getSesionDato("IdTienda"));
 $esCarritoAlmacen      = getSesionDato("ModoCarritoAlmacen");
 $esAgrupar             = ($esCarritoAlmacen == 'g')? 'true':'false';
 $esTraslado            = ($esCarritoAlmacen == 't')? 'true':'false';
-$lanzarTPV             = ( isset($_GET["t"]) == 'on');
+
 //TODO: hacer esto XUL seguro
 StartXul(_("gPOS ".$NombreEmpresa.' // Admin'));
 
@@ -77,7 +77,7 @@ if (isUsuarioAdministradorWeb()){
 <command id="altaFamilia"  oncommand="solapa('modfamilias.php?modo=alta','<?php echo _("Familia: Alta") ?>')" 
   <?php gulAdmite("Administracion") ?>  label="<?php echo _("Alta familia") ?>"/>
   
-<command id="cmdLogout"  oncommand="if ( tpvWindow ) if ( tpvWindow.close ) tpvWindow.close(); document.location.href='logout.php'"  label="<?php echo _(" Salir") ?>"/>
+<command id="cmdLogout"  oncommand="if ( tpvWindow ) if ( tpvWindow.close ) tpvWindow.close(); document.location.href='logout.php'"  label="<?php echo _(" Salir ") ?>"/>
 
 <command id="procesarCompra" oncommand="solapa('modcompras.php?modo=continuarCompra','<?php echo _("Compras") ?>')"
      <?php gulAdmite("Compras") ?> label="<?php echo _("Continuar compra") ?>"/>
@@ -109,6 +109,9 @@ if (isUsuarioAdministradorWeb()){
 <command id="verAjuste"   oncommand="solapa('modulos/inventario/modinventario.php?modo=verAjuste','<?php echo _("Almacén - Ajuste") ?>','framelist')" accesskey="A"
   <?php gulAdmite("VerAjustes") ?> label="<?php echo _("Ajustes") ?>"/>
 
+<command id="verInventario"   oncommand="solapa('modulos/inventario/modinventario.php?modo=verInventario','<?php echo _("Almacén - Inventario") ?>','framelist')" accesskey="I"
+  <?php gulAdmite("VerAjustes") ?> label="<?php echo _("Inventario") ?>"/>
+
 
 <!-- ====== MENU ALMACEN - ITEM  ====== -->
 
@@ -121,6 +124,9 @@ if (isUsuarioAdministradorWeb()){
 
 <command id="verProductos"  oncommand="solapa('modulos/productos/xulproductos.php?modo=lista','<?php echo _("Productos - Gestión de Productos") ?>','productos')" accesskey="d"
   <?php gulAdmite("Productos") ?>    label="<?php echo _("Productos") ?>"/>
+
+<command id="verPedidoCompra"  oncommand="solapa('modulos/ordencompra/modordencompra.php?modo=listarTodoOrdenCompra','<?php echo _("Compras - Pedidos") ?>','framelist')" accesskey="p"
+  <?php gulAdmite("Presupuestos") ?>    label="<?php echo _("Pedidos") ?>"/>
 
   <command id="verComprasBorrador"  oncommand="solapa('modulos/comprobantecompra/modcomprasborrador.php?modo=listarTodoCompra','<?php echo _("Compras - Comprobantes") ?>','framelist')" accesskey="o"
   <?php gulAdmite("ComprobantesCompra") ?>    label="<?php echo _("Comprobantes") ?>"/>
@@ -138,7 +144,10 @@ if (isUsuarioAdministradorWeb()){
 
 <!--  ====== MENU VENTAS - ITEM   ======  -->
 
-<command id="lanzarTPV" oncommand="lanzarTPV('rd')" <?php gulAdmite("TPV") ?>  label="<?php echo _("TPV") ?>"/> 
+<command id="lanzarTPV" oncommand="lanzarTPV('rd')" <?php gulAdmite("TPV") ?>  label="<?php echo _("TPV") ?>"/>
+
+<command id="VerPedidosVentas" oncommand="solapa('modulos/pedidosventa/modpedidosventa.php?modo=mostrarPedidos','<?php echo _("Ventas - Pedidos") ?>','framelist')" 
+   <?php gulAdmite("PedidosVenta") ?> label="<?php echo _("Pedidos") ?>"/>
 
 <command id="VerComprobantesVentas" oncommand="solapa('modulos/comprobanteventa/modventas.php?modo=mostrarComprobantes','<?php echo _("Ventas - Comprobantes") ?>','framelist')" 
    <?php gulAdmite("ComprobantesVenta") ?> label="<?php echo _("Comprobantes") ?>"/>
@@ -153,6 +162,14 @@ if (isUsuarioAdministradorWeb()){
 
 
 <!--  ====== MENU FINAZAS - ITEM   ====== -->
+<command id="verPagosProveedor" oncommand="solapa('modulos/pagoscobros/modpagoscobros.php?modo=verPagosProveedor','<?php echo _("Finanzas - Comprobantes") ?>','framelist')" accesskey="P"
+   <?php guladmite("Pagos") ?> label="<?php echo _("Pagos") ?>"/>
+
+<command id="verCobrosClientes" oncommand="solapa('modulos/pagoscobros/modpagoscobros.php?modo=verCobrosCliente','<?php echo _("Finanzas - Comprobantes") ?>','framelist')" accesskey="C"
+   <?php guladmite("Cobros") ?> label="<?php echo _("Cobros") ?>"/>
+
+<command id="verCajaGeneral" oncommand="solapa('modulos/arqueogral/modarqueogral.php?modo=verCajaGeneral&amp;xidacg=&amp;xidl=','<?php echo _("Finanzas - Caja General") ?>','framelist')" 
+   <?php gulAdmite("CajaGeneral") ?> label="<?php echo _("Caja General") ?>"/>
 
 <command id="verEstablecerPrecioPedido" oncommand="solapa('modulos/recepcionpedido/modalmacenborrador.php?modo=recibirProductosAlmacen','<?php echo _("Almacén - Recibir Pedidos ") ?>','framelist')" accesskey="R"
    <?php gulAdmite("VerStocks") ?> label="<?php echo _("Recibir Pedidos") ?>"/>
@@ -170,8 +187,12 @@ if (isUsuarioAdministradorWeb()){
     elseif(Admite('InformeLocal')){ $arealistados = 'tpv'; } 
     else{ $disablelistado = "disabled='true'";}?>
 
-<command id="verListados"   oncommand="solapa('modulos/generadorlistados/formlistados.php?area=<?php echo $arealistados;?>','<?php echo _("Listados") ?>','framelist')"
+<command id="verListados" oncommand="solapa('modulos/generadorlistados/formlistados.php?area=<?php echo $arealistados;?>','<?php echo _("Listados") ?>','framelist')"
     <?php echo $disablelistado; ?>  label="<?php echo _("Listados") ?>"/> 
+<command id="verReportes" oncommand="solapa('modulos/reportes/modreportes.php?modo=xReportes','<?php echo _("Reportes") ?>','framelist')"
+    <?php echo $disablelistado; ?>  label="<?php echo _("Utilidad") ?>"/> 
+<command id="verReportesVence" oncommand="solapa('modulos/reportes/modreportes.php?modo=xReportesVence','<?php echo _("Reportes") ?>','framelist')" 
+      label="<?php echo _("Fecha Vencimiento") ?>" <?php echo $btca?> /> 
 <!-- ====== MENU REPORTES  ====== -->  
 
 
@@ -181,8 +202,8 @@ if (isUsuarioAdministradorWeb()){
 <command id="verSubsidiarios" oncommand="solapa('modsubsidiarios.php?modo=lista','<?php echo _("Outsourcing") ?>','varios')"
   <?php gulAdmite("Administracion") ?>  label="<?php echo _("Outsourcing") ?>"/>
   
-<command id="verClientes"  oncommand="solapa('modclientes.php?modo=lista','<?php echo _("Clientes") ?>','clientes')" 
-  <?php gulAdmite("Administracion") ?>  label="<?php echo _("Clientes") ?>"/>
+<!--command id="verClientes"  oncommand="solapa('modclientes.php?modo=listar','<?php echo _("Clientes") ?>','clientes')" 
+  <?php gulAdmite("Administracion") ?>  label="<?php echo _("Clientes") ?>"/-->
   
 <command id="verUsuarios"   oncommand="solapa('modusers.php?modo=lista','<?php echo _("Usuarios") ?>','varios')"
   <?php gulAdmite("Administracion") ?>  label="<?php echo _("Usuarios") ?>"/>  
@@ -235,12 +256,12 @@ if (isUsuarioAdministradorWeb()){
  <?php gulAdmite("Administracion") ?>  label="<?php echo _("Alta cliente particular") ?>"/>
 
 
-<command id="buzonSugerencia"  oncommand="solapa('modulos/mensajeria/modbuzon.php?modo=feature','<?php echo _("Buzón") ?>','buzon')" 
+<command id="buzonSugerencia"  oncommand="solapa('modulos/mensajeria/modbuzon.php?modo=feature','<?php echo _(" Buzón ") ?>','buzon')" 
  <?php gulAdmite("Administracion","mensajeria") ?>  label="<?php echo _("Hacer sugerencia") ?>"/>
-<command id="buzonReportefallo" oncommand="solapa('modulos/mensajeria/modbuzon.php?modo=bug','<?php echo _("Buzón") ?>','buzon')" 
+<command id="buzonReportefallo" oncommand="solapa('modulos/mensajeria/modbuzon.php?modo=bug','<?php echo _("Buzón ") ?>','buzon')" 
  <?php gulAdmite("Administracion","mensajeria") ?>  label="<?php echo _("Hacer aviso de fallo") ?>"/> 
 
-<command id="buzonReporte" oncommand="solapa('modulos/mensajeria/reporte.php','<?php echo _("Buzón") ?>','buzon')" 
+<command id="buzonReporte" oncommand="solapa('modulos/mensajeria/reporte.php','<?php echo _(" Buzón ") ?>','buzon')" 
  <?php gulAdmite("Administracion","mensajeria") ?>  label="<?php echo _("Hacer sugerencia de mantenimiento") ?>"/> 
 
 <command id="buzonNotaNormal" oncommand="solapa('modulos/mensajeria/modbuzon.php?modo=notanormal','<?php echo _("Nota normal") ?>','buzon')" 
@@ -250,21 +271,20 @@ if (isUsuarioAdministradorWeb()){
  <?php gulAdmite("Administracion","mensajeria") ?>  label="<?php echo _("Enviar nota importante") ?>"/> 
 
 <groupbox flex="1" class="frameExtraXX">
-  <caption label="<?php echo $NombreEmpresa?>"/>
-
-<vbox id="gpostoolbox" >
+<vbox class="gpostoolbox" >
 <hbox flex="1">
 		<!-- button image="img/gpos_cajavacia.png" command="verAlmacen" <?php gulAdmite("VerStocks") ?> accesskey="a"/ -->
 		<!-- button image="img/gpos_productos.png" command="verProductos" <?php gulAdmite("Productos") ?> accesskey="p"/ -->
 		<!-- button image="img/gpos_compras.png"  command="verCompras" <?php gulAdmite("Compras") ?> accesskey="c"/ -->
 		
-
-		<button label="<?php echo _(" Compras") ?>" image="img/gpos_compras.png" type="menu" accesskey="C" id="btnCompras">	        	       
+                <toolbarbutton class="boxtool" image="img/gpos_logo.png" label="" oncommand="startgPOS()"/>
+		<toolbarbutton class="boxtool" label="<?php echo _("Compras  ") ?>" image="img/gpos_compras.png" type="menu" id="btnCompras">	        	       
 		  <menupopup id="idconfig">
 
 		    <?php
 		       $menuConfiguracion = array(	
 		       _("Comprobantes") =>  "verPresupuesto",	
+		       _("Pedidos") =>  "verPedidoCompra",
 		       _("Facturar ") =>  "verComprasBorrador"		
 		    );  
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
@@ -287,9 +307,9 @@ if (isUsuarioAdministradorWeb()){
 		    
 		    ?>
 		  </menupopup>
-		</button>
+		</toolbarbutton>
 
-		<button label="<?php echo _(" Almacén") ?>" image="img/gpos_almacen.png" type="menu"  accesskey="A">	        	       
+		<toolbarbutton class="boxtool" label="<?php echo _("Almacén  ") ?>" image="img/gpos_almacen.png" type="menu" >	        	       
 		  <menupopup id="idconfig">
 		    <?php
  		
@@ -312,7 +332,8 @@ if (isUsuarioAdministradorWeb()){
  		       $menuConfiguracion = array(
 
 		       _("Kardex") =>  "verKardex",	
-		       _("Ajuste") =>  "verAjuste"
+		       _("Ajuste") =>  "verAjuste",
+		       _("Inventario") =>  "verInventario"
 
 		    );  
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
@@ -320,14 +341,15 @@ if (isUsuarioAdministradorWeb()){
 		    ?>
 
 		  </menupopup>
-		</button>
+		</toolbarbutton>
 		
-		<button label="<?php echo _(" Ventas") ?>" image="img/gpos_ventas.png" type="menu" accesskey="V" >	        	       
+		<toolbarbutton class="boxtool" label="<?php echo _("Ventas  ") ?>" image="img/gpos_ventas.png" type="menu" >	        	       
 		  <menupopup id="idconfig">
 		    <?php
  		       
  		       $menuConfiguracion = array(		
 		    _("TPV") =>  "lanzarTPV",
+		    _("PedidosVenta") =>  "VerPedidosVentas",
 		    _("ComprobantesVenta") =>  "VerComprobantesVentas"
 		    );  
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
@@ -352,21 +374,55 @@ if (isUsuarioAdministradorWeb()){
 		    ?>
 
 		  </menupopup>
-		</button>
+		</toolbarbutton>
 
-		<button label="<?php echo _(" Reportes ") ?>" image="img/gpos_reportes.png" type="menu"  accesskey="R" >	        	       
+		<toolbarbutton class="boxtool" label="<?php echo _("Finanzas  ") ?>" image="img/gpos_finanzas.png" type="menu">	        	       
 		  <menupopup id="idconfig">
-		    <?php
- 		
- 		       $menuConfiguracion = array(		
-						  _("Listados General") =>  "verListados"
+		      <?php
+		      $menuConfiguracion = array(
+					         _("Pagos Proveedor") =>  "verPagosProveedor",
+					         _("Cobros Cliente") =>  "verCobrosClientes"
+
 
 		    );  
+ 		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
+		    ?>
+
+		    <menuseparator />
+		      <?php
+		      $menuConfiguracion = array(		
+					  _("Caja General") =>  "verCajaGeneral"
+
+		    );  
+ 		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
+		    ?>
+
+		  </menupopup>
+		</toolbarbutton>
+
+		<toolbarbutton class="boxtool" label="<?php echo _("Reportes  ") ?>" image="img/gpos_reportes.png" type="menu" >	        	       
+		  <menupopup id="idconfig">
+		    <?php
+			
+ 		       $menuConfiguracion = array(		
+						  _("Listados General") =>  "verListados",
+						  _("Utilidad") =>  "verReportes"
+						  
+						 );
+
+                    if(getSesionDato("GlobalGiroNegocio") == 'BTCA'){
+		       $menuConfiguracion = array(		
+						  _("Listados General") =>  "verListados",
+						  _("Utilidad") =>  "verReportes",
+						  _("Vencimiento") =>  "verReportesVence"
+						  
+						  );  
+		    }
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
 		    
 		    ?>
 		  </menupopup>
-		</button>
+		</toolbarbutton>
 
                <!-- ?php
  		$menuModulos = array( );  
@@ -390,7 +446,7 @@ if (isUsuarioAdministradorWeb()){
        ?>  		
 	          
 	<spacer flex="1"/>       
-    <button  label="<?php echo _(" Buzón") ?>"  type="menu" image="img/gpos_buzon.png" <?php gulAdmite("Administracion") ?>>	       	       
+    <toolbarbutton class="boxtool" label="<?php echo _("Buzón  ") ?>"  type="menu" image="img/gpos_buzon.png" <?php gulAdmite("Administracion") ?>>	       	       
     <menupopup id="idconfig">
      <?php
  		
@@ -403,10 +459,10 @@ if (isUsuarioAdministradorWeb()){
 	
 	 ?>
     </menupopup>
-    </button>
+    </toolbarbutton>
 
            
-    <button label="<?php echo _(" Config.") ?>" image="img/gpos_config.png" type="menu"  <?php gulAdmite("Administracion") ?> >	        	       
+    <toolbarbutton class="boxtool" label="<?php echo _("Config.  ") ?>" image="img/gpos_config.png" type="menu"  <?php gulAdmite("Administracion") ?> >	        	       
     <menupopup id="idconfig">
      <?php
 
@@ -421,27 +477,32 @@ if (isUsuarioAdministradorWeb()){
 	
 	 ?>
     </menupopup>
-    </button>
+    </toolbarbutton>
        
-    <button image="img/gpos_salir.png" command="cmdLogout" accesskey="s"/>
+    <toolbarbutton class="boxtool" image="img/gpos_salir.png" command="cmdLogout" accesskey="s"/>
 </hbox>
 </vbox>
 
-<menubar id="status-area" class="AreaPagina" style="">
-  <caption id="status" class="enAreaPagina" label=""  style="font-size: 12px;font-weight: bold;" flex="1"/>
-  <caption id="statusLocal" class="enAreaPagina" label="<?php echo _("Local: ") . $NombreTiendaDefecto; ?>" style="font-size: 12px;font-weight: bold;"/>
-<caption id="statusOperador" class="enAreaPagina" label="<?php echo _("Operador: ") . $NombreUsuarioDefecto; ?>" style="font-size: 12px;font-weight: bold;"/>
-
-
-</menubar>
+<hbox id="status-area" class="AreaPagina" style="">
+  <caption id="status" class="enAreaPagina" label=""  flex="1"/>
+  <caption id="statusLocal" class="enAreaPagina" label="<?php echo _("Local: ") . $NombreTiendaDefecto; ?>" />
+  <caption id="statusOperador" class="enAreaPagina" label="<?php echo _("Operador: ") . $NombreUsuarioDefecto; ?>" />
+</hbox>
 
 <!-- VISTA NUEVOS MODULOS  -->
 <hbox id="WebLista" flex="1" class="frameExtra"  collapsed="true">
  <box flex="1" class="frameExtra"> 
-   <html:iframe  id="weblist"  class="AreaListados" src="about:blank" flex="1"/>
+   <html:iframe  id="weblist"  class="AreaListados" src="about:blank" flex="1" style="padding-right: .6em"/>
  </box>
 </hbox>
 <!-- VISTA NUEVOS MODULOS -->
+
+<!-- VISTA TPV  -->
+<hbox id="WebTPV" flex="1" class="frameExtra"  collapsed="true">
+ <box flex="1" class="frameExtra"> 
+   <html:iframe  id="webtpv"  class="AreaListados" src="about:blank" flex="1" style="padding-right: .6em"/>
+ </box>
+</hbox>
 
 
 <!-- VISTA OLD -->
@@ -466,21 +527,27 @@ if (isUsuarioAdministradorWeb()){
      <tabbox class="frameExtra" flex="1">		
        <box id="accionesweb" class="frameNormal">
 	 <groupbox class="frameNormal" flex="1">
-	   <caption label="<?php echo _("Acciones"); ?>" class="frameNormal"/>
+            <vbox>
+	      <caption label="<?php echo _("Carrito Almacén: "); ?>" class="frameNormal box"/>
+	      <hbox class="resumenvbox">
+		<label id="CarritoTraspasoCant" value="" /><label>Productos Seleccionados</label>
+	      </hbox>
+	    </vbox>  
 	   <spacer style="height:4px"/>
 	   <hbox equalsize="always">
-	     <button image="img/gpos_vercompras.png" command="verCarritoAlmacen" flex="1"/>     
-	     <button crop="end" image="img/gpos_vaciarcompras.png" command="verCarritoCancelar" flex="1"/>
+	     <button class="btn" image="img/gpos_vercompras.png" command="verCarritoAlmacen" flex="1"/>     
+	     <button class="btn" crop="end" image="img/gpos_vaciarcompras.png" command="verCarritoCancelar" flex="1"/>
 	   </hbox>
+
 	 </groupbox>
        </box>
        
        <tabs class="AreaPagina">
-	 <tab id="buscarAlmacen" onclick="almacen_buscar()" label="<?php echo _(" Buscar") ?>"/>
+	 <tab id="buscarAlmacen" onclick="almacen_buscar()" label="<?php echo _(" Buscar Productos") ?>" image="img/gpos_buscar.png"/>
 	 <tab id="capturarAlmacen" onclick="almacen_buscar()" label="<?php echo _(" Capturar CB ") ?>" collapsed='true'/>
-	 <tab id="accionesCarrito" onclick="almacen_MuestraCarrito()" label="<?php echo _(" Acciones Carrito") ?>" />
+	 <tab id="accionesCarrito" onclick="almacen_MuestraCarrito()" label="<?php echo _(" Acciones Carrito") ?>" image="img/gpos_compras.png"/>
        </tabs>
-       <tabpanels flex="1" id="tabpanelAlmacen">
+       <tabpanels flex="1" id="tabpanelAlmacen" class="box">
 	 <tabpanel id="normaltab" flex='1'>		    	
 	   <groupbox flex="1">
 	     <caption label="<?php echo _("Opciones:"); ?>" collapse="true"/>
@@ -509,7 +576,7 @@ if (isUsuarioAdministradorWeb()){
 		 </row>						
 		 <row>
 		   <caption label="<?php echo _("Nombre"); ?>"/>
-		   <textbox id="a_Nombre" flex="1" onkeypress="if (event.which == 13) { almacen_buscar() }" onfocus="select()"/>
+		   <textbox id="a_Nombre" flex="1" onkeypress="if (event.which == 13) { almacen_buscar() }" onfocus="select()" placeholder=" nombre | marca ó modelo ó detalle..."/>
 		 </row>						
 		 <row>
 		   <box/>
@@ -531,20 +598,20 @@ if (isUsuarioAdministradorWeb()){
 		 </row>						
 	       </rows>
 	     </grid>					
-	     <button image="img/gpos_buscar.png" label='<?php echo _("Buscar") ?>' oncommand="almacen_buscar()"/>
+	     <button class="btn" image="img/gpos_buscar.png" label='<?php echo _("Buscar") ?>' oncommand="almacen_buscar()"/>
 	   </groupbox>
 	 </tabpanel>
 	 <tabpanel id="capturarAlmacen" flex='1'>
 	   <groupbox flex="1">
 	     <caption label="<?php echo _("Captura CB"); ?>" collapse="true"/>	
-	     <menulist  id="a_idlocal_captura" oncommand="almacen_Guard_BotonCapturar()" <?php gulAdmite("Almacen") ?>>					
+	     <menulist class="btn"  id="a_idlocal_captura" oncommand="almacen_Guard_BotonCapturar()" <?php gulAdmite("Almacen") ?>>					
 	       <menupopup>
 		 <menuitem label="<?php echo _("Elije local") ?>" style="font-weight: bold"/>
 		 <?php echo genXulComboAlmacenes(false,"menuitem") ?>
 	       </menupopup>
 	     </menulist>					
 	     <textbox  id="a_CapturaCB" multiline="true" flex="1"/>																
-	     <button id="botonCapturarAlmacen" disabled="true" image="img/gpos_compras.png"  label="<?php echo _("Añadir"); ?>" oncommand="Almacen_selrapidaCompra()"/>	        	       
+	     <button class="btn" id="botonCapturarAlmacen" disabled="true" image="img/gpos_compras.png"  label="<?php echo _("Añadir"); ?>" oncommand="Almacen_selrapidaCompra()"/>	        	       
 	   </groupbox>
 	 </tabpanel>
 	 <tabpanel id="avanzadatabAlmacen" flex='1'>
@@ -553,7 +620,7 @@ if (isUsuarioAdministradorWeb()){
 			
 	     <spacer style="height:1em"/>
 	     <vbox pack="center" align="center" >
-	       <radiogroup flex="1" orient="horizontal" style="font-size: 110%;font-weight: bold;" > 
+	       <radiogroup flex="1" orient="horizontal" > 
 		 <radio id="Atributos" label="Agrupar" selected="<?php echo $esAgrupar;?>" 
 		        oncommand="selCarritoAlmacen('g')" <?php gulAdmite("Almacen") ?> />
 		 <radio id="Traslado" label="Trasladar" selected="<?php echo $esTraslado;?>" 
@@ -574,7 +641,7 @@ if (isUsuarioAdministradorWeb()){
 	       </menulist>
 	       <spacer style="height: 1.3em"/>
 
-	       <button id="cmbtraslado" image="img/gpos_almacen.png" type="menu" 
+	       <button  id="cmbtraslado" image="img/gpos_almacen.png" type="menu" class="popup"
 		       label="<?php echo _(" Elije Local"); ?>" 
 	               oncommand="almacen_Traslado()"> 
                        <menupopup>
@@ -583,13 +650,13 @@ if (isUsuarioAdministradorWeb()){
 	       </button>
 
 	       <button id="cmbtrasladoprovedor" image="img/gpos_proveedores.png" type="menu" 
-		       label="<?php echo _(" Elije Proveedor"); ?>" 
+		       label="<?php echo _(" Elije Proveedor"); ?>" class="popup"
 	               oncommand="almacen_Traslado()" collapsed="true"> 
 		       <menupopup>
 		       <?php echo genXulComboProveedores(false,"menuitem","almacen_setLocalTraslado");?>
 		     </menupopup>
 	       </button>
-	       <button id="btntrasladolocal" image="img/gpos_trasladar.png" 
+	       <button class="btn" id="btntrasladolocal" image="img/gpos_trasladar.png" 
 		       label="<?php echo _(" Finalizar Carrito "); ?>" 
 	               onclick="almacen_Traslado()" collapsed="true"> 
 	       </button>
@@ -601,16 +668,16 @@ if (isUsuarioAdministradorWeb()){
 		 <columns><column flex="1"/><column flex="1"/></columns>
 		 <rows>
 		   <row>
-		     <button image="img/gpos_enoferta.png"  command='verCarritoEnOferta' flex="1"/>
-		     <button image="img/gpos_sinoferta.png" command='verCarritoSinOferta' flex="1"/>
+		     <button class="btn" image="img/gpos_enoferta.png"  command='verCarritoEnOferta' flex="1"/>
+		     <button class="btn" image="img/gpos_sinoferta.png" command='verCarritoSinOferta' flex="1"/>
 		   </row>
 		   <row>					
-		     <button image="img/gpos_enventa.png" command='verCarritoEnVenta' flex="1"/>
-		     <button image="img/gpos_reservado.png" command='verCarritoSinVenta' flex="1"/>
+		     <button class="btn" image="img/gpos_enventa.png" command='verCarritoEnVenta' flex="1"/>
+		     <button class="btn" image="img/gpos_reservado.png" command='verCarritoSinVenta' flex="1"/>
 		   </row>
 		   <row>
-		     <button image="img/gpos_noobsoleto.png" command='verCarritoNoObsoleto' flex="1"/>
-		     <button image="img/gpos_obsoleto.png"  command='verCarritoObsoleto' flex="1"/>						
+		     <button class="btn" image="img/gpos_noobsoleto.png" command='verCarritoNoObsoleto' flex="1"/>
+		     <button class="btn" image="img/gpos_obsoleto.png"  command='verCarritoObsoleto' flex="1"/>						
 		   </row>										
 		 </rows>
 	       </grid>
@@ -628,81 +695,44 @@ if (isUsuarioAdministradorWeb()){
      <spacer style="height:15px"/>
      <box id="accionesweb" class="frameNormal">
        <groupbox class="frameNormal" flex="1">
-	 <caption label="<?php echo _("Acciones:"); ?>" class="frameNormal"/>
+	 <caption label="<?php echo _("Acciones:"); ?>" class="frameNormal box"/>
 	 <spacer style="height:4px"/>
 	 <hbox  equalsize="always">
-	   <button id="verBtnCarrito" image="img/gpos_vercompras.png" label="<?php echo _(" Ver Carrito") ?>" 
-	   oncommand="Compras_verCarrito();" flex="1" collapsed="false"/>     
-
-	   <button crop="end" image="img/gpos_vaciarcompras.png" label="<?php echo _(" Vaciar Carrito") ?>" oncommand="ifConfirmExec('gPOS:\n\n¿Esta seguro que quiere vaciar el carrito?','Compras_cancelarCarrito()')" flex="1"/>
-	 </hbox>
-           <spacer style="height:4px"/>
-	 <button  image="img/gpos_fincompras.png" id='bcapturar' flex="1" type="menu" label="<?php echo _(" Finalizar Compra"); ?>" oncommand="Compras_compraEfectuar()">
+	  <button class="popup" image="img/gpos_fincompras.png" id='bcapturar' flex="1" type="menu" label="<?php echo _("  Finalizar Compra "); ?>" oncommand="Compras_compraEfectuar()">
 	   <menupopup id="idlocal3">
 	     <?php echo genXulComboAlmacenes(false,"menuitem","Compras_setLocal"); ?>
-	  </menupopup>
-	</button>	 	      
+	   </menupopup>
+	  </button>
+
+	 </hbox>
+	 <hbox>
+
+	   <button id="bcancelar" class="btn" crop="end" image="img/gpos_vaciarcompras.png" label="<?php echo _(" Cancelar Compra") ?>" oncommand="ifConfirmExec('gPOS:\n\n¿Esta seguro que quiere vaciar el carrito?','Compras_cancelarCarrito()')" flex="1"/>
+
+	 </hbox>
        </groupbox>
      </box>
+
      <box>
        <groupbox class="frameNormal" flex="1">
-	 <caption label="<?php echo _("Recursos:"); ?>" class="frameNormal"/>
+	 <caption label="<?php echo _("Recursos:"); ?>" class="frameNormal box"/>
 	 <hbox  equalsize="always">
-	   <button image="img/gpos_productos.png" label="<?php echo _(' Productos'); ?>" 
-	   oncommand="solapa('modulos/productos/xulproductos.php?modo=lista','<?php echo _("Productos") ?>','productos')" flex="1" <?php gulAdmite("Productos") ?>/>     
-
-	   <button  image="img/gpos_altarapida.png" flex="1" label="<?php echo _(" Alta Rápida..."); ?>" oncommand="Compras_altaRapida()" <?php gulAdmite("Productos") ?> />
+	   <button class="btn"  image="img/gpos_altarapida.png" flex="1" label="<?php echo _(" Alta Rápida..."); ?>" oncommand="Compras_altaRapida()" <?php gulAdmite("Productos") ?>  />
 	 </hbox>
 	 <spacer style="height:4px"/>
 	 <!-- hbox  equalsize="always" -->
-	 <spacer style="height:4px"/>
-
 	 <!-- /hbox -->
        </groupbox>
      </box>
      <tabbox class="frameExtra" flex="1">
        <tabs class="AreaPagina">
-	 <tab label="<?php echo _("Buscar") ?>"/>
-	 <tab label="<?php echo _("Comprar") ?>"/>		    
-	 <tab label="<?php echo _("Capturar CB") ?>"/>
+	 <tab label="<?php echo _(" Comprar ") ?>" image="img/gpos_barcode.png"/>		    
+	 <tab label="<?php echo _(" Capturar CB ") ?>" image="img/gpos_barcode.png"/>
        </tabs>
        
-       <tabpanels flex="1">
-	 <tabpanel id="normaltab" flex='1'>		    	
-	   <groupbox flex="1">
-	     <caption label="<?php echo _("Buscar"); ?>" collapse="true"/>
-	     <grid> 
-	       <columns> 
-		 <column flex="1"/><column flex="1"/>
-	       </columns>
-	       <rows>
-		 <row>
-		   <caption label="<?php echo _("CB"); ?>"/>
-		   <textbox id="c_CB" flex="1" onfocus="select()"
-			    onkeypress="if (event.which == 13) { Compras_buscar() }"/>
-		 </row>				
-		 <row>
-		   <caption label="<?php echo _("Ref"); ?>"/>
-		   <textbox id="c_Referencia" flex="1" onfocus="select()"
-			    onkeypress="if (event.which == 13) { Compras_buscar() }"/>
-		 </row>						
-		 <row>
-		   <caption label="<?php echo _("Nombre"); ?>"/>
-		   <textbox id="c_Nombre" flex="1" onfocus="select()" 
-			    onkeypress="if (event.which == 13) { Compras_buscar() }"/>
-		 </row>			
-		 <row>
-		   <caption label="<?php echo _("Solo"); ?>"/>
-		 </row>
-
-		 <row><box/><checkbox id="c_StockMinimo" label="<?php echo _("Stock Minimo"); ?>" checked="false"/></row>
-		 <row><box/><checkbox id="c_PorProveedor" label="<?php echo _("Por Proveedor"); ?>" checked="false"/></row>
-		 <row><box/><checkbox id="c_Obsoletos" label="<?php echo _("Obsoletos"); ?>" checked="false"/></row>
-	       </rows>
-	     </grid>
-	     <button id='btnbuscar' image='img/gpos_buscar.png' label='Buscar' oncommand="Compras_buscar()"/>
-	   </groupbox>
-	 </tabpanel>
+       <tabpanels flex="1" class="box">
+	 <!-- Buscar productos Compra -->
+	 <!-- /Buscar productos Compra -->
 	 <tabpanel id="comprapanel" flex='1'>		    	
 	   <groupbox flex="1">
 	     <caption label="<?php echo _("Comprar"); ?>" collapse="true"/>
@@ -718,7 +748,7 @@ if (isUsuarioAdministradorWeb()){
 		 </row>										
 	       </rows>				  
 	     </grid>
-	     <button  image="img/gpos_compras.png" label='<?php echo _("Comprar") ?>' oncommand="Compras_CBCompra()"/>
+	     <button class="btn"  image="img/gpos_compras.png" label='<?php echo _("Comprar") ?>' oncommand="Compras_CBCompra()"/>
 	     <spacer style="height: 16px"/>					
 	   </groupbox>
 	 </tabpanel>		  
@@ -726,7 +756,7 @@ if (isUsuarioAdministradorWeb()){
 	   <groupbox flex="1">
 	     <caption label="<?php echo _("Captura CB"); ?>" collapse="true"/>
 	     <textbox  id="c_CapturaCB" multiline="true" flex="1"/>
-	     <button   image="img/gpos_compras.png"  label="<?php echo _("Comprar"); ?>" oncommand="Compras_selrapidaCompra()"/>	        	       
+	     <button class="btn"   image="img/gpos_compras.png"  label="<?php echo _("Comprar"); ?>" oncommand="Compras_selrapidaCompra()"/>	        	       
 	   </groupbox>
 	 </tabpanel>
        </tabpanels>
@@ -739,20 +769,20 @@ if (isUsuarioAdministradorWeb()){
      <spacer style="height:15px"/>
      <box id="accionesweb" class="frameNormal">
        <groupbox class="frameNormal" flex="1">
-	 <caption label="<?php echo _("Acciones:"); ?>" class="frameNormal"/>
+	 <caption label="<?php echo _("Acciones:"); ?>" class="frameNormal box"/>
 	 <spacer style="height:4px"/>
 	 <vbox>
-	   <button  image="img/gpos_productos.png"  label="<?php echo _(" Nuevo producto"); ?>" oncommand="Productos_ModoAlta();"/>
+	   <button class="btn"  image="img/gpos_productos.png"  label="<?php echo _(" Nuevo producto"); ?>" oncommand="Productos_ModoAlta();"/>
            <spacer style="height:10px"/>
-           <button  image="img/gpos_fichatecnica.png"  label="<?php echo _("  Ficha Técnica"); ?>" oncommand="solapa('modulos/productos/modproductoextra.php?modo=verProductoInformacion','<?php echo _("Productos - Ficha Técnica") ?>','framelist');" flex="1"/>
+           <button  class="btn" image="img/gpos_fichatecnica.png"  label="<?php echo _("  Ficha Técnica"); ?>" oncommand="solapa('modulos/productos/modproductoextra.php?modo=verProductoInformacion','<?php echo _("Productos - Ficha Técnica") ?>','framelist');" flex="1"/>
 	 </vbox>
        </groupbox>
      </box>
      <box>
        <groupbox class="frameNormal" flex="1">
-	 <caption label="<?php echo _("Recursos:"); ?>" class="frameNormal"/>
+	 <caption label="<?php echo _("Recursos:"); ?>" class="frameNormal box"/>
 	 <hbox  equalsize="always">
-	 <button  image="img/gpos_presupuesto.png"  label="<?php echo _(" Presupuestos"); ?>" 
+	 <button class="btn"  image="img/gpos_presupuesto.png"  label="<?php echo _(" Ir a Presupuestos"); ?>" 
 	          oncommand="solapa('modulos/compras/xulcompras.php?modo=entra','<?php echo _("Compras - Presupuestos") ?>','compras');" <?php gulAdmite("Presupuestos") ?> flex="1"/>
 
 	 </hbox>
@@ -761,13 +791,13 @@ if (isUsuarioAdministradorWeb()){
 
      <tabbox class="frameExtra" flex="1">
        <tabs class="AreaPagina">
-	 <tab label="<?php echo _("Buscar") ?>"/>
-	 <tab label="<?php echo _("Búsqueda avanzada") ?>" oncommand="Productos_loadAvanzado()"/>
+	 <tab label="<?php echo _(" Buscar Productos ") ?>" image="img/gpos_barcode.png"/>
+	 <tab label="<?php echo _(" Búsqueda avanzada ") ?>" oncommand="Productos_loadAvanzado()" image="img/gpos_barcode.png"/>
        </tabs>
-       <tabpanels flex="1">
+       <tabpanels flex="1" class="box">
 	 <tabpanel id="normaltab" flex='1'>
 	   <groupbox  flex="1">
-	     <caption label="<?php echo _("Buscar") ?>" />
+	     <caption label="<?php echo _(" Buscar ") ?>" />
 	     <grid>
 	       <columns>
     		 <column flex="1" />
@@ -776,12 +806,12 @@ if (isUsuarioAdministradorWeb()){
 	       <rows>
     		 <row><caption label="<?php echo _("CB"); ?>"/><textbox id="p_CB" onkeypress="if (event.which == 13) { Productos_buscar() }"/></row>
     		 <row><caption label="<?php echo _("Ref"); ?>"/><textbox id="p_Referencia" onkeypress="if (event.which == 13) { Productos_buscar() }"/></row>
-		 <row><caption label="<?php echo _("Nombre"); ?>"/><textbox id="p_Nombre" onkeypress="if (event.which == 13) { Productos_buscar() }" onfocus="select()"/></row>
+		 <row><caption label="<?php echo _("Nombre"); ?>"/><textbox id="p_Nombre" onkeypress="if (event.which == 13) { Productos_buscar() }" onfocus="select()"  placeholder=" nombre | marca ó modelo ó detalle..."/></row>
 		 <row><box/>
 		 <checkbox id="p_Obsoletos" label="<?php echo _("Ver obsoletos"); ?>" checked="false"/></row>
 	       </rows>
 	     </grid>
-	     <button  image="img/gpos_buscar.png" label='<?php echo _("Buscar") ?>' oncommand="Productos_buscar()"/>
+	     <button class="btn"  image="img/gpos_buscar.png" label='<?php echo _("Buscar") ?>' oncommand="Productos_buscar()"/>
 	   </groupbox>
 	 </tabpanel>
 	 <tabpanel id="avanzadatabProductos" flex='1'>
@@ -799,20 +829,20 @@ if (isUsuarioAdministradorWeb()){
    <vbox class="frameNormal">
        <spacer style="height:2em"/>		
      <groupbox class="frameNormal" >
-       <caption label="<?php echo _("Acciones:"); ?>" class="frameNormal"/>
-       <button  image="img/gpos_proveedores.png"  command="altaProveedor"/>
+       <caption label="<?php echo _("Acciones:"); ?>" class="frameNormal box"/>
+       <button class="btn"  image="img/gpos_proveedores.png"  command="altaProveedor"/>
        <spacer style="height:0.5em"/>
-       <button  image="img/gpos_listaproveedores.png"  command="listaProveedores"/>
+       <button class="btn"  image="img/gpos_listaproveedores.png"  command="listaProveedores"/>
        <spacer style="height:0.5em"/>
-       <button  image="img/gpos_labs.png"  command="altaLaboratorio"/>
+       <button class="btn"  image="img/gpos_labs.png"  command="altaLaboratorio"/>
        <spacer style="height:0.5em"/>
-       <button  image="img/gpos_listaproveedores.png"  command="listaLaboratorios"/>
+       <button class="btn"  image="img/gpos_listaproveedores.png"  command="listaLaboratorios"/>
      </groupbox>
      
      <tabbox class="frameExtra" flex="1">
        <tabs class="AreaPagina">		    		    
        </tabs>
-       <tabpanels flex="1">
+       <tabpanels flex="1" class="box">
 	 <tabpanel id="atab" flex='1'>
 	   <groupbox flex="1"></groupbox>
 	 </tabpanel>
@@ -825,21 +855,34 @@ if (isUsuarioAdministradorWeb()){
    <vbox flex="1" class="frameNormal">		
      <spacer style="height:1.5em"/>
      <groupbox class="frameNormal">
-       <caption label="<?php echo _("Acciones:"); ?>" class="frameNormal"/>	     
+       <caption label="<?php echo _("Acciones:"); ?>" class="frameNormal box"/>	     
        <spacer style="height:1em"/>
-       <button  image="img/gpos_clienteempresa.png" command="altaCliente"/>
+       <button class="btn"  image="img/gpos_clienteempresa.png" command="altaCliente"/>
        <spacer style="height:1em"/>
-       <button  image="img/gpos_clienteparticular.png" command="altaClienteParticular"/>
+       <button class="btn"  image="img/gpos_clienteparticular.png" command="altaClienteParticular"/>
        <spacer style="height:1em"/>
-       <button  image="img/gpos_listaclientes.png" command="listaClientes"/>
+       <button class="btn"  image="img/gpos_listaclientes.png" command="listaClientes"/>
        <box flex="1"></box>	     
      </groupbox>	
      <tabbox class="frameExtra" flex="1">
-       <tabs class="AreaPagina">		    		    
+       <tabs class="AreaPagina">
+	 <tab label="<?php echo _(" Buscar Cliente ") ?>" image="img/gpos_clientecorp.png"/>
        </tabs>
-       <tabpanels flex="1">
+       <tabpanels flex="1" class="box">
 	 <tabpanel id="atab" flex='1'>
-	   <groupbox flex="1"></groupbox>
+	   <groupbox flex="1">
+ <grid>
+	       <columns>
+    		 <column flex="1" />
+    		 <column flex="1" />
+  	       </columns>
+	       <rows>
+		 <row><caption label="<?php echo _("Nombre"); ?>"/><textbox id="c_Nombre" onkeypress="if (event.which == 13) { Clientes_buscar() }" onfocus="select()"  placeholder=" nombre RUC/DNI "/></row>
+		 
+	       </rows>
+	     </grid>
+	     <button class="btn"  image="img/gpos_buscar.png" label='<?php echo _("Buscar") ?>' oncommand="Clientes_buscar()"/>
+           </groupbox>
 	 </tabpanel>
        </tabpanels>
      </tabbox>
@@ -849,17 +892,17 @@ if (isUsuarioAdministradorWeb()){
    <!-- Ventana Servicio Tecnico -->
    <vbox flex="1" class="frameNormal">		
      <groupbox class="frameNormal">
-       <caption label="<?php echo _("Acciones: "); ?>" class="frameNormal"/>	     
-       <button  image="img/gpos_clienteparticular.png" command="buzonSugerencia"/>
-       <button  image="img/gpos_clienteparticular.png" command="buzonReportefallo"/>
-       <button  image="img/gpos_listaclientes.png" command="listaClientes"/>	  	        	              	     
+       <caption label="<?php echo _("Acciones: "); ?>" class="frameNormal box"/>	     
+       <button class="btn"  image="img/gpos_clienteparticular.png" command="buzonSugerencia"/>
+       <button class="btn"  image="img/gpos_clienteparticular.png" command="buzonReportefallo"/>
+       <button class="btn"  image="img/gpos_listaclientes.png" command="listaClientes"/>	  	        	              	     
        <box flex="1"></box>	     
      </groupbox>	
      
      <tabbox class="frameExtra" flex="1">
        <tabs class="AreaPagina">		    		    
        </tabs>
-       <tabpanels flex="1">
+       <tabpanels flex="1" class="box">
 	 <tabpanel id="atab" flex='1'>
 	   <groupbox flex="1"></groupbox>
 	 </tabpanel>
@@ -876,8 +919,6 @@ if (isUsuarioAdministradorWeb()){
 </groupbox>
 <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/cadenas.js.php?ver=1/r<?php echo rand(0,99999999); ?>"/>
 <script><![CDATA[
-
-
 
 var id2nombreAlmacenes   = new Array();
 var id2nombreProveedores = new Array();
@@ -900,8 +941,6 @@ var id2nombreProveedores = new Array();
 		echo "id2nombreAlmacenes[$key] = '".addslashes($value). "';\n";			
 	}
 
-        //Lanzar TPV 
-        if( $lanzarTPV && Admite("TPV") ){ echo "setTimeout('lanzarTPV()',4200);"; }
 ?>;	
 
 var myBrowser = false;
@@ -1012,14 +1051,17 @@ function MostrarDeck(){
 }
 
 var cSolapaLista  = '';
+var cSolapaTPV    = false;
 var cSolapaNormal = '';
 
 function solapa(url,area,deck){
 	var main     = getBrowser();  
         var mainweb  = document.getElementById("WebNormal");
         var mainlist = document.getElementById("WebLista");
+	var maintpv  = document.getElementById("WebTPV");
 	var status   = document.getElementById("status");
         mainweb.setAttribute("collapsed","false");
+	maintpv.setAttribute("collapsed","true");
         mainlist.setAttribute("collapsed","true");
 
    	status.setAttribute("label","Area " + area);
@@ -1039,11 +1081,12 @@ function solapa(url,area,deck){
 	  case "compras":
 	  	OpenDeck(2);
 		MostrarDeck();
-	  	document.getElementById("c_Nombre").focus();
+	  	//document.getElementById("c_Nombre").focus();
 
 		if( cSolapaNormal != deck){
 		    //blankBrowser();
-		    Compras_buscar();	  	
+		    Compras_verCarrito()
+                    //Compras_buscar();	  	
 		   }
 		cSolapaNormal = deck;
 	  	break;
@@ -1085,6 +1128,9 @@ function solapa(url,area,deck){
                 // OCULTA VISTA GENERAL 
                 mainweb.setAttribute("collapsed","true");
 
+		// VISTA TPV
+                maintpv.setAttribute("collapsed","true");
+
                 // VISTA LISTAS CODEKA
                 mainlist.setAttribute("collapsed","false");
 
@@ -1103,6 +1149,33 @@ function solapa(url,area,deck){
 
 	        break;
 
+	 case "frametpv":
+                w_tpv = document.getElementById("webtpv");
+ 
+                // OCULTA VISTA GENERAL 
+                mainweb.setAttribute("collapsed","true");
+
+                // VISTA LISTAS CODEKA
+                mainlist.setAttribute("collapsed","true");
+
+		// VISTA TPV
+                maintpv.setAttribute("collapsed","false");
+
+                extraVisible = 0;	 	   
+
+	        // CARGAR URL
+		if( ! cSolapaTPV )
+		  w_tpv.setAttribute("src", url);
+		
+		cSolapaTPV = true;
+
+                if(window.innerWidth){
+                   var ancho = window.innerWidth - 12;
+                   w_tpv.setAttribute("width",ancho);
+                }
+
+	        break;
+		
 	  case "buzon":	
 	  	OcultaDeck();
 	  	main.setAttribute("src", url);
@@ -1139,22 +1212,36 @@ function popup(url,metodo){
 
 var tpvWindow;
 var gposWindow;
+var esTPVPopUp   = 2;
+var loadFrameTPV = false;
+
 function lanzarTPV(rt){
 	
-	<?php 
-	if (Admite("TPV")){
+<?php if (Admite("TPV")){ ?>
 
-	  $rtpv = 'rd';
-	?>
-	
+    //valida inicio
+    if(esTPVPopUp == 2)
+      esTPVPopUp = (confirm("gPOS: Lanzar Terminal de Punto Venta \n\n"+
+			    " ¿ TPV Embebido en la Ventana Actual? ") );
+    var espopup = ( esTPVPopUp )? 'off':'on';
+    var url     = 'tpvload.php?modo=tpv&t=rd&espopup='+espopup+'&r=' + Math.random();
+    
+    if( esTPVPopUp )
+      {
+	//FRAME
+	solapa(url,'<?php echo _("Ventas - Terminal de Punto Venta") ?>','frametpv');
+      }
+    else
+      {
+	//POPUP
 	if (tpvWindow && tpvWindow.close) tpvWindow.close();
-
-	var url    = 'tpvload.php?modo=tpv&t=<?php echo $rtpv; ?>&espopup=on&r=' + Math.random();
 	var metodo = 'fullscreen=yes,directories=No,toolbar=No,menubar=No,status=No,resizable=No,titlebar=No,location=No';
-	tpvWindow  =  open(url,"gPOS // TPV ",metodo);	
-	<?php  } ?>
+	tpvWindow  =  open(url,"gPOS // TPV ",metodo);
+      }
+<?php  } ?>
 
 }
+
 
 function lanzarVentasGeneral(){
    	    var url="modulos/comprobanteventa/modventas.php?modo=mostrarComprobantes"
@@ -1332,6 +1419,7 @@ function almacen_MotivoTraslado(){
 
     switch (trasmotivo.value) {
 
+    case '10'://Traslado y Recepción
     case '5'://Traslado
     case '2'://Consignacion
         xtlocal     = false;
@@ -1363,6 +1451,7 @@ function almacen_Traslado() {
     var Destino = '';
 
     switch (motivo) {
+    case '10'://Traslado y Recepcion
     case '5'://Traslado
     case '2'://Consignacion
     case '6'://inmovilizacion
@@ -1580,7 +1669,7 @@ function Compras_compraEfectuar() {
     if(res!='')
       {
         alert(xrequest.responseText);
-        return Compras_verCarrito();
+        return;
        }
     //Finaliza Compra	
     var url = "modcompras.php?modo=continuarCompra&IdLocal="+c_local;
@@ -1601,45 +1690,6 @@ function Compras_verCarrito(modo=false) {
 
     main.setAttribute("src",'modulos/compras/progress.php?modo=aCarritoCompras&aviso='+aviso);
     xwebCollapsed(true);
-}
-
-function Compras_cambiaBtnCarrito(modo) { 
-
-    //Id Actual
-    var btnVer    = document.getElementById("verBtnCarrito");
-    var btnLoad   = document.getElementById("loadBtnCarrito")
-    var thisbtn   = (btnVer)? btnVer:btnLoad;
-    var actualiza = false;
-
-    //WebFrom hide
-    xwebCollapsed(false,true);
-
-    switch(modo)
-	{
-	case "Ver":
-	  if(thisbtn.id == 'verBtnCarrito') return;
- 	  var btnid    =  'verBtnCarrito';
- 	  var btnlink  =  'Compras_verCarrito();';
-	  var btnimg   =  'img/gpos_vercompras.png';
-	  var btnlabel =  ' Ver Carrito';		
-	  var actualiza = true;
-	break;
-
-	case "Load":
-	 if(thisbtn.id == 'loadBtnCarrito') return;
-	 var btnid    = 'loadBtnCarrito';		
-	 var btnlink  = 'Compras_buscar()';
-	 var btnimg   = 'img/gpos_compras.png';
-	 var btnlabel = ' Cargar Carrito';
-	 var actualiza = true;
-	break;
-	}
-	
-    //Actualiza Atributos
-    thisbtn.setAttribute("id",btnid);
-    thisbtn.setAttribute("oncommand",btnlink);
-    thisbtn.setAttribute("label",btnlabel);
-    thisbtn.setAttribute("image",btnimg);
 }
 
 function Compras_loadCarrito(){
@@ -1669,37 +1719,30 @@ function Compras_selrapidaCompra(cb=false) {
 }
 
 function Compras_altaRapida() {
+
 	var url   = "modulos/altarapida/xulaltarapida.php?modo=alta";
 	var aviso = 'Cargando Carrito Alta Rapida...';
-	var main  = parent.getWebForm();
-	var lurl  = 'modulos/compras/progress.php?modo=lWebFormAltaRapida&aviso='+aviso+'&url='+url;
-
+	var main  = getWebForm();
+	var lurl  = 'modulos/compras/progress.php?modo=cAltaRapida&aviso='+aviso+'&url='+url;
+	setTimeout("xwebAltaRapida()",600);
 	main.setAttribute("src",lurl);
-	xwebCollapsed(true);
 }
 
-function Compras_buscar()
-{  
-  var xnombre     = document.getElementById("c_Nombre").value; 
-  var codigo      = document.getElementById("c_CB").value;
-  var referencia  = document.getElementById("c_Referencia").value;
-  var obsoletos   = ( document.getElementById("c_Obsoletos").checked )?1:0;
-  var porproveedor= ( document.getElementById("c_PorProveedor").checked )?1:0;
-  var stockminimo = ( document.getElementById("c_StockMinimo").checked )?1:0;
-
-  var extra ="";
-	extra = extra + "&CodigoBarras="+codigo;
-	extra = extra + "&Nombre="+xnombre;
-	extra = extra + "&Referencia="+referencia;
-	extra = extra + "&Obsoletos="+obsoletos;
-	extra = extra + "&PorProveedor="+porproveedor;
-	extra = extra + "&StockMinimo="+stockminimo;
-  
-  url = "modcompras.php?modo=buscarproductos" + extra; 
-
-  subweb.setAttribute("src", url);
-  document.getElementById("c_Nombre").focus();
+function xwebAltaRapida(){
+        xwebCollapsed(true);
+        OcultaDeck();
 }
+
+function Compras_ClonarProducto(xid) {
+
+	var url   = "modulos/altarapida/xulaltarapida.php?modo=alta%clonidbase="+xid;
+	var aviso = 'Cargando Carrito Alta Rapida...';
+	var main  = parent.getWebForm();
+	var lurl  = 'modulos/compras/progress.php?modo=cAltaRapidaClon&aviso='+aviso+'&url='+url;
+	setTimeout("xwebAltaRapida()",600);
+	main.setAttribute("src",lurl);
+}
+
 /* ========== COMPRAS ============ */
 
 /* ========== PRODUCTOS ============ */
@@ -1826,6 +1869,16 @@ function clientes_Ver(){
 	subweb.setAttribute("src",url);
 }
 
+function Clientes_buscar()
+{  
+  var xnombre    = document.getElementById("c_Nombre").value;
+  var extra ="";
+  extra = extra + "&Nombre="+xnombre;
+       
+  url = "modclientes.php?modo=buscarclientes" + extra;
+  subweb.setAttribute("src", url);
+  document.getElementById("c_Nombre").focus();
+}
 
 /* ========== CLIENTES ============ */
 
@@ -1837,6 +1890,10 @@ function clientes_Ver(){
 //}
 
 var localcesion = "<?php echo getSesionDato("IdTienda");?>";
+function startgPOS(){
+solapa('modulos/dashboard/xuldashboard.php','<?php echo _(" gPOS ") ?>','framelist');
+}
+setTimeout( "startgPOS()", 100);
 ]]></script>
 
 <?php

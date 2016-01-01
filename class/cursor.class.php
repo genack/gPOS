@@ -381,7 +381,7 @@ class Cursor {
 				if ($hackCheckBox and $value == "on")
 					$value = 1;
 
-				$value = mysql_escape_string($value);
+				$value = mysql_real_escape_string($value);
 
 				$str .= " $key = '".$value."'";
 				$coma = true;

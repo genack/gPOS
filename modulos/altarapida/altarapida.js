@@ -12,6 +12,7 @@ function ResetRetrys(){
 
 var itacolor = 0 ;//Indice de Talla/Color
 var elAltaRapida = new Array();
+var costoxcontenedor = 0;
 
 function xNuevaTallaColor(){
 
@@ -106,87 +107,96 @@ function xNuevaTallaColor(){
         noretryTC[autentitalla] = autenticolor;		
 	noretryCOD[actualCOD] = 1;		
 
-	var xlistitem = document.createElement("listitem");	
-        document.createElement("listitem");	
+
+        //treechildren
+        //treeitem
+        //treerow
+        //treecell
+        var treeChildren = document.getElementById("my_tree_children");
+        var xlistitem    = document.createElement("treeitem");
+        var xrow         = document.createElement("treerow");
+
+        /* var xlistitem = document.createElement("listitem");	
+        document.createElement("listitem");	 */
 	
-	var xcod   = document.createElement("label");
-	xcod.setAttribute("value",actualCOD);			
+	var xcod   = document.createElement("treecell");
+	xcod.setAttribute("label",actualCOD);			
 		
-	var xtalla = document.createElement("label");
-	xtalla.setAttribute("value",autentitalla);
+	var xtalla = document.createElement("treecell");
+	xtalla.setAttribute("label",autentitalla);
 	xtalla.setAttribute("tooltipText",idtalla);					
 		
-	var xcolor = document.createElement("label");
-        xcolor.setAttribute("value",autenticolor);		
+	var xcolor = document.createElement("treecell");
+        xcolor.setAttribute("label",autenticolor);		
         xcolor.setAttribute("tooltipText",idcolor);					
 
-	var xcosto = document.createElement("label");
-        xcosto.setAttribute("value",vcosto);		
+	var xcosto = document.createElement("treecell");
+        xcosto.setAttribute("label",vcosto);		
 
-	var xcostoop = document.createElement("label");
-        xcostoop.setAttribute("value",vcostoop);		
+	var xcostoop = document.createElement("treecell");
+        xcostoop.setAttribute("label",vcostoop);		
 
         //Precios Venta
-	var xpvd = document.createElement("label");
-        xpvd.setAttribute("value",vpvd);		
+	var xpvd = document.createElement("treecell");
+        xpvd.setAttribute("label",vpvd);		
 
-	var xpvdd = document.createElement("label");
-        xpvdd.setAttribute("value",vpvdd);		
+	var xpvdd = document.createElement("treecell");
+        xpvdd.setAttribute("label",vpvdd);		
 
-	var xpvc = document.createElement("label");
-        xpvc.setAttribute("value",vpvc);		
+	var xpvc = document.createElement("treecell");
+        xpvc.setAttribute("label",vpvc);		
 
-	var xpvcd = document.createElement("label");
-        xpvcd.setAttribute("value",vpvcd);		
+	var xpvcd = document.createElement("treecell");
+        xpvcd.setAttribute("label",vpvcd);		
 
         //Alias
-	var xalias = document.createElement("label");
-        xalias.setAttribute("value",valiasuno+' '+valiasdos);		
+	var xalias = document.createElement("treecell");
+        xalias.setAttribute("label",valiasuno+' '+valiasdos);		
         //fv
-	var xfv = document.createElement("label");
-        xfv.setAttribute("value",(id("FechaVencimiento").checked)?vfv:'');		
+	var xfv = document.createElement("treecell");
+        xfv.setAttribute("label",(id("FechaVencimiento").checked)?vfv:'');		
         //lt     
-	var xlt = document.createElement("label");
-        xlt.setAttribute("value",(id("Lote").checked)?vlt:'');		
+	var xlt = document.createElement("treecell");
+        xlt.setAttribute("label",(id("Lote").checked)?vlt:'');		
         //Menudeo
-	var xmenudeo = document.createElement("label");
-        xmenudeo.setAttribute("value",
+	var xmenudeo = document.createElement("treecell");
+        xmenudeo.setAttribute("label",
 			      (id("Menudeo").checked)?vcantcont+' '+
 			      vcont+'+'+vcantcontunid+''+unids:'');
 
-	var xidcont = document.createElement("label");
-        xidcont.setAttribute("value",(id("Menudeo").checked)?idcont:'1');
+	var xidcont = document.createElement("treecell");
+        xidcont.setAttribute("label",(id("Menudeo").checked)?idcont:'1');
         xidcont.setAttribute("collapsed","true");
 
-	var xaliasuno = document.createElement("label");
-        xaliasuno.setAttribute("value",idaliasuno);
+	var xaliasuno = document.createElement("treecell");
+        xaliasuno.setAttribute("label",idaliasuno);
         xaliasuno.setAttribute("collapsed","true");		
 
-	var xaliasdos = document.createElement("label");
-        xaliasdos.setAttribute("value",idaliasdos);
+	var xaliasdos = document.createElement("treecell");
+        xaliasdos.setAttribute("label",idaliasdos);
         xaliasdos.setAttribute("collapsed","true");		
 
-	var xunidxcont = document.createElement("label");
-        xunidxcont.setAttribute("value",(id("Menudeo").checked)?vunidxcont:'0');
+	var xunidxcont = document.createElement("treecell");
+        xunidxcont.setAttribute("label",(id("Menudeo").checked)?vunidxcont:'0');
         xunidxcont.setAttribute("collapsed","true");
 
-	var xcantcont = document.createElement("label");
-        xcantcont.setAttribute("value",(id("Menudeo").checked)?vcantcont:'0');
+	var xcantcont = document.createElement("treecell");
+        xcantcont.setAttribute("label",(id("Menudeo").checked)?vcantcont:'0');
         xcantcont.setAttribute("collapsed","true");
 
-	var xcantcontunid = document.createElement("label");
-        xcantcontunid.setAttribute("value",(id("Menudeo").checked)?vcantcontunid:'0');
+	var xcantcontunid = document.createElement("treecell");
+        xcantcontunid.setAttribute("label",(id("Menudeo").checked)?vcantcontunid:'0');
         xcantcontunid.setAttribute("collapsed","true");
 
         //Unidades
         var ounidadescompra = parseFloat(vunidxcont*vcantcont )+parseFloat(vcantcontunid);
         unidadescompra = ( id("Menudeo").checked )? ounidadescompra:unidadescompra;
 				
-	var xunid = document.createElement("label");
-        xunid.setAttribute("value",unidadescompra);	
+	var xunid = document.createElement("treecell");
+        xunid.setAttribute("label",unidadescompra);	
 
-	var xcondventa = document.createElement("label");
-        xcondventa.setAttribute("value",condventa);	
+	var xcondventa = document.createElement("treecell");
+        xcondventa.setAttribute("label",condventa);	
         xcondventa.setAttribute("collapsed","true");
 
 		
@@ -217,32 +227,31 @@ function xNuevaTallaColor(){
 	xaliasdos.setAttribute("id",firma+ "_aliasdos");
 	xcondventa.setAttribute("id",firma+ "_condventa");
 
-	xlistitem.appendChild( xcod );
-	xlistitem.appendChild( xcolor );
-	xlistitem.appendChild( xtalla );	
-	xlistitem.appendChild( xalias );
-    	xlistitem.appendChild( xunid );
-	xlistitem.appendChild( xcosto );
-	xlistitem.appendChild( xcostoop );
-	xlistitem.appendChild( xpvd );
-	xlistitem.appendChild( xpvdd );
-	xlistitem.appendChild( xpvc );
-	xlistitem.appendChild( xpvcd );
+	xrow.appendChild( xcod );
+	xrow.appendChild( xcolor );
+	xrow.appendChild( xtalla );	
+	xrow.appendChild( xalias );
+    	xrow.appendChild( xunid );
+	xrow.appendChild( xcosto );
+	xrow.appendChild( xcostoop );
+	xrow.appendChild( xpvd );
+	xrow.appendChild( xpvdd );
+	xrow.appendChild( xpvc );
+	xrow.appendChild( xpvcd );
+        xrow.appendChild( xmenudeo );
+        xrow.appendChild( xfv );
+	xrow.appendChild( xlt );
+	xrow.appendChild( xunidxcont );
+	xrow.appendChild( xidcont );
+	xrow.appendChild( xaliasuno );
+	xrow.appendChild( xaliasdos );
+	xrow.appendChild( xcantcont );
+	xrow.appendChild( xcantcontunid );
+	xrow.appendChild( xcondventa );
 
-        xlistitem.appendChild( xmenudeo );
-
-        xlistitem.appendChild( xfv );
-	xlistitem.appendChild( xlt );
-
-	xlistitem.appendChild( xunidxcont );
-	xlistitem.appendChild( xidcont );
-	xlistitem.appendChild( xaliasuno );
-	xlistitem.appendChild( xaliasdos );
-	xlistitem.appendChild( xcantcont );
-	xlistitem.appendChild( xcantcontunid );
-	xlistitem.appendChild( xcondventa );
-
-	xlistadoTacolor.appendChild( xlistitem );		
+        xlistitem.appendChild( xrow );		
+        treeChildren.appendChild( xlistitem );		
+	//xlistadoTacolor.appendChild( xlistitem );		
 	id("CB").value = parseInt(actualCOD) + 1;
 
         //setTimeout("ordenaListaTaColor()",200);
@@ -265,33 +274,6 @@ function RegenCB() {
 		//id("CB").style.color = "black"; 			
 }
 
-
-
-var ven_normal = "dependent=yes,width=300,height=220,screenX=200,screenY=300,titlebar=yes,status=0";
-var ven_familiaplus = "dependent=yes,width=450,height=350,screenX=200,screenY=300,titlebar=yes,status=0";
-var ven_talla = "dependent=yes,width=300,height=260,screenX=200,screenY=300,titlebar=yes,status=0";
-var ven_marca = "dependent=yes,width=300,height=360,screenX=200,screenY=300,titlebar=yes,status=0";
-
-var ven = new Array();
-ven["talla"]= ven_normal;
-ven["marca"]= ven_marca;
-ven["talla"]= ven_talla;
-ven["tallaje"]= ven_talla;
-ven["familiaplus"] = ven_familiaplus;
-
-
-
-
-function popup(url,tipo) {
- if (ven[tipo])
-   extra = ven[tipo];
- else 
-   extra =  'dependent=yes,width=210,height=230,screenX=200,screenY=300,titlebar=yes,status=0';
-   
-  var nueva = window.open(url,tipo,extra);
-}
-
-
 //---------------------ALTA PRODUCTO--------------------------
 
 function AltaProductoInventario(){
@@ -308,7 +290,8 @@ function AltaProducto(){
     
     var xlistitem = id("elementosTallas");
     var iditem;
-    var t = 0;
+    var t    = 0;
+    var xArt = 0;
     var el, talla, color, cb, idtalla, idcolor, probhab, cantcont,cantcontu,vfv,vlt,costo; 
 
     if (id("Referencia").value.length <1)
@@ -318,34 +301,43 @@ function AltaProducto(){
     var lt = (id("Lote").checked)? 'on' : '';
     var md = (id("Menudeo").checked)? 'on' : '';
     var ns = (id("NS").checked)? 'on' : '';
-
+    var imm = ''; 
+    var xAlmacen = ( parent.cIdLocal )? parent.cIdLocal:0;//Solo para inventario
     firma = "tacolor_";
+
+    //Mensaje
+    id("msjAltaRapida").setAttribute("label","...validando datos");
+    id("msjAltaRapida").setAttribute("collapsed",false);
+    id("btnAccionAltaRapida").setAttribute("collapsed",true);
+
+    //Almacen
+
 
     while( el = id(firma + t) ) { 
 	
 	data = "";
 	
-	talla 	     = id( firma + t + "_talla" ).value;
+	talla 	     = id( firma + t + "_talla" ).getAttribute("label");
 	idtalla      = id( firma + t + "_talla" ).getAttribute("tooltipText");
 	idcolor      = id( firma + t + "_color" ).getAttribute("tooltipText")
-	costo        = id( firma + t + "_costo"  ).value;	
-	costoop      = id( firma + t + "_costoop"  ).value;	
-	unidades     = id( firma + t + "_unid"  ).value;	
-	vfv          = id( firma + t + "_fv"  ).value;	
-	vlt          = id( firma + t + "_lt"  ).value;	
-	color 	     = id( firma + t + "_color" ).value;
-	cb 	     = id( firma + t + "_cod" ).value;	
-	idcont	     = id( firma + t + "_idcont" ).value;	
-	idaliasuno   = id( firma + t + "_aliasuno" ).value;	
-	idaliasdos   = id( firma + t + "_aliasdos" ).value;	
-	condventa    = id( firma + t + "_condventa" ).value;	
-	unidxcont    = id( firma + t + "_unidxcont" ).value;	
-	cantcont     = id( firma + t + "_cantcont" ).value;	
-	cantcontunid = id( firma + t + "_cantcontunid"  ).value;	
-	pvd          = id( firma + t + "_pvd"  ).value;
-	pvdd         = id( firma + t + "_pvdd"  ).value;
-	pvc          = id( firma + t + "_pvc"  ).value;
-	pvcd         = id( firma + t + "_pvcd"  ).value;
+	costo        = id( firma + t + "_costo"  ).getAttribute("label");	
+	costoop      = id( firma + t + "_costoop"  ).getAttribute("label");	
+	unidades     = id( firma + t + "_unid"  ).getAttribute("label");	
+	vfv          = id( firma + t + "_fv"  ).getAttribute("label");	
+	vlt          = id( firma + t + "_lt"  ).getAttribute("label");	
+	color 	     = id( firma + t + "_color" ).getAttribute("label");
+	cb 	     = id( firma + t + "_cod" ).getAttribute("label");	
+	idcont	     = id( firma + t + "_idcont" ).getAttribute("label");	
+	idaliasuno   = id( firma + t + "_aliasuno" ).getAttribute("label");	
+	idaliasdos   = id( firma + t + "_aliasdos" ).getAttribute("label");	
+	condventa    = id( firma + t + "_condventa" ).getAttribute("label");	
+	unidxcont    = id( firma + t + "_unidxcont" ).getAttribute("label");	
+	cantcont     = id( firma + t + "_cantcont" ).getAttribute("label");	
+	cantcontunid = id( firma + t + "_cantcontunid"  ).getAttribute("label");	
+	pvd          = id( firma + t + "_pvd"  ).getAttribute("label");
+	pvdd         = id( firma + t + "_pvdd"  ).getAttribute("label");
+	pvc          = id( firma + t + "_pvc"  ).getAttribute("label");
+	pvcd         = id( firma + t + "_pvcd"  ).getAttribute("label");
         unids        = enviar["UnidadMedida"];
 
 	data = data + "&Referencia=" + escape(id("Referencia").value);
@@ -378,33 +370,63 @@ function AltaProducto(){
 	data = data + "&vPVCD="+ pvcd;				
 	data = data + "&vModo="+ cModo;				
 	data = data + "&UnidadMedida="+ unids;
+	data = data + "&Almacen="+ xAlmacen;
 	data = data + "&CostoOP="+ escape(costoop);
 
+	//Mensaje
+	id("msjAltaRapida").setAttribute("label","...registrando "+
+					 id( firma + t + "_talla" ).getAttribute("label")+' - '+
+					 id( firma + t + "_color" ).getAttribute("label")+'.' );
+	
 	xrequest.open("POST",url,false);
 	xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 	xrequest.send(data);
-	
-	var res = xrequest.responseText;
-	if(!parseInt(res)) 
-	    alert(po_servidorocupado+'\n\n -'+res+'-');	
 
+	var xres = xrequest.responseText.split(';');
+	
+	if(xres[0]!='')
+	{
+	    var existeClon = xrequest.responseText.split('~');
+	    
+	    if ( !parseInt( existeClon[0] ) ){
+		if( !esInventario )
+		    alert('gPOS Alta Rapida:   Modelo y detalle existente \n\n '+
+			  id( firma + t + "_talla" ).getAttribute("label")+' - '+
+			  id( firma + t + "_color" ).getAttribute("label")+'.\n\n'+
+			  '         - Aceptar para continuar - ');
+	    }
+	    else
+		alert(po_servidorocupado+'\n\n -'+xres[0]+'-');	
+	}
+	
 	//Inventario	
 	if(esInventario)
-	{
-	    aProducto[t]                = cb;
-	    aProducto[cb+'_idproducto'] = res;
-	    aProducto[cb+'_cantidad']   = unidades;
-	    aProducto[cb+'_costo']      = costo;
-	    aProducto[cb+'_costoop']    = costoop;
-	    aProducto[cb+'_pvd']        = pvd;
-	    aProducto[cb+'_pvdd']       = pvdd;
-	    aProducto[cb+'_pvc']        = pvc;
-	    aProducto[cb+'_pvcd']       = pvcd;
-	    aProducto[cb+'_lt']         = vlt;
-	    aProducto[cb+'_fv']         = vfv;
-
-	}
-
+	    if( parseInt( xres[1] ) > 0){
+		cb                             = xres[8];// nuevo cb;
+		aProducto[ xArt ]              = xres[8];// cb;
+		aProducto[cb+'_idproducto']    = xres[1];// id producto
+		aProducto[cb+'_idarticulo']    = xres[2];// almacen - id -
+		aProducto[cb+'_existencias']   = xres[3];// stock
+		aProducto[cb+'_resumenkardex'] = xres[4];// kardex
+		aProducto[cb+'_lt']            = xres[5];// es Lote?
+		aProducto[cb+'_fv']            = xres[6];// es Vence?
+		aProducto[cb+'_serie']         = xres[7];// es Serie?
+		aProducto[cb+'_producto']      = xres[9];// nombre producto
+		aProducto[cb+'_idalmacen']     = xAlmacen;// local
+		aProducto[cb+'_cantidad']   = unidades;
+		aProducto[cb+'_costo']      = costo;
+		aProducto[cb+'_costoop']    = costoop;
+		aProducto[cb+'_pvd']        = pvd;
+		aProducto[cb+'_pvdd']       = pvdd;
+		aProducto[cb+'_pvc']        = pvc;
+		aProducto[cb+'_pvcd']       = pvcd;
+		aProducto[cb+'_lote']       = vlt;// valor lote
+		aProducto[cb+'_vence']      = vfv;// valor vencimiento
+		xArt++;
+	    } else
+		imm =  '\n   - '+id( firma + t + "_color" ).getAttribute("label")
+	               +' / '+id( firma + t + "_talla" ).getAttribute("label");
+	
 	t++;
     }
 
@@ -416,17 +438,33 @@ function AltaProducto(){
 	VaciarTacolores();
 
 	if(!esInventario){
+	    
 	    resetAllDatos('aAltaRapida');
 	    parent.xwebcoreCollapsed(false,true);
 	    parent.cSolapaLista = '';
 	}
 
-	if(esInventario)
-	    parent.agregaStockAltaRapida(aProducto,t,0);
-    } 
-    else 
-	alert('gPOS: \n\n '+po_nohayproductos);	
+	if(esInventario){
+	    if( imm != '')
+		alert('gPOS Alta Rapida:   Modelos y detalles duplicados \n '+imm);
 
+	    if( xArt > 0 ){ 
+		//Mensaje
+		id("msjAltaRapida").setAttribute("label","...cargando stock" );	
+		parent.agregaStockAltaRapida(aProducto,xArt,0);
+	    }
+	        
+	    else
+		parent.volverStock()
+	}
+    } 
+    else {
+
+	//Oculta Mensaje
+	alert('gPOS: \n\n '+po_nohayproductos);	
+	id("msjAltaRapida").setAttribute("collapsed",true);
+	id("btnAccionAltaRapida").setAttribute("collapsed",false);
+    }
 }
 
 
@@ -582,44 +620,48 @@ function VaciarTallas(){
 }
 
 function RevisarProductoSeleccionado(){
+    var treeView = id("listadoTacolor").treeBoxObject.view;
 
-    var idex          = id("listadoTacolor").selectedItem;
+    if(treeView.rowCount == 0 ) return; 
 
-    if(!idex) return;
-      cTacolorSelect = idex.value;
+    var idex  = id("listadoTacolor");
+    var xitem = idex.contentView.getItemAtIndex( idex.currentIndex );
+
+    cTacolorSelect = xitem.value;
 }
 function quitarTacolorSelect(){
 
-    var xlistitem = id("listadoTacolor");
+    if( !id( cTacolorSelect ) ) return;
+
+    var xlistitem = id("my_tree_children");
     var el        = id( cTacolorSelect );
-    var xtalla    = id(cTacolorSelect+"_talla").value;
+    var xtalla    = id( cTacolorSelect+"_talla" ).getAttribute('label');
 
-    xlistitem.removeChild( el ) ;	
+    xlistitem.removeChild( el ); 
+    
     noretryTC[xtalla] = '';
-
+    
     if(itacolor==1)
-	changeEditHeadDatos('false');
+	if(cAccion == 'alta')
+	    changeEditHeadDatos('false');
     itacolor--;
-
+    
     setTimeout("ordenaListaTaColor()",100);
 }
 
 function VaciarTacolores(){
-	var xlistitem = id("listadoTacolor");
-	var iditem;
-	var t = 0;
 
-	while( el = id("tacolor_"+ t) ) {
-		if (el) {
-			xlistitem.removeChild( el ) ;	
-		}
-		t = t + 1;
+    var xlist = id("my_tree_children");
+    var el    = ""
+    var t     = 0;
+    while( el = id("tacolor_"+ t) ) {
+	if (el) {
+	    xlist.removeChild( el ) ;	
 	}
-	
-	itacolor = 0;
-
-	ResetRetrys();
-	
+	t = t + 1;
+    }
+    itacolor = 0;
+    ResetRetrys();
 }
 
 
@@ -658,6 +700,7 @@ function RegenTallajes() {
 function changeTalla(idtalla, txttalla) {
     RegenTallajes();
     enviar["IdTalla"] = idtalla.value;
+    id("Tallas").value = (isObject(idtalla))? idtalla.value : idtalla;
     id("Tallas").setAttribute("label", txttalla);  
 }
 
@@ -860,15 +903,17 @@ function verDatosExtra(xsw,xval){
     case 'fv':
 	vval = (sval)?'':'FV';
 	id("rowDatoFechaVencimiento").setAttribute('collapsed',sval);
-	id("colFV").setAttribute('label',vval);
+	//id("colFV").setAttribute('label',vval);
 	id("NS").checked = false;
+	id("FechaVencimiento").checked = xval;
 	break;
 
     case 'lt':
 	vval = (sval)?'':'LT';
 	id("rowDatoLote").setAttribute('collapsed',sval);
-	id("colLT").setAttribute('label',vval);
+	//id("colLT").setAttribute('label',vval);
 	id("NS").checked = false;
+	id("Lote").checked = xval;
 	break;
 
     case 'ct':
@@ -876,8 +921,11 @@ function verDatosExtra(xsw,xval){
 	id("rowDatoContenedor").setAttribute('collapsed',sval);
 	id("rowCantidad").setAttribute('collapsed',nval);
 	id("rowContenedor").setAttribute('collapsed',sval);
-	id("colMenudeo").setAttribute('label',vval);
+	//id("colMenudeo").setAttribute('label',vval);
 	id("NS").checked = false;
+	id("Menudeo").checked = xval;
+	id("xEmpaqueProductoAlta").setAttribute("collapsed",sval);
+	id("xEmpaqueProductoAlta").setAttribute("label","xEmpaque");
 	break;
 
     case 'ns':
@@ -889,10 +937,11 @@ function verDatosExtra(xsw,xval){
 	id("FechaVencimiento").checked = false;
 	id("Lote").checked = false;
 	id("Menudeo").checked = false;
+	id("NS").checked = xval;
 	id("rowDatoContenedor").setAttribute('collapsed',nval);
 	id("rowCantidad").setAttribute('collapsed',false);
 	id("rowContenedor").setAttribute('collapsed',nval);
-	id("colMenudeo").setAttribute('label',vval);
+	//id("colMenudeo").setAttribute('label',vval);
 
 	id("rowDatoLote").setAttribute('collapsed',nval);
 	id("colLT").setAttribute('label',vval);
@@ -947,13 +996,10 @@ function validaDato(xo,xtext){
 }
 
 function volverPresupuestos(){
-    if(confirm('gPOS:\n\n ¿Esta seguro que quiere vaciar el Carrito Alta Rapida?')){
-		VaciarTacolores();
-
-	resetAllDatos('cAltaRapida');
+        VaciarTacolores();
+	resetAllDatos('aCompras');
 	parent.xwebcoreCollapsed(false,true);
 	parent.cSolapaLista = '';
-    }
 }
 
 var xPVD  = 0;
@@ -987,17 +1033,17 @@ function setCostoPreciosAltaRapida(xval,xdato){
     xMUC        = parseFloat(xMUC);
 
     COP         = (COPImpuesto)? 0:xPrecio;
-    MUD         = (xCosto + COP)*(xMUD/100);
-    MUC         = (xCosto + COP)*(xMUC/100);
+    MUD         = ((xCosto*cCambio) + COP)*(xMUD/100);
+    MUC         = ((xCosto*cCambio) + COP)*(xMUC/100);
 
     switch (xval) {
 
     case 'costo':
-	id("Costo").value = formatDineroTotal(xCosto);
+	id("Costo").value = xCosto;
     case 'precio':
-	id("xCostoOP").value = formatDineroTotal(xPrecio);
+	id("xCostoOP").value = xPrecio.toFixed(3);
 
-	xPVD     = xCosto + MUD + COP;
+	xPVD     = (xCosto*cCambio) + MUD + COP;
 	IMP      = (xPVD*cImpuesto/100).round(2);
 	xPVD     = (COPImpuesto)? (xPVD + IMP + xPrecio):(xPVD + IMP);
 	xPVD     = xPVD.round(2);
@@ -1005,7 +1051,7 @@ function setCostoPreciosAltaRapida(xval,xdato){
 	sPVD     = xPVD;
 	sPVDD    = xPVDD;
 
-	xPVC     = xCosto + MUC + COP;
+	xPVC     = (xCosto*cCambio) + MUC + COP;
 	IMP      = (xPVC*cImpuesto/100).round(2);
 	xPVC     = (COPImpuesto)? (xPVC + IMP + xPrecio):(xPVC + IMP);
 	xPVC     = xPVC.round(2);
@@ -1097,11 +1143,12 @@ function sSF(xKey,xMUD,xMUC,xDSTO){
 
 function ordenaListaTaColor(){
 
-    var lista = id("listadoTacolor");
-    n = lista.itemCount;
+    var treeView = id("listadoTacolor").treeBoxObject.view;
+    var n        = treeView.rowCount;
+
     if(n==0) return; 
     for (var i = 0; i < n; i++) {
-	var zlistitem  = lista.getItemAtIndex(i);
+	var zlistitem  = treeView.getItemAtIndex(i);
 	var zfirma    = zlistitem.getAttribute('id');
 	var zcod     = id(zfirma+"_cod");
 	var ztalla   = id(zfirma+"_talla");
@@ -1129,6 +1176,7 @@ function ordenaListaTaColor(){
 	
 	zfirma = "tacolor_"+i;
 	zlistitem.setAttribute("id",zfirma); 
+        zlistitem.value = zfirma;
 	zcod.setAttribute("id",zfirma+ "_cod");
 	ztalla.setAttribute("id",zfirma+ "_talla");
 	zcolor.setAttribute("id",zfirma+ "_color");
@@ -1154,4 +1202,25 @@ function ordenaListaTaColor(){
 	zcondventa.setAttribute("id",zfirma+ "_condventa");
 
     }
+}
+
+function mostrarCostoTotalAlta(){
+
+    var p = prompt("gPOS:\n\n Costo Total", costoxcontenedor);
+    if(!p) return;
+
+    if(isNaN(p)||p==""||p.lastIndexOf(' ')>-1||parseFloat(p)<0)
+    {
+	alert("gPOS: \n\n Ingrese correctamente el valor del campo");
+	return mostrarCostoTotalAlta();
+    }
+
+    costoxcontenedor = p;
+    var UnidxCont = id("UnidadesxContenedor").value;
+    var costo = document.getElementById("Costo");
+    var nuevocosto = p/parseFloat(UnidxCont);
+
+    //costo.value = nuevocosto.toFixed(3);
+    costo.value = Math.round( nuevocosto*100000 )/100000;
+    setCostoPreciosAltaRapida('costo',costo);
 }

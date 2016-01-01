@@ -11,15 +11,30 @@ StartXul(_("Progress"));
 <?php 
    switch ($modo) {
    case "cAltaRapida" :
-     echo 'setTimeout("reloadAltaRapida()",100);';//MENSAJES
+     echo 'setTimeout("reloadAltaRapida()",400);';//MENSAJES
      break;
+   case "cAltaRapidaClon" :
+     echo 'setTimeout("reloadAltaRapidaClon()",400);';//MENSAJES
+     break;
+   case "aCompras" :
+     echo 'setTimeout("loadCompras()",10);';//MENSAJES
+      break;
+
    case "aCarritoCompras" :
    case "aAltaRapida" :
-     echo 'setTimeout("loadPresupuesto()",10);';//MENSAJES
+     echo 'setTimeout("loadPresupuesto()",400);';//MENSAJES
      break;
 
    case "hWebForm" :
-     echo 'setTimeout("hWebForm()",250);';//MENSAJES
+     echo 'setTimeout("hWebForm()",450);';//MENSAJES
+
+     echo 'if( parent.document.getElementById("c_Nombre") )
+       parent.document.getElementById("c_Nombre").focus()';
+
+     break;
+
+   case "hWebBox" :
+     echo 'setTimeout("hWebBox()",450);';//MENSAJES
 
      echo 'if( parent.document.getElementById("c_Nombre") )
        parent.document.getElementById("c_Nombre").focus()';
@@ -27,23 +42,19 @@ StartXul(_("Progress"));
      break;
 
    case "lWebFormCartBuy" :
-     echo 'setTimeout("lWebFormCartBuy()",200);';//MENSAJES
+     echo 'setTimeout("lWebFormCartBuy()",400);';//MENSAJES
      break;
 
    case "lWebFormCartMod" :
-     echo 'setTimeout("lWebFormCartMod()",200);';//MENSAJES
+     echo 'setTimeout("lWebFormCartMod()",400);';//MENSAJES
      break;
 
    case "lWebFormCartSerieMod" :
-     echo 'setTimeout("lWebFormCartSerieMod()",200);';//MENSAJES
+     echo 'setTimeout("lWebFormCartSerieMod()",400);';//MENSAJES
      break;
 
    case "lWebFormAlmacen" :
-     echo 'setTimeout("lWebFormAlmacen()",200);';//MENSAJES
-     break;
-
-   case "lWebFormAltaRapida" :
-     echo 'setTimeout("lWebFormAltaRapida()",200);';//MENSAJES
+     echo 'setTimeout("lWebFormAlmacen()",400);';//MENSAJES
      break;
 
    }
@@ -53,30 +64,26 @@ function hWebForm(){
   parent.xwebCollapsed(false,true);
 }
 
-function lWebFormAltaRapida(){
-  parent.solapa('<?php echo $url;?>','<?php echo _("Compras - Presupuestos") ?>','framelist')
+function hWebBox(){
+  parent.setWebBoxCollapsed(false);
 }
 
 function lWebFormCartMod(){
-
   var main = parent.getWebForm();
   var url  = '<?php echo $url;?>';
   var lurl = url.replace(/%/g,"&");
 
   main.setAttribute("src",lurl);  
   parent.xwebCollapsed(true);
-
 }
 
 function lWebFormCartSerieMod(){
-
   var main = parent.getWebForm();
   var url  = '<?php echo $url;?>';
   var lurl = url.replace(/%/g,"&");
 
   main.setAttribute("src",lurl);  
   parent.xwebCollapsed(true);
-
 }
 
 function lWebFormAlmacen(){
@@ -102,7 +109,15 @@ function lWebFormCartBuy(){
 
 }
 
+function loadCompras(){
+     parent.MostrarDeck();
+     //parent.Compras_buscar();
+     parent.Compras_verCarrito()
+     hWebForm();
+}
+
 function loadPresupuesto(){
+     parent.MostrarDeck();
      var subweb = parent.document.getElementById("web");
      if(subweb)
  	 subweb.setAttribute("src","about:blank");
@@ -113,15 +128,28 @@ function postloadPresupuesto(){
      var subweb = parent.document.getElementById("web");
      if(subweb)
          subweb.setAttribute("src","vercarrito.php?modo=check");
-     setTimeout("postViewPresupuesto()",280);
+
+     setTimeout("postViewPresupuesto()",280);     
 }
 
-function postViewPresupuesto(){ parent.xwebCollapsed(false);}
+function postViewPresupuesto(){ parent.xwebCollapsed(false);
+                                parent.solapa('modulos/compras/xulcompras.php?modo=entra','Compras - Presupuestos','compras');
+}
+
 
 function reloadAltaRapida(){
     var main = parent.getWebForm();
     main.setAttribute('src','modulos/altarapida/xulaltarapida.php?modo=alta');
 }
+
+function reloadAltaRapidaClon(){
+
+  var url  = '<?php echo $url;?>';
+  var lurl = url.replace(/%/g,"&");
+  var main = parent.getWebForm();
+  main.setAttribute('src',lurl);
+}
+
 //]]></script>
 <html:style>
   #boxprogress{
@@ -131,7 +159,7 @@ function reloadAltaRapida(){
 	    }
 </html:style>
 
-<vbox flex="1" id="boxprogress" >
+<vbox flex="1" id="boxprogress" class="box">
 <spacer style="height:6px"/>
 <hbox pack="center">
   <caption style="font-size: 14px;font-weight: bold;">

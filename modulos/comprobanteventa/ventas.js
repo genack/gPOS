@@ -10,6 +10,7 @@ var cMontoComprobanteVenta     = 0;
 var cPendienteComprobanteVenta = 0;
 var cIdLocalVenta              = 0;
 var cIdSuscripcionVenta        = 0;
+var cReservado                 = 0;
 
 var RevDet = 0;
 
@@ -19,7 +20,8 @@ var vMoneda        = true;
 var vUsuario       = true;
 var vOP            = true;
 var vCodigo        = true;
-var serialNum = (Math.random()*9000).toFixed();
+var vFechaRegistro = true;
+var serialNum      = (Math.random()*9000).toFixed();
 
 //Pagos comprobantes clientes
 var idetallescobro = 0;
@@ -63,10 +65,11 @@ function RevisarVentaSeleccionada(){
     cSerieNroComprobanteVenta  = idex.childNodes[5].attributes.getNamedItem('label').nodeValue;
     cClienteComprobanteVenta   = idex.childNodes[6].attributes.getNamedItem('label').nodeValue;
     cIdClienteComprobanteVenta = idex.childNodes[6].attributes.getNamedItem('value').nodeValue;
-    cMontoComprobanteVenta     = idex.childNodes[9].attributes.getNamedItem('label').nodeValue;
-    cPendienteComprobanteVenta = idex.childNodes[10].attributes.getNamedItem('label').nodeValue;
-    cIdLocalVenta              = idex.childNodes[13].attributes.getNamedItem('value').nodeValue;
-    cIdSuscripcionVenta        = idex.childNodes[14].attributes.getNamedItem('value').nodeValue;
+    cMontoComprobanteVenta     = idex.childNodes[10].attributes.getNamedItem('label').nodeValue;
+    cPendienteComprobanteVenta = idex.childNodes[11].attributes.getNamedItem('label').nodeValue;
+    cIdLocalVenta              = idex.childNodes[15].attributes.getNamedItem('value').nodeValue;
+    cIdSuscripcionVenta        = idex.childNodes[16].attributes.getNamedItem('value').nodeValue;
+    cReservado                 = id("venta_reservado_"+idex.value).getAttribute("value");
 
     menuContextualVentasRealizadas(cIdComprobanteVenta);
 
@@ -276,7 +279,7 @@ function AddLineaDetallesVenta(CodBar, Nombre,Talla, Color, unidades, Descuento,
     var xmenudeo  = ( menudeo == 1)? xcant+''+cont+'+'+xresto+''+xcont+' ' : false;
 
 
-    var vdetalle  = ( mproducto == 1)? '**MPRODUCTO** '       : '';
+    var vdetalle  = ( mproducto == 1)? '**MIXPRODUCTO** '       : '';
     var vdetalle  = ( menudeo   == 1)? vdetalle+xmenudeo      : vdetalle;
     var vdetalle  = ( serie!='false')? vdetalle+'NS. '+serie.slice(0,120)+' ' : vdetalle;
     var vdetalle  = ( vence!='false')? vdetalle+'FV. '+vence + ' ' : vdetalle;
@@ -421,9 +424,21 @@ var ilineabuscaventas = 0;
 function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
 			IdComprobanteVenta,nombreCliente,NumeroDocumento,TipoDocumento,
 			IdCliente,Local,IdLocal,MotivoAlba,IdSuscripcion,FechaEmision,
-			PlazoPago,Cobranza,Observaciones){
+			PlazoPago,Cobranza,Observaciones,Reservado,FechaEntregaReserva){
     var lista = id("busquedaVentas");
-    var xitem, xnumitem, xvendedor,xserie,xnum,xfecha,xtotal,xpendiente,xestado,xtipodoc,xop,xlocal,xsuscripcion,xemision,xplazopago,xcobranza,xobservaciones;
+    var xitem, xnumitem, xvendedor,xserie,xnum,xfecha,xtotal,xpendiente,xestado,xtipodoc,xop,xlocal,xsuscripcion,xemision,xplazopago,xcobranza,xobservaciones,xreserva,xfechareserva;
+    
+    var vfecha = "0000-00-00 00:00:00";
+    var lfecha = "";
+    if(FechaEntregaReserva != ' '){
+	var afecha = FechaEntregaReserva.split("~");
+	vfecha = afecha[1];
+	lfecha = afecha[0];
+    } 
+
+    var aPlazo = PlazoPago.split("-");
+    FechaPlazo = aPlazo[2]+"/"+aPlazo[1]+"/"+aPlazo[0];
+    FechaPlazo = (PlazoPago == '0000-00-00')? "":FechaPlazo;
     
     xitem = document.createElement("listitem");
     xitem.value = IdComprobanteVenta;
@@ -458,11 +473,13 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
     
     xnum = document.createElement("listcell");
     xnum.setAttribute("label", num);
+    xnum.setAttribute("collapsed", "true");
     xnum.setAttribute("id","venta_num_"+IdComprobanteVenta);
     
     xfecha = document.createElement("listcell");
     xfecha.setAttribute("style","text-align:right");
     xfecha.setAttribute("label", fecha);	
+    xfecha.setAttribute("collapsed", vFechaRegistro);	
 
     xemision = document.createElement("listcell");
     xemision.setAttribute("style","text-align:right");
@@ -512,7 +529,9 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
 
     xplazopago = document.createElement("listcell");
     xplazopago.setAttribute("value", PlazoPago);
-    xplazopago.setAttribute("collapsed", "true");
+    xplazopago.setAttribute("label", FechaPlazo);
+    //xplazopago.setAttribute("collapsed", "true");
+    xplazopago.setAttribute("style","text-align:right");
     xplazopago.setAttribute("id","venta_plazopago_"+IdComprobanteVenta);
 
     xcobranza = document.createElement("listcell");
@@ -525,6 +544,16 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
     xobservaciones.setAttribute("collapsed", "true");
     xobservaciones.setAttribute("id","venta_observaciones_"+IdComprobanteVenta);
 
+    xreservado = document.createElement("listcell");
+    xreservado.setAttribute("value", Reservado);
+    xreservado.setAttribute("collapsed", "true");
+    xreservado.setAttribute("id","venta_reservado_"+IdComprobanteVenta);
+
+    xfechareserva = document.createElement("listcell");
+    xfechareserva.setAttribute("value", vfecha);
+    xfechareserva.setAttribute("label", lfecha);
+    xfechareserva.setAttribute("id","venta_fechareserva_"+IdComprobanteVenta);
+
     
     xitem.appendChild( xnumitem );
     xitem.appendChild( xserie );
@@ -535,15 +564,17 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
     xitem.appendChild( xnombre );	
     xitem.appendChild( xfecha );
     xitem.appendChild( xemision );
+    xitem.appendChild( xplazopago );
     xitem.appendChild( xtotal );
     xitem.appendChild( xpendiente );	
     xitem.appendChild( xestado );
+    xitem.appendChild( xfechareserva );
     xitem.appendChild( xvendedor );
     xitem.appendChild( xlocal );
     xitem.appendChild( xsuscripcion );
-    xitem.appendChild( xplazopago );
     xitem.appendChild( xcobranza );
     xitem.appendChild( xobservaciones );
+    xitem.appendChild( xreservado );
 
     lista.appendChild( xitem );		
 }
@@ -557,26 +588,47 @@ function BuscarVentas(){
     var desde = id("FechaBuscaVentas").value;
     var hasta = id("FechaBuscaVentasHasta").value;
     var nombre = id("NombreClienteBusqueda").value;
+
+    var modoend         = (id("modoConsultaVentasFin").checked);
+    var modopen         = (id("modoConsultaVentasPen").checked);
+    var modotpventa     = id("modoConsultaTipoVenta").value;
+    var modoserie       = "todos";
+    var modocontado     = "todos";
+    var modosuscripcion = "todos";
+    var modoreserva     = "todos";
+
+    var modo            = "todos";    
+    //modo                = ( modoend && modopen )? "endypen":"todos";
+    modo                = ( modoend && !modopen )? "end":modo;
+    modo                = ( !modoend && modopen )? "pen":modo;
+
+    //alert(modotpventa);
+    switch( modotpventa ){
+    case "contado":     modoserie = "contado"; break;
+    case "credito":     modoserie = "cedidos"; break;
+    case "suscripcion": modosuscripcion = "suscripcion"; break;
+    case "reservas":    modoreserva = "reservados"; break;
+    }
+
+    //habilita tree
+    BuscarReservados();
+    BuscarPlazo();
     
-    if ((!hasta || hasta == "DD-MM-AAAA") &&  (!desde || desde == "DD-MM-AAAA") && (!nombre))return;
-    
-    var modo      = (id("modoConsultaVentas").checked)?"pendientes":"todos";
-    var modoserie = (id("modoConsultaVentasSerie").checked)?"cedidos":"todos";
-    var modosuscripcion = (id("modoConsultaVentasSuscripcion").checked)?"suscripcion":"todos";
     var filtrocodigo   = id("busquedaCodigoSerie").value;
     var filtroventa    = id("FiltroVenta").value;
     var filtrolocal    = id("FiltroVentaLocal").value;
     var modofactura    = (filtroventa == "factura")?"factura":"todos";
     var modoboleta     = (filtroventa == "boleta")?"boleta":"todos";
     var modoticket     = (filtroventa == "ticket" )?"ticket":"todos";
-    var mododevolucion = (filtroventa == "devolucion")?"devolucion":"todos";
     var modoalbaran    = (filtroventa == "albaran")?"albaran":"todos";
     var modoalbaranint = (filtroventa == "albaranint")?"albaranint":"todos";
-    var forzarid        = (filtrocodigo != '' )? filtrocodigo:false;
+    var forzarid       = (filtrocodigo != '' )? filtrocodigo:false;
+    var usuario        = id("IdUsuario").getAttribute("value");
+    var tipoproducto   = id("TipoProducto").value;
 
     RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modofactura,modoboleta,
-		    mododevolucion,modoalbaran,modoalbaranint,modoticket,false,false,filtrolocal,
-		    forzarid,AddLineaVentas);
+		    modoalbaran,modoalbaranint,modoticket,false,false,filtrolocal,
+		    forzarid,usuario,modoreserva,tipoproducto,AddLineaVentas);
 
     var elemento = id("busquedaCodigoSerie").value;
 
@@ -585,20 +637,19 @@ function BuscarVentas(){
 }
 
 
-function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modofactura,modoboleta,
-			 mododevolucion,modoalbaran,modoalbaranint,modoticket,
-			 IdComprobanteVenta,reimprimir,filtrolocal,forzarid,
-			 FuncionProcesaLinea){
+function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modofactura,
+			 modoboleta, modoalbaran,modoalbaranint,modoticket,
+			 IdComprobanteVenta,reimprimir,filtrolocal,forzarid,usuario,
+			 modoreserva,tipoproducto,FuncionProcesaLinea){
 
     var url = "../../services.php?modo=mostrarVentas&desde=" + escape(desde) 
         + "&modoconsulta=" + escape(modo) 
         + "&hasta=" + escape(hasta) 
-        + "&nombre=" + escape(nombre)
+        + "&nombre=" + trim(nombre)
         + "&modoserie=" + escape(modoserie)
         + "&modosuscripcion=" + escape(modosuscripcion)
         + "&modoboleta=" + escape(modoboleta)
         + "&modoticket=" + escape(modoticket)
-        + "&mododevolucion=" + escape(mododevolucion)
         + "&modoalbaran=" + escape(modoalbaran)
         + "&modoalbaranint=" + escape(modoalbaranint)
         + "&modofactura=" + escape(modofactura)
@@ -606,7 +657,11 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
         + "&esventas=on"
         + "&modoventa=notpv" 
         + "&forzarfactura=" + IdComprobanteVenta
+        + "&usuario=" + usuario
+        + "&modoreserva=" + modoreserva
+        + "&tipoprod=" + tipoproducto
         + "&forzarid=" + forzarid;
+
 
     var obj = new XMLHttpRequest();
     obj.open("GET",url,false);
@@ -615,7 +670,7 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
     var tex = "";
     var cr = "\n";
     
-    var vendedor,serie,num,fecha,total,pendiente,estado,IdComprobanteVenta,NumeroDocumento,TipoDocumento,IdCliente,Local,IdLocal,FechaEmision,PlazoPago,Cobranza,Observaciones;
+    var vendedor,serie,num,fecha,total,pendiente,estado,IdComprobanteVenta,NumeroDocumento,TipoDocumento,IdCliente,Local,IdLocal,FechaEmision,PlazoPago,Cobranza,Observaciones,Reservado,FechaEntregaReserva;
     var node,t,i,codventa; 
     var totalVenta = 0;
     var totalVentaPendiente = 0;
@@ -668,11 +723,17 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
 	    PlazoPago     = node.childNodes[t++].firstChild.nodeValue;
 	    Cobranza      = node.childNodes[t++].firstChild.nodeValue;
 	    Observaciones = node.childNodes[t++].firstChild.nodeValue;
+	    Reservado     = node.childNodes[t++].firstChild.nodeValue;
+	    FechaEntregaReserva = node.childNodes[t++].firstChild.nodeValue;
+
+	    totalVenta    = (TipoDocumento == 'AlbaranInt' && MotivoAlba == 'Devolución')? parseFloat(totalVenta)-parseFloat(total):totalVenta;
+	    totalVentaPendiente    = (TipoDocumento == 'AlbaranInt' && MotivoAlba == 'Devolución')? parseFloat(totalVentaPendiente)-parseFloat(pendiente):totalVentaPendiente;
 
 	    FuncionProcesaLinea(item,vendedor,serie,num,fecha,total,pendiente,estado,
 				IdComprobanteVenta,nombreCliente,NumeroDocumento,
 				TipoDocumento,IdCliente,Local,IdLocal,MotivoAlba,
-				IdSuscripcion,FechaEmision,PlazoPago,Cobranza,Observaciones);
+				IdSuscripcion,FechaEmision,PlazoPago,Cobranza,Observaciones,
+				Reservado,FechaEntregaReserva);
 	    
 	    item--;
         }
@@ -704,10 +765,10 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
     id("TotalImporteVentas").value = cMoneda[1]['S']+" "+formatDinero(totalVenta.toFixed(2));
     id("TotalImporteVentasPendiente").value = cMoneda[1]['S']+" "+formatDinero(totalVentaPendiente.toFixed(2));
     id("ImporteTotalVentas").value    = cMoneda[1]['S']+" "+formatDinero(ImporteTotalVentas);
-    id("TotalVentasRealizadas").value = "  " + nrototalventas;
-    id("TotalNroFacturas").value      = "  " + nrofacturas;
-    id("TotalNroBoletas").value       = "  " + nroboletas;
-    id("TotalNroTicket").value        = "  " + nrotickets;
+    id("TotalVentasRealizadas").value = nrototalventas;
+    id("TotalNroFacturas").value      = nrofacturas;
+    id("TotalNroBoletas").value       = nroboletas;
+    id("TotalNroTicket").value        = nrotickets;
     a_cvres  = new Array();
     a_cv     = new Array();
     a_cvdev  = new Array();
@@ -722,6 +783,10 @@ function mostrarBusquedaAvanzadaVenta(xthis){
     case "Forma_Venta":
 	vFormaVenta    = xchecked;
 	break;
+    case "Usuario":
+	vUsuario       = xchecked;
+	if(xchecked) id("IdUsuario").value = 'todos';
+	break;
     case "Moneda" : 
 	vMoneda        = xchecked;
 	break;
@@ -734,26 +799,29 @@ function mostrarBusquedaAvanzadaVenta(xthis){
     case "Codigo":
 	vCodigo        = xchecked;
 	break;
+    case "Fecha_Registro":
+	vFechaRegistro = xchecked;
+	break;
     }
 
-    if(id("vbox"+xlabel)) id("vbox"+xlabel).setAttribute("collapsed",xchecked);
-    if(id("vlist"+xlabel)) id("vlist"+xlabel).setAttribute("collapsed",xchecked);
-    if(id("vlistcol"+xlabel)) id("vlistcol"+xlabel).setAttribute("collapsed",xchecked);
+    if(id("vboxv"+xlabel)) id("vboxv"+xlabel).setAttribute("collapsed",xchecked);
+    if(id("vlistv"+xlabel)) id("vlistv"+xlabel).setAttribute("collapsed",xchecked);
+    if(id("vlistcolv"+xlabel)) id("vlistcolv"+xlabel).setAttribute("collapsed",xchecked);
     BuscarVentas();
 }
 
 function menuContextualVentasRealizadas(xval){
-
-    if(esFinanzas){
-	id("VentaRealizadaAbonar").setAttribute("disabled",true);
-	var esAbonar =  ( id("venta_pendiente_"+xval).getAttribute("label") > 0 )? true:false
-	if ( esAbonar ) id("VentaRealizadaAbonar").removeAttribute("disabled");
-    }
-    
     var aAlbaInt  = id("venta_tipodoc_"+xval).getAttribute("label").split(" ");
     var AlbaInt   = trim(aAlbaInt[0]);
     var esAlbaInt = (AlbaInt == 'AlbaranInt')? true:false;
 
+    if(esFinanzas){
+	id("VentaRealizadaAbonar").setAttribute("disabled",true);
+	var esAbonar =  ( id("venta_pendiente_"+xval).getAttribute("label") > 0 )? true:false
+	//if ( esAbonar ) id("VentaRealizadaAbonar").removeAttribute("disabled");
+	if(esAbonar && !esAlbaInt) id("VentaRealizadaAbonar").removeAttribute("disabled");
+    }
+    
     id("mheadImprimir").setAttribute('collapsed',esAlbaInt);
     if(!esFinanzas)
 	id("mheadImprimirInt").setAttribute('collapsed',!esAlbaInt);
@@ -779,6 +847,7 @@ function VolverCobros(){
     id("hboxDetallesCobro").setAttribute('collapsed',false);
     id("busquedaDetallesCobro").setAttribute('collapsed',false);
     id("formAbonarComprobantesVentas").setAttribute('collapsed',true);
+    id("boxResumenComprobanteVenta").setAttribute("collapsed",false);
 }
 
 function ActualizaPeticion(){
@@ -992,6 +1061,7 @@ function VentanaAbonos(){
     
     id("rowPlazoPago").setAttribute("collapsed",xpte);
     id("rowEstadoCobranza").setAttribute("collapsed",xpte);
+    id("boxResumenComprobanteVenta").setAttribute("collapsed",true);
 }
 
 function ActualizaPeticionAbono() {
@@ -1063,28 +1133,46 @@ function RealizarAbono(){
     var abono_efectivo     = CleanMoney(id("abono_Efectivo").value);
     var comprobante        = id("venta_tipodoc_"+idx).getAttribute('label');
     var numcomprobante     = id("venta_num_bol_"+idx).getAttribute('label');
-    
+    var idcliente          = id("venta_cliente_"+idx).getAttribute("value");
+
+    if(comprobante == 'AlbaranInt Devolución')
+	return;
+
+    var totalpendiente = id("abono_Debe").getAttribute("value");
+
+    if(totalpendiente < abono_efectivo)
+	abono_efectivo = totalpendiente;
+
+    if(abono_efectivo < 0.01)
+	return alert('gPOS:  Abono Cliente \n\n  - Ingrese monto mayor a 0.00');
+
+    //Codigo Validacion
+    if( !Local.esAdmin )
+	if( !validaCodigoAutorizacion(cIdComprobante,'Eliminar Abono' ) ) return;
+
     var obj = new XMLHttpRequest();
     var url = "../../services.php?modo=realizarAbonoComprobanteCliente"
 	+ "&IdComprobanteVenta=" + escape(IdComprobanteVenta)
         + "&pago_efectivo=" + parseFloat(abono_efectivo)
-        + "&comprobante=" + escape(comprobante)
-        + "&numcomprobante=" + escape(numcomprobante);
+        + "&comprobante=" + trim(comprobante)
+        + "&numcomprobante=" + escape(numcomprobante)
+        + "&idc=" + escape(idcliente);
 
     obj.open("POST",url,false);
     obj.send("");	
     
     var text = obj.responseText;
+    var ares = text.split("~");
 
-    if (!parseFloat(text)) return alert('gPOS: '+po_servidorocupado+'\n'+text);
-    
+    if (ares[0] != "") return alert('gPOS: '+po_servidorocupado+'\n'+ares[0]);
+
+    if(ares[1] == 'cjacda')
+	return alert('gPOS:  Abono Cliente \n\n  - La caja general está cerrada, abra para continuar');
+
     var xpen = id("venta_pendiente_"+IdComprobanteVenta);
     var xstatus = id("venta_status_"+IdComprobanteVenta);
 
-    if(text == 'cjacda')
-	return alert('gPOS:\n     La caja general está cerrada, abra para continuar');
-    
-    text = parseFloat(text);		
+    text = parseFloat(ares[2]);
 
     xpen.setAttribute("label",parseFloat(text).toFixed(2));//Nuevo valor pendiente
     
@@ -1118,7 +1206,7 @@ function RawBuscarDetallesCobro(IdComprobante,FuncionRecogerDetalles){
 
     var tex = "";
     var cr = "\n";
-    var item,ModoPago,FechaPago,ImportePago,IdComprobante,Usuario,Simbolo,Caja,Local,LocalPago;
+    var item,ModoPago,FechaPago,ImportePago,IdComprobante,Usuario,Simbolo,Caja,Local,LocalPago,IdModalidad,TipoVenta;
     var node,t,i;
     var numitem = 0;
 
@@ -1141,10 +1229,12 @@ function RawBuscarDetallesCobro(IdComprobante,FuncionRecogerDetalles){
 		Usuario      = node.childNodes[t++].firstChild.nodeValue;
 		IdOperacion  = node.childNodes[t++].firstChild.nodeValue;
 		Local        = node.childNodes[t++].firstChild.nodeValue;
+		IdModalidad  = node.childNodes[t++].firstChild.nodeValue;
+		TipoVenta    = node.childNodes[t++].firstChild.nodeValue;
 		LocalPago    = node.childNodes[t++].firstChild.nodeValue;
 		
 		FuncionRecogerDetalles(numitem,FechaPago,ImportePago,Usuario,ModoPago,
-				       IdOperacion,Local,LocalPago);
+				       IdOperacion,Local,LocalPago,IdModalidad,TipoVenta);
             //item--;
 	    }
         }
@@ -1152,12 +1242,12 @@ function RawBuscarDetallesCobro(IdComprobante,FuncionRecogerDetalles){
 }
 
 function AddLineaDetallesCobro(numitem,FechaPago,ImportePago,Usuario,ModoPago,
-			       IdOperacion,Local,LocalPago){
+			       IdOperacion,Local,LocalPago,IdModalidad,TipoVenta){
 
     var lista = id("busquedaDetallesCobro");
-    var xitem,xnumitem,xFechaPago,xModoPago,xUsuario,xIMportePago,xLocalPago;
+    var xitem,xnumitem,xFechaPago,xModoPago,xUsuario,xIMportePago,xLocalPago,xTipoVenta;
 
-    xitem    = document.createElement("listitem");
+    xitem = document.createElement("listitem");
     xitem.value = IdOperacion;
     xitem.setAttribute("id","detallecobro_" + idetallescobro);
     idetallescobro++;
@@ -1168,6 +1258,7 @@ function AddLineaDetallesCobro(numitem,FechaPago,ImportePago,Usuario,ModoPago,
 
     xModoPago = document.createElement("listcell");
     xModoPago.setAttribute("label", ModoPago);
+    xModoPago.setAttribute("value", IdModalidad);
     xModoPago.setAttribute("id","c_modopago_"+IdOperacion);
 
     xFechaPago = document.createElement("listcell");
@@ -1176,8 +1267,8 @@ function AddLineaDetallesCobro(numitem,FechaPago,ImportePago,Usuario,ModoPago,
 
     xImportePago = document.createElement("listcell");
     xImportePago.setAttribute("label", formatDinero(ImportePago));
-    xImportePago.setAttribute("style","font-weight:bold;text-align:right");
     xImportePago.setAttribute("value",ImportePago);
+    xImportePago.setAttribute("style","font-weight:bold;text-align:right");
     xImportePago.setAttribute("id","c_importe_"+IdOperacion);
 
     xUsuario = document.createElement("listcell");
@@ -1190,6 +1281,10 @@ function AddLineaDetallesCobro(numitem,FechaPago,ImportePago,Usuario,ModoPago,
     xLocalPago.setAttribute("style","text-align:center");
     xLocalPago.setAttribute("id","c_localpago_"+IdOperacion);
 
+    xTipoVenta = document.createElement("listcell");
+    xTipoVenta.setAttribute("value", TipoVenta);
+    xTipoVenta.setAttribute("collapsed","true");
+    xTipoVenta.setAttribute("id","c_tipoventa_"+IdOperacion);
 
     xitem.appendChild( xnumitem );
     xitem.appendChild( xFechaPago );
@@ -1197,6 +1292,7 @@ function AddLineaDetallesCobro(numitem,FechaPago,ImportePago,Usuario,ModoPago,
     xitem.appendChild( xImportePago );
     xitem.appendChild( xLocalPago );
     xitem.appendChild( xUsuario );
+    xitem.appendChild( xTipoVenta );
     lista.appendChild( xitem );
 }
 
@@ -1214,4 +1310,159 @@ function ImprimirCobroSeleccionada(){
     var url           = "../fpdf/imprimir_cobros.php?idoc="+idoc+
                         "&totaletras="+importeletras;
     location.href=url;
+}
+
+function BuscarReservados(){
+    var xval = (id("modoConsultaTipoVenta").value == "reservas")? false:true;
+    id("vlistcolFechaEntrega").setAttribute("collapsed",xval);
+    id("vlistFechaEntrega").setAttribute("collapsed",xval);
+}
+
+function BuscarPlazo(){
+    var xval = (id("modoConsultaVentasPen").checked)? false:true;
+    var yval = ( id("modoConsultaTipoVenta").value == "credito" )? false:true;
+    xval     = (!xval || !yval)? false:true;
+
+    id("vlistcolvPlazoPago").setAttribute("collapsed",xval);
+    id("vlistvPlazoPago").setAttribute("collapsed",xval);
+}
+
+function RevisarCobroSeleccionada(){
+    var idex = id("busquedaDetallesCobro").selectedItem;
+    if(!idex) return;
+    var idpago = idex.value;
+
+    cIdOperacionCaja = idex.value;
+    cIdModalidadPago = id("c_modopago_"+idex.value).getAttribute("value");
+    cTipoVenta       = id("c_tipoventa_"+idex.value).getAttribute("value");
+    cImporteCobro    = id("c_importe_"+idex.value).getAttribute("value");
+}
+
+function ModificarCobros(xval){
+    var idex = id("busquedaDetallesCobro").selectedItem;
+    if(!idex) return;
+
+    //Codigo Validacion
+    if( !Local.esAdmin )
+	if( !validaCodigoAutorizacion(cIdComprobante,'Eliminar Abono' ) ) return;
+
+    var msj = "- Cliente: "+cClienteComprobanteVenta+"\n- Monto : "+cImporteCobro;
+    if(!confirm('gPOS:  Eliminar Abonos Cliente \n\n'+msj+',\n'+'Va eliminar el abono.  ¿desea continuar?'))
+	return;
+
+    var obj = new XMLHttpRequest();
+    var url = "modpagoscobros.php?modo=ModificarCobros"
+	+ "&idopcja=" + escape(cIdOperacionCaja)
+        + "&idcbte=" + escape(cIdComprobanteVenta)
+        + "&idmod=" + escape(cIdModalidadPago)
+        + "&idc=" + escape(cIdClienteComprobanteVenta)
+        + "&idl=" + escape(cIdLocalVenta)
+        + "&tv=" + escape(cTipoVenta)
+        + "&ximp=" + escape(cImporteCobro)
+        + "&xop=" + escape(xval);
+
+    obj.open("POST",url,false);
+    obj.send("");	
+    
+    var text = obj.responseText;    
+    var ares = text.split("~");
+    
+    if(ares[0] != '')
+	return alert('gPOS:  Eliminar Abono Cliente \n\n- Error al Eliminar \n'+po_servidorocupado+'\n'+ares[0]);
+
+    if(ares[1] == 'cjacda')
+	return alert("gPOS:  Eliminar Abono Cliente \n\n- No se eliminó el abono, la caja está cerrada");
+    if(ares[2]){
+	alert("gPOS:  Eliminar Abono Cliente \n\n- Se Eliminó el abono");
+	BuscarVentas();
+    }
+}
+
+function ckCodigoAutorizacion(xaccion,xck){
+    var idex = id("busquedaVentas").selectedItem;
+    var xid  = idex.value;
+    var url  = "../../services.php?modo=codigoAutorizacionTPV"+
+	       "&xid="+xid+
+	       "&xaccion="+xaccion;
+
+    var xres = new XMLHttpRequest();
+
+    xres.open("GET",url,false);
+    try{
+	xres.send(null);
+    } catch(z){
+	return;
+    }
+
+    var xarrcod  = xres.responseText.split("~");
+    var xtrmsj   = ( !xarrcod[2] )? '\n\n      *** Nuevo Código Generado  ***':'';
+ 
+    if(xarrcod[0] != 0 )
+	return alert(po_servidorocupado);
+    var xmsj  = "gPOS:   Código de Autorización de Operaciones: \n"+
+		"\n  CLIENTE "+ cClienteComprobanteVenta +
+		"\n  COMPROBANTE        : "+ cComprobanteVenta +" "+ cSerieNroComprobanteVenta +
+	        "\n  CODIGO                   : ***"+xarrcod[1]+xtrmsj;
+
+    //codigo nuevo
+    if( xaccion == 'resetck' )
+	return alert( xmsj+'\n' );
+
+    //codigo guardado
+    if( confirm( xmsj+"\n\n  desea generar un nuevo código de autorización?" ) )
+	ckCodigoAutorizacion('resetck',false);
+}
+
+function validaCodigoAutorizacion(xid,xop){
+
+    var xcod;
+    
+    if ( Local.CodigoAutorizacion[xid] )
+        xcod = Local.CodigoAutorizacion[xid]; 
+    else
+	xcod = prompt( "gPOS:   Código de Autorización de Operaciones: \n"+
+		       "\n  CLIENTE "+ cClienteComprobanteVenta +
+		       "\n  COMPROBANTE       : "+ cComprobanteVenta +" "+ cSerieNroComprobanteVenta +
+		       "\n  OPERACION             : "+ xop +
+		       "\n\nIngrese el código de autorización de operaciones:\n\n", '');
+
+    //cancelo?
+    if( xcod == null)
+	return false;
+
+    //codigo vacio?
+    if ( xcod == '') {
+	alert( "gPOS:   Código de Autorización de Operaciones: \n"+
+	       "\n     -   Ingrese correctamente el código de autorización  - ");
+	return validaCodigoAutorizacion(xid,xop);
+    }
+
+    //servidor?
+    var url,xres,xarrcod;
+
+    url  = "../../services.php?modo=validaCodigoAutorizacionTPV"+
+	"&xid="+xid+
+	"&xcod="+xcod;
+    xres = new XMLHttpRequest();
+    xres.open("GET",url,false);
+    try{
+	xres.send(null);
+    } catch(z){
+	return;
+    }
+    
+    xarrcod = xres.responseText.split("~");
+
+    //respuesta del servidor
+    if(xarrcod[0] != 0 ){ 
+	alert(po_servidorocupado); return false; 
+    }
+    
+    Local.CodigoAutorizacion[xid] = ( xarrcod[1] == 1 )? xcod: false;
+
+    if( !Local.CodigoAutorizacion[xid] )
+	alert( "gPOS:  Código de Autorización de Operaciones: "+
+	       "\n\n    -   El código de autorización es incorrecto ó expiró  -\n");
+
+    return ( xarrcod[1] == 1 );
 }

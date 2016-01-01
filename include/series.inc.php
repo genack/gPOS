@@ -661,6 +661,7 @@
 	  $row=queryrow($sql);
 	  return ($row["Cantidad"] == $Unidades)? false:true;
 	}
+
         function obtenerSeriesProductoPresupuesto($xidproducto,$xidlocal){
 
 	  $rkdx   = getResumenKardex2Producto($xidproducto,$xidlocal);

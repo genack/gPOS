@@ -434,20 +434,6 @@ function formatDinero(numero) {
     return (((sign)?'':'-') + num );   
 }
 
-function verCarritoCompras(){ 
-	var subweb   = parent.document.getElementById("web");
-	var url      = "vercarrito.php?modo=check";
-        var mainweb  = parent.document.getElementById("WebNormal");
-        var mainlist = parent.document.getElementById("WebLista");
-	var deck     = parent.document.getElementById("DeckArea");  
-
-        mainweb.setAttribute("collapsed","false");
-        mainlist.setAttribute("collapsed","true");
-	subweb.setAttribute("src",url);
-        deck.setAttribute("selectedIndex",2);
-	deck.setAttribute("collapsed","false");	 	   
-}
-
 function soloNumeros(evt,num){
     keynum = (window.event)?evt.keyCode:evt.which;
     if(keynum == 46) 
@@ -482,48 +468,36 @@ function changeProvPost(o,label){
 function setProvPost(o,label){
     ProveedorPost   = label;
     IdProveedorPost = o.value;
+    loadProvHab();
 }
 
 function setSubsidPost(o,label){
     SubsidiarioPost   = label;
     IdSubsidiarioPost = o.value;
+    if(SubsidiarioPost == 'undefined' || !SubsidiarioPost) return;
+    if( id("EmpresaTextGasto") )
+        id("EmpresaTextGasto").value = SubsidiarioPost;
+    if( id("IdSubsidiario") )
+	id("IdSubsidiario").value = IdSubsidiarioPost;
+    loadSubsidiarioHab();
 }
-
+ 
 function setClientPost(o,label){
     ClientePost   = label;
     IdClientePost = o.value;
+    loadCliente();
 }
 
 function setLocalPost(o,label){
     LocalPost   = label;
     IdLocalPost = o.value;
-}
-
-function selProveedorAux() { 
-    var ven = "dialogWidth:" + "350" + "px;dialogHeight:" + "350" + "px";
-    popupx('../../modulos/proveedores/selproveedor.php?modo=proveedorpost',ven,'proveedorhab'); 
- }
-
-function selClienteAux() { 
-    var ven = "dialogWidth:" + "350" + "px;dialogHeight:" + "350" + "px";
-    popupx('../../modulos/clientes/selcliente.php?modo=clientepost',ven,'clientehab'); 
- }
-
-function selLocalAux() { 
-    var ven = "dialogWidth:" + "350" + "px;dialogHeight:" + "350" + "px";
-    popupx('../../modulos/locales/sellocal.php?modo=localpost',ven,'localhab'); 
- }
-
-
-function popupx(url,extra,tipo) {
-    // window.open(url,tipo,extra);
-    window.showModalDialog(url,tipo,extra);
+    loadLocalHab();
 }
 
 function soloAlfaNumerico(e){
     key = e.keyCode || e.which;
     tecla = String.fromCharCode(key).toLowerCase();
-    letras = " áéíóúabcdefghijklmnñopqrstuvwxyz0123456789:,%-|";
+    letras = " áéíóúabcdefghijklmnñopqrstuvwxyz0123456789:,%-|_";
     especiales = [8, 13, 9, 39, 46, 35, 36];
     tecla_especial = false
     for(var i in especiales){
@@ -646,4 +620,79 @@ function FormatPreciosTPV(Precio){
 Number.prototype.round = function(places) {
     // Redondeo con precision 
     return +(Math.round(this + "e+" + places)  + "e-" + places);
+}
+
+
+/*+++++++popup div++++++++++*/
+var ven = new Array();
+//ven["talla"]= ''ven_normal';
+//ven["marca"]='ven_normal';
+ven["alta"]='ven_alta';
+ven["codigobarras"]='ven_codigobarras';
+ven["selcomprar"]='ven_seleccion';
+ven["selalmacen"]='ven_seleccion';
+ven["carrito"]='ven_carrito';
+ven["printallcb"]='ven_printallcb';
+ven["color"]='ven_color';
+ven["talla"]='ven_talla';
+ven["tallaje"]='ven_tallaje';
+ven["marca"]='ven_marca';
+ven["avanzada"]='ven_avanzada';
+ven["proveedorhab"] ='ven_prov';
+ven["contenedor"] ='ven_contenedor';
+ven["servicio"] ='ven_servicio';
+ven["laboratoriohab"] ='ven_lab';
+ven["altaproveedor"] ='ven_alta';
+ven["altalaboratorio"] ='ven_alta';
+ven["familiaplus"] ='ven_familiaplus';
+ven["cuenta"] = 'ven_cuenta';
+
+function popup(url,tipo) {
+
+  var extra = '';
+  //windows
+  switch ( tipo ){
+    case 'printallcb':
+    case 'codigobarras':
+       var extra = ( tipo == 'printallcb' )? 'dialogWidth:610px;dialogHeight:650px':
+                                             'dialogWidth:320px;dialogHeight:420px';
+       extra  =  extra+',dependent=yes,screenX=200,screenY=300,titlebar=no,status=0';
+       window.showModalDialog(url,tipo,extra);
+       return;
+  }
+
+  //iframe div
+  document.getElementById('windowpopup').src=url;   //Carga link
+  var extra = (ven[tipo])? ven[tipo]:'ver_clasico'; //Muestra box
+  lanzapopup(extra);
+}
+
+function lanzapopup(extra){
+  document.getElementById('box-popup').className='box-popup-on '+extra;
+}
+
+function closepopup(){
+  document.getElementById('box-popup').className='box-popup-off';
+  document.getElementById('windowpopup').src='about:blank';
+}
+function loadFocusPopup(){
+   windowpopup.loadfocus();
+}
+
+function soloAlfaNumericoExt(e,ext){
+    key = e.keyCode || e.which;
+    tecla = String.fromCharCode(key).toLowerCase();
+    letras = " áéíóúabcdefghijklmnñopqrstuvwxyz0123456789+-_$%@:,"+ext;
+    especiales = [8, 13, 9, 39, 46, 35, 36, 38, 40];
+    tecla_especial = false
+    for(var i in especiales){
+        if(key == especiales[i]){
+            tecla_especial = true;
+            break;
+        }
+    }
+    
+    if(letras.indexOf(tecla)==-1 && !tecla_especial){
+        return false;
+    }
 }

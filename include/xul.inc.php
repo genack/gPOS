@@ -14,18 +14,33 @@ function StartXul($titulo,$predata="",$css=false){
 	$crf = "?>";	
 	
 	$titulobreve = str_replace(" ","-",trim(strtolower($titulo)));
-	
+	$_BasePath   = $_SESSION['BasePath'];
 	echo $predata;	
 	
 	echo '<?xml version="1.0" encoding="UTF-8"?>';
-	echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';	?>
-  <?php echo $cr ?>xml-stylesheet href="css/xul.css" type="text/css"<?php echo $crf ?>
-  <?php	if($css) echo $cr . "xml-stylesheet href='data:text/css,$css'" . $crf; ?>
+	echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';	
+	echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css?v=2" type="text/css"?>';
+        //if($css) echo $cr . "xml-stylesheet href='data:text/css,$css'" . $crf; 
+        if($css) echo $cr . "xml-stylesheet href='".$_BasePath.$css."' type='text/css'" . $crf; 
+?>
+
 <window id="<?php echo $titulobreve ?>" title="<?php echo $titulo ?>"
         xmlns:html="http://www.w3.org/1999/xhtml"        
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">        
 	<?php
 
+}
+
+function StartJs($js=false){
+  $_BasePath   = $_SESSION['BasePath'];
+  ?>
+  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js?v=2.1" /> 
+  <?php
+  if($js){
+    ?>
+    <script type="application/x-javascript" src="<?php echo $_BasePath.$js; ?>" />        
+   <?php
+  }
 }
 
 function StartXulOverlay($titulo,$predata=""){

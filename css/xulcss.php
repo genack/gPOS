@@ -12,8 +12,6 @@ header("content-type: text/css");
   border: 0px none!important;
 }
 
-
-
 /* Elementos que flotan dentro de una cabecera AreaPagina */
 .enAreaPagina {
  /* background-color: #ECE8DE;*/

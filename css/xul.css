@@ -1,234 +1,543 @@
-
-/* Areas de cabecera que parecen pertenecer al iframe de listados*/
-.AreaPagina {
-  background-color: #ECE8DE;
-  border: 0px none!important;
+/* fonts 
+--------------------------------------------*/
+@font-face {
+  font-family: 'Signika Negative';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Signika Negative'), local('SignikaNegative-Regular'), url(font/signikanegative.woff) format('woff');
+}
+ 
+@font-face {
+  font-family: 'Signika Light';
+  font-style: normal;
+  font-weight: 100;
+  src: local('Signika Light'), local('Signika-Light'), url(font/SignikaNegative-Light.woff) format('woff');
 }
 
+/* windows
+___________________________________________*/
+windows { font-family: 'Signika Light',Arial, sans-serif; }
 
-
-/* Elementos que flotan dentro de una cabecera AreaPagina */
-.enAreaPagina {
- /* background-color: #ECE8DE;*/
- /*background-color: white;*/
-}
-
-
-/* Iframe con contenido html */
-.AreaListados {
- /*background-color: white;*/
- height: 100%;border: 0px none;
-}
-
-/* Areas añadidas con controles extra */
+/* iframe
+___________________________________________*/
+.AreaListados { height: 100%;border: 0px none;}
 
 .frameExtra {
- background-color: #FBFBFB;
  background-image:url('../img/gpos_marcagua.png');
  background-repeat: no-repeat; 
  background-position: bottom left;
  border: 0px none;
 }
-toolbox{ 
-         border: 0px solid; 
-         }
-#gpostoolbox{ 
-              padding: .1em;
- }
+.frameExtraDeck { border: 0px none;}
+.frameNormal { border: 0px none;}
+.trans { background-color: #FFFFFF; border: 0px none;}
 
+/* menu
+___________________________________________*/
 
-.frameExtraDeck {
- background-color: #FBFBFB;
- border: 0px none;
+menubar{   padding: .3em;   }
+popup,
+menupopup{ border: 1px solid #ccc; border-top: 1px solid #eee; } 
+popup{ background-color: #F8F8F8; font-size: 1rem!important; color: #555!important;}
+
+/* menulist
+___________________________________________*/
+menulist{ -moz-appearance: none;
+          font-weight: 400!important; 
+          height: 26px!important;
+          margin: 4px;
+          padding: 0 0!important;
+          border-radius: 2px;
+          color: #555!important;
+          text-align: center!important;
+          font-size: 1rem!important;
+          line-height: 22px!important;
+          letter-spacing: .1rem!important;
+          /* text-transform: uppercase!important;  */
+          border: 1px solid #33c3f0!important;   
+          box-shadow: none!important;
+          background-color: #F8F8F8;
+          min-height: 2em;}
+
+/* tab
+___________________________________________*/
+tab image{ width:28px!important;
+           padding-bottom: .1em!important;
+           padding-top:    .2em!important;
+           padding-left:   .3em!important;
+           padding-right:  .4em!important;}
+tab{ -moz-appearance: none;
+  background-color: #f8f8f8;
+  padding: .3em;
+  margin-right: .1em;
+  margin-left: .1em;
+  border: 1px solid #33c3f0!important;
+  border-top: 1px solid #33c3f0!important;
+  border-left: 1px solid #33c3f0!important;
+  border-right: 1px solid #33c3f0!important;
+  border-bottom: 0px solid #33c3f0!important;   
+  border-radius: 2px 2px 0 0;
+  font-size: 0.9rem;
+   		font-style: italic; }
+tab[selected="true"] {  padding: .2em;}
+tabpanels {
+    border: 1px solid #33c3f0!important;
+    border-left: 0px solid #33c3f0!important;
+    border-right: 0px solid #33c3f0!important;
+    border-bottom: 0px solid #33c3f0!important; }
+
+/* listitem
+___________________________________________*/
+listitem:hover{ border: 0px solid; background-color:#EFE0DE!important;}
+
+listitem[selected="true"] {
+    background-attachment: scroll;
+    background-clip: border-box;
+    background-color: #D7EDF4!important;
+    background-image: none;
+    background-origin: padding-box;
+    background-position: 0 0;
+    background-repeat: repeat;
+    background-size: auto auto;
+    color: #e7e7e7;
+    border:0px solid;
 }
+listitem { 
+           font-size: 0.9rem!important;
+           /* font-weight: 400;  */
+           color: #555!important;
+           padding-top:.6em;
+           padding-bottom:.4em; 
+           -moz-border-bottom-colors: none;
+           -moz-border-left-colors: none;
+           -moz-border-right-colors: none;
+           -moz-border-top-colors: none;
+           border-bottom-color: #eee;
+           border-bottom-style: solid;
+           border-bottom-width: 1px;
+           border-image-outset: 0 0 0 0;
+           border-image-repeat: stretch stretch;
+           border-image-slice: 100% 100% 100% 100%;
+           border-image-source: none;
+           border-image-width: 1 1 1 1;
+           border-left-color: transparent;
+           border-left-style: solid;
+           border-left-width: 0px;
+           border-right-color: transparent;
+           border-right-style: solid;
+           border-right-width: 0px;
+           border-top-color: transparent;
+           border-top-style: solid;
+           border-top-width: 0px;}
 
-/* Areas añadidas con controles extra */
+description.res-item { border-bottom:1 px solid #BEBDBC;width:35em;background-color: transparent; padding-top:1em; border-bottom: 1px solid #eee; }
+/* groupbox
+___________________________________________*/
 
-.frameNormal {
- /*background-color: white;*/
- /*background-image: url(img/bg2.png);
- background-repeat: repeat-x;*/
- border: 0px none;
-}
-
-/* areas con fondo transparente, como labels */
-
-.trans {
- background-color: #FFFFFF;
- border: 0px none;
-}
-
-button{ 
-  padding: .3em;      
-  box-shadow: 0px 0px 0px #888;
-  border: 1px solid #aaa;
-  border-radius:3px;
- }
-
-button:hover{ 
- /*  box-shadow: 0px 1px 2px #888; */
- }
-
-tab{ 
-  background: #C1C1C1;
-  padding: 0.5em;      
-  /*box-shadow: -1px 0px 0px #333;*/
-  border: 1px solid #6B6B6B;
-  border-radius: 6px 6px 0  0;
-  font-size: 110%;
-  font-weight: bold;
- }
-tab:hover{   background: #C9C9C9;   color: #000;  }
-
+groupbox row textbox{ width: auto; }
+groupbox{ border:0px; border-bottom:1px solid #eee;}
+/* textbox
+___________________________________________*/
 textbox{ 
   border: 0px solid #DFDFDF;
   box-shadow: inset 0px 1px 2px #555;
-  background-color: #F0F0F0;
-  border-radius:3px;
+  background-color: #f8f8f8;
   min-height: 2em;      
  }
+textbox#cambioPassUsuario{ min-height: 2.4em; }
+textbox { -moz-appearance: none;}
+textbox[multiline="true"] {
+   min-height:50px!important;
+   /*  -moz-binding: url("chrome://global/content/bindings/textbox.xml#textarea"); */
+   -moz-appearance:none;
+}
+textbox[readonly="true"] { background-color:#efe0de!important;}
+/* button
+___________________________________________*/
+textbox,
+button{ font-weight: 400!important; 
+        height: 26px!important;
+        margin: 4px;
+        padding: 0 0!important;
+        border-radius: 2px;
+        color: #555!important;
+        text-align: center!important;
+        font-style: normal!important; 
+        font-size: 1rem!important;
+        line-height: 22px!important;
+        letter-spacing: 1rem!important;
+        /* text-transform: uppercase!important;  */
+        border: 1px solid #33c3f0!important;   
+        box-shadow: none!important; }
 
-popup{ 
-  background-color: #e6e6e6;
-  border-radius: .2em;
-  border: 1px solid #aaa;       
- }
 
-menubar{   padding: .3em;   }
+button.btn{ height: 28px!important;   
+            background-color: #33c3f0!important;
+            text-transform: none!important; 
+            /* min-width: 7em; */
+            cursor:pointer;
+                        padding: 0.2em!important;
+            -moz-appearance:none;}
+
+button[type=menu]{ padding: 0.3em!important; }
+button[disabled=true],
+button.btn_disabled{ height: 28px!important;   
+            background-color: #EEE!important;
+            text-transform: none!important; 
+            cursor:auto;
+            border: 0px solid #33c3f0!important;   
+            -moz-appearance:none;
+            /* -moz-binding: url("../bindings/button.xml#button"); */}
+
+button[type="menu"], button[type="panel"] { -moz-appearance:none;}
+button[type="menu"], button[type="panel"],
+button.popup menupopup,
+button.popup menuitem, 
+button.popup vbox, 
+button.popup hbox {  background-color: #33c3f0!important; }
+
+.popup label,
+.cmb label,
+.btn label{ color:#fff!important; font-weight: 600; }
+
+button[type="menu"] menuitem:hover, button[type="panel"] menuitem:hover,
+button.popup menuitem:hover{  background-color: #EFB4AC!important;} 
+button[type="menu"] menuitem label, button[type="panel"] menuitem label{ color:#555!important;}
+
+/* datetimepicker.css
+---------------------------------------------------- */
+hbox.datepicker{             margin: 4px; }
+timepicker,
+datepicker{ font-weight: 400!important; 
+            height: 26px!important;
+            margin: 4px;
+            padding: 0 0!important;
+            border-radius: 2px;
+            color: #555!important;
+            text-align: center!important;
+            font-size: 1rem!important;
+            line-height: 26px!important;
+            letter-spacing: .1rem!important;
+            text-transform: uppercase!important;
+            border: 0px solid #33c3f0!important;   
+            box-shadow: none!important;}
+
+timepicker button,
+datepicker button{ height: auto!important;
+                   margin: auto!important; 
+                   background-color: none!important;}
+hbox.datetimepicker-input-box hbox{ padding: 4px 0px; margin: -3px -2px -3px -4px;}
+hbox.datetimepicker-input-box label{ padding: 4px 0px; }
+timepicker spinbuttons,
+datepicker spinbuttons { display:none;} 
+
+datepicker vbox,
+datepicker hbox,
+datepicker label,
+datepicker input,
+datepicker, timepicker,
+datepicker panel{
+                  background-color: #f8f8f8!important;
+                  color: #444!important;
+}
+
+hbox image,
+hbox label{ background-color: transparent!important; }
+/* toolbox
+___________________________________________*/
+toolbox{ border: 0px solid; }
+
+/* tree
+-------------------------------------------*/
+tree{ -moz-appearance: none; border : 0px solid;
+       margin-bottom: 0!important;
+       margin-left: 0!important;
+       margin-right: 0!important;
+       margin-top: 0!important; }
+
+tree > treechildren{ font-size: .9rem!important; font-weight: 400; color: #555!important; font-family: 'Signika Light',Arial, sans-serif; }
+treecol, treecolpicker {
+    -moz-appearance: none;
+    -moz-box-align: center;
+    -moz-box-pack: center;
+    background-attachment: scroll;
+    background-clip: none;
+    background-color: #eee;
+    background-image: none;
+    background-origin: none;
+    background-position: 0 0;
+    background-repeat: repeat;
+    background-size: auto auto;
+    border: 0px solid  #33c3f0!important;                         
+    box-shadow: none;
+    margin-right: 0;
+    padding-bottom: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 5px;
+    font-size: 1rem;
+    font-weight: 600;}
+
+treeitem{  background-color:#f9f9f9; }
+/* toolbarbutton
+___________________________________________*/
+row.movimientos label,
+row.recibir label,
+listheader,
+caption,
+treecol,
+treecolpicker,
+menubar,
+button,
+menu,
+menuitem,
+toolbarbutton {
+                padding-top: 0.1em;
+                padding-bottom: 0.1em;
+                padding-left: .1em;
+                padding-right: .1em;
+                font-size: 1.05rem; line-height: 1.1;  letter-spacing: -.1rem;
+                font-weight: 400;
+                font-family: 'Signika Light',Arial, sans-serif;
+		font-style: italic; 
+                /* -moz-transition: all 0.9s ease; */
+                color: #555!important;
+}
+menu,
+tab,
+button,
+toolbarbutton { cursor: pointer;}
+toolbarbutton{
+                padding-left: .4em;
+                padding-right: .4em;
+}
+menu[disabled="true"],
+radio[disabled="true"],
+menuitem[disabled="true"]{ color:#aa0000!important; text-decoration:line-through!important;}
+
+caption.h1{ font-size: 1.2rem!important; color:#aa0000!important;font-weight: 400!important;padding-bottom: .6em;}
+caption.h1 label{ font-size: 1.2rem!important; color:#aa0000!important;font-weight: 400!important;padding-bottom: .3em;}
+
+caption.bbox label,
+caption.bbox{ font-size: 1.1rem!important; color:#aa0000!important;}
+
+caption.box label,
+caption.box{ font-size: 1rem!important; color:#aa0000!important;}
+row caption{ margin-top:.8em!important; }
+description, label { color: #111!important;}
+caption{ background-color:transparent!important; }
+menuitem{ font-size: 0.9rem!important;
+          padding-top: 0.4em;
+          padding-bottom: 0.4em;
+          /* color : #aa0000; */
+}
+
+row.box caption label,
+row.box caption { font-size: .9rem!important; color:#33C3F0!important;}
+
+description {font-size: .98rem!important;margin-bottom:0px!important;}
+hbox.resumen{ padding: .5em; color:#33C3F0; border-top:1px solid #eee!important;}
+hbox.resumen label{ font-size: 1rem!important; color:#5ECFF2!important;}
+
+hbox.resumenvbox{padding-left:2em; padding-top:.5em;}
+hbox.resumenvbox label,
+hbox.resumenbox  label{ font-size: 1.05rem!important; color:#5ECFF2!important;}
+hbox.resumenhead label{ font-size: 1.05rem!important; color:#5ECFF2!important;}
 menupopup{ 
-  border: 0px solid #DFDFDF;
-  /* color: #505050;  */
- } 
-
-menulist{ 
-  border: 0px solid #DFDFDF;
-  box-shadow: inset 0px 1px 2px #555;
-  background-color: #F0F0F0;
-  border-radius:3px;
-  min-height: 2em;      
+           border-bottom:1px solid #ccc;
+           border-left:1px solid #ccc;
+           border-right:1px solid #ccc;
+           border-top:1px solid #f6f6f6;
+           /* -moz-transition: all 5s ease; */
  }
 
- groupbox row textbox{ 
-        width: 6em; 
- }
+button:hover label,
+button:hover hbox,
+button:hover vbox,
+button:focus,
+button:hover,
+toolbarbutton:hover { background-color:#aa0000!important; }
+button:hover { border:1px solid #aa0000!important}
 
-#busquedaDetallesCompra row description,
-#busquedaDetallesCompra row textbox{ 
-padding-top:5px;
- }
+menuitem:hover,
+menuitem:focus,
+menulist:focus,
+menulist:hover,
+datepicker:focus,
+datepicker:hover,
+textbox:focus,
+textbox:hover{ background-color:#f7ecf3!important;}
+textbox[focused=true]{ color : #000!important; background-color:#f7ecf3!important;}
+menuitem:hover{ background-color:#e8e8e8; }
 
-listitem { 
-           /* background-color:#BCBBBA; */
-           padding-top:0.22em;   
-           padding-bottom:0.17em;   
-           }
+toolbarbutton.media { 
+                      padding-left: .1em!important;
+                      padding-top: .1em!important;
+                      padding-bottom: .01em!important;
+                      /* font-weight: 300; */
+                      }
 
-listitem.parrow{ 
-         /* background-color:#BCBBBA; */
-          /*  padding-top:0.2em; */   
-          /*  padding-bottom:0.2em; */   
-         }
-listitem.imparrow{ 
-           /* background-color:transparent; */
-           /* padding-top:0.2em; */   
-           /* padding-bottom:0.2em; */   
-                   }
-
-
-/**
-listitem[selected="true"] {
-        background-color:#282828;
+toolbarbutton.media label,
+toolbarbutton.boxtool label{ color:#111!important; }
+vbox.gpostoolbox{  
+		  padding: .8em .6em .4em;
+                  box-shadow: 0 2px 8px #cfcbcb;
+                  margin-top: -5px;
+                  margin-bottom: 5px;
+                  margin-left: -10px;
+                  margin-right: -5px;
+                  border-bottom:1px solid #ccc;
+                  /* background-color: #f9f9f9!important */;
+                  z-index:40;
 }
-**/
+vbox.gpostoolbox toolbarbutton { font-size: 1rem;}
+hbox.AreaPagina{ 
+                 background-color: transparent!important;
+                 margin-top: 0;
+                 padding: 0;
+                 z-index:30;}
+hbox.AreaPagina caption{ font-size: 1.02rem!important; }
+hbox.AreaPagina label{ color:#444!important; }
+/* checkbox
+-------------------------------------------*/
+checkbox label{ font-size: 1rem!important;color:#33c3f0!important;}
+checkbox[checked="true"] label{ font-size: 1rem!important;color:#aa0000!important; }
 
-#xboxprecios hbox groupbox grid rows row description{
-    border: 0px solid #000;
-    padding:0.3em;
-    padding-top:0.5em;
+/* background color
+___________________________________________*/
+.frameExtraDeck,
+.frameExtra,
+hbox.box,
+vbox.box,
+panel.box hbox,
+panel.box vbox,
+tabbox.box vbox,
+tabbox.box hbox,
+.box,
+tree,
+listbox,
+window,
+menupopup,
+menuitem,
+tabpanels,
+groupbox,
+tab { background-color: #f8f8f8!important; }
+tabpanels.box{-moz-appearance: none;border: 1px solid!important;color: #33c3f0;}
+
+listhead{ background-color: #eee!important; padding-top:1px!important;padding-bottom:0px!important;}
+listheader {
+    -moz-appearance:none;
+    -moz-margin-end: 1px;
+    background-attachment: scroll;
+    background-clip: border-box;
+    background-color:  transparent!important;
+    background-image: none;
+    background-origin: none;
+    background-position: 0 0;
+    background-repeat: none;
+    background-size: auto auto;
+    border : 0px solid  #bbb!important;                         
+    box-shadow: none;
+    padding-bottom: 2px;
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-top: 1px;
+    font-size: 1rem;
+    font-weight: 400;}
+
+listbox {
+    -moz-appearance: none;
+    -moz-border-bottom-colors: none !important;
+    -moz-border-left-colors: none !important;
+    -moz-border-right-colors: none !important;
+    -moz-border-top-colors: none !important;
+   /*  background-color: rgb(170, 170, 170) !important; */
+    border-bottom-color: rgb(80, 80, 80) !important;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+    border-bottom-style: solid !important;
+    border-bottom-width: 0px !important;
+    border-image-outset: 0 0 0 0 !important;
+    border-image-repeat: stretch stretch !important;
+    border-image-slice: 100% 100% 100% 100% !important;
+    border-image-source: none !important;
+    border-image-width: 1 1 1 1 !important;
+    border-left-color: rgb(80, 80, 80) !important;
+    border-left-style: solid !important;
+    border-left-width: 0px !important;
+    border-right-color: rgb(80, 80, 80) !important;
+    border-right-style: solid !important;
+    border-right-width: 0 !important;
+    border-top-color: rgb(80, 80, 80) !important;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-top-style: solid !important;
+    border-top-width: 0px !important;
+    color: rgb(45, 45, 45);
+    margin: 0;
 }
 
-#xboxprecios hbox groupbox grid rows row textbox{
-    border: 0px solid #000;
-    padding:0.1em;
+splitter[orient="vertical"] {
+    background-color: #f8f8f8!important;
+    border: 0px solid!important;                          
+    cursor: ns-resize;
+    color: #33c3f0!important;
 }
 
-menu toolbarbutton {
-                padding-top: 0.05em;
-                padding-bottom: 0.05em;
-                padding-left: 2em;
-                padding-right: 2em;
-}
-textbox#cambioPassUsuario{  
-                    min-height: 2.4em;
-               }
-hbox toolbarbutton.media{  
-                    padding: 0.05em;
-               }
-.cjafaltante{
-    color:#C91918; 
-}
+
+/* caja
+___________________________________________*/
+.cjafaltante{ color:#C91918;}
 .cjacierre,
-.cjasobrante{
-    color:#000;
-}
-
+.cjasobrante{ color:#000;}
 .cjasobrante,
 .cjafaltante,
-.cjacierre{
-    font-size: 120%;
-    font-weight: bold;
-    text-align:center;
+.cjacierre{ font-size: 120%; font-weight: bold; text-align:center; }
+.arqueoaling{ text-align:right; width:10em;}
+.cjagralabierta{background-color:#FFA500;border:0px!important;}
+.cjagralcerrada{ background-color:#ff5f59;border:0px!important;color:#FFF; }
 
-}
 
-.arqueoaling{
-    text-align:right;
-    width:10em;
-}
+/* otros class
+___________________________________________*/
+.nopasswd_local{ margin-top:2.1em }
 
-.cjagralabierta{
-    background-color:#FFA500;
-    border:0px;
-}
 
-.cjagralcerrada{
-    background-color:#C91918;
-    border:0px;
-    color:#FFF;
-}
-listitem:hover{ 
-                border-top: 1px dotted #AA0000;
-                border-bottom: 1px dotted #AA0000;
- }
+/* otros id
+___________________________________________*/
+
+
+#xboxprecios hbox groupbox grid rows row description{ padding-top:1em; padding-bottom:1em;}
+#xboxprecios hbox groupbox grid rows row image{ padding-bottom: 0.8em; padding-top: 0.8em; }
+#xboxprecios hbox groupbox grid rows row textbox{ border: 0px solid #000; padding:0.1em;}
+#xboxprecios hbox groupbox grid rows row { border-bottom: 1px solid #eee!important; padding:0.05em;}
+
+textbox.stockmin{ width:3.5em!important; }
+textbox.costoop{ width:3.5em!important; }
+textbox.precio{ width:6em!important; }
+
+
 #busquedaDetallesVenta,
 #listadoOrdenServicioDetalle,
 #busquedaListaServicios,
-#busquedaCompraDetalle,
 #listadoMovimiento,
 #listadoAlmacen,
-#formAjustesExistencias,
 #boxmovimientos,
 #boxexistencias,
 #busquedaDetallesOrdenCompra,
-#busquedaDetallesCompra,
-#listaMovimientos,
 #busquedaDetallesPago,
 #busquedaDetallesPedidosVenta,
 #listadoPromocion,
 #xboxprecios,
 #listaPagoDocumento,
 #busquedaDetallesCobro,
+#boxvencimientos,
 #listadoTicket{ 
             background-image: url("../img/gpos_marcagua.png");
             background-position: left bottom;
             background-repeat: no-repeat;
- }
-#listaMovimientos{ 
-            background-image: url("../img/gpos_marcagua.png");
-                   /* background-position: center center; */
-            background-position: left bottom;
-            background-size: 172px 137px;
-            background-repeat: no-repeat;
+            background-size: 10%;
+            background-color:#f8f8f8!important;
  }
 #nombrelocal,
 #passlocal{
@@ -236,6 +545,124 @@ listitem:hover{
             height:2.2em;
             font-size: 11.5px;
  }
-.nopasswd_local{ 
-                 margin-top:2.1em
+
+
+
+/* popup
+-------------------------------------------*/
+div#box-popup{ 
+               border: 1px solid #33C3F0;
+               border-radius: 0px;
+               /* margin: 4px -120px 4px; */
+               padding: 0px;
+               padding-top: 0px;
+               background-color: #f8f8f8;
+               background-image:url('../img/gpos_marcagua.png');
+               background-size: 25%;
+               background-repeat: no-repeat; 
+               background-position: center center;
+               box-shadow: 0 2px 15px #555;/*0px 1px 8px #D3D3D3;*/
+               /* cursor:pointer; */
+	       z-index:1
+               }
+span.closepopup{ 
+                 position: absolute; 
+                 border: 0px solid #D9D9D9;
+                 font-size: 120%;
+                 width:10px;
+                 height:10px;
+                 min-height: 6px;
+                 top: 4px; 
+                 right: 4px;
+                 cursor:pointer;
+                 background-image:url('../img/gpos_eliminarproducto.png');
+                 background-repeat: no-repeat; 
+                 background-position: center center;
                  }
+
+div.box-popup-off{ height: 0em;width: 0em;display:none;}
+div.box-popup-on{ position: fixed; left: 50%; display: block; }
+
+.ver_clasico { top: 25%;  transform: translate(-50%, -25%); width:210; height:230; }
+.ven_normal { top: 25%;  transform: translate(-50%, -25%); width:300px; height:220px;}
+.ven_alta { top: 4%;  transform: translate(-50%, 0%); width:400px; height:520px;}
+.ven_seleccion { top: 25%; transform: translate(-50%, -25%);  width:400px; height:520px;}
+.ven_codigobarras { top: 4%;  transform: translate(-50%, 0%); width:400px; height:520px;}
+.ven_carrito { top: 25%; transform: translate(-50%, -50%);  width:600px; height:320px;}
+.ven_printallcb { top: 25%; transform: translate(-50%, -25%);  width:610px; height:650px;}
+.ven_contenedor,
+.ven_tallaje,
+.ven_talla,
+.ven_color,
+.ven_marca { top: 25%; transform: translate(-50%, -25%);  width:250px; height:315px;}
+.ven_cuenta { top: 25%; transform: translate(-50%, -25%);  width:420px; height:350px;}
+.ven_avanzada { top: 25%; transform: translate(-50%, -25%);  width:600px; height:80px;}
+.ven_familiaplus { top: 25%; transform: translate(-50%, -25%);  width:450px; height:350px;}
+.ven_lab { top: 10%; transform: translate(-50%, -0%);  width:350px; height: 350px;}
+.ven_prov { top: 25%; transform: translate(-50%, -25%);  width:350px; height: 350px;}
+.ven_servicio { top: 25%; transform: translate(-50%, -25%);  width:300px; height: 320px;}
+div#box-popup.ven_alta { background-color: #fff;}
+/* end popup
+-------------------------------------------*/
+
+/* login
+-------------------------------------------*/
+box.box-login-gpos vbox{  background-color: transparent!important; }
+box.box-login-gpos button,
+box.box-login-gpos textbox{  border: 0px solid #33c3f0!important;}
+
+caption.login{ color: #eee!important;
+               font-size: 1.1rem !important;
+               font-style: initial;
+               font-weight: 400;
+               letter-spacing: 0.18em;
+               margin-left: 18px;
+               margin-top: 0.9em;
+               padding-bottom: 0.9em;}
+#passlocal,#nombrelocal{  font-style: italic; }
+
+            
+button.btn-login{ height: 26px!important;   
+                  background-color: #d9d9d9!important;
+                  text-transform: none!important; 
+                  cursor:pointer;
+                  -moz-appearance:none;
+                  /* -moz-binding: url("../bindings/button.xml#button"); */}
+button.btn-login,
+button.btn-login label{ color: #777!important; font-weight: 400!important; }
+button.btn-login{ font-size: 1.1rem!important; }
+
+toolbarbutton.btn label{ color:#aa0000!important; font-weight: 400; font-size: 1.1rem!important;}
+
+/* Grid row
+----------------------------------------*/
+grid.consolidado{ padding-top: .6em!important; padding-bottom: .4em!important; }
+
+.movimientos,
+.recibir{ background-color:#eee;padding:0; }
+
+
+/* Ajustes
+----------------------------------------*/
+description.xbase{ /* font-size: 1.2rem!important;  */
+                   color:#33C3F0!important; }
+
+row.xbase description{ padding-bottom: 0.1em;
+                       padding-top: 1em;
+                       text-align: center;
+                       border-bottom: 1px solid #eee; }
+
+row.xbase caption{ /* text-align:center!important;  */
+                   padding-bottom: 0.8em; 
+                   padding-top: 0.2em; }
+
+caption.xbase  label{/*  font-size: 1.23rem!important; */ font-weight: 400;}
+
+description.xproducto,
+caption.xproducto label{ font-size: 1.2rem!important; font-weight: 400;}
+
+description.xtitulo{ font-size: 1.35rem!important; font-weight: 400; color:#33C3F0!important; }
+description.xtext{ padding-top: 1.2em; }
+label.xtext{ padding-top: 1.2em; }
+caption.xtotal{ margin-top:0em!important;  }
+caption.xtotal label{color:#33C3F0!important; font-style:normal!important;font-size: 1.25rem!important;  font-weight: 400;}

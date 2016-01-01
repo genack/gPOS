@@ -3,6 +3,7 @@
 function GenEtiqueta($id,$precio=0) {
 	global $action;
 	$ot = getTemplate("Etiqueta");
+	$NombreEmpresa  = $_SESSION["GlobalNombreNegocio"];
 	
 	if (!$ot){	
 		error(__FILE__ . __LINE__ ,"Info: template busqueda no encontrado");
@@ -19,14 +20,13 @@ function GenEtiqueta($id,$precio=0) {
 	
 	$bar = $oProducto->getCB();
 	$nombre = $oProducto->getDescripcion();
-	$marca = $oProducto->getMarcaTexto();
+	$marca  = $oProducto->getMarcaTexto();
 	$nombre = $nombre.' '.$marca;
 	$cr = "&";
 		
 	$cad = "barcode=" . $bar . $cr;
 	$cad .= "format=gif" . $cr;
-	$cad .= "text=$bar" . $cr;
-	$cad .= "text=".urlencode($nombre ." - " .$oProducto->get("Referencia")) . $cr;
+	$cad .= "text=$bar" . $cr;	
 	$cad .= "width=".getParametro("AnchoBarras")  .$cr; 
 	$cad .= "height=".getParametro("AltoBarras") . $cr;		
 
@@ -38,6 +38,8 @@ function GenEtiqueta($id,$precio=0) {
 	$ot->fijar("color",$oProducto->getTextColor());
 	$ot->fijar("referencia",$oProducto->get("Referencia"));
 	$ot->fijar("nombre",$nombre);
+	$ot->fijar("NombreEmpresa",$NombreEmpresa);
+	
 
 	echo $ot->Output();					
 }
@@ -206,7 +208,7 @@ function getProductosSyncAlmacen($aprod=array(),$IdLocalActivo,$filtro=false,$es
 	   "       ges_almacenes.StockMin, ".
 	   "       ges_almacenes.StockIlimitado, ".
 	   "       ges_productos.CodigoBarras, ".
-	   "       ges_productos.RefProvHab, ".
+	   "       UPPER(ges_productos.RefProvHab) as RefProvHab, ".
 	   "       ges_productos.Referencia, ".
 	   "       ges_productos_idioma.Descripcion, ".
 	   "       ges_marcas.Marca, ".
@@ -585,13 +587,15 @@ class articulo extends Cursor {
 		if ($idalias)
 		  $and_producto .= "AND (IdProductoAlias0 = '".$idalias."' OR IdProductoAlias1 ='".$idalias."')";
 		else{
-		  if ($nombre){
-		    $xnombre    = explode("|", $nombre);
-		    $and_producto .= " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre[0]."%' ";
-		    $and_producto .= ( isset( $xnombre[1] ) )? " AND ( ges_marcas.Marca  LIKE '%".$xnombre[1]."%' OR ges_modelos.Color  LIKE '%".$xnombre[1]."%' OR ges_detalles.Talla LIKE '%".$xnombre[1]."%' )  OR ges_productos.RefProvHab  LIKE '%".$xnombre[1]."%' ": "";
-		    $extrafrom .= ( isset( $xnombre[1] ) )? " INNER JOIN ges_marcas ON ges_marcas.IdMarca = ges_productos.IdMarca  INNER JOIN ges_modelos ON ges_modelos.IdColor = ges_productos.IdColor  INNER JOIN ges_detalles ON ges_detalles.IdTalla = ges_productos.IdTalla ":"";
-		    
-		  }
+
+		  $xnombre    = explode("|", $nombre);
+		  $and_producto .= ( $xnombre[0] != '' )? " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre[0]."%' ":"";
+		  if( isset( $xnombre[1] ) )
+		    if ( $xnombre[1] != '' )
+		      {
+			$and_producto .= " AND ( ges_marcas.Marca  LIKE '%".$xnombre[1]."%' OR ges_modelos.Color  LIKE '%".$xnombre[1]."%' OR ges_detalles.Talla LIKE '%".$xnombre[1]."%' OR ges_productos.RefProvHab  LIKE '%".$xnombre[1]."%' OR ges_laboratorios.NombreComercial LIKE '%".$xnombre[1]."%' OR ges_productos_alias.ProductoAlias LIKE '%".$xnombre[1]."%' ) ";
+			$extrafrom .=  " INNER JOIN ges_marcas ON ges_marcas.IdMarca = ges_productos.IdMarca  INNER JOIN ges_modelos ON ges_modelos.IdColor = ges_productos.IdColor  INNER JOIN ges_detalles ON ges_detalles.IdTalla = ges_productos.IdTalla INNER JOIN ges_laboratorios ON ges_laboratorios.IdLaboratorio = ges_productos.IdLabHab INNER JOIN ges_productos_alias ON (ges_productos.IdProductoAlias0 = ges_productos_alias.IdProductoAlias OR ges_productos.IdProductoAlias1 = ges_productos_alias.IdProductoAlias)  ";
+		      }
 		}    		
  
 		$restriccion_base = "";
@@ -661,6 +665,7 @@ class articulo extends Cursor {
 			$restriccion_reservados
 			ges_productos_idioma.IdIdioma = '$Idioma'
 			AND ges_productos.Eliminado = 0 $and_producto" .
+		        " GROUP BY ges_productos.CodigoBarras ".
 			"ORDER BY ".
 			" ges_productos_idioma.Descripcion ASC, " .
 			" ges_productos.IdProdBase ASC, " .			
@@ -1063,6 +1068,7 @@ class almacenes {
 				"StockIlimitado"=> $Servicio,
 				"Disponible"=>1,
 				"Oferta"=>0,
+				"CostoUnitario"=>$oProducto->get("Costo"),
 				);
 				 				 		
  		$sql = CreaInsercion(false,$datos,"ges_almacenes"); 
@@ -1367,7 +1373,7 @@ function obtenerCostoUnitarioFifo($IdProducto,$IdLocal){
 	 return $costounitario;
 }
 
-function actualizarPreciosVentaAlmacen($idproducto,$pvd,$idlocal){
+function actualizarAllPreciosVentaAlmacen($idproducto,$pvd,$idlocal){
 
          $sql = 
 	   "UPDATE ges_almacenes ".
@@ -1380,6 +1386,28 @@ function actualizarPreciosVentaAlmacen($idproducto,$pvd,$idlocal){
 	 $res = query($sql);
 }
 
+function actualizarPreciosVentaAlmacen($idproducto,$pvd,$pvdd,$pvc,$pvcd,$idlocal){
+
+         $sql = 
+	   "UPDATE ges_almacenes ".
+	   "SET    PrecioVenta   = '".$pvd."', ".
+	   "       PVDDescontado = '".$pvdd."', ".
+	   "       PrecioVentaCorporativo = '".$pvc."',".
+	   "       PVCDescontado = '".$pvcd."' ".
+	   "WHERE  IdProducto = '".$idproducto."' ".
+	   "AND    IdLocal = '".$idlocal."'";
+	 query($sql);
+}
+
+function obtenerAllPreciosVentaAlmacen($idproducto,$idlocal){
+
+         $xsql = 
+	   " select PrecioVenta,PVDDescontado,PrecioVentaCorporativo,PVCDescontado ".
+	   " from   ges_almacenes ".
+	   " where  IdProducto = '".$idproducto."' ".
+	   " and    IdLocal = '".$idlocal."'";
+	 return queryrow($xsql);
+}
 
 function obtenerKardexMovimientosProducto($idproducto,$idlocal,$desde,
 					  $hasta,$xope,$xmov){
@@ -1477,9 +1505,13 @@ function obtenerKardexMovimientos($idlocal,$desde,$hasta,$xope,$xfamilia,
 
          $desde  = CleanFechaES($desde);
 	 $hasta  = CleanFechaES($hasta);
-	 $anombre    = ($xnombre)? explode("|", $xnombre):"";
-	 $extra  = ( isset($anombre[0])  )? " AND ges_productos_idioma.Descripcion  LIKE '%".$anombre[0]."%' ":"";
-	 $extra .= ( isset($anombre[1])  )? " AND ( ges_marcas.Marca  LIKE '%".$anombre[1]."%' OR ges_modelos.Color  LIKE '%".$anombre[1]."%' OR ges_detalles.Talla LIKE '%".$anombre[1]."%' )  OR ges_productos.RefProvHab  LIKE '%".$anombre[1]."%' ":"";
+
+
+	 //Nombre
+         $anombre = explode("|", $xnombre);	   
+	 $extra   = ( $anombre[0] != '' )? " AND ges_productos_idioma.Descripcion  LIKE '%".$anombre[0]."%' ":"";
+	 if( isset( $anombre[1] ) )
+	   $extra .= ( $anombre[1] != '' )? " AND ( ges_marcas.Marca  LIKE '%".$anombre[1]."%' OR ges_modelos.Color  LIKE '%".$anombre[1]."%' OR ges_detalles.Talla LIKE '%".$anombre[1]."%'   OR ges_productos.RefProvHab  LIKE '%".$anombre[1]."%' OR ges_laboratorios.NombreComercial LIKE '%".$anombre[1]."%')  ":"";
 	 $extra .= ( $xmarca   != "0" )? " AND ges_marcas.IdMarca = '".$xmarca."' ":"";
 	 $extra .= ( $xfamilia != "0" )? " AND ges_familias.IdFamilia = '".$xfamilia."' ":"";
 	 $extra  = ( $xcodigo )? " AND ges_productos.CodigoBarras LIKE '".$xcodigo."' ":$extra;
@@ -1577,12 +1609,16 @@ function obtenerKardexMovimientosInventario($idlocal,$desde,$hasta,$xfamilia,
          $desde   = CleanFechaES($desde);
 	 $hasta   = CleanFechaES($hasta);
 	 $fecha   = " AND  FechaMovimiento>= '$desde' AND  FechaMovimiento<= ADDDATE('$hasta',1) ";
-	 $anombre    = ($xnombre)? explode("|", $xnombre):"";
 
-	 $extra  = ( $esInvent )? " AND ges_kardex.IdInventario = '".$xinvent."' ":"";
-	 $extra .= ( $esInvent )? "":$fecha;
-	 $extra .= ( isset($anombre[0])  )? " AND ges_productos_idioma.Descripcion  LIKE '%".$anombre[0]."%' ":"";
-	 $extra .= ( isset($anombre[1])  )? " AND ( ges_marcas.Marca  LIKE '%".$anombre[1]."%' OR ges_modelos.Color  LIKE '%".$anombre[1]."%' OR ges_detalles.Talla LIKE '%".$anombre[1]."%' )  OR ges_productos.RefProvHab  LIKE '%".$anombre[1]."%' ":"";
+	 $extra   = ( $esInvent )? " AND ges_kardex.IdInventario = '".$xinvent."' ":"";
+	 $extra  .= ( $esInvent )? "":$fecha;
+
+	 //Nombre
+         $anombre = explode("|", $xnombre);	   
+	 $extra  .= ( $anombre[0] != '' )? " AND ges_productos_idioma.Descripcion  LIKE '%".$anombre[0]."%' ":"";
+	 if( isset( $anombre[1] ) )
+	   $extra .= ( $anombre[1] != '' )? " AND ( ges_marcas.Marca  LIKE '%".$anombre[1]."%' OR ges_modelos.Color  LIKE '%".$anombre[1]."%' OR ges_detalles.Talla LIKE '%".$anombre[1]."%'   OR ges_productos.RefProvHab  LIKE '%".$anombre[1]."%' OR ges_laboratorios.NombreComercial LIKE '%".$anombre[1]."%' ) ":"";
+
 	 $extra .= ( $xmarca   != "0" )? " AND ges_marcas.IdMarca = '".$xmarca."' ":"";
 	 $extra .= ( $xfamilia != "0" )? " AND ges_familias.IdFamilia = '".$xfamilia."' ":"";
 	 $extra  = ( $xcodigo  )? " AND ges_productos.CodigoBarras LIKE '".$xcodigo."' ":$extra;
@@ -1680,17 +1716,23 @@ function obtenerKardexMovimientosInventario($idlocal,$desde,$hasta,$xfamilia,
 function obtenerKardexInventarioAlmacen($idlocal,$xfamilia,$xmarca,$xstock,
 					$xnombre,$xcodigo,$esInvent){
 
-         $anombre    = ($xnombre)? explode("|", $xnombre):"";	   
+
 	 $extra  = ( $xmarca   != "0" )? " AND ges_marcas.IdMarca = '".$xmarca."' ":"";
 	 $extra .= ( $xfamilia != "0" )? " AND ges_familias.IdFamilia = '".$xfamilia."' ":"";
 	 $extra .= ( $xstock   == "1" )? " AND ges_almacenes.Unidades > 0 ":"";
 	 $extra .= ( $xstock   == "2" )? " AND ges_almacenes.Unidades = 0 ":"";
 	 $extra .= ( $xstock   == "3" )? " AND ges_almacenes.EstadoInventario = 1 ":"";
 	 $extra .= ( ( $xstock != "3" ) && $esInvent )? " AND ges_almacenes.EstadoInventario = 0 ":"";
-	 $extra .= ( isset($anombre[0])  )? " AND ges_productos_idioma.Descripcion  LIKE '%".$anombre[0]."%' ":"";
-	 $extra .= ( isset($anombre[1])  )? " AND ( ges_marcas.Marca  LIKE '%".$anombre[1]."%' OR ges_modelos.Color  LIKE '%".$anombre[1]."%' OR ges_detalles.Talla LIKE '%".$anombre[1]."%' )  OR ges_productos.RefProvHab  LIKE '%".$anombre[1]."%' ":"";
+
+	 //Nombre
+         $anombre = explode("|", $xnombre);	   
+	 $extra  .= ( $anombre[0] != '' )? " AND ges_productos_idioma.Descripcion  LIKE '%".$anombre[0]."%' ":"";
+	 if( isset( $anombre[1] ) )
+	   $extra .= ( $anombre[1] != '' )? " AND ( ges_marcas.Marca  LIKE '%".$anombre[1]."%' OR ges_modelos.Color  LIKE '%".$anombre[1]."%' OR ges_detalles.Talla LIKE '%".$anombre[1]."%'   OR ges_productos.RefProvHab  LIKE '%".$anombre[1]."%' OR ges_laboratorios.NombreComercial LIKE '%".$anombre[1]."%' OR ges_productos_alias.ProductoAlias LIKE '%".$anombre[1]."%') ":"";
+	 //Local o CB
 	 $extra  = ( $xcodigo )? " AND ges_productos.CodigoBarras LIKE '".$xcodigo."' ":$extra;
 	 $extra .= ( $idlocal  != "0" )? " AND ges_almacenes.IdLocal = '".$idlocal."' ":"";
+
 	 $sql    = 
 	   "SELECT ges_almacenes.Id,ges_almacenes.IdProducto,ges_almacenes.IdLocal,".
 	   "       DATE_FORMAT(ges_almacenes.FechaChange, '%e %b %y  %H:%i') as FechaMovimiento,".
@@ -1728,11 +1770,13 @@ function obtenerKardexInventarioAlmacen($idlocal,$xfamilia,$xmarca,$xstock,
 	   "INNER  JOIN ges_familias     ON ges_productos.IdFamilia = ges_familias.IdFamilia ".
 	   "INNER  JOIN ges_contenedores ON ges_productos.IdContenedor = ges_contenedores.IdContenedor ".
 	   "INNER  JOIN ges_locales      ON ges_locales.IdLocal    = ges_almacenes.IdLocal ".
+	   "INNER JOIN ges_productos_alias ON (ges_productos.IdProductoAlias0 = ges_productos_alias.IdProductoAlias OR ges_productos.IdProductoAlias1 = ges_productos_alias.IdProductoAlias) ".
 	   "WHERE  ges_almacenes.Eliminado      = 0 ".
 	   "AND    ges_productos.MetaProducto   = 0 ".
 	   "AND    ges_productos.Servicio       = 0 ".
 	   "AND    ges_almacenes.StockIlimitado = 0 ".
 	   $extra.
+	   " GROUP BY ges_productos.CodigoBarras ".
 	   "ORDER  BY ges_productos_idioma.Descripcion DESC";
 
 	 $res = query($sql);
@@ -1740,10 +1784,15 @@ function obtenerKardexInventarioAlmacen($idlocal,$xfamilia,$xmarca,$xstock,
 	 $OrdenKardex = array();
 	 $t = 0;
 
+	 $oLocal = new local;
+	 $IdLocalCentral = $oLocal->getIdLocalCentral();
+
 	 while($row = Row($res))
 	   {
 	     $nombre               = "Operacion_" . $t++;
 	     $row["MUSubFamilia"]  = ObtenerMUSubFamilia($row["IdProducto"],$row["IdFamilia"],$row["IdSubFamilia"]);
+	     $row["COPOrigen"]     = ($esInvent && $row["CostoOperativo"] == 0)? obtenerCostoOperativoOrigen($IdLocalCentral,$row["IdProducto"]):0;
+	     $row["CostoOrigen"]     = ($esInvent && $row["Costo"] == 0)? obtenerCostoLocalCentral($IdLocalCentral,$row["IdProducto"]):0;
 	     $OrdenKardex[$nombre] = $row; 
 	     
 	   }	
@@ -2055,13 +2104,14 @@ function registrarPreciosVentaAlmacen($PVD,$PVDD,$PVC,$PVCD,$IdArticulo){
 	 query($sql);
 }
 
-function registrarPreciosVentaAlmacenProducto($PVD,$PVDD,$PVC,$PVCD,$IdProducto){
+function registrarPreciosVentaAlmacenProducto($PVD,$PVDD,$PVC,$PVCD,$CostoOP,$IdProducto){
          $sql = 
 	   " update ges_almacenes".
 	   " set    PrecioVenta            = ".$PVD.",".
 	   "        PrecioVentaCorporativo = ".$PVC.",".
 	   "        PVDDescontado          = ".$PVDD.",".
-	   "        PVCDescontado          = ".$PVCD." ".
+	   "        PVCDescontado          = ".$PVCD.",".
+	   "        CostoOperativo         = ".$CostoOP." ".
 	   " where  (IdProducto = '".$IdProducto."')";
 	 query($sql);
 }
@@ -2186,7 +2236,7 @@ function FormatPreciosTPV($numero){
       $precio = $numero;
     if($resto < 0.5 && $resto > 0.0)
       $precio = $entero+0.5;
-    if($resto >= 0.5)
+    if($resto > 0.5)
       $precio = round($numero, 0, PHP_ROUND_HALF_UP);
     break;
   }
@@ -2283,8 +2333,8 @@ function obtenerProductoxSubFamilia($IdFamilia,$IdSubFamilia){
 	   "       ges_productos.Referencia, ".
 	   "       CONCAT(ges_productos_idioma.Descripcion,' ', ".
 	   "       ges_marcas.Marca, ' ', ".
-	   "       ges_detalles.Talla, ' ', ".
 	   "       ges_modelos.Color, ' ', ".
+	   "       ges_detalles.Talla, ' ', ".
 	   "       ges_laboratorios.NombreComercial) as Producto, ".
            "       ges_productos.Costo as UltimoCosto, ".
            "       ges_almacenes.CostoOperativo, ".
@@ -2300,7 +2350,7 @@ function obtenerProductoxSubFamilia($IdFamilia,$IdSubFamilia){
          "INNER JOIN ges_productos_idioma ON ges_productos.IdProdBase = ges_productos_idioma.IdProdBase ".
          "INNER JOIN ges_marcas ON ges_productos.IdMarca = ges_marcas.IdMarca ".
          "INNER JOIN ges_modelos ON ges_productos.IdColor = ges_modelos.IdColor ".
-         "INNER JOIN ges_detalles ON ges_productos.IdTallaje = ges_detalles.IdTallaje ".
+         "INNER JOIN ges_detalles ON ges_productos.IdTalla = ges_detalles.IdTalla ".
          "INNER JOIN ges_laboratorios ON ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
          "WHERE ges_productos.Eliminado = 0 ".
          "AND   ges_productos.Servicio = 0 ".
@@ -2310,6 +2360,28 @@ function obtenerProductoxSubFamilia($IdFamilia,$IdSubFamilia){
          "GROUP BY ges_almacenes.IdProducto ";
   $res = query($sql);
   return $res;
+}
+
+function getDatosArticuloExtra($id,$almacen){
+
+  if( $almacen == 0 ) return;
+
+  $sql = " select Id,IdProducto,Unidades,Resumenkardex ".
+         " from   ges_almacenes ".
+         " where  IdProducto = '$id' ".
+         " and    IdLocal    = '$almacen'";	
+
+  $row = queryrow($sql);
+  if ($row) 
+    {
+      $arprod    = getDatosProductosExtra($id,"id");
+      
+      return $row["Id"].";".$row["Unidades"].";".$row["Resumenkardex"].
+	";".$arprod["Lote"].";".$arprod["Vence"].";".$arprod["Serie"].";".$arprod["CodigoBarras"].
+	";".$arprod["CodigoBarras"]." ".getDatosProductosExtra($id,"nombre");
+    }
+  else
+    return;
 }
 
 ?>

@@ -138,23 +138,6 @@ function Paginar(inipagina,rangolist){
 
 }
 
-function onFocusTextboxBusqueda(textboxid){
-    textbox=document.getElementById(textboxid);
-    if(textboxid == "codigo"){ 
-	if( textbox.value == 'CB/Ref.' ) 
-	    textbox.value=''; 
-	else 
-	    textbox.select();
-    }
-
-    if(textboxid == "descripcion"){
-	if( textbox.value == 'Descripcion del Producto' ) 
-	    textbox.value=''; 
-	else 
-	    textbox.select();
-    }
-}
-
 function iniBusqueda(codigo,descripcion,idfamilia,idmarca){
     id("codigo").value = codigo;
     id("descripcion").value = descripcion;
@@ -228,8 +211,8 @@ function listarPVMD(){
 	id("idfamilia").value = 0;
 	id("listmarca").value = 1;
 	id("idmarca").value = 0;
- 	id("codigo").value='CB/Ref.';
-	id("descripcion").value='Descripcion del Producto';
+ 	id("codigo").value='';
+	id("descripcion").value='';
 	id("codigo").setAttribute('readonly','true');
 	id("descripcion").setAttribute('readonly','true');
 	//BOTONES
@@ -244,8 +227,8 @@ function listarPVMD(){
 	id("idfamilia").value = 0;
 	id("listmarca").value = 1;
 	id("idmarca").value = 0;
- 	id("codigo").value='CB/Ref.';
-	id("descripcion").value='Descripcion del Producto';
+ 	id("codigo").value='';
+	id("descripcion").value='';
 	filtrarProductos(); 
     }
 }
@@ -340,6 +323,7 @@ function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnit
     var xStockMin = document.createElement('textbox');
     xStockMin.setAttribute('value',StockMin);
     xStockMin.setAttribute("style","text-align:right"); 
+    xStockMin.setAttribute("class","stockmin"); 
     xStockMin.setAttribute('id','SM'+(parseFloat(i)+parseFloat(1)));
     xStockMin.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xStockMin.setAttribute('onfocus','this.select()');
@@ -353,7 +337,7 @@ function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnit
     var xCOP = document.createElement('textbox');
     xCOP.setAttribute('value',formatDineroTotal(CostoOperativo));
     xCOP.setAttribute('label',formatDineroTotal(CostoOperativo));
-    xCOP.setAttribute("style","text-align:right"); 
+    xCOP.setAttribute("class","costoop"); 
     xCOP.setAttribute('id','COP'+(parseFloat(i)+parseFloat(1)));
     xCOP.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xCOP.setAttribute('onfocus','this.select()');
@@ -386,7 +370,7 @@ function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnit
     var xPVD = document.createElement('textbox');
     xPVD.setAttribute('value',formatDineroTotal(PVD));
     xPVD.setAttribute('label',formatDineroTotal(PVD));
-    xPVD.setAttribute("style","text-align:right"); 
+    xPVD.setAttribute("class","precio"); 
     xPVD.setAttribute('id','PVD'+(parseFloat(i)+parseFloat(1)));
     xPVD.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xPVD.setAttribute('onblur','validarPVD('+(i+1)+')');
@@ -397,7 +381,7 @@ function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnit
 
     var xPVD_Descontado = document.createElement('textbox');
     xPVD_Descontado.setAttribute('value',formatDineroTotal(PVD_Descontado));
-    xPVD_Descontado.setAttribute("style","text-align:right"); 
+    xPVD_Descontado.setAttribute("class","precio"); 
     xPVD_Descontado.setAttribute('id','PVDD'+(parseFloat(i)+parseFloat(1)));
     xPVD_Descontado.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xPVD_Descontado.setAttribute('onfocus','this.select()');
@@ -418,7 +402,7 @@ function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnit
     var xPVC = document.createElement('textbox');
     xPVC.setAttribute('value',formatDineroTotal(PVC));
     xPVC.setAttribute('label',formatDineroTotal(PVC));
-    xPVC.setAttribute("style","text-align:right"); 
+    xPVC.setAttribute("class","precio"); 
     xPVC.setAttribute('id','PVC'+(parseFloat(i)+parseFloat(1)));
     xPVC.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xPVC.setAttribute('onblur','validarPVC('+(i+1)+')');
@@ -429,7 +413,7 @@ function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnit
 
     var xPVC_Descontado = document.createElement('textbox');
     xPVC_Descontado.setAttribute('value',formatDineroTotal(PVC_Descontado));
-    xPVC_Descontado.setAttribute("style","text-align:right"); 
+    xPVC_Descontado.setAttribute("class","precio"); 
     xPVC_Descontado.setAttribute('id','PVCD'+(parseFloat(i)+parseFloat(1)));
     xPVC_Descontado.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xPVC_Descontado.setAttribute('onblur','validarPVCD('+(i+1)+')');
@@ -753,15 +737,14 @@ function RawfiltrarProductos(idfamilia,listalocal,idmarca,codigo,descripcion,ini
     listaPaginas.setAttribute('collapsed',true);
 
     //TOTALES RESUMEN
-    textoproductos.setAttribute('label','Total : '+
-				totalFilasProductos+' productos.');
-    totalCPP.setAttribute('label','Total CP: '+cMoneda[1]['S']+" "+
+    textoproductos.setAttribute('label', totalFilasProductos+' productos.');
+    totalCPP.setAttribute('label',cMoneda[1]['S']+" "+
 			  formatoMoneda( Math.round(totalCP*100)/100, 2, [',', "'", '.'] ));
-    totalPVP.setAttribute('label','Total PVP: '+cMoneda[1]['S']+" "+ 
+    totalPVP.setAttribute('label',cMoneda[1]['S']+" "+ 
 			  formatoMoneda( Math.round(totalPVD*100)/100, 2, [',', "'", '.'] ));
-    totalMU.setAttribute('label','Total MU: '+cMoneda[1]['S']+" "+ 
+    totalMU.setAttribute('label',cMoneda[1]['S']+" "+ 
 			 formatoMoneda( Math.round(totalMUD*100)/100, 2, [',', "'", '.'] ));
-    totalIGV.setAttribute('label','Total IGV: '+cMoneda[1]['S']+" "+ 
+    totalIGV.setAttribute('label',cMoneda[1]['S']+" "+ 
 			  formatoMoneda( Math.round(totalIGVD*100)/100, 2, [',', "'", '.'] ));
 
     

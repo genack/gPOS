@@ -105,7 +105,14 @@ class Subsidiario extends Cursor {
 	
 }
 
-
+function buscarNumeroFiscalSubs($nfiscal,$idsubs){
+  $xwhere = ($idsubs)? " AND IdSubsidiario = '$idsubs'":" AND NumeroFiscal = '$nfiscal'";
+  $sql = "SELECT NumeroFiscal FROM ges_subsidiarios ".
+         "WHERE Eliminado = 0".
+         "$xwhere";
+  $row = queryrow($sql);
+  return $row["NumeroFiscal"];
+}
 
 
 ?>

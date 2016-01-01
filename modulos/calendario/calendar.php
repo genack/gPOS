@@ -22,7 +22,7 @@ class DHTML_Calendar {
     var $calendar_options;
 
     function DHTML_Calendar($calendar_lib_path = '/calendar/',
-                            $lang              = 'en',
+                            $lang              = 'es',
                             $theme             = 'calendar-win2k-1',
                             $stripped          = true) {
         if ($stripped) {

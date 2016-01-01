@@ -143,31 +143,64 @@ function DetallesServicios($idsubsidiario,$status,$ticket,$desde,$hasta){
 }
 
 
-function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFactura=false,
-		       $esSoloBoleta=false,$esSoloDevolucion=false,$esSoloAlbaran=false,
-		       $esSoloAlbaranInt=false,$esSoloTicket=false,$nombre=false,
+function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFinalizados=false,
+		       $esSoloContado=false,$esSoloFactura=false,$esSoloBoleta=false,
+		       $esSoloAlbaran=false,$esSoloAlbaranInt=false,$esSoloTicket=false,$nombre=false,
 		       $esSoloCesion=false,$esSoloSuscripcion=false,$forzarfacturaid=false,
-		       $TipoVenta,$forzarid,$forzaridsuscripcion){
-	
+		       $TipoVenta,$forzarid,$forzaridsuscripcion,$usuario,
+		       $esSoloReserva=false,$esSoloCaja=false,$tipoproducto=false){
+
         $xnombre       = CleanRealMysql($nombre);
 	$cod          = ($forzarid != 'false')? explode("-",$forzarid) : "";
+	$cod[0]       = (isset($cod[0]))? $cod[0]:'';
+	$cod[1]       = (isset($cod[1]))? $cod[1]:'';
 	$extraNombre  = ($nombre and $nombre != "")?true:false;
 	$extraID      = ($forzarfacturaid>0)? " AND ges_comprobantes.IdComprobante = '$forzarfacturaid' ":"";
-	$extraFechas  = ($extraID =="")? " AND ges_comprobantes.FechaComprobante >= '$desde'".
-	                                " AND ges_comprobantes.FechaComprobante <= '$hasta' ":"";
+	$extraFechas  = ($extraID =="")? " AND DATE(ges_comprobantes.FechaComprobante) >= '$desde'".
+	                                " AND DATE(ges_comprobantes.FechaComprobante) <= '$hasta' ":"";
 	$extraFechas  = ($forzarid != 'false')? " AND ges_comprobantes.SerieComprobante like '%$cod[0]%' AND ges_comprobantes.NComprobante like '%$cod[1]%'" : $extraFechas;
-	$extraStatus  = ($esSoloPendientes)?" AND ges_comprobantes.Status = 1 ":"";
-	$extraCesion  = ($esSoloCesion)?" AND ges_comprobantes.SerieComprobante LIKE 'CS%' ":"";
+
+	#Pendientes
+	$extraStatus  = ( $esSoloPendientes )?" AND ges_comprobantes.Status = 1 ":"";
+
+	#Suscripcion
 	$extraSuscripcion = ($esSoloSuscripcion )? " AND ges_comprobantes.IdSuscripcion <> 0 ":"";
 	$extraSuscripcion = ($forzaridsuscripcion != 0 )? " AND ges_comprobantes.IdSuscripcion = '$forzaridsuscripcion' ":$extraSuscripcion;
+	$extraSuscripcion = ( $esSoloFinalizados && $esSoloSuscripcion )? $extraSuscripcion." AND ges_comprobantes.Status = 2 ":$extraSuscripcion;
+
+	#Contado
+	$extraCesion  = ( $esSoloContado )?" AND ges_comprobantes.SerieComprobante LIKE 'B%' ":"";
+	$extraCesion  = ( $esSoloFinalizados && $esSoloContado )? $extraCesion." AND ges_comprobantes.Status = 2 ":$extraCesion;
+
+	#Credito
+	$extraCesion  = ( $esSoloCesion )?" AND ges_comprobantes.SerieComprobante LIKE 'CS%' AND ges_comprobantes.Reservado = 0 ":$extraCesion;
+	$extraCesion  = ( $esSoloFinalizados && $esSoloCesion )? $extraCesion." AND ges_comprobantes.Status = 2 ":$extraCesion;
+
+	#### Reverva
+	$extraReserva = ( $esSoloReserva )?" AND ges_comprobantes.Reservado = 1 ":"";
+	$extraReserva = ( $esSoloReserva && $esSoloPendientes )? $extraReserva." AND ges_comprobantes.FechaEntregaReserva = '0000-00-00 00:00:00.000000'":$extraReserva;//Pendiente
+	$extraReserva = ( $esSoloReserva && $esSoloFinalizados )? $extraReserva." AND ges_comprobantes.FechaEntregaReserva <> '0000-00-00 00:00:00.000000'": $extraReserva;//Finalizado
+
+	$extraStatus  = ( ( $extraReserva == '' && $extraCesion == '' && $extraCesion == '') && $esSoloFinalizados )?" AND ges_comprobantes.Status = 2 ": $extraStatus;
+
+
 	$extraBoleta  = ($esSoloBoleta)?" AND ges_comprobantestipo.TipoComprobante = 'Boleta' ":"";
 	$extraFactura = ($esSoloFactura)?" AND ges_comprobantestipo.TipoComprobante = 'Factura' ":"";
 	$extraAlbaran = ($esSoloAlbaran)?" AND ges_comprobantestipo.TipoComprobante = 'Albaran' ":"";
-	$extraAlbaranInt = ($esSoloAlbaranInt)?" AND ges_comprobantestipo.TipoComprobante = 'AlbaranInt' ":"";
+	$extraAlbaranInt = ($esSoloAlbaranInt)?" AND ges_comprobantestipo.TipoComprobante = 'AlbaranInt' ":" AND ges_comprobantestipo.TipoComprobante <> 'AlbaranInt' ";
 	$extraTicket     = ($esSoloTicket)?" AND ges_comprobantestipo.TipoComprobante = 'Ticket' ":"";
 	$extraTipoVenta  = ($TipoVenta)?" AND ges_comprobantes.TipoVentaOperacion = '$TipoVenta'":"";
 
 	$extraLocal      = ($local != 0)? "AND  ges_comprobantes.IdLocal = '$local'":"";
+	$extrausuario    = ($usuario != 'todos')? " AND ges_comprobantes.IdUsuario = '$usuario' ":"";
+	$extraCaja       = ($esSoloCaja)?" AND ges_comprobantestipo.TipoComprobante in ('Ticket','Factura','Boleta','Albaran') ":"";
+
+	// Filtro Tipo Producto
+	$buscaProducto = ($tipoproducto == 'todos')? "":" INNER JOIN ges_comprobantesdet ON ges_comprobantes.IdComprobante = ges_comprobantesdet.IdComprobante INNER JOIN ges_productos ON ges_comprobantesdet.IdProducto = ges_productos.IdProducto ";
+	$extraProducto = ($tipoproducto == 'Producto')? " AND ges_productos.Servicio = 0":"";
+	$extraProducto = ($tipoproducto == 'Servicio')? " AND ges_productos.Servicio = 1":$extraProducto;
+	$extraProducto = ($tipoproducto == 'todos')? "":$extraProducto;
+	$extragroup    = ($tipoproducto == 'todos')? "":" GROUP BY ges_comprobantes.IdComprobante";
 
 	$desde = CleanRealMysql($desde);
 	$hasta = CleanRealMysql($hasta);
@@ -187,22 +220,26 @@ function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFactu
                 ges_locales.NombreComercial as Local, ges_comprobantes.IdLocal,
                 IF(ges_comprobantesnum.IdMotivoAlbaran = 0,' ',(SELECT ges_motivoalbaran.MotivoAlbaran FROM ges_motivoalbaran WHERE ges_motivoalbaran.IdMotivoAlbaran = ges_comprobantesnum.IdMotivoAlbaran)) as MotivoAlbaran,
                 ges_comprobantes.IdSuscripcion,
-                DATE_FORMAT(ges_comprobantes.FechaComprobante,'%d/%m/%Y') as FechaEmision, 
+                DATE_FORMAT(ges_comprobantes.FechaComprobante,'%d/%m/%Y %H:%i') as FechaEmision, 
                 ges_comprobantes.PlazoPago, 
                 ges_comprobantes.Cobranza, 
-                IF(ges_comprobantes.Observaciones like '',' ',ges_comprobantes.Observaciones) as Observaciones 
+                IF(ges_comprobantes.Observaciones like '',' ',ges_comprobantes.Observaciones) as Observaciones, 
+                ges_comprobantes.Reservado, 
+	        IF(ges_comprobantes.FechaEntregaReserva = '0000-00-00 00:00:00',' ',CONCAT(DATE_FORMAT(ges_comprobantes.FechaEntregaReserva,'%d/%m/%Y %H:%i'),'~',ges_comprobantes.FechaEntregaReserva)) AS FechaEntregaReserva
     		FROM ges_comprobantes " .
     		"LEFT JOIN ges_clientes ON ges_comprobantes.IdCliente = ges_clientes.IdCliente
                 INNER JOIN ges_comprobantesstatus ON ges_comprobantes.Status = ges_comprobantesstatus.IdStatus
                 INNER JOIN ges_locales ON ges_comprobantes.IdLocal = ges_locales.IdLocal
                 INNER JOIN ges_usuarios ON ges_comprobantes.IdUsuario = ges_usuarios.IdUsuario
                 INNER JOIN ges_comprobantesnum ON ges_comprobantesnum.IdComprobante = ges_comprobantes.IdComprobante
-                INNER JOIN ges_comprobantestipo ON  ges_comprobantestipo.IdTipoComprobante = ges_comprobantesnum.IdTipoComprobante 
-                WHERE ges_comprobantes.Eliminado = 0
+                INNER JOIN ges_comprobantestipo ON  ges_comprobantestipo.IdTipoComprobante = ges_comprobantesnum.IdTipoComprobante".
+               " $buscaProducto ".
+	       " WHERE ges_comprobantes.Eliminado = 0
                 AND  ges_comprobantesnum.Eliminado = 0
                 AND  ges_comprobantesnum.Status = 'Emitido'
 
                 $extraLocal
+                $extrausuario
                 $extraTipoVenta
  	        $extraID
 	        $extraFechas
@@ -213,17 +250,24 @@ function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFactu
                 $extraAlbaran 
                 $extraAlbaranInt 
                 $extraSuscripcion
-                $extraCesion" .
+                $extraCaja
+                $extraReserva
+                $extraCesion
+                $extraProducto " .
+                " $extragroup ".
 	        " ORDER BY ges_comprobantes.IdComprobante DESC ";  
 	$res = query($sql);
 	if (!$res) return false;
 	$ventas = array();
 	$t = 0;
 	while($row = Row($res)){
-	  
-	  if($extraNombre)
-	    if(!strpos(strtoupper($row["Cliente"]),strtoupper($xnombre)))
+
+	  if($extraNombre){
+	    $xclient = str_replace('ñ','Ñ',$row["Cliente"]);
+	    $xnombre = str_replace('ñ','Ñ',$xnombre);
+	    if(!strpos(strtoupper($xclient),strtoupper($xnombre)))
 	      continue;
+	  }
 	    
 	  $nombre = "venta_" . $t++;
 	  $ventas[$nombre] = $row;
@@ -281,24 +325,34 @@ function cajaescerrado(){
 	  return $esCerrada;
 	}
 
-function OperarPagoSobreTicket($IdComprobante,$pago_efectivo, $pago_bono, $pago_tarjeta,$concepto){
-  
+function OperarPagoSobreTicket($IdComprobante,$pago_efectivo, $pago_bono, $pago_tarjeta,
+			       $concepto,$fechapago=false,$modalidadpago=1,$doccobro=false,
+			       $IdUsuario){
+
         $TipoVenta = getSesionDato("TipoVentaTPV");
+	$pago = $pago_efectivo + $pago_bono + $pago_tarjeta;
+
+	$sql = "SELECT IdCliente, ImportePendiente FROM ges_comprobantes ".
+	       "WHERE IdComprobante='$IdComprobante' AND  TipoVentaOperacion = '$TipoVenta'";
+	$row = queryrow($sql);
+
+        $pendiente = $row["ImportePendiente"];
+	$idcliente = $row["IdCliente"];
+	$resto     = $pendiente - $pago;
+
+	if( $pendiente == 0 ) return "";
 
 	/* Movimientos de dinero */
 	$IdLocal =  getSesionDato("IdTienda");
-	EntregarCantidades("Abonando pendiente ".$concepto, $IdLocal,$pago_efectivo, $pago_bono, $pago_tarjeta,$IdComprobante);	
+	$IdUsuario = (!$IdUsuario)? getSesionDato("IdUsuario"):$IdUsuario;
+
+	EntregarCantidades("Abonando pendiente ".$concepto, $IdLocal,$pago_efectivo, 
+			   $pago_bono, $pago_tarjeta,$IdComprobante,"Ingreso",
+			   $fechapago,$modalidadpago,$doccobro);
 	
-	$pago = $pago_efectivo + $pago_bono + $pago_tarjeta;
 	
 	/* Estudiamos el estado final */
 		
-	$sql = "SELECT * FROM ges_comprobantes WHERE IdComprobante='$IdComprobante' AND  TipoVentaOperacion = '$TipoVenta'";	
-	$row = queryrow($sql);
-	
-	$pendiente = $row["ImportePendiente"];
-	$resto = $pendiente - $pago;
-	
 	if($resto<0.01){
 		$newstatus = FAC_PAGADA;
 		$newpendiente = 0;
@@ -308,9 +362,27 @@ function OperarPagoSobreTicket($IdComprobante,$pago_efectivo, $pago_bono, $pago_
 	}
 	
 	/* Actualizamos estado y cantidades pendientes */	
-	$sql = "UPDATE  ges_comprobantes SET Status='$newstatus', ImportePendiente = '$newpendiente' WHERE IdComprobante = '$IdComprobante' AND  TipoVentaOperacion = '$TipoVenta'";	
+	$sql = "UPDATE  ges_comprobantes SET Status='$newstatus', 
+                        ImportePendiente = '$newpendiente'
+                WHERE IdComprobante = '$IdComprobante' 
+                AND  TipoVentaOperacion = '$TipoVenta'";	
 	query($sql,"Abonando un ticket");
-		
+
+	if( $idcliente > 1 )
+	  actualizarImportePendienteCliente($row["IdCliente"]);
+
+	//Abono con Nota de Credito o Bono...
+	$pago_bono    = ($modalidadpago == 10)? $pago_efectivo:$pago_bono;
+	$pago_credito = ($modalidadpago == 9)?  $pago_efectivo :0;
+
+	if($pago_bono > 0)
+	  registrarMovimientoBonoCliente($idcliente,"-".$pago_bono,1,$IdLocal,
+					 $IdComprobante,$IdUsuario);
+	if($pago_credito > 0)
+	  registrarMovimientoCreditoCliente($idcliente,"-".$pago_credito,1,$IdLocal,
+					    $IdComprobante,$IdUsuario,false);
+
+
 	return $newpendiente;		
 }
 
@@ -321,15 +393,15 @@ function obtnerPendienteComprobante($IdComprobante){
        return $row["ImportePendiente"];
 }
 
-function actualizarPendienteComprobante($IdComprobante,$Pendiente,$Pago){
-	$resto = $Pendiente - $Pago;
+function actualizarPendienteComprobante($IdComprobante,$Importe,$IdCliente){
+  //$resto = $Pendiente - $Pago;
 	
-	if($resto<0.01){
+	if($Importe<0.01){
 		$newstatus = FAC_PAGADA;
 		$newpendiente = 0;
 	}	else {
 		$newstatus = FAC_PENDIENTE_PAGO;
-		$newpendiente = $resto;
+		$newpendiente = $Importe;
 	}
 
 	$sql = "UPDATE ges_comprobantes ".
@@ -337,6 +409,10 @@ function actualizarPendienteComprobante($IdComprobante,$Pendiente,$Pago){
 	       "       ImportePendiente   = '$newpendiente' ".
 	       "WHERE  IdComprobante      = '$IdComprobante' ";
 	query($sql,"Abonando un ticket");
+
+	if( $IdCliente > 1 )
+	  actualizarImportePendienteCliente($IdCliente);
+
 	return $newpendiente;  
 }
 
@@ -344,11 +420,13 @@ function DetallesCobro($IdComprobante){
   $TipoVenta    = getSesionDato("TipoVentaTPV");
   $TipoVenta    = ($TipoVenta == 'VD')? 'Caja: B2C':'Caja: B2B';
   $sql = "SELECT ModalidadPago, ".
-         "DATE_FORMAT(ges_dinero_movimientos.FechaInsercion, '%e %b %y  %H:%i') AS Fecha, ".
+         "DATE_FORMAT(ges_dinero_movimientos.FechaPago, '%e %b %y  %H:%i') AS Fecha, ".
          "Importe, ".
          "ges_usuarios.Nombre As Usuario, ".
          "IdOperacionCaja, ".
-         "ges_locales.NombreComercial as Local ".
+         "ges_locales.NombreComercial as Local, ".
+         "ges_modalidadespago.IdModalidadPago, ".
+         "ges_dinero_movimientos.TipoVentaOperacion ".
          "FROM ges_dinero_movimientos ".
          "INNER JOIN ges_usuarios ON ges_dinero_movimientos.IdUsuario = ges_usuarios.IdUsuario ".
          "INNER JOIN ges_modalidadespago ON ges_dinero_movimientos.IdModalidadPago = ges_modalidadespago.IdModalidadPago ".
@@ -363,7 +441,8 @@ function DetallesCobro($IdComprobante){
   $t = 0;
   while($row = Row($res)){
     $nombre = "DetPago_" . $t++;
-    $row["LocalPago"] = $TipoVenta;
+    $tvo    = ($row["TipoVentaOperacion"] == 'VD')? 'Caja: B2C':'Caja: B2B';
+    $row["LocalPago"] = $tvo;
     $PagoDocumento[$nombre] = $row;
   }
 
@@ -372,7 +451,9 @@ function DetallesCobro($IdComprobante){
          "Importe, ".
          "ges_usuarios.Nombre As Usuario, ".
          "IdOperacionCaja, ".
-         "ges_locales.NombreComercial as Local ".
+         "ges_locales.NombreComercial as Local, ".
+         "'1' AS IdModalidadPago, ".
+         "'CG' AS TipoVentaOperacion ".
          "FROM ges_librodiario_cajagral ".
          "INNER JOIN ges_usuarios ON ges_librodiario_cajagral.IdUsuario = ges_usuarios.IdUsuario ".
          "INNER JOIN ges_locales ON ges_librodiario_cajagral.IdLocal = ges_locales.IdLocal ".
@@ -414,11 +495,21 @@ function obtenerCostePendiente($xid){
 }
 
 function ModificarFechaEmicionComprobante($Fecha,$TipoComprobante,$IdComprobante,$accion){
+
+  $validacaja     = ValidarFechaAperturaCaja($Fecha);
+  if($validacaja != 1){
+    echo $validacaja;
+    return;
+  }
+
+  ModificarFechaDineroMovimiento($IdComprobante,$Fecha);
+
   $sql   =
     " update ges_comprobantes ".
     " set    FechaComprobante = '$Fecha'".
     " where  IdComprobante = '$IdComprobante'";	
-  echo query($sql);
+  echo "~".query($sql);
+
 }
 
 function ActualizarEstadoPago($xid,$campoxdato){
@@ -456,7 +547,123 @@ function  ActualizaPagoAdelantadoPresupuesto($idPresupuesto,$idComprobante,$text
   EntregarOperacionCaja($IdLocal,$Monto,$concepto,$IdPartida,'Sustraccion',
 			$FechaCaja,$IdArqueo,$TipoVenta);
   //Abono Metalico Ticket
-  $xpendiente = OperarPagoSobreTicket($idComprobante,$Monto, 0, 0,$textCaja);
+  $xpendiente = OperarPagoSobreTicket($idComprobante,$Monto, 0, 0,$textCaja,false,1,false,false);
+}
+
+function ActualizarReservaEntregado($IdComprobante,$fecha){
+  
+  $sql   =
+    " update ges_comprobantes ".
+    " set    FechaEntregaReserva = '$fecha' ".
+    " where  IdComprobante = '$IdComprobante' ".
+    " AND    FechaEntregaReserva = '0000-00-00 00:00:00'";
+  return query($sql);  
+}
+
+function realizarAbonoBrutalCliente( $IdCliente,$xmonto ){
+
+ $sql = " select ges_comprobantes.IdComprobante,ges_comprobantes.ImportePendiente,
+           concat( ges_comprobantestipo.TipoComprobante,' ',ges_comprobantestipo.Serie,' - ',ges_comprobantesnum.NumeroComprobante) as Documento
+	              from   ges_comprobantes 
+	              inner  join ges_comprobantesnum  
+	              on     ges_comprobantes.IdComprobante = ges_comprobantesnum.IdComprobante      
+	              inner  join ges_comprobantestipo 
+	              on     ges_comprobantesnum.IdTipoComprobante = ges_comprobantestipo.IdTipoComprobante 
+	              where  ges_comprobantes.ImportePendiente > 0 
+	              and    ges_comprobantes.Status IN(1,3) 
+	              and    ges_comprobantes.Destinatario = 'Cliente' 
+	              and    ges_comprobantes.IdCliente = ".$IdCliente." 
+	              and    ges_comprobantestipo.TipoComprobante in ('Ticket','Factura','Boleta','Albaran') 
+	              and    ges_comprobantesnum.Status in ('Emitido','Facturado') 
+                      order  by ges_comprobantes.FechaComprobante asc";
+  $res = query($sql);
+  
+  while( $row = Row( $res ) )
+    {
+      if( $xmonto <= 0 ) continue;
+
+      $xpendiente    = $row["ImportePendiente"];
+      $xmontoAbonar = ( $xmonto >= $xpendiente )? $xpendiente:$xmonto;
+      $xmonto       = ( $xmonto >= $xpendiente )? $xmonto - $xpendiente: 0;
+
+      OperarPagoSobreTicket($row["IdComprobante"],$xmontoAbonar, 0, 0,$row["Documento"],
+      			    false,1,false,false);  
+    }
+
+  //if( $IdCliente > 1 )
+  // actualizarImportePendienteCliente($IdCliente);
+}
+
+function ModificarCobros($Opcion,$IdComprobante,$IdOperacionCaja,$IdCliente,$IdModalidadPago,$ImporteCobro,$IdLocal,$TipoVenta){
+  $IdUsuario = getSesionDato("IdUsuario");
+
+  switch($Opcion){
+    case '1': //Eliminar Movimiento de caja
+      $Pendiente    = obtnerPendienteComprobante($IdComprobante);
+      $Importe      = obtenerImporteComprobante($IdComprobante);
+      $newimporte   = $Pendiente + $ImporteCobro;
+      $newimporte   = ($newimporte > $Importe)? $Importe:$newimporte;
+      $ImporteCobro = ($Pendiente >= $Importe)? 0:$ImporteCobro;
+
+      if($Pendiente < $Importe)
+	actualizarPendienteComprobante($IdComprobante,$newimporte,$IdCliente);
+      
+      if($IdModalidadPago == 10 && $ImporteCobro > 0)
+	registrarMovimientoBonoCliente($IdCliente,$ImporteCobro,0,$IdLocal,$IdComprobante,
+				       $IdUsuario);
+      $dato = ($TipoVenta == 'CG')? EliminarMovimientoCajaGral($IdOperacionCaja):EliminarMovimientoCaja($IdOperacionCaja);
+      return $dato;
+      break;
+  }
+}
+
+function EliminarMovimientoCaja($IdOperacionCaja){
+  $sql = "UPDATE ges_dinero_movimientos SET Eliminado = 1 ".
+         "WHERE IdOperacionCaja = '$IdOperacionCaja' ";
+  return query($sql);
+}
+
+function EliminarMovimientoCajaGral($IdOperacionCaja){
+  $sql = "UPDATE ges_librodiario_cajagral SET Eliminado = 1 ".
+         "WHERE IdOperacionCaja = '$IdOperacionCaja' ";
+  return query($sql);
+}
+
+function ModificarFechaPagoComprobante($IdComprobante,$fecha){
+  
+  $sql   =
+    " update ges_comprobantes ".
+    " set    PlazoPago = '$fecha' ".
+    " where  IdComprobante = '$IdComprobante' ";
+
+  echo query($sql);  
+}
+
+function verificarPendienteComprobante($IdComprobante){
+  $sql   =
+    " SELECT ges_comprobantes.ImportePendiente  ".
+    " FROM   ges_comprobantes ".
+    " where  IdComprobante = '$IdComprobante' ";
+  $row = queryrow($sql);
+  return $row["ImportePendiente"];
+}
+
+function ModificarEstadoReservaComprobante($IdComprobante,$reserva){
+  $sql   =
+    " update ges_comprobantes ".
+    " set    Reservado = '$reserva' ".
+    " where  IdComprobante = '$IdComprobante' ";
+
+  echo query($sql);    
+}
+
+function obtenerImporteComprobante($idc){
+  $sql = "SELECT TotalImporte as Importe ".
+         "FROM ges_comprobantes ".
+         "WHERE ges_comprobantes.IdComprobante IN ($idc) ";
+
+  $row = queryrow($sql);
+  return $row["Importe"];
 }
 
 ?>

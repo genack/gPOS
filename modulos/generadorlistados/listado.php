@@ -22,7 +22,7 @@ if ( $row) {
   $esnombreclient1= strpos($CodigoSQL,'ges_clientes.NombreComercial');
   $nombrereplace  = ($esnombreclient || $esnombreclient1)? true:false;
 }
-//echo $CodigoSQL."--------------";
+//echo $CodigoSQL."<br>--------------<br>";
 $genCabecera = "";
 $genListado  = "";
 $genListCol  = "";
@@ -127,6 +127,7 @@ if ($res){
 }
 
 ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/DTD/loose.dtd">
 <html>
   <head>
   <style type='text/css'>
@@ -141,11 +142,37 @@ if ($res){
   td {
     font-size: 12px;
   }
+input[type="button"]{
+  display: inline-block;
+  height: 25px;
+  padding: 0 5px;
+  color: #555;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 22px;
+  letter-spacing: .1rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border-radius: 2px;
+  border: 1px solid  #33c3f0;
+  cursor: pointer;
+  box-sizing: border-box; }
+
+input.btn{ 
+  background-color: #33c3f0;
+  color:#fff;
+  font-weight: 400; 
+  border: 1px solid #33c3f0;
+ }
+
   </style>
   <style type='text/css' media='print'>
     
   input {
-    visibility: hidden;
+  /*visibility: hidden;*/
   }
 
 </style>
@@ -165,8 +192,8 @@ if ($res){
   </menulist>
 </row>
 
-   <input type="button" value="Imprimir" onclick="imprimirLista()"/>
-   <input type="button" value="Exportar CSV" onclick="exportarcsv()"/>
+   <input type="button" value="Imprimir" onclick="imprimirLista()" class="btn"/>
+   <input type="button" value="Exportar CSV" onclick="exportarcsv()" class="btn"/>
 
 <!--div style="padding: 3px 0pt 2px;">
   <b><font  color="black" size="2">Exportar:</font></b> 
@@ -186,13 +213,15 @@ if ($res){
 </div-->
 <?php } ?>
 
-<table style="background-color: #fefefe" width='100%'>
+<table class='forma' width='100%'>
+<tbody>
 <?php
+
 	echo $genCabecera;
 	echo $genListado;
 	echo $genTotales;
 	
-	echo "</table>";
+	echo "</tbody></table>";
 
 ?>
 <script>
@@ -260,6 +289,14 @@ function exportarcsv(){
    var EstadoPagoVenta = "<?php echo $_GET["estadopagoventa"]?>";
    var Cobranza = "<?php echo $_GET["cobranza"]?>";
    var CodigoComprobante = "<?php echo $_GET["codcomprobante"]?>";
+   var PresupuestoVenta = "<?php echo $_GET["presupuestoventa"]?>";
+   var Moneda = "<?php echo $_GET["moneda"]?>";
+   var EstadoPresupuesto = "<?php echo $_GET["estadopresupuesto"]?>";
+   var TipoVentaTPV = "<?php echo $_GET["tipoventa"]?>";
+   var VentaEstado = "<?php echo $_GET["ventaestado"]?>";
+   var ProductoIdioma = "<?php echo $_GET["productoidioma"]?>";
+   var ModalidadPago = "<?php echo $_GET["modalidadpago"]?>";
+   var CuentaBancaria = "<?php echo $_GET["cuentabancaria"]?>";
 
    var url  = 
      "exportarlistados.php?modo=ExportarDirectoCSV"+
@@ -308,6 +345,14 @@ function exportarcsv(){
      "&estadopagoventa="+EstadoPagoVenta+
      "&cobranza="+Cobranza+
      "&codcomprobante="+CodigoComprobante+
+     "&presupuestoventa="+PresupuestoVenta+
+     "&moneda="+Moneda+
+     "&estadopresupuesto="+EstadoPresupuesto+
+     "&tipoventatpv="+TipoVentaTPV+
+     "&ventaestado="+VentaEstado+
+     "&productoidioma="+ProductoIdioma+
+     "&modalidadpago="+ModalidadPago+
+     "&cuentabancaria="+CuentaBancaria+
      "&cb="+cb;
 
    document.location=url;
@@ -574,6 +619,38 @@ function PostProcesarSQL( $cod,$LocalActual ) {
   $TipoVenta = getSesionDato("TipoVentaTPV");
   $Precio    = ($TipoVenta == 'VD')? 'PrecioVenta':'PrecioVentaCorporativo';
 
+  //tipo venta tpv
+  $xtipo = CleanText($_GET["tipoventa"]);
+  if($xtipo == '%VentaTodos%')
+    $TipoVentaTPV = "";
+  if($xtipo == '%VentaContado%')
+    $TipoVentaTPV = " AND ges_comprobantes.SerieComprobante LIKE 'B%' ";  
+  if($xtipo == '%VentaCredito%')
+    $TipoVentaTPV = " AND ges_comprobantes.SerieComprobante LIKE 'CS%' AND ges_comprobantes.Reservado = 0";  
+  if($xtipo == '%VentaReserva%')
+    $TipoVentaTPV = " AND ges_comprobantes.Reservado = 1 ";  
+  if($xtipo == '%VentaSuscripcion%')
+    $TipoVentaTPV = "AND ges_comprobantes.IdSuscripcion > 0";  
+
+  //estado Venta
+  $xestado = CleanText($_GET["ventaestado"]);
+
+  if($xestado == '%EstadoTodos%')
+    $VentaEstado = "";
+  if($xestado == '%EstadoPendiente%')
+    $VentaEstado = "AND ges_comprobantes.ImportePendiente > 0";
+  if($xestado == '%EstadoFinalizado%')
+    $VentaEstado = "AND ges_comprobantes.ImportePendiente = 0";
+  if($xestado == '%EstadoFinalizado%' && $xtipo == '%VentaSuscripcion%')
+    $VentaEstado = " AND ges_comprobantes.Status = 2 ";
+  if($xestado == '%EstadoFinalizado%' && $xtipo == '%VentaCredito%')
+    $VentaEstado = " AND ges_comprobantes.Status = 2 ";
+  if($xestado == '%EstadoFinalizado%' && $xtipo == '%VentaContado%')
+    $VentaEstado = " AND ges_comprobantes.Status = 2 ";
+  if($xestado == '%EstadoFinalizado%' && $xtipo == '%VentaReserva%')
+    $VentaEstado = " AND ges_comprobantes.FechaEntregaReserva <> '0000-00-00 00:00:00.000000' ";
+  
+
   $cod = str_replace("%IDIDIOMA%",$IdLang,$cod);
   $cod = str_replace("%DESDE%",		CleanCadena($_GET["Desde"]),$cod);
   $cod = str_replace("%HASTA%",		CleanCadena($_GET["Hasta"]),$cod);
@@ -586,7 +663,7 @@ function PostProcesarSQL( $cod,$LocalActual ) {
   $cod = str_replace("%REFERENCIA%",	CleanRealMysql($_GET["Referencia"]),$cod);
   $cod = str_replace("%NUMEROSERIE%",	CleanText($_GET["ns"]),$cod);
   $cod = str_replace("%LOTE%",	        CleanText($_GET["lote"]),$cod);
-  $cod = str_replace("%PARTIDA%",	CleanID($_GET["partida"]),$cod);
+  $cod = str_replace("%PARTIDA%",	CleanText($_GET["partida"]),$cod);
   $cod = str_replace("%TIPOVENTAOP%",	CleanText($_GET["tipoventaop"]),$cod);
   $cod = str_replace("%IDLOCAL%",	$LocalActual,$cod);
   $cod = str_replace("%DNICLIENTE%",	CleanText($_GET["dnicliente"]),$cod);
@@ -619,6 +696,14 @@ function PostProcesarSQL( $cod,$LocalActual ) {
   $cod = str_replace("'%PERIODO_GROUP%'",$g_periodo,$cod);
   $cod = str_replace("%SML%",$Moneda[1]['S'],$cod);
   $cod = str_replace("'%TIPOVENTA%'",$Precio,$cod);
+  $cod = str_replace("%PRESUPUESTOVENTA%",CleanText($_GET["presupuestoventa"]),$cod);
+  $cod = str_replace("%IDMONEDA%",CleanText($_GET["moneda"]),$cod);
+  $cod = str_replace("%ESTADOPRESUPUESTO%",CleanText($_GET["estadopresupuesto"]),$cod);
+  $cod = str_replace("'%TIPOVENTATPV%'", $TipoVentaTPV,$cod);
+  $cod = str_replace("'%VENTAESTADO%'",	$VentaEstado,$cod);
+  $cod = str_replace("%PRODUCTOIDIOMA%",CleanText($_GET["productoidioma"]),$cod);
+  $cod = str_replace("%MODALIDADPAGO%",CleanText($_GET["modalidadpago"]),$cod);
+  $cod = str_replace("%CUENTABANCARIA%",CleanText($_GET["cuentabancaria"]),$cod);
 
   return $cod;
 }

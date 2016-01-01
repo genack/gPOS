@@ -4,6 +4,8 @@ include("tool.php");
 
 SimpleAutentificacionAutomatica("visual-iframe");
 
+
+
 function ListarPerfiles() {
 	global $action;
 	
@@ -12,8 +14,8 @@ function ListarPerfiles() {
 	if (!$res){
 		echo gas("aviso","No hay perfiles disponibles");	
 	} else{
-		
-		//echo gas("titulo",_("Lista de perfiles"));
+	        echo gas("cabecera",_("Perfiles"));	
+	  //echo gas("titulo",_("Lista de perfiles"));
 		echo "<center>";
 		echo "<table border=0 class=forma>";
 		echo "<tr><td class='lh'>Perfil</td><td class='lh'></td><td class='lh'></td></tr>";
@@ -28,6 +30,7 @@ function ListarPerfiles() {
 			//$linkborrado = gModoButton("borrar",_("Eliminar"),"id=".$id);
 			$linkEdicion = gAccion("editar",_("Modificar"),$id); 
 			$linkborrado = gAccionConfirmada( "borrar", _("Eliminar") ,$id ,_("¿Seguro que quiere borrar?"));
+			if($id == 7) continue;
 			echo "<tr class='f'><td class='nombre'>$nombre</td><td>$linkEdicion</td><td>$linkborrado</td></tr>";
 					
 		}		
@@ -119,8 +122,17 @@ function ModificarPerfil($id,$nombre,
 }
 
 function OperacionesConPerfiles(){
-	if (!isUsuarioAdministradorWeb())
-		return;
+	?>
+        <center>
+	<form action="modperfiles.php?modo=alta" method="post">
+	<table class='forma'>
+	<tr><td><input  class='btn' value="Crear" type="submit"></td></tr>
+	</table>
+	</form>
+        </center>
+	<?php
+        if (!isUsuarioAdministradorWeb())
+           return;
 	
 	echo gas("titulo",_("Operaciones sobre Perfiles"));
 	echo "<table border=1>";

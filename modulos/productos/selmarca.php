@@ -2,8 +2,8 @@
 
 include("../../tool.php");
 
-
-$sat = false;
+$marca = '';
+$sat   = false;
 
     switch($modo){
     case "salvamarcasat":
@@ -38,8 +38,15 @@ $sat = false;
       break;
       
     case "eliminamarca":
-      $marca = CleanText($_GET["marca"]);
-      $sql = "UPDATE ges_marcas SET Eliminado=1 WHERE Marca='$marca'";
+      $idmarca = CleanID($_GET["xid"]);
+      $sql = "UPDATE ges_marcas SET Eliminado=1 WHERE IdMarca='$idmarca'";
+      query($sql);	
+      break;
+
+    case "modificamarca":
+      $marca = CleanText($_GET["txt"]);
+      $idmarca = CleanID($_GET["xid"]);
+      $sql = "UPDATE ges_marcas SET Marca='$marca' WHERE IdMarca='$idmarca'";
       query($sql);	
       break;
     default:
@@ -51,88 +58,41 @@ $sat = false;
 
 //SE EJECUTA SIEMPRE
 
-    echo "<groupbox> <caption label='Buscar Marca'/>";
+    echo "<vbox class='box' flex='1'><groupbox> <caption class='box' label='Buscar Marca'/>";
     echo "<hbox>";
-    echo "<textbox  flex='1'   id='buscamarca' onkeyup='BuscarMarca();   if (event.which == 13) agnadirDirecto();' onkeypress='return soloAlfaNumerico(event)' />";
+    echo "<textbox  flex='1'   id='buscamarca' onkeyup='BuscarMarca();   if (event.which == 13) agnadirDirecto();' onkeypress='return soloAlfaNumerico(event)' value='".$marca."' />";
     echo "</hbox>";
     echo "<hbox flex='1'>";
-    echo "<button flex='1' label='"._("Nuevo")."' onkeypress='if (event.which == 13) UsarNuevo()' oncommand='UsarNuevo()'/>";
+    echo "<button class='btn' id='btnNuevaMarca' flex='1' label='"._("Nuevo")."' oncommand='UsarNuevo()' collapsed='true'/>";
     echo "</hbox>";
 
 
-    echo "</groupbox>";
-    echo "<groupbox><caption label='" . _("Marcas") . "'/>";
+    echo "</groupbox> ";
+    echo "<groupbox><caption class='box' label='" . _("Marcas") . "'/>";
 
     $familias = genArrayMarcas();
     $combo = "";
-		echo "<script>\n";
-		echo " fam =new Object();\n";
+    echo "<script>\n";
+    echo " fam =new Object();\n";
 		foreach ($familias as $key=>$value){
 			echo "fam[$key] = '$value';\n";
 		}
-		
-		echo "
-		function UsarNuevo() {
-			var talla, url;
-			var nuevocolor = document.getElementById('buscamarca');			
+    echo "\n</script>";						
+    echo "<script  type='application/x-javascript' src='marca.js?v=3.1' />";
+    echo "<listbox id='listboxMarca' ondblclick='parent.changeMarca(this,fam[this.value]);parent.closepopup();return true;' onkeypress='if (event.which == 13) { parent.changeMarca(this,fam[this.value]);parent.closepopup();return true;}' contextmenu='accionesListaMarcas' >\n";
+    echo  genXulComboMarcas();				
+    echo "</listbox>";
 
-			if (nuevocolor)
-                             talla = nuevocolor.value;
+    echo "<popupset>
+       <popup id='accionesListaMarcas'> 
+        <menuitem  label='Modificar' oncommand='ModificarMarca()'/>
+        <menuitem  label='Eliminar' oncommand='EliminarMarca()'/>
+       </popup>
+      </popupset>";
 
-                        if (!talla || talla == '')
-                             return;
-			url = 'selmarca.php';
-			url = url +'?';
-                        url = url + 'modo';
-                        url = url + '=salvamarca';
-                        url = url + '&amp;'+'marca=' + talla;
-			document.location.href = url;			
-		}
-		
-		function Eliminar() {
-			var marcaname, url;
-			var lamarca = document.getElementById('buscamarca');	
-			if (lamarca) 
-				marcaname = lamarca.value;
-			if (!marcaname || marcaname== '') return;				
-			url = 'selmarca.php';
-			url = url +'?';
-                        url = url + 'modo';
-                        url = url + '=eliminamarca';
-                        url = url + '&amp;'+'marca=' + marcaname;
-			document.location.href = url;				  			
-		}
-
-                function soloAlfaNumerico(e){ 
-                        key = e.keyCode || e.which;
-                        tecla = String.fromCharCode(key).toLowerCase();
-                        letras = ' abcdefghijklmnñopqrstuvwxyz0123456789-.';
-                        especiales = [8, 13, 9, 35, 36, 37, 39];
-                        tecla_especial = false
-                        for(var i in especiales){
-                           if(key == especiales[i]){
-                              tecla_especial = true;
-                              break;
-                           }
-                        }
-    
-                        if(letras.indexOf(tecla)==-1) { 
-                           if(!tecla_especial){
-                              return false;
-                           }
-                        }
-                }
- 		";
-		
-echo "\n</script>";						
-echo "<script  type='application/x-javascript' src='marca.js' />";
-echo "<listbox id='Marca' rows='5' onclick='opener.changeMarca(this,fam[this.value]);window.close();return true;'>\n";
-echo  genXulComboMarcas();				
-echo "</listbox>";
-echo "<button flex='1' label='"._("Eliminar")."' onkeypress='if (event.which == 13) Eliminar()' oncommand='Eliminar()'/>";
-echo "<button label='". _("Cerrar")."' oncommand='window.close()'/>";	
-echo "</groupbox>";
-
+    //echo "<button flex='1' label='"._("Eliminar")."' onkeypress='if (event.which == 13) Eliminar()' oncommand='Eliminar()'/>";
+    //echo "<button label='". _("Cerrar")."' oncommand='parent.closepopup()'/>";	
+    echo "</groupbox> </vbox>";
 
 EndXul();
 

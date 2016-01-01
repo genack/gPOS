@@ -78,7 +78,7 @@ function MostrarSubsidiarioParaEdicion($id, $lang) {
 	
 	$ot->fijar("tModPagoHabitual", _("Modo pago hab."));
 	$ot->fijar("vIdModPagoHabitual", $oSubsidiario->get("IdModPagoHabitual"));	
-	$ot->fijar("comboModPagoHabitual", genComboModPagoHabitual( $oSubsidiario->get("IdModPagoHabitual")));
+	$ot->fijar("comboModPagoHabitual", genComboModalidadPago( $oSubsidiario->get("IdModPagoHabitual")));
 	
 	$ot->campo(_("Pagina web"), "PaginaWeb", $oSubsidiario);
 	$ot->fijar("comboIdPais" ,genComboPaises($oSubsidiario->get("IdPais")));
@@ -96,7 +96,7 @@ function MostrarSubsidiarioParaEdicion($id, $lang) {
 	$ot->campo(_("Cargo"), "Cargo", $oSubsidiario);
 	$ot->campo(_("Email"), "Email", $oSubsidiario);
 	$ot->campo(_("Cuenta bancaria"), "CuentaBancaria", $oSubsidiario);
-	$ot->campo(_("Número fiscal"), "NumeroFiscal", $oSubsidiario);
+	$ot->campo(_("Número fiscal (RUC)"), "NumeroFiscal", $oSubsidiario);
 	$ot->campo(_("Comentarios"), "Comentarios", $oSubsidiario);	
 	
 
@@ -123,6 +123,9 @@ function FormularioAlta($esPopup=false) {
 
 	$oSubsidiario->Crea();
 
+	if($esPopup)
+	  echo "<script> function loadfocus(){ }</script>";
+
 	$ot = getTemplate("FormAltaSubsidiario");
 	if (!$ot) {
 		error(__FILE__.__LINE__, "Info: template no encontrado");
@@ -133,7 +136,7 @@ function FormularioAlta($esPopup=false) {
 	
 	$ot->fijar("tModPagoHabitual", _("Modo pago hab."));
 	$ot->fijar("vIdModPagoHabitual", $oSubsidiario->get("IdModPagoHabitual"));	
-	$ot->fijar("comboModPagoHabitual", genComboModPagoHabitual( $oSubsidiario->get("IdModPagoHabitual")));
+	$ot->fijar("comboModPagoHabitual", genComboModalidadPago( $oSubsidiario->get("IdModPagoHabitual")));
 	
 	$ot->campo(_("Pagina web"), "PaginaWeb", $oSubsidiario);
 	
@@ -151,19 +154,18 @@ function FormularioAlta($esPopup=false) {
 	$ot->campo(_("Cargo"), "Cargo", $oSubsidiario);
 	$ot->campo(_("Email"), "Email", $oSubsidiario);
 	$ot->campo(_("Cuenta bancaria"), "CuentaBancaria", $oSubsidiario);
-	$ot->campo(_("Número fiscal"), "NumeroFiscal", $oSubsidiario);
+	$ot->campo(_("Número fiscal (RUC)"), "NumeroFiscal", $oSubsidiario);
 	$ot->campo(_("Comentarios"), "Comentarios", $oSubsidiario);
 	
 	if ($esPopup) {
 		$ot->fijar("vesPopup", 1);
-		$ot->fijar("onClose", "window.close()");
+		$ot->fijar("onClose", "parent.closepopup()");
 	} else {
 		$ot->fijar("vesPopup", 0);
 		$ot->fijar("onClose", "location.href='modsubsidiarios.php'");	
 	}
 
 	echo $ot->Output();
-
 }
 
 function PaginaBasica() {
@@ -316,8 +318,8 @@ switch ($modo) {
 		$poblacion  = CleanText($_POST["Localidad"]);
 		$cp         = CleanCP($_POST["CP"]);
 		$email      = CleanEmail($_POST["Email"]);
-		$telefono1  = CleanTelefono($_POST["Telefono1"]);
-		$telefono2  = CleanTelefono($_POST["Telefono2"]);
+		$telefono1  = CleanText($_POST["Telefono1"]);
+		$telefono2  = CleanText($_POST["Telefono2"]);
 		$contacto   = CleanText($_POST["Contacto"]);
 		$cargo      = CleanText($_POST["Cargo"]);
 		$cuentabancaria = CleanCC($_POST["CuentaBancaria"]);
@@ -345,8 +347,8 @@ switch ($modo) {
 		$poblacion  = CleanText($_POST["Localidad"]);
 		$cp         = CleanCP($_POST["CP"]);
 		$email      = CleanEmail($_POST["Email"]);
-		$telefono1  = CleanTelefono($_POST["Telefono1"]);
-		$telefono2  = CleanTelefono($_POST["Telefono2"]);
+		$telefono1  = CleanText($_POST["Telefono1"]);
+		$telefono2  = CleanText($_POST["Telefono2"]);
 		$contacto   = CleanText($_POST["Contacto"]);
 		$cargo      = CleanText($_POST["Cargo"]);
 		$cuentabancaria = CleanText($_POST["CuentaBancaria"]);
@@ -359,7 +361,7 @@ switch ($modo) {
 				
 		if (CrearSubsidiario($comercial, $legal, $direccion, $poblacion, $cp, $email, $telefono1, $telefono2, $contacto, $cargo, $cuentabancaria, $numero, $comentario,$IdModPagoHabitual,$paginaweb,$idpais )) {
 			if ($espopup){
-				echo "<script>window.close()</script>";
+				echo "<script>parent.closepopup();</script>";
 				exit();				
 			}
 			//Separador();

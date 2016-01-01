@@ -29,11 +29,18 @@
 <popup id="AccionesBusquedaAlmacenInventario" class="media" >
   <menuitem id="menuModProducto" label="<?php echo _("Modificar Existencias") ?>"  
             oncommand="modificarArticuloSeleccionada()"/>
-  <menuitem id="menuAlmacenFinalizarInventario" label="<?php echo _("Finalizar Inventario") ?>"  
-            oncommand="finalizaOperacionInventario()" collapsed="true" <?php gulAdmite("Ajustes") ?> />
 
-  <menuitem id="menuAltaRapida" label="<?php echo _("Alta Rapida") ?>"  
+
+  <menuitem id="menuAltaRapida" label="<?php echo _("Alta Rápida") ?>"  
             oncommand="altarapidaArticulo()"  collapsed="true"/>
+
+  <menuitem id="menuClonaArticulo" label="<?php echo _("Clonar") ?>"  
+            oncommand="clonarArticulo()"  collapsed="true"/>
+  <vbox id="menuAlmacenFinalizarInventario" collapsed="true">
+  <menuseparator />
+  <menuitem  label="<?php echo _("Finalizar Inventario") ?>"  
+            oncommand="finalizaOperacionInventario()"  <?php gulAdmite("Ajustes") ?> />
+</vbox>
 </popup>
 
 </popupset>

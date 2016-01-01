@@ -1,15 +1,9 @@
 <?php
 SimpleAutentificacionAutomatica("visual-xulframe");
-header("Content-type: application/vnd.mozilla.xul+xml");
-echo '<?xml version="1.0" encoding="UTF-8"?>';
-echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';
-echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
+StartXul('Inventario Ajustes',$predata="",$css='');
+StartJs($js='modulos/inventario/inventario.js?v=3.1');
 ?>
-<window id="MovimientoVista" title="Movimientos Kardex"
-	xmlns:html="http://www.w3.org/1999/xhtml"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/inventario/inventario.js" />
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js" />
+
   <script>//<![CDATA[
   var cImpuesto       = <?php echo $Impuesto ?>;
   var cIdLocal        = <?php echo $IdLocal; ?>;
@@ -30,27 +24,26 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
 
 <!-- Movimientos Encabezado-->
-<vbox> 
+<vbox class="box">  
     <vbox pack="center" align="center">
-      <hbox id="rdioInvetarioAjuste" flex="1"  style="font-size: 14px;font-weight: bold;" >
-	<caption id="ajust" value="ajust" label="Ajustes" />
-	<caption id="invent" value="invent" label="Inventarios"  />
+      <hbox id="rdioInvetarioAjuste" flex="1" >
+	<caption class="h1" id="ajust" value="ajust">Ajustes</caption>
+	<caption class="h1" id="invent" value="invent">Inventarios</caption>
       </hbox>
-      <caption id="wtitleInventario" style="padding:0.4em;font-size: 14px;font-weight: bold;"
-	       label="<?php echo _("Inventario") ?>" collapsed="true"/>
+      <caption  class="h1" id="wtitleInventario"  collapsed="true"
+	       label="<?php echo _("Inventario") ?>"/>
       <textbox id="filtroOperacion" collapsed="true" value="5"/>
     </vbox>
-  <spacer style="height:4px"/>
 </vbox> 
 
 <!-- Movimientos Busqueda-->
-<vbox id="busquedaMovimiento">
-  <hbox align="start" pack="center" style="background-color: #d7d7d7;padding:3px;">
+<vbox class="box" id="busquedaMovimiento">
+  <hbox align="start" pack="center" >
     <vbox>
       <?php if(getSesionDato("esAlmacenCentral")){?>
       <description>Local:</description>
       <hbox>
-	<menulist id="FiltroMovimientoLocal" label="FiltrosMovimientoLocal" oncommand="BuscarMovimiento()">
+	<menulist id="FiltroMovimientoLocal" label="FiltrosMovimientoLocal" oncommand="CambioLocalInventario()">
 	  <menupopup id="combolocales">
 	    <?php echo genXulComboAlmacenes($IdLocal,"menuitem") ?>
 	  </menupopup>
@@ -97,7 +90,8 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <description>Producto:</description>
       <textbox onfocus="select()" id="NombreBusqueda" style="width: 21em"
 	       onkeyup="if (event.which == 13) BuscarMovimiento()" 
-               onkeypress="return soloAlfaNumerico(event);"/>
+               onkeypress="return soloAlfaNumerico(event);" 
+	       placeholder=" nombre | marca ó modelo ó detalle..."/>
     </vbox>
 
     <vbox id="vboxFamilia" collapsed="true">
@@ -114,7 +108,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <description>Marca:</description>
       <menulist  id="idmarca" oncommand="BuscarMovimiento()">
        <menupopup>
- 	 <menuitem label="Todos" style="font-weight: bold"/>
+ 	 <menuitem label="Todos" />
 	 <?php echo genXulComboMarcas(false,"menuitem") ?>
        </menupopup>
       </menulist>
@@ -139,9 +133,9 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                onkeypress="return soloNumeros(event,this.value);"/>
     </vbox>
 
-      <vbox style="margin-top:1.5em">
+      <vbox style="margin-top:1em">
         <menu>
-          <toolbarbutton image="<?php echo $_BasePath; ?>img/gpos_busqueda_avanzada.png" />
+          <toolbarbutton image="<?php echo $_BasePath; ?>img/gpos_busqueda_avanzada.png" style="min-height: 2.7em;"/>
           <menupopup >
 	    <menuitem type="checkbox" label="Movimiento" checked="false"
                       oncommand = "mostrarBusquedaAvanzada(this);"/>	 
@@ -161,16 +155,16 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
         </menu>
       </vbox>
 
-    <vbox style="margin-top:.9em">
-      <button id="btnbuscar" label=" Buscar "  image="<?php echo $_BasePath; ?>img/gpos_buscar.png" 
+    <vbox style="margin-top:1.2em">
+      <button class="btn" id="btnbuscar" label=" Buscar "  image="<?php echo $_BasePath; ?>img/gpos_buscar.png" 
 	      oncommand="BuscarMovimiento()"/>
     </vbox>
-    <vbox style="margin-top:.9em">
-      <button id="btnImprimirInventarioPDF" image="<?php echo $_BasePath; ?>img/gpos_pdf_ico.png" label=""
+    <vbox style="margin-top:1.2em">
+      <button class="btn" id="btnImprimirInventarioPDF" image="<?php echo $_BasePath; ?>img/gpos_pdf_ico.png" label=""
 	      oncommand="exportarInventario('pdf');" collapsed="false" />
     </vbox>
-    <vbox style="margin-top:.9em">
-      <button id="btnImprimirInventarioCVS" image="<?php echo $_BasePath; ?>img/gpos_csv_ico.png" label=""
+    <vbox style="margin-top:1.2em">
+      <button class="btn" id="btnImprimirInventarioCVS" image="<?php echo $_BasePath; ?>img/gpos_csv_ico.png" label=""
 	      oncommand="exportarInventario('cvs');" collapsed="false"/>
     </vbox>
     <vbox>
@@ -186,20 +180,11 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 </vbox>
 
 <!-- Movimientos Resumen -->
-<vbox id="resumenMovimiento" collapsed="false">
+<vbox id="resumenMovimiento" collapsed="false" class="box" >
 <spacer style="height:5px"/>
   <hbox flex="1">
-    <caption id="listKardexResumen" style="font-size:10px; font-weight: bold;" 
-	 label="<?php echo _("Listado de Ajustes") ?>" />
+    <caption class="box" id="listKardexResumen" label="<?php echo _("Listado de Ajustes") ?>" />
     <caption id="fechaInventario" label="" style="font-weight: bold;" collapsed="true"/>
-    <hbox  flex="1" pack="center">
-      <label value="Total Movimientos:"/>
-      <description id="TotalMovimientos" value="" />
-      <label value="Listados:"/>
-      <description id="TotalMovimientosListado" value="" />
-      <label value="Valor Listado:"/>
-      <description id="MovValorTotal" value="" />
-    </hbox>
   </hbox>
 </vbox>
 
@@ -250,22 +235,27 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
     </listhead>
 </listbox>
 
-<!-- Resumen Almacen  -->
-<vbox id="resumenAlmacen" collapsed="true">
-  <hbox flex="1">
-    <caption style="font-size:10px; font-weight: bold;" label="<?php echo _("Stock Almacén") ?>" />
-    <hbox  flex="1" pack="center">
-      <label value="Total Productos:"/>
-      <description id="TotalProductos" value=" 0" />
-      <label value="Con Stock:"/>
-      <description id="conStock" value=" 0 " />
-      <label value="Sin Stock:"/>
-      <description id="sinStock" value=" 0 " />
-      <label value="Valor Total:"/>
-      <description id="ValorTotal" value="<?php echo $Moneda[1]['S']?> 0.00" />
-    </hbox>
+<vbox  id="resumenMovimientoFooter"  pack="top" align="left" collapsed="false" class="box">
+  <caption class="box" label="<?php echo _("Resumen") ?>" />
+  <hbox class="resumen" >
+    <label value="Total Movimientos:"/>
+    <description id="TotalMovimientos" value="" />
+    <label value="Listados:"/>
+    <description id="TotalMovimientosListado" value="" />
+    <label value="Valor Listado:"/>
+    <description id="MovValorTotal" value="" />
   </hbox>
 </vbox>
+
+
+
+<!-- Resumen Almacen  -->
+<vbox id="resumenAlmacen" collapsed="true" class="box">
+  <hbox flex="1">
+    <caption class="box" label="<?php echo _("Stock Almacén") ?>" />
+  </hbox>
+</vbox>
+
 
 <!-- Almacen Listado-->
 <listbox flex="1" id="listadoAlmacen" collapsed="true"
@@ -311,49 +301,65 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
     </listhead>
 </listbox>
 
+<vbox  id="resumenAlmacenFooter"  pack="top" align="left"  collapsed="true" class="box">
+  <caption class="box" label="<?php echo _("Resumen") ?>" />
+   <hbox class="resumen" >
+      <label value="Total Productos:"/>
+      <description id="TotalProductos" value=" 0" />
+      <label value="Con Stock:"/>
+      <description id="conStock" value=" 0 " />
+      <label value="Sin Stock:"/>
+      <description id="sinStock" value=" 0 " />
+      <label value="Valor Total:"/>
+      <description id="ValorTotal" value="<?php echo $Moneda[1]['S']?> 0.00" />
+  </hbox>
+</vbox>
+
+
 <!-- Web Extra -->
-<hbox flex="1" id="boxkardex"  collapsed="true" style="height:50em;" pack="center"> 
+<hbox flex="1" id="boxkardex"  collapsed="true" style="height:50em;" pack="center" class="box" > 
   <iframe  id="webkardex" name="webkardex" class="AreaKardex"  src="about:blank" flex="1"/>
 </hbox>
 
 <!-- Form Modificar -->
-<vbox style="margin-top:1em" id="formAjustesExistencias" 
-      align="center"  pack="top" collapsed="true">
+<vbox id="formAjustesExistencias" class="box" flex="1" collapsed="true">
+<vbox  class="box" style="margin-top:2em"
+      align="center"  pack="top" >
   <spacer flex="1"></spacer>
   <hbox pack="center">
-    <caption style="font-size: 14px;font-weight: bold;">
-      <?php echo _("Ajustar Existencias") ?>
-    </caption>
+    <caption class="h1" > <?php echo _("Ajustar Existencias") ?> </caption>
   </hbox>
-  <spacer style="height:1em"/>
   <hbox pack="center">
-    <caption id="xProducto" label="Producto" style="font-size: 12px;font-weight: bold;"/>
+    <caption class="xproducto" id="xProducto" label="Producto" />
   </hbox>
-  <spacer style="height:0.5em"/>
   <hbox>
     <groupbox>
       <hbox>
 	<grid>
 	  <rows>
 
-	    <row>
- 	      <caption label="Existencias kardex" />
-	      <description id="xExistencias" style="font-size:11px;text-align:right;" 
-		       size="40" onfocus="this.select()" readonly="true"/> 
+	    <row class="xbase">
+ 	      <caption class="xbase" label="Existencias kardex" />
+	      <description class="xbase" id="xExistencias" onfocus="this.select()" readonly="true"/> 
+ 	    </row>
+	    <row class="xbase">
+ 	      <caption class="xbase" label="Ajuste Existencias" />
+	      <description class="xbase" id="xAjuste" onfocus="this.select()" readonly="true"/>
 	    </row>
+
 	    <row id="rowContenedor" collapsed="true">
 	      <caption label="Unid/Empaque "/>
 	      <description id="xUnidxEmpaque" style="text-align:right;font-size:11px;" 
-		       size="40" onfocus="this.select()" readonly="true"/>
+		       onfocus="this.select()" readonly="true"/>
 	    </row>
 	    <row id="rowDatoContenedor" collapsed="true">
 	      <caption id="txtContenedor" class="media" label="Empaque - Unid"/>
 	      <hbox flex="1">
-		<textbox class="media" id="xEmpaques" value="1" onfocus="this.select()" 
+		<textbox flex="1" class="media" id="xEmpaques" value="1" onfocus="this.select()" 
 			 style="width: 4.5em;text-align:right;" 
 			 onchange="validaDatoMenudeo(this)" 
-			 onkeypress="return soloNumerosEnteros(event,this.value)"/> -
-		<textbox class="media" id="xUnidades" value="0" onfocus="this.select()"
+			 onkeypress="return soloNumerosEnteros(event,this.value)"/>
+		<textbox flex="1" class="media" id="xUnidades" value="0" onfocus="this.select()"
 			 style="width: 4em;text-align:right;" 
 			 onchange="validaDatoMenudeo(this)" 
 			 onkeypress="return soloNumerosEnteros(event,this.value)"/>
@@ -363,28 +369,24 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	    <row  id="rowExistencias">
  	      <caption label="Existencias Fisico" />
 	      <textbox style="text-align:right" id="xExistenciasFisico"  
-		       size="40" onfocus="this.select()" value="0"
+		        onfocus="this.select()" value="0"
 		       onkeypress="return soloNumeros(event,this.value);" 
 		       onblur="totalAjusteExistencias(this.value)"/>
 	    </row>
 
-	    <spacer style="height:0.2em"/>
-	    <row>
- 	      <caption label="Ajuste Existencias" />
-	      <description id="xAjuste" style="text-align:right;font-size:11px;" 
-		       size="40" onfocus="this.select()" readonly="true"/>
-	    </row>
-	    <spacer style="height:0.2em"/>
 	    <row>
  	      <caption label="Costo" />
-	      <textbox style="text-align:right" id="xValorCompra"  size="40" onfocus="this.select()" 
+	      <hbox flex="1">
+	        <textbox style="text-align:right" id="xValorCompra"   onfocus="this.select()" 
 		       onkeypress="return soloNumeros(event,this.value)" 
 		       onchange="setCostoPrecios('costo',this.value)"/>
+	        <button id="xEmpaqueProducto" oncommand="mostrarCostoTotalInvent()" collapsed="false"/>
+	      </hbox>
 	    </row>
 
 	    <row>
 	      <caption label="Costo Operativo" />
-	      <textbox style="text-align:right" id="xCostoOP"  size="40" onfocus="this.select()" 
+	      <textbox style="text-align:right" id="xCostoOP"   onfocus="this.select()" 
 		       onkeypress="return soloNumeros(event,this.value)" 
 		       onchange="setCostoPrecios('precio',this.value)" />
 	    </row>
@@ -398,28 +400,28 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
 	    <row>
 	      <caption label="PVP" />
-	      <textbox style="text-align:right" id="xPVD"  size="40" onfocus="this.select()"
+	      <textbox style="text-align:right" id="xPVD"   onfocus="this.select()"
 		       onkeypress="return soloNumeros(event,this.value)" 
 		       onchange="setCostoPrecios('pvd',this.value)"/>
 	    </row>
 
 	    <row>
 	      <caption label="PVP/Dcto." />
-	      <textbox style="text-align:right" id="xPVDD"  size="40" onfocus="this.select()" 
+	      <textbox style="text-align:right" id="xPVDD" onfocus="this.select()" 
 		       onkeypress="return soloNumeros(event,this.value)" 
 		       onchange="setCostoPrecios('pvdd',this.value)"/>
 	    </row>
 
 	    <row>
 	      <caption label="PVC" />
-	      <textbox style="text-align:right" id="xPVC"  size="40" onfocus="this.select()" 
+	      <textbox style="text-align:right" id="xPVC"  onfocus="this.select()" 
 		       onkeypress="return soloNumeros(event,this.value)" 
 		       onchange="setCostoPrecios('pvc',this.value)"/>
 	    </row>
 
 	    <row>
 	      <caption label="PVC/Dcto." />
-	      <textbox style="text-align:right" id="xPVCD"  size="40" onfocus="this.select()"
+	      <textbox style="text-align:right" id="xPVCD" onfocus="this.select()"
 		       onkeypress="return soloNumeros(event,this.value)" 
 		       onchange="setCostoPrecios('pvcd',this.value)"/>
 
@@ -432,21 +434,19 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
     </groupbox>	
 
     <groupbox id="postAjusteBox" collapsed="true">	
-      <caption label="Ingrese:" style="padding:0.5em 0 0.5em 0;"/>
       <hbox>
 	<grid >
 	  <rows>
 
-	    <row>
-	      <caption label="Existencias Ajustar" />
-	      <description id="xCantidadAjuste" style="font-size:11px;"
-		       size="20" onfocus="this.select()" readonly="true"/>
+	    <row class="xbase">
+	      <caption class="xbase" label="Existencias Ajustar" />
+	      <description class="xbase" id="xCantidadAjuste" onfocus="this.select()" readonly="true"/>
 	    </row>
 
 	    <!-- Lote -->
 	    <row id="rowLote" collapsed="true">
 	      <caption label="Lote" />
-	      <textbox id="xLote"  size="20" onfocus="this.select()" 
+	      <textbox id="xLote"  onfocus="this.select()" 
 		       style="text-transform:uppercase;" 
 		       onkeyup="javascript:this.value=this.value.toUpperCase();"/>
 	    </row>
@@ -500,32 +500,33 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
   <hbox collapsed="false">
     <box flex="1"></box>
-    <button class="media" style="font-size:10px;font-weight: bold;" id="btnModificarStock"
+    <button class="media btn" style="font-size:10px;font-weight: bold;" id="btnModificarStock"
 	    image="<?php echo $_BasePath; ?>img/gpos_modify.png" label=" Modificar..." 
 	    oncommand="validaModificarStock()" collapsed="false"></button>
-    <button class="media" style="font-size:10px;font-weight: bold;" 
+    <button class="media btn" style="font-size:10px;font-weight: bold;" 
 	    image="<?php echo $_BasePath; ?>img/gpos_volver.png" label=" Volver Stock" 
 	    oncommand="volverStock()" collapsed="false"></button>
   </hbox>
   <spacer flex="1"></spacer>
 </vbox>
+</vbox>
 
-<vbox>
+<vbox class="box">
   <box flex="1"></box>
   <hbox flex="1">
     <button  flex="1" id="btnVolver" style="font-weight: bold;font-size:11px;" 
-	     class="media" image="<?php echo $_BasePath; ?>img/gpos_nuevoajuste.png"  
+	     class="media btn" image="<?php echo $_BasePath; ?>img/gpos_nuevoajuste.png"  
              label=" Nuevo Ajuste" 
 	     oncommand="nuevaOperacionAjuste()" collapsed="false" 
              <?php gulAdmite("Ajustes") ?>/>
     
     <button  flex="1" id="btnFinalizarInventario" style="font-weight: bold;font-size:11px;" 
-	     class="media" image="<?php echo $_BasePath; ?>img/gpos_finalizarinventario.png"  
+	     class="media btn" image="<?php echo $_BasePath; ?>img/gpos_finalizarinventario.png"  
 	     label=" Finalizar Inventario" 
 	     oncommand="finalizaOperacionInventario()" collapsed="true" 
              <?php gulAdmite("Ajustes") ?>/>
 
-    <button flex="1" id="btnAltaRapida" style="font-weight: bold;font-size:11px;" 
+    <button class="btn" flex="1" id="btnAltaRapida" style="font-weight: bold;font-size:11px;" 
 	    image="<?php echo $_BasePath; ?>img/gpos_altarapida.png" label=" Alta Rápida..."
 	    oncommand="altarapidaArticulo()" collapsed="true" 
 	    <?php gulAdmite("Productos") ?> />
@@ -533,14 +534,9 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
   </hbox>
 </vbox>
 
-<spacer style="height: 4px"></spacer>
-
 <script>//<![CDATA[
-  VerMovimiento();
-<?php echo "mostrarOperacion('".$xload."');"?>
+<?php echo "mostrarOperacion('".$xload."',true);"?>
 //]]></script>
-
-
 
   <?php
     EndXul();

@@ -50,6 +50,14 @@ switch($modo){
     $EstadoPagoVenta   = CleanText($_GET["estadopagoventa"]);
     $Cobranza          = CleanText($_GET["cobranza"]);
     $CodigoComprobante = CleanText($_GET["codcomprobante"]);
+    $PresupuestoVenta  = CleanText($_GET["presupuestoventa"]);
+    $IdMoneda          = CleanText($_GET["moneda"]);
+    $EstadoPresupuesto = CleanText($_GET["estadopresupuesto"]);
+    $TipoVentaTPV      = CleanText($_GET["tipoventatpv"]);
+    $VentaEstado       = CleanText($_GET["ventaestado"]);
+    $ProductoIdioma    = CleanText($_GET["productoidioma"]);
+    $ModalidadPago     = CleanText($_GET["modalidadpago"]);
+    $CuentaBancaria    = CleanText($_GET["cuentabancaria"]);
 
     $Consulta          = "SELECT * FROM $Tabla WHERE (IdListado = '$Id')";
     $row               = queryrow($Consulta);
@@ -71,7 +79,9 @@ switch($modo){
 				    $Prioridad,$Facturacion,$EstadoSuscripcion,
 				    $TipoSuscripcion,$TipoPagoSuscripcion,
 				    $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta,
-				    $Cobranza,$CodigoComprobante);
+				    $Cobranza,$CodigoComprobante,$PresupuestoVenta,
+				    $IdMoneda,$EstadoPresupuesto,$TipoVentaTPV,$VentaEstado,
+				    $ProductoIdioma,$ModalidadPago,$CuentaBancaria);
 
     }
     $NombreArchivo = '"'.$NombreArchivo.'"';
@@ -142,6 +152,58 @@ switch($modo){
     $xtitulo       = '"'.$almacen.' '.$invent.'"';
     exportMysqlToCsv($sql,$NombreArchivo,$xtitulo); 
     break;
+  case 'movimientoscaja':
+    $IdArqueo      = CleanID($_GET["idarqueo"]);
+    $IdLocal       = CleanID($_GET["idlocal"]);
+    $TipoVenta     = getSesionDato("TipoVentaTPV");
+
+    $sql = "SELECT ges_locales.NombreComercial as Local,ges_usuarios.Identificacion AS Usuario, IF(IdPartidaCaja = 0,'Ventas',(SELECT PartidaCaja FROM ges_partidascaja WHERE ges_partidascaja.IdPartidaCaja = ges_dinero_movimientos.IdPartidaCaja)) AS Partida, DATE_FORMAT(FechaPago,'%d/%m/%Y %H:%s') as 'Fecha Operación', ges_dinero_movimientos.TipoOperacion AS Operación,IF(ges_dinero_movimientos.IdComprobante = 0,' ',(SELECT ges_clientes.NombreComercial FROM ges_clientes INNER JOIN ges_comprobantes ON ges_clientes.IdCliente = ges_comprobantes.IdCliente WHERE ges_comprobantes.IdComprobante = ges_dinero_movimientos.IdComprobante)) as Cliente ,Concepto, ROUND(Importe,2) AS Importe 
+        FROM ges_dinero_movimientos 
+        INNER JOIN ges_usuarios ON ges_dinero_movimientos.IdUsuario = ges_usuarios.IdUsuario 
+        INNER JOIN ges_locales ON ges_dinero_movimientos.IdLocal = ges_locales.IdLocal 
+        WHERE ges_dinero_movimientos.Eliminado = 0 
+        AND TipoVentaOperacion = '$TipoVenta' 
+        AND ges_dinero_movimientos.IdLocal = $IdLocal
+        AND ges_dinero_movimientos.IdArqueoCaja = $IdArqueo 
+        AND ges_dinero_movimientos.Importe > 0 
+        ORDER BY ges_dinero_movimientos.TipoOperacion ASC, Partida ASC";
+
+    $name          = "gPOS_Arqueo_Caja_".$IdArqueo;
+    $NombreArchivo = $name.".csv";
+    $xtitulo       = '"'.'Arqueo Caja '.$IdArqueo.'"';
+    exportMysqlToCsv($sql,$NombreArchivo,$xtitulo);
+    break;
+
+  case 'movimientoscajagral':
+    $IdArqueo      = CleanID($_GET["idarqueo"]);
+    $IdLocal       = CleanID($_GET["idlocal"]);
+    $IdMoneda      = CleanID($_GET["idmoneda"]);
+
+	$sql = "SELECT ges_locales.NombreComercial as Local, ".
+               "ges_usuarios.Identificacion AS Usuario, PartidaCaja as Partida,  ".
+	       "DATE_FORMAT(FechaInsercion,'%d/%m/%Y %H:%i') as 'Fecha Operación', ".
+               "ges_librodiario_cajagral.TipoOperacion as Operación, Concepto, ".
+	       "Documento, CodigoDocumento,IF(ges_librodiario_cajagral.IdSubsidiario <> 0,(SELECT NombreLegal FROM ges_subsidiarios WHERE ges_subsidiarios.IdSubsidiario = ges_librodiario_cajagral.IdSubsidiario),'') as 'Doc. Gastos', Importe ".
+	       "FROM ges_librodiario_cajagral ".
+	       "INNER JOIN ges_usuarios ON ".
+               " ges_librodiario_cajagral.IdUsuario = ges_usuarios.IdUsuario ".
+	       "INNER JOIN ges_partidascaja ON ".
+               " ges_librodiario_cajagral.IdPartidaCaja = ges_partidascaja.IdPartidaCaja ".
+	       "INNER JOIN ges_moneda ON ".
+               " ges_librodiario_cajagral.IdMoneda = ges_moneda.IdMoneda ".
+	       "INNER JOIN ges_locales ON ".
+	        "ges_librodiario_cajagral.IdLocal = ges_locales.IdLocal ".
+	       "WHERE ges_librodiario_cajagral.IdArqueoCajaGral = '$IdArqueo' ".
+	       "AND ges_librodiario_cajagral.Eliminado = 0 ".
+	       "AND ges_librodiario_cajagral.IdMoneda = '$IdMoneda' ".
+	       "AND ges_librodiario_cajagral.IdLocal = '$IdLocal' ".	  
+	       "ORDER BY ges_librodiario_cajagral.FechaInsercion DESC ";
+
+    $name          = "gPOS_Arqueo_CajaGral_".$IdArqueo;
+    $NombreArchivo = $name.".csv";
+    $xtitulo       = '"'.'Arqueo Caja General '.$IdArqueo.'"';
+    exportMysqlToCsv($sql,$NombreArchivo,$xtitulo);
+    break;
 }
 
 function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
@@ -153,7 +215,9 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
 		     $TipoCliente,$IdMarca,$CondicionVenta,$EstadoOS,$Prioridad,
 		     $Facturacion,$EstadoSuscripcion,$TipoSuscripcion,$TipoPagoSuscripcion,
 		     $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta,$Cobranza,
-		     $CodigoComprobante) {
+		     $CodigoComprobante,$PresupuestoVenta,$IdMoneda,$EstadoPresupuesto,
+		     $TipoVentaTPV,$VentaEstado,$ProductoIdioma,$ModalidadPago,
+		     $CuentaBancaria) {
 
   $Moneda = getSesionDato("Moneda");
   
@@ -176,6 +240,37 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
 
   $TipoVenta = getSesionDato("TipoVentaTPV");
   $Precio    = ($TipoVenta == 'VD')? 'PrecioVenta':'PrecioVentaCorporativo';
+
+  //tipo venta tpv
+  $xtipo = $TipoVentaTPV;
+  if($xtipo == '%VentaTodos%')
+    $TipoVentaTPV = "";
+  if($xtipo == '%VentaContado%')
+    $TipoVentaTPV = " AND ges_comprobantes.SerieComprobante LIKE 'B%' ";  
+  if($xtipo == '%VentaCredito%')
+    $TipoVentaTPV = " AND ges_comprobantes.SerieComprobante LIKE 'CS%' AND ges_comprobantes.Reservado = 0";  
+  if($xtipo == '%VentaReserva%')
+    $TipoVentaTPV = " AND ges_comprobantes.Reservado = 1 ";  
+  if($xtipo == '%VentaSuscripcion%')
+    $TipoVentaTPV = "AND ges_comprobantes.IdSuscripcion > 0";  
+
+  //estado Venta
+  $xestado = $VentaEstado;
+
+  if($xestado == '%EstadoTodos%')
+    $VentaEstado = "";
+  if($xestado == '%EstadoPendiente%')
+    $VentaEstado = "AND ges_comprobantes.ImportePendiente > 0";
+  if($xestado == '%EstadoFinalizado%')
+    $VentaEstado = "AND ges_comprobantes.ImportePendiente = 0";
+  if($xestado == '%EstadoFinalizado%' && $xtipo == '%VentaSuscripcion%')
+    $VentaEstado = " AND ges_comprobantes.Status = 2 ";
+  if($xestado == '%EstadoFinalizado%' && $xtipo == '%VentaCredito%')
+    $VentaEstado = " AND ges_comprobantes.Status = 2 ";
+  if($xestado == '%EstadoFinalizado%' && $xtipo == '%VentaContado%')
+    $VentaEstado = " AND ges_comprobantes.Status = 2 ";
+  if($xestado == '%EstadoFinalizado%' && $xtipo == '%VentaReserva%')
+    $VentaEstado = " AND ges_comprobantes.FechaEntregaReserva <> '0000-00-00 00:00:00.000000' ";
 
   $cod = str_replace("%IDIDIOMA%",$IdLang,$cod);
   $cod = str_replace("%DESDE%",		$Desde,$cod);
@@ -223,6 +318,14 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
   $cod = str_replace("%SML%",$Moneda[1]['S'],$cod);
   $cod = str_replace("%COBRANZA%",$CodigoComprobante,$cod);
   $cod = str_replace("'%TIPOVENTA%'",$Precio,$cod);
+  $cod = str_replace("%PRESUPUESTOVENTA%",$PresupuestoVenta,$cod);
+  $cod = str_replace("%IDMONEDA%",$IdMoneda,$cod);
+  $cod = str_replace("%ESTADOPRESUPUESTO%",$IdMoneda,$cod);
+  $cod = str_replace("'%TIPOVENTATPV%'", $TipoVentaTPV,$cod);
+  $cod = str_replace("'%VENTAESTADO%'",	$VentaEstado,$cod);
+  $cod = str_replace("%PRODUCTOIDIOMA%",$ProductoIdioma,$cod);
+  $cod = str_replace("%MODALIDADPAGO%",$ModalidadPago,$cod);
+  $cod = str_replace("%CUENTABANCARIA%",$CuentaBancaria,$cod);
 
   if($esTPVOP)
     $cod = str_replace("%TIPOVENTA%",	$esTPVOP,$cod);

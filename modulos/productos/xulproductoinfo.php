@@ -1,15 +1,9 @@
 <?php
 SimpleAutentificacionAutomatica("visual-xulframe");
-header("Content-type: application/vnd.mozilla.xul+xml");
-echo '<?xml version="1.0" encoding="UTF-8"?>';
-echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';
-echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
+StartXul('Productos Ficha Tecnica',$predata="",$css='');
+StartJs($js='modulos/productos/productoinfo.js?v=3.1');
 ?>
-<window id="MovimientoVista" title="Movimientos Kardex"
-	xmlns:html="http://www.w3.org/1999/xhtml"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/productos/productoinfo.js" />
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js" />
+
   <script>//<![CDATA[
   var cImpuesto = <?php echo getSesionDato("IGV"); ?>;
   var cIdLocal  = <?php echo getSesionDato("IdTienda"); ?>;
@@ -21,19 +15,15 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 <!--  no-visuales -->
 
 <!--  Encabezado-->
-<vbox> 
-  <spacer style="height:6px"/>
+<vbox class="box"> 
     <vbox pack="center" align="center">
-      <caption id="wtitleInventario" style="padding:0.4em;font-size: 14px;font-weight: bold;"
-	       label="<?php echo _("Productos - Ficha Técnica") ?>" />
+      <caption id="wtitleInventario" class="h1" > <?php echo _("Productos - Ficha Técnica") ?> </caption>
     </vbox>
-
-  <spacer style="height:8px"/>
 </vbox> 
 
 <!--Almacen  Busqueda-->
-<vbox id="busquedaMovimiento">
-  <hbox align="start" pack="center" style="background-color: #d7d7d7;padding:3px;">
+<vbox id="busquedaMovimiento" class="box">
+  <hbox align="start" pack="center">
     <vbox>
       <?php if(getSesionDato("esAlmacenCentral")){?>
       <description>Local:</description>
@@ -96,21 +86,19 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                onkeypress="return soloNumeros(event,this.value);"/>
     </vbox>
 
-    <vbox>
-      <description style="-moz-opacity: 0">. </description>
-      <button id="btnbuscar" label=" Buscar "  
+    <vbox style="margin-top:1.1em" >
+      <button id="btnbuscar" label=" Buscar "  class="btn"
               image="<?php echo $_BasePath; ?>img/gpos_buscar.png" 
 	      oncommand="BuscarAlmacen()"/>
     </vbox>
-    <vbox id="btnAltaRapida"  collapsed="true">
-      <description style="-moz-opacity: 0">. </description>
+    <vbox id="btnAltaRapida" style="margin-top:1.1em"  collapsed="true">
       <button image="<?php echo $_BasePath; ?>img/gpos_altarapida.png" 
-	      label=" Alta Rápida..." 
+	      label=" Alta Rápida..." class="btn"
 	      oncommand="altarapidaArticulo()"/>
     </vbox>
-    <vbox>
+    <vbox style="margin-top:1.1em" >
       <description style="-moz-opacity: 0">. </description>
-      <button id="btnImprimirInventario" 
+      <button id="btnImprimirInventario" class="btn"
               image="<?php echo $_BasePath; ?>img/gpos_imprimir.png" label=" Imprimir" 
 	      oncommand="imprimirInventario();" collapsed="true"/>
     </vbox>
@@ -120,12 +108,8 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
 
 <!-- Resumen Almacen  -->
-<vbox id="resumenAlmacen" >
- <spacer style="height:5px"/>
-  <hbox flex="1">
-    <caption style="font-size:10px; font-weight: bold;" label="<?php echo _("Stock Almacén") ?>" />
-    <description id="TotalProductos" value="0 productos listados" />
-  </hbox>
+<vbox class="box">
+  <caption class="box" label="<?php echo _("Productos:") ?>" />
 </vbox>
 
 <!-- Almacen Listado-->
@@ -172,33 +156,38 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
     </listhead>
 </listbox>
 
+<vbox id="resumenAlmacen" class="box">
+  <caption class="box" label="<?php echo _("Resumen Productos:") ?>" />
+  <hbox class="resumen" align="left">
+    <label id="TotalProductos" value="0 productos listados" />
+  </hbox>
+</vbox>
+
+
 <!-- Web Extra -->
 <hbox flex="1" id="boxkardex"  collapsed="true" style="height:50em;" pack="center"> 
   <iframe  id="webkardex" name="webkardex" class="AreaKardex"  src="about:blank" flex="1"/>
 </hbox>
 
 <!-- Form Producto Información -->
-<vbox style="margin-top:1.5em" id="formAjustesExistencias" 
-      align="center"  pack="top" collapsed="true">
+<vbox id="formAjustesExistencias" 
+      align="center"  pack="top" collapsed="true" class="box">
   <spacer flex="1"></spacer>
   <hbox pack="center">
-    <caption style="font-size: 14px;font-weight: bold;">
-      <?php echo _("Ficha Técnica") ?>
-    </caption>
+    <caption class="h1" label="<?php echo _("Ficha Técnica")?>"/>
   </hbox>
-  <spacer style="height:1em"/>
   <hbox pack="center">
-    <caption id="xProducto" style="font-size: 12px;font-weight: bold;"/>
+    <caption id="xProducto" style="font-size: 1.1rem;"/>
   </hbox>
   <spacer style="height:1em"/>
 
-  <hbox>
+  <hbox class="box">
     <groupbox id="gboxIndicaciones">
       <vbox>
  	<caption label="<?php echo $Indicaciones ?>" />
 	<rows>
 	 <row>
-	<textbox id="xIndicacion1" style="width:25em;" 
+	<textbox id="xIndicacion1" multiline="true"
 	         onfocus="this.select()"
 	         onpaste="return false"
                  onkeypress="return soloAlfaNumerico(event);"
@@ -208,7 +197,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                        oncommand="checkItemsFichaTecnica(1,1)" />
 	 </row>
 	 <row>
-	<textbox id="xIndicacion2" style="width:25em;" collapsed="true"
+	<textbox id="xIndicacion2"  collapsed="true" multiline="true"
 	         onfocus="this.select()"
 	         onpaste="return false"
                  onkeypress="return soloAlfaNumerico(event);"
@@ -218,7 +207,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                        oncommand="checkItemsFichaTecnica(1,2)" collapsed="true"/>
 	 </row>
 	 <row>
-	<textbox id="xIndicacion3" style="width:25em;" collapsed="true"
+	<textbox id="xIndicacion3" collapsed="true" multiline="true"
 	         onfocus="this.select()"
 	         onpaste="return false"
                  onkeypress="return soloAlfaNumerico(event);"
@@ -228,7 +217,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                        oncommand="checkItemsFichaTecnica(1,3)" collapsed="true"/>
 	 </row>
 	 <row>
-	<textbox id="xIndicacion4" style="width:25em;" collapsed="true"
+	<textbox id="xIndicacion4"  collapsed="true" multiline="true"
 	         onfocus="this.select()"
 	         onpaste="return false"
                  onkeypress="return soloAlfaNumerico(event);"
@@ -238,7 +227,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                        oncommand="checkItemsFichaTecnica(1,4)" collapsed="true"/>
 	 </row>
 	 <row>
-	<textbox id="xIndicacion5" style="width:25em;" collapsed="true"
+	<textbox id="xIndicacion5"  collapsed="true" multiline="true"
 	         onfocus="this.select()"
 	         onpaste="return false"
                  onkeypress="return soloAlfaNumerico(event);"
@@ -255,7 +244,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	<rows>
 	 <row>
 
-	<textbox id="xContraIndicacion1" style="width:25em;"
+	<textbox id="xContraIndicacion1" multiline="true"
 	         onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -265,7 +254,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                  oncommand="checkItemsFichaTecnica(2,1)" />
 	 </row>
 	 <row>
-	<textbox id="xContraIndicacion2" style="width:25em;" collapsed="true"
+	<textbox id="xContraIndicacion2" collapsed="true" multiline="true"
 	         onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -275,7 +264,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                  oncommand="checkItemsFichaTecnica(2,2)" collapsed="true"/>
 	 </row>
 	 <row>
-	<textbox id="xContraIndicacion3" style="width:25em;" collapsed="true"
+	<textbox id="xContraIndicacion3"  collapsed="true" multiline="true"
 	         onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -285,7 +274,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                  oncommand="checkItemsFichaTecnica(2,3)" collapsed="true"/>
 	 </row>
 	 <row>
-	<textbox id="xContraIndicacion4" style="width:25em;" collapsed="true"
+	<textbox id="xContraIndicacion4"  collapsed="true" multiline="true"
 	         onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -295,7 +284,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                  oncommand="checkItemsFichaTecnica(2,4)" collapsed="true"/>
 	 </row>
 	 <row>
-	<textbox id="xContraIndicacion5" style="width:25em;" collapsed="true"
+	<textbox id="xContraIndicacion5"  collapsed="true" multiline="true"
 	         onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -311,7 +300,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
         <caption label="<?php echo $Interaccion ?>" />
 	 <rows>
 	 <row>
-        <textbox id="xInteraccion1" style="width:25em;"
+        <textbox id="xInteraccion1" multiline="true"
 	         onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -321,7 +310,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                  oncommand="checkItemsFichaTecnica(3,1)" />
 	 </row>
 	 <row>
-        <textbox id="xInteraccion2" style="width:25em;" collapsed="true"
+        <textbox id="xInteraccion2" collapsed="true" multiline="true"
 	         onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -331,7 +320,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                  oncommand="checkItemsFichaTecnica(3,2)" collapsed="true"/>
 	 </row>
 	 <row>
-        <textbox id="xInteraccion3" style="width:25em;" collapsed="true"
+        <textbox id="xInteraccion3" collapsed="true" multiline="true"
 	         onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -341,7 +330,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                  oncommand="checkItemsFichaTecnica(3,3)" collapsed="true"/>
 	 </row>
 	 <row>
-        <textbox id="xInteraccion4" style="width:25em;" collapsed="true"
+        <textbox id="xInteraccion4" collapsed="true" multiline="true"
 	         onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -351,7 +340,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                  oncommand="checkItemsFichaTecnica(3,4)" collapsed="true"/>
 	 </row>
 	 <row>
-        <textbox id="xInteraccion5" style="width:25em;" collapsed="true"
+        <textbox id="xInteraccion5" collapsed="true" multiline="true"
 	         onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -366,7 +355,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	<caption label="<?php echo $Dosificacion ?>" />
 	 <rows>
 	 <row>
-	<textbox id="xDosificacion1" style="width:25em;"
+	<textbox id="xDosificacion1" multiline="true"
                  onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -376,7 +365,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                  oncommand="checkItemsFichaTecnica(4,1)" />
 	 </row>
 	 <row>
-	<textbox id="xDosificacion2" style="width:25em;" collapsed="true"
+	<textbox id="xDosificacion2" collapsed="true" multiline="true"
                  onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -386,7 +375,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                  oncommand="checkItemsFichaTecnica(4,2)" collapsed="true"/>
 	 </row>
 	 <row>
-	<textbox id="xDosificacion3" style="width:25em;" collapsed="true"
+	<textbox id="xDosificacion3" collapsed="true" multiline="true"
                  onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -396,7 +385,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                  oncommand="checkItemsFichaTecnica(4,3)" collapsed="true"/>
 	 </row>
 	 <row>
-	<textbox id="xDosificacion4" style="width:25em;" collapsed="true"
+	<textbox id="xDosificacion4" collapsed="true" multiline="true"
                  onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -406,7 +395,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                  oncommand="checkItemsFichaTecnica(4,4)" collapsed="true"/>
 	 </row>
 	 <row>
-	<textbox id="xDosificacion5" style="width:25em;" collapsed="true"
+	<textbox id="xDosificacion5" collapsed="true" multiline="true"
                  onfocus="this.select()" 
 	         onpaste="return false"
 	         onkeypress="return soloAlfaNumerico(event);"
@@ -422,18 +411,16 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
   <spacer flex="1"></spacer>
 </vbox>
 
-<vbox>
+<vbox class="box">
   <box flex="1"></box>
   <hbox flex="1">
-    <button  flex="1" id="btnVolver" style="font-weight: bold;font-size:11px;" 
-	     class="media" image="<?php echo $_BasePath; ?>img/gpos_volver.png"  
+    <button  flex="1" id="btnVolver" 
+	     class="media btn" image="<?php echo $_BasePath; ?>img/gpos_volver.png"  
              label=" Volver Productos" 
 	     oncommand="volverProductos()"/>
     
   </hbox>
 </vbox>
-
-<spacer style="height: 4px"></spacer>
 
 <script>//<![CDATA[
 	 verStockAlmacen();

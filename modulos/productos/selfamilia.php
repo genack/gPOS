@@ -16,7 +16,7 @@ switch($modo){
 		// ....continua....
 			
 	case "familia":
-		echo "<groupbox flex='1'> <caption label='" . _("Familia") . "'/>";
+		echo "<groupbox flex='1'> <caption class='box' label='" . _("Familia") . "'/>";
 		
 		$familias = genArrayFamilias();
 		
@@ -44,19 +44,19 @@ switch($modo){
 		";
 		echo "\n</script>";						
 						
-		echo "<listbox id='Familia' flex='1'  onclick='opener.change(this,fam[this.value]);window.close();return true;'>";
+		echo "<listbox id='Familia' flex='1'  onclick='parent.change(this,fam[this.value]);parent.closepopup();return true;'>";
 		echo  genXulComboFamilias();				
 		echo "</listbox>";
 		echo "</groupbox>";
-		echo "<groupbox>"."<caption label='" . _("Nueva familia") . "'/>";		
+		echo "<groupbox>"."<caption class='box' label='" . _("Nueva familia") . "'/>";		
 		echo "<textbox id='nuevafamilia'/>";
-		echo "<button label='"._("Nuevo")."' onkeypress='if (event.which == 13) UsarNuevo()' oncommand='UsarNuevo()'/>";		
+		echo "<button class='btn' label='"._("Nuevo")."' oncommand='UsarNuevo()'/>";
 		echo "</groupbox>";		
 		break;		
 	case "subfamilia":
 		$idfamilia = CleanID($_GET["IdFamilia"]);
 
-		echo "<groupbox  flex='1'> <caption label='" . _("Sub familias") . "'/>";
+		echo "<groupbox  flex='1'> <caption class='box' label='" . _("Sub familias") . "'/>";
 		$subfamilias = genArraySubFamilias($idfamilia);
 		
 		echo "<script>\n";
@@ -66,9 +66,8 @@ switch($modo){
 		}
 		echo "\n</script>";		
 				
-
 		//echo "Mostrando sub familia de familia id '$idfamilia'<p>"; 	
-		echo "<listbox id='Subfamilia' flex='1' rows='7' onclick='opener.changeSub(this,fam[this.value]);window.close();return true;'>";
+		echo "<listbox id='Subfamilia' flex='1' rows='7' onclick='parent.changeSub(this,fam[this.value]);parent.closepopup();return true;'>";
 		echo  genXulComboSubFamilias(false,$idfamilia);				
 		echo "</listbox>";
 		echo "</groupbox>";
