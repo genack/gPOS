@@ -1,12 +1,12 @@
-   <panel id="panelElijeProducto" style="border:1px solid #aaa">
+   <panel id="panelElijeProducto" style="border:1px solid #aaa"  class="box">
      <vbox align="center" style="padding:1em">	
-       <caption label="Agregar Productos"  style="font-size: 1.6em;"/>
+       <caption label="Agregar Productos"  class="h1"/>
      </vbox>
      <hbox align="center">	
        <spacer style="width: 5px"/>
        <image src="img/gpos_barcode.png" height="16" width="16"/>
        <caption  label="CB" class="compacta"/>
-       <textbox   id="panelCB"   size="12" onfocus="select()" class="compacta"   flex="1" 
+       <textbox   id="panelCB"   size="12" onfocus="select()" class="bbox"   flex="1" 
 		  onkeypress="return soloNumerosTPV(event,this.value)" 
 		  onkeyup="if (event.which == 13) agnadirPanelPorCodigoBarras()" />
        
@@ -14,12 +14,13 @@
        
        <image src="img/gpos_tpvreferencia.png" />
        <caption label=" CR"  class="compacta" />
-       <textbox  id="panelREF"  size="8" onfocus="select()" class="compacta" flex="1" 
+       <textbox  id="panelREF"  size="8" onfocus="select()" class="bbox" flex="1" 
 		 onkeyup="agnadirPanelPorReferencia()" />
        <spacer style="width: 30px"/>
        <image src="img/gpos_productos.png" height="16" width="16"/>
        <caption label="Producto"  class="compacta" />
-       <textbox id="panelNOM"  size="20" onfocus="select()" class="compacta" flex="1" 
+       <textbox id="panelNOM"  size="20" onfocus="select()" class="bbox" flex="1" 
+		placeholder=" nombre | marca ó modelo..." 
 		onkeypress=" if (event.which == 13) focusPanelListaProductos(); else agnadirPanelPorNombre();" />
        <spacer style="width: 10px"/>
      </hbox>

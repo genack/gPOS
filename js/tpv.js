@@ -1,4 +1,3 @@
-
 /*++++++++++++++++++++++ INIT +++++++++++++++++++++++++*/
 
     var id          = function(name) { return document.getElementById(name); }
@@ -54,6 +53,7 @@
     var cListaProductos = 'compact';  //compact, column
     var cListaCompacta  = true;  //compact, column
     var cEsDevolucionDetalle = false;
+    var cDevolucionModo = '';
     var cDevolucion     = new Array();
     var cDevolucionList = new Array();
     var prodSerie       = new Array();
@@ -151,6 +151,25 @@
 	setTimeout("syncMProducto()",200);       //MetaProductos
 	setTimeout("syncPromociones()",300);     //Promociones
         setTimeout("syncClientes()",400);        //Clientes 
+
+    }
+
+    function syncTipoVentaTPV(){
+	
+	//Termina Brutal
+	if(esSyncBoton('on')) return;
+
+	mostrarMensajeTPV(1,'Sincronizando datos...',2400);
+
+	//syncProductosPostTicket();               //Productos
+	syncPresupuesto('Preventa');               //PreVentas
+        syncPresupuesto('Proforma');               //Proformas
+        syncPresupuesto('ProformaOnline');         //ProformasOnline
+	setTimeout("reloadCaja()",10);	           //Recargar Caja
+        //setTimeout("syncMensajes()",100);        //Mensajes
+	//setTimeout("syncMProducto()",200);       //MetaProductos
+	//setTimeout("syncPromociones()",300);     //Promociones
+        //setTimeout("syncClientes()",400);        //Clientes 
 
     }
 
@@ -753,6 +772,7 @@
         //Array Meta Productos
         var aMProductos = new Array();
 
+        var cFechaProforma = '';
 
         /*++++++++++++++++ Busquedas ++++++++++++++*/
 
@@ -877,7 +897,8 @@
             var cod     = getCodigoSelectedProd();
 	    var pstock  = id("prevt-stock").getAttribute("checked");
 	    var modo    = (pstock != "true")? "pedidos":id("rgModosTicket").value;
-
+	    var esMayoreo = false;
+	    
             if (!cod) return;
 	    if (habilitarAddMProducto()) return;
 	    if (productos[cod].servicio || productos[cod].ilimitado) modo = "pedidos";//Servicio
@@ -901,9 +922,9 @@
 	    //Inicia Menudeo
             if (unidades=="mayoreo")
 	    {
-
+		
 		if(!productos[cod].menudeo) return;
-
+		var esMayoreo = true;
 		var xunidades = prompt('¿Cuántas '+productos[cod].cont+'+'+
 				       productos[cod].unid+'?',0);
 		if(!xunidades) return;
@@ -975,7 +996,10 @@
 					cod);
 
 	    //Carrito TPV
-            tpv.AddCarrito( cod.toUpperCase() , unidades);
+	    if ( esMayoreo )
+		tpv.AddCarritoMayoreo( cod.toUpperCase() , unidades);
+	    else
+		tpv.AddCarrito( cod.toUpperCase() , unidades);
             //RecalculoTotal();***
 
             var extatus = id("rgModosTicket").value;	
@@ -1046,13 +1070,12 @@
 		marca       = productos[cod].marca.toUpperCase();	
 		modelo      = productos[cod].talla.toUpperCase();	
 		detalle     = productos[cod].color.toUpperCase();	
+		ref         = productos[cod].refprovhab;//.toUpperCase();	
 		laboratorio = productos[cod].laboratorio.toUpperCase();	
 		//var tienda1 = new String(tienda);
 
 		//if (nom.indexOf( nombre ) != -1) {
-		if  ( (nom.indexOf( cadena1 ) != -1) || 
-		      (al1.indexOf( cadena1 ) != -1) || 
-		      (al2.indexOf( cadena1 ) != -1))  
+		if  ( (nom.indexOf( cadena1 ) != -1))  
 		{
 		    k      = productos[cod];
 		    precio = (Local.TPV=='VC')? k.pvc:k.pvd;
@@ -1070,7 +1093,10 @@
 			if( (marca.indexOf(cadena2)!= -1   ) ||
 			    (modelo.indexOf(cadena2) != -1 ) ||
 			    (detalle.indexOf(cadena2) != -1) || 
-			    (laboratorio.indexOf(cadena2) != -1) )
+			    (laboratorio.indexOf(cadena2) != -1) || 
+			    (al1.indexOf( cadena2 ) != -1) || 
+			    (al2.indexOf( cadena2 ) != -1) || 
+			    (ref.indexOf( cadena2 ) != -1) )
 			    CrearEntradaEnProductos(k.producto,k.nombre,k.marca,k.color,k.talla,k.laboratorio,
 						    k.codigobarras,k.referencia,precio,
 						    k.impuesto,k.unidades,k.costo,k.lote,k.vence,
@@ -1380,7 +1406,8 @@
 		//Intenta anadir si no existe... 
 		if (!productos[vcb]) ExtraBuscarEnServidorXCB(vcb);
 
-		precio    = parseFloat(celdas[4]);
+		precio    = obtenerPrecioBaseMProducto( productos[vcb].costo );
+		//precio    = parseFloat(celdas[4]);
 		cantidad  = parseFloat(celdas[2]);
 		acantidad = parseFloat( cantidad );//Pre-MProducto
 		iadd      = 1;
@@ -2058,7 +2085,7 @@
 		    elemento.setAttribute('label',celdas[1]);
 		    elemento.setAttribute('id',celdas[0]);
 		    elemento.setAttribute('oncommand',
-					  'cargarIdMProducto('+celdas[0]+',"'+celdas[1]+'")');
+					  'cargarIdMProducto('+celdas[0]+',"'+celdas[1]+'","'+celdas[2]+'")');
 		    combo.appendChild(elemento);
 		}
 
@@ -2066,14 +2093,21 @@
 	    //<menuitem label="Todos" selected="true"  />
 	    esSyncBoton('pause');//Boton Sync
 	}
+        function obtenerPrecioBaseMProducto( xvalue ){
+	    var xvalorventa  = parseFloat( xvalue + ( xvalue * Local.MPUtilidad ) /100 );
+	    var xprecioventa = parseFloat( xvalorventa + ( xvalorventa * Local.Impuesto ) /100);
+	    return xprecioventa;
+	}
+        function cargarIdMProducto(Id,label,margenutil){
 
-        function cargarIdMProducto(Id,label){
+	    //Margen util
+	    cargarMargenUtilMproducto( margenutil );
 
  	    //Variable global MProducto
             id("SelBaseMProducto").setAttribute("label",label); //Meta Producto
-
+	    
 	    IdMProducto = Id;
-
+	    
 	    //Sin STOCK
 	    StockMetaProducto = 1;
 
@@ -2087,6 +2121,15 @@
 	    getIdDetBaseMProducto();
 	}
 
+        function cargarMargenUtilMproducto(margenutil){
+
+	    var xmutil = margenutil.split('~~');
+	    switch(Local.TPV )
+	    {
+	    case "VD":Local.MPUtilidad = (parseFloat( xmutil[0] )>0 )? xmutil[0]:Local.Utilidad;break;
+	    case "VC":Local.MPUtilidad = (parseFloat( xmutil[1] )>0 )? xmutil[1]:Local.Utilidad;break;
+	    }
+	}
 
         function CargarMProducto(){
 
@@ -2187,13 +2230,14 @@
 	    var r_venta = id("rVenta");
 	    var modo    = id("rgModosTicket");	   
  	    var t_bpedi = id("buscapedido");
-	    var modotpv;
+	    var modotpv,noreset=true;
 
 	    //CONTROL
 	    switch( modo.value ){
 	    case 'venta':
 	    case 'cesion':
 		modotpv = 1;
+		noreset = ( IdPresupuesto > 0 )? true:false;
  		break;
 	    case 'pedidos': 
 		//if( selticket == 2 )
@@ -2223,15 +2267,15 @@
 	    //ALERT
 	    if( modotpv != 1 && selticket != 0){
 		//DEFAULT
-		var m_alert = 'VENTA ó CESION';
+		var m_alert = 'CONTADO ó CREDITO';
 
 		//PROFORMA
 		if(selticket == 2)
-		    m_alert = 'VENTA, CESION ó COTIZACION';
+		    m_alert = 'CONTADO, CREDITO ó PEDIDO';
 
 		//METAPRODUCTO
 		if(selticket == 4)
-		    m_alert = 'MPRODUCTO';
+		    m_alert = 'MIXPRODUCTO';
 
 		//LANZA MESAJE
 		alert( c_gpos + '\n - Selecione el modo '+
@@ -2281,12 +2325,14 @@
 		//Default Variables Globales
 		IdTipoPresupuesto = 0;
 		IdPresupuesto     = 0;  
-		 IdMProducto       = 0;  
+		IdMProducto       = 0;  
 		IdMetaProducto    = 0;  
 		StockMetaProducto = 0;
 		//reset modo
 		AjustarEtiquetaMetaproducto();
-		resetPresupuestoCarrito();
+
+		if( noreset )
+		    resetPresupuestoCarrito();
 
 		break;
 
@@ -2338,7 +2384,7 @@
 		    setTimeout("runsyncTPV('Proforma')",200);
 
 		//MENU Ticket Proforma
-		t_comb.label="TICKET PROFORMA";
+		t_comb.label="TICKET PEDIDO";
 		i_prof.setAttribute('checked', 'true');
 		i_profol.setAttribute('checked', 'false');
 		i_mpro.setAttribute('checked', 'false');
@@ -2417,7 +2463,7 @@
 		    setTimeout("runsyncTPV('MProductos')",200)
 
 		//MENU Ticket MProducto
-		t_comb.label="TICKET MPRODUCTO";
+		t_comb.label="TICKET MIXPRODUCTO";
 		i_mpro.setAttribute('checked', 'true');
 		i_prof.setAttribute('checked', 'false');
 		i_profol.setAttribute('checked', 'false');
@@ -2512,11 +2558,11 @@
 		var nuevoNombreUsuario = usuarios[csr[0]].nombre;	
 		var labelCliente = id("tCliente");
 		var smp = id("serieMProducto");
-		if(confirm(c_gpos + " TPV MPRODUCTOS \n"+
+		if(confirm(c_gpos + " TPV MIXPRODUCTOS \n"+
 			   "\n Cliente  : "+nuevoNombreUsuario+
 			   "\n\n MProducto(s) : \n" +t_prod+
 			   "\n                                    "+
-			   " Cargar MProducto(s) a la Cotización? ") ){
+			   " Cargar MProducto(s) al Pedido? ") ){
 		    //INSERTA CLIENTE
 		    UsuarioSeleccionado = csr[0]; 
 		    labelCliente.setAttribute("label", nuevoNombreUsuario );
@@ -2704,13 +2750,18 @@
 
 	    var cod = getCodigoSelectedTicket();
 	    if(cod == null) return;
-	    
+
+
 	    var xconcepto = prompt('gPOS:  MODIFICAR CONCEPTO    \n\n'+
 				   'Producto: ' + productos[cod].producto+'.\n\n',
-				   productos[cod].producto);
+				   trim( productos[cod].nombre+' '+
+					 productos[cod].marca+' '+
+					 productos[cod].color+' '+
+					 productos[cod].talla+' '+
+					 productos[cod].laboratorio ) );
 
-	    if( trim( xconcepto ) == '' ) return;
-	    
+	    if( trim( xconcepto ) == '' || !xconcepto ) return;
+
 	    //xconcepto = xconcepto.toUpperCase();
 	    ticket[cod].concepto = xconcepto;
 
@@ -2777,7 +2828,7 @@
 
 
  
-    var impuesto_normal = vIGV;//TODO: impuesto de subsidiarios
+    var impuesto_normal = Local.Impuesto;//TODO: impuesto de subsidiarios
     var arreglosprenda  = new Array();
 
     function agnadirLineaSubsidiario() {
@@ -3184,12 +3235,11 @@
 				    productos[cod].unidades,cod);
 
         cuantas = ( cuantas<0 )? prompt(po_cuantasunidades,0):parseInt(cuantas);
+	cuantas = parseInt(cuantas);//Control de Enteros
 
 	if (isNaN(cuantas)) return alert( c_gpos + 'Ingresar un valor numérico');
 	
         if (cuantas<0) return alert( c_gpos + 'Ingresar un valor numérico positivo.');
-
-	cuantas = parseInt(cuantas);//Control de Enteros	
 
         if (cuantas==0) return QuitarArticulo();
 
@@ -3500,13 +3550,13 @@
 	lPromocionSeleccionado = false;
     }
 
-    function ModificarPrecio() {
+    function ModificarPrecio(precio) {
         var ticketcodigo = getCodigoSelectedTicket();
         if (!ticketcodigo)	return;
         var ticprecio = id("tic_precio_"+ ticketcodigo);
         if (!ticprecio) return;
 
-        p = parseMoney(prompt("Nuevo precio?", ticprecio.value ));
+        p = (precio)? precio:parseMoney(prompt("Nuevo precio?", ticprecio.value ));
         if(p){
             ticprecio.setAttribute("value",formatDinero(p));	
             Blink("tic_precio_" + ticketcodigo, "label-precio" );
@@ -3514,7 +3564,56 @@
         }
     }
 
-    function ModificarDescuento(adm) {
+    function ModificarImporte() {
+        var ticketcodigo = getCodigoSelectedTicket();
+        if (!ticketcodigo)	return;
+        var ticimporte = id("tic_importe_"+ ticketcodigo);
+        if (!ticimporte) return;
+        var ticunid    = id("tic_unid_"+ ticketcodigo);
+
+	var oldimporte = parseFloat(ticimporte.value);
+	var cantidad   = parseFloat(ticunid.value);
+	var precioorig = (Local.TPV=='VC')? productos[ticketcodigo].pvc  : productos[ticketcodigo].pvd;
+	var importeorig= formatDinero(precioorig*cantidad);
+	var dscto      = '0';
+	var newprecio  = precioorig;
+
+        p = parseMoney(prompt("Nuevo importe?", ticimporte.value ));
+	if(!p) return;
+
+	if(parseMoney(oldimporte) == p) return;
+
+	if(parseMoney(importeorig) != p || parseMoney(oldimporte) != p){
+	    oldimporte = parseFloat(importeorig);
+	}
+
+	if(p > oldimporte){
+	    newprecio = parseFloat(p)/cantidad ;
+	}
+	else{
+	    dscto = parseFloat(oldimporte) - parseFloat(p);
+	    dscto = (parseFloat(dscto) == 0)? '0':parseFloat(dscto);
+	}
+
+	var newimport = formatDinero(newprecio)*cantidad;
+	newimport = Math.round(newimport*100)/100;
+
+	if(newimport < p){
+	    newprecio  = parseFloat(newprecio) + parseFloat(0.01);
+	    newimport  = parseFloat(formatDinero(newprecio))*cantidad;
+	    var xresto = newimport - p;
+	    dscto      = parseFloat(xresto);
+	}
+	if(newimport > p){
+	    var xresto = newimport - p;
+	    dscto      = parseFloat(xresto);
+	}
+
+	ModificarPrecio(newprecio);
+	ModificarDescuento(Local.esPrecios,dscto);
+    }
+
+    function ModificarDescuento(adm,dcto) {
 
 	var modo = id("rgModosTicket").value;
         var ticketcodigo = getCodigoSelectedTicket();
@@ -3527,7 +3626,7 @@
  	var precio     = (Local.TPV=='VC')? productos[ticketcodigo].pvc  : productos[ticketcodigo].pvd;
         var preciodcto = (Local.TPV=='VC')? productos[ticketcodigo].pvcd : productos[ticketcodigo].pvdd;
         var maxdes     = Math.round(parseFloat((precio - preciodcto)*cantidad)*100)/100;
-        var dscto      = prompt("Descuento máximo permitido: "+maxdes+" "+cMoneda[1]['TP'], 0);
+        var dscto      = (dcto)? dcto:prompt("Descuento máximo permitido: "+maxdes+" "+cMoneda[1]['TP'], 0);
 	var esDscto    = ( dscto < 0 || dscto > maxdes )? true:false;
 	var esAdmin    = ( modo!="pedidos" && adm=='0' )? true:false;
 
@@ -3715,7 +3814,7 @@
 	    syncProductosPostTicket();
 
 	    //PDF Codigo barras
-	    var url="modulos/fpdf/codigo.php?codigo="+IdMProducto;
+	    //var url="modulos/fpdf/codigo.php?codigo="+IdMProducto;
 
 	}
 	var xEstado = ( Estado == 'Ensamblaje' )? 'Arreglo':Estado;
@@ -3726,7 +3825,7 @@
 	      "Cliente     :  "+t_client+" \n"+	  
 	      "Producto  :  "+t_mprod+" \n"+	  
 	      "Estado     :  "+xEstado+" *** \n"+	  
-	      "N/S          :  "+resultado+" *** ");
+	      "Código          :  "+resultado+" *** ");
 
 	// Finaliza el proceso
 	CerrarPeticion();
@@ -3753,8 +3852,8 @@
 	    salvarMPparaPedido(srt_p);//IdUsuario~CBMP~IdProducto
 
 	//IMPRIME UN TICKET MPRODUCTO
-	if( Estado == 'Finalizado' )//Imprime Comprobante
-	    location.href=url;
+	//if( Estado == 'Finalizado' )//Imprime Comprobante
+	//    location.href=url;
     }
 
     function salvarMPparaPedido(srt){
@@ -3786,7 +3885,7 @@
 	    var p_stock  = id("prevt-stock");
 	    var r_pedid  = id("rPedido");
 	    var r_cesio  = id("rCesion");
-	    var l_pvpti  = id("pvpUnidadTicket");
+	    //var l_pvpti  = id("pvpUnidadTicket");
 
 	    //Default
 	    btimpr.setAttribute("collapsed", "false");  //Boton Imprimir
@@ -3796,8 +3895,8 @@
 	    btborr.setAttribute("oncommand", "BorrarVentaTPV()"); //Boton Guardar
 	    r_pedid.setAttribute("collapsed", "false");//Oculta Pedidos
 	    r_cesio.setAttribute("collapsed", "false");//Oculta Cesion
-	    s_bmprod.setAttribute("label","Elije MProducto...."); //Meta Producto
-	    l_pvpti.setAttribute("label","PV/U"); 
+	    s_bmprod.setAttribute("label","Elije MixProducto...."); //Meta Producto
+	    //l_pvpti.setAttribute("label","PV/U"); 
 	    //MetaProducto
 	    if( modo == "mproducto" ){
 		btimpr.setAttribute("collapsed", "true");  //Boton Imprimir
@@ -3806,7 +3905,7 @@
 		btborr.setAttribute("oncommand", "BorrarMProductoTPV()"); //Boton Borrar
 		r_pedid.setAttribute("collapsed", "true");//Oculta Pedidos
 		r_cesio.setAttribute("collapsed", "true");//Oculta Cesion
-		l_pvpti.setAttribute("label","Costo/U"); 
+		//l_pvpti.setAttribute("label","Costo/U"); 
 
 		//Muestra check stock
 		p_stock.setAttribute('checked', 'true');
@@ -3958,7 +4057,7 @@
          /*+++++++++++++ CADENAS +++++++++++++++++++++++++*/
          var c_gpos         = "gPOS: ";
          var c_stockalmacen = c_gpos+"STOCK ALMACÉN \n\n Producto: ";
-         var c_mproducto    = c_gpos+"TPV MPRODUCTO ";
+         var c_mproducto    = c_gpos+"TPV MIXPRODUCTO ";
          var c_preventa     = c_gpos+"TPV PREVENTA "
          var c_pedido       = c_gpos+"TPV PEDIDO "
 
@@ -3995,7 +4094,8 @@
              id(name).style.color='black';
 	     
              if (tipo=="listbox"){
-		 id(name).style.cssText = " -moz-binding: url(\"chrome://global/content/bindings/listbox.xml#listitem\");";	
+		 
+		 //id(name).style.cssText = " -moz-binding: url(\"chrome://global/content/bindings/listbox.xml#listitem\");";	
 		 blockUnidTicket(name);//solo para unidades en ticket
 	     }
              else
@@ -4020,15 +4120,16 @@
 	 }
 
          function Iluminate(name) {
-             id(name).style.backgroundColor='yellow';
-             id(name).style.color='black';
+             //id(name).style.backgroundColor=' yellow !important';
+             //id(name).style.color=' black !important ';
+	     id(name).style.cssText = "background-color:yellow!important; color:black!important; "
 	 }
 
          function Blink(name,tipo) {
              Iluminate(name);
 	     
              if (!tipo) tipo ="listbox";
-	     
+
              setTimeout("unIluminate('"+name+"','"+tipo+"') ",500);
 	 }
 
@@ -4156,28 +4257,49 @@
 
 
 	      Local.esPrecios            = ares[1];
+	      Local.esAdmin              = ( ares[1] == 1)? true:false;
 	      Local.esCajaTPV            = ares[2];
 	      Local.esB2B                = ares[3];
 	      Local.esServicios          = ares[4];
 	      Local.esSuscripcion        = ares[5];
 	      Local.esSAT                = ares[6];
+	      Local.esStock              = ares[6];
 	      
-	      if( Local.esPrecios == 1 ) id("ticketModificarPrecio").removeAttribute("disabled");
-	      if( Local.esPrecios == 0 ) id("ticketModificarPrecio").setAttribute("disabled",true);
+	      updatexAtt("ticketModificarPrecio",Local.esPrecios);
+	      updatexAtt("ckCodigoAutorizacionCliente",Local.esPrecios);	      
+	      updatexAtt("ckCodigoAutorizacion",Local.esPrecios);	      
+	      updatexAtt("VentaRealizadaDevolver",Local.esStock);
+	      updatexAtt("VerCajaButton",Local.esCajaTPV);
+	      updatexAtt("modoDcumentoSoloCaja",Local.esCajaTPV);
+	      updatexAtt("depTipoVentaVC",Local.esB2B);
 
-	      if( Local.esCajaTPV == 1 ) id("VerCajaButton").removeAttribute("disabled");
-	      if( Local.esCajaTPV == 0 ) id("VerCajaButton").setAttribute("disabled",true);
-
-	      if( Local.esServicios == 1 ) id("VerServiciosButton").removeAttribute("disabled");
-	      if( Local.esServicios == 0 ) id("VerServiciosButton").setAttribute("disabled",true);
+	      if( Local.esB2B == 0 )
+		  if(Local.TPV == 'VC')
+		      cambiarTipoVenta( id("depTipoVentaVD") );
+	      
+	      updatexAtt("VerServiciosButton",Local.esServicios );
+	      updatexAtt("cargarSuscripcion",Local.esSuscripcion );
+	      
+	      updatexAtt("btnOrdenServicio",Local.esSAT );
+	      updatexAtt("btnOrdenServicioDet",Local.esSAT );
+	      updatexAtt("itemEditarOrdenServicio",Local.esSAT );
+	      updatexAtt("itemEditarOrdenServicioDet",Local.esSAT );
+	      updatexAtt("itemAgregarServicio",Local.esSAT );
+	      updatexAtt("itemAgregarProducto",Local.esSAT );
+	      updatexAtt("itemQuitarProducto",Local.esSAT );
+	      updatexAtt("itemClonarServicio",Local.esSAT );
 
 	      id("ticketModificarDescuento").setAttribute("oncommand",
-							  "ModificarDescuento("+ares[1]+")");
+							  "ModificarDescuento("+ares[1]+",false)");
 	      //cambio usuario: mantiene usuario
 	      xdato = ( res[0] == 1 )? 1:2;  
 	      actualizaUsuarioTPV(xdato,xuser);
 	  }
 
+           function updatexAtt(xid,xstatus){
+	       if( xstatus == 1 ) id( xid ).removeAttribute("disabled");
+	       if( xstatus == 0 ) id( xid ).setAttribute("disabled",true);
+           }
 
 
           function actualizaUsuarioTPV(xdato,xuser){
@@ -4227,6 +4349,8 @@
               id("modoVisual").setAttribute("selectedIndex",0);
               id("fichaProducto").setAttribute("src","about:blank");
 
+	      //Actualiza lista productos 
+	      resizelistboxticket(true);
 	  }
 
 
@@ -4243,7 +4367,7 @@
 
               var cod = getCodigoSelectedProd();
               var fichaProducto = id("fichaProducto");
-	      id("fichaProductoNombre").setAttribute("label",CargarDescripcionFichaProducto(cod));
+	      id("fichaProductoNombre").setAttribute("label",productos[cod].producto);
               id("modoVisual").setAttribute("selectedIndex",code);
 
               var url = "simplecruzado.json.php?CodigoBarras=" + cod;
@@ -4253,6 +4377,7 @@
 		  Meca.generaCruzadoProductos( "fichaProducto", obj );	
               }
               esFichaVisible = code;
+	      resizelistboxticket(false);
 	  }
 
 
@@ -4483,7 +4608,7 @@
         function habilitarAddMProducto(){
 	    var modo = id("rgModosTicket").value;
 	    if( modo == "mproducto" && IdMProducto == 0 ){
-		alert( c_mproducto + "\n  - Elije un MProducto, para seguir.");
+		alert( c_mproducto + "\n  - Elije un MixProducto, para seguir.");
 		return true;
 	    }
 	}
@@ -4574,27 +4699,41 @@
 	}
 
         function VolverVentas(){	
-	    id("modoVisual").setAttribute("selectedIndex",Vistas.ventas);	
+	    id("modoVisual").setAttribute("selectedIndex",Vistas.ventas);
+	    id("boxComprobantesVenta").setAttribute("collapsed",true);
+	    id("checkReservaEntregago").checked = false;
+	    id("modoDeAbonoTicket").value = 1;
+	    VerFechaReservaEntregado(true);
+	    VerVentas();
 	}
 
         function VerVentas(){
 
 	    id("FechaBuscaVentas").value =id("FechaBuscaVentas").value;
 	    id("FechaBuscaVentasHasta").value = id("FechaBuscaVentasHasta").value;	
-	    id("panelDerecho").setAttribute("collapsed","true");
+	    id("panelDerecho").setAttribute("collapsed",true);
+	    id("boxComprobantesVenta").setAttribute("collapsed",false);
 	    id("modoVisual").setAttribute("selectedIndex",Vistas.ventas);	
 	    setTimeout('BuscarVentas()',400);
+	    if(ientidadfinanciera == 0) RegenCuentasBancarias();
 	    id("NombreClienteBusqueda").focus();
+	    resizelistboxticket(false); 
 	}
 
         function VerCaja(){
+
+	    if( !Local.esCajaTPV) return;
 	    
 	    id("panelDerecho").setAttribute("collapsed","true");
 	    id("modoVisual").setAttribute("selectedIndex",Vistas.caja);	
-
+	    frameArqueo.RegenPartidas('Aportacion');
+	    frameArqueo.RegenPartidas('Sustraccion');
+	    frameArqueo.RegenPartidas('Ingreso');
+	    frameArqueo.RegenPartidas('Gasto');
 	    //Sync
 	    if( Local.esSyncCaja )
 		setTimeout("runsyncTPV('Caja')",800);
+	    resizelistboxticket(false);
 	}
 
         function reloadCaja(){
@@ -4613,6 +4752,7 @@
         function VerListados(){
             id("panelDerecho").setAttribute("collapsed","true");
             id("modoVisual").setAttribute("selectedIndex",9);	
+	    resizelistboxticket(false);
 	}
 
         function esCajaCerrada(){
@@ -4633,23 +4773,33 @@
 	}
 
         function VerTPV(){
- 	    id("panelDerecho").setAttribute("collapsed","false");
+ 	    id("panelDerecho").setAttribute("collapsed",false);
+	    id("boxComprobantesVenta").setAttribute("collapsed",true);
+	    id("boxServicios").setAttribute("collapsed",true);	    
 	    id("modoVisual").setAttribute("selectedIndex",Vistas.tpv);	
 	    id("NOM").focus();
+
+	    //Actualiza lista productos 
+	    resizelistboxticket(true);
 	}
 
-
-        function CBFocus(){
-	    id("CB").focus();
+        function resizelistboxticket( xw ){
+	    var xvwlist = ( xw )? 1:0;
+	    id("listadoTicket").setAttribute("flex",xvwlist);
+	    id("listaProductos").setAttribute("flex",xvwlist);
+	    id("clientPickArea").setAttribute("flex",xvwlist);
+	    resizelistboxcliente( false );
+	}
+        function resizelistboxcliente( xw ){
+	    var xvwlist = ( xw )? 1:0;
+	    id("clientPickArea").setAttribute("flex",xvwlist);
 	}
 
-        function SalirNice(){
-	    window.document.location.href="logout.php";
-	}
+        function CBFocus(){ id("CB").focus(); }
 
-        function SalirTPV(){
-	    window.close();
-	}
+        function SalirNice(){ parent.window.document.location.href="logout.php"; }
+
+        function SalirTPV(){ window.close(); }
 
          function BotonCancelarVenta(){
 	     habilitarControles(); 
@@ -4677,6 +4827,7 @@
 		    id("CancelarMensajePrivado").setAttribute('collapsed',true);
  		    id("adelantoProformabox").setAttribute('collapsed',false);
 		    id("filaFechaEntregaProforma").setAttribute('collapsed',false);
+		    id("ventasButton").setAttribute('collapsed',true);
 		    id("vigenciaProformabox").setAttribute('collapsed',false);
 		    id("btnEscribirMensajes").setAttribute('label',' Observaciones');
 		    id("tituloVisualMensaje").setAttribute('label','Observaciones:');
@@ -4701,35 +4852,32 @@
 		id("vboxserieMProducto").setAttribute('collapsed',true);
  		id("adelantoProformabox").setAttribute('collapsed',true);
 		id("filaFechaEntregaProforma").setAttribute('collapsed',true);
+		id("ventasButton").setAttribute('collapsed',false);
 		id("vigenciaProformabox").setAttribute('collapsed',true);
 		id("btnEscribirMensajes").setAttribute('label',' Escribir mensaje');
 		id("tituloVisualMensaje").setAttribute('label','Mensaje');
 		id("tituloNuevoMensaje").setAttribute('collapsed',false);
 		break;
 	    }
-	    
 	}
 
 
         function AjustarEtiquetaModo(){
 	    var extatus = id("rgModosTicket").value;	
-	    var MODOP   = "EFECTIVO";
-	    var VMODOP  = vEFECTIVO;
 	    var r_mprod = id("rMProducto");
 	    var r_pedid = id("rPedido");
 	    var r_cesio = id("rCesion");
-
 
 	    habilitarMensajePrivado();
 
 	    switch (extatus) {
             case 'venta':		
-		id("etiquetaTicket").setAttribute("label",  po_txtTicketVenta  );		
+		id("etiquetaTicket").setAttribute("label",  po_txtTicketVenta  );
 		ModoDeTicket = "venta";
 		habilitarControles();
 		break;
             case 'cesion': 		
-		id("etiquetaTicket").setAttribute("label", po_txtTicketCesion );		
+		id("etiquetaTicket").setAttribute("label", po_txtTicketCesion );
 		r_pedid.setAttribute("collapsed", "true");//Oculta Pedidos
 		r_mprod.setAttribute("collapsed", "true");//Oculta Mproductos
 		ModoDeTicket = "cesion";
@@ -4742,9 +4890,12 @@
 		ModoDeTicket = "pedidos";
 		habilitarControles();
 		habilitarMensajePrivado('pedidos');
+		id("fechaEntregaProforma").value = calcularFechaActual('fecha');
+		id("horaEntregaProforma").value = calcularFechaActual('hora');
+		cFechaProforma = id("fechaEntregaProforma").value+" "+id("horaEntregaProforma").value;
 		break;
             case 'mproducto': 		
-		id("etiquetaTicket").setAttribute("label", po_txtTicketMProducto );		
+		id("etiquetaTicket").setAttribute("label", po_txtTicketMProducto );
 		ModoDeTicket = "mproducto";
 		habilitarControles();
 		break;
@@ -4755,10 +4906,7 @@
 		break;
 	    }
 
-
-	    id("modoDePagoTicket").setAttribute("label", MODOP);//no le gusta a F15
-
-	    id("modoDePagoTicket").value = VMODOP;
+	    id("modoDePagoTicket").value = 1;
 
 	}
 
@@ -4977,10 +5125,11 @@
                 resultado = false;	
             }
 
-            if ( resultado == "OK" ){
-		if( modo != "pedidos" )
-                    alert( c_gpos + po_mensajeenviado);
-	    }
+	    //if( modo != "pedidos" )
+            //alert( c_gpos + po_mensajeenviado);
+
+            if ( resultado == "OK" )
+		setTimeout("syncMensajes()",600);//Mensajes
             else 
                 alert( c_gpos + po_servidorocupado);
 
@@ -4999,6 +5148,11 @@
 	    var p_enfecha  = id("fechaEntregaProforma").value;
 	    var p_enhora   = id("horaEntregaProforma").value;
 	    var res = p_enfecha.split("-");
+
+	    if(cFechaProforma >= p_enfecha+" "+p_enhora){
+		res = calcularFechaActual('fecha').split("-");
+		p_enhora = calcularFechaActual('hora');
+	    }
 
 	    p_enfecha = res[2]+'/'+res[1]+'/'+res[0];
 
@@ -5019,7 +5173,7 @@
 	    }
 
 	    //Adelanto	
-	    if( p_adelanto > 0)
+	    if( parseFloat(p_adelanto) > 0)
 	    {
 		var ad_mensaje = '\n- Adelanto: '+p_adelanto+' '+cMoneda[1]['TP'];
 		m_envia = 1;
@@ -5033,7 +5187,7 @@
 	    }
 
 	    //Vigencia
-	    if( p_vigencia > 0)
+	    if( parseInt(p_vigencia) > 0)
 	    {
 		var vi_mensaje = '\n- Vigencia: '+p_vigencia+' día(s)';
 		m_envia = 1;
@@ -5046,15 +5200,12 @@
 		m_envia = 1;
 	    }
 
-	    //Fecha entrega
-	    if( p_enfecha != '' && m_envia )
-	    {
-		var ef_mensaje = '\n- Fecha Entrega: '+p_enfecha+' '+p_enhora;
-	    }
-
 	    //VALIDA ENVIO MENSAJE	
 	    if( m_envia == 1 )
 	    {
+		//Fecha entrega
+		var ef_mensaje = '\n- Fecha Entrega: '+p_enfecha+' '+p_enhora;
+
  		//EL MENSAJE
 		var all_mensaje = mp_mensaje+''+
 		    ad_mensaje+''+
@@ -5072,13 +5223,13 @@
 		EnviarMensajePrivado();
 
 		//Limpia TextBox
-		id("cuerpoNuevoMensaje").value='';
+		id("cuerpoNuevoMensaje").value='-';
 		id("serieMProducto").value='';
- 		id("adelantoProforma").value='';
+ 		id("adelantoProforma").value='0';
 		id("lugarEntregaProforma").value='';
 		//id("fechaEntregaProforma").value='0000-00-00';
 		//id("horaEntregaProforma").value='00:00:00';
-		id("vigenciaProforma").value='';
+		id("vigenciaProforma").value='0';
  		//EL MENSAJE
 		return all_mensaje;
 	    } 
@@ -5086,7 +5237,67 @@
 		return 0;
 	}
 
-  
+        /*++++++++++++++++++ Tipo Venta Dependiente ++++++++++++++++++*/ 
+
+        function cambiarTipoVenta(xthis){
+	    
+	    if( Local.TPV == xthis.value ) return;
+
+	    var xtv;
+	    switch(xthis.value){
+	    case 'VC': xtv = "rc";break;
+	    case 'VD': xtv = "rd";break;
+	    default: return;
+	    }
+
+	    if( !setTipoVentaDependiente(xtv) ) {
+		id("depTipoVentaVC").setAttribute("checked", (xthis.value == 'VD'));
+		id("depTipoVentaVD").setAttribute("checked", (xthis.value == 'VC'));
+		return;
+	    }
+	    Local.TPV = xthis.value;
+	    id('depTipoVenta').setAttribute('label',xthis.label);
+	    id("depTipoVentaVC").setAttribute("checked", (xthis.value == 'VC'));
+	    id("depTipoVentaVD").setAttribute("checked", (xthis.value == 'VD'));
+	    //Actualizar Titulo TPV
+	    id("window-tpv").setAttribute('title','gPOS '+Local.NegocioTipoVenta+' // '+xthis.label);
+	    //mostrarMensajeTPV(1,'Cargando cambios de '+trim(xthis.label)+'...',2200);
+
+	    //Limpia TPV
+	    selTipoPresupuesto(0);
+	    VerTPV();    
+	    //Recargar Preventa,Clientes,Promociones,Mensajes
+	    syncTipoVentaTPV();
+	    //Muestra mensaje en TPV
+	} 
+
+        function setTipoVentaDependiente(xvalue){
+
+ 	    //Check Conecction
+	    if(syncCheckConnection()) return false;
+
+	    var xres,url,prod,xjsOut,z;
+	    z   = null;	    
+	    
+	    url = 
+		"services.php?"+
+		"modo=setTipoVentaDependiente&"+
+		"xtipoventa="+xvalue;
+	    AjaxDemon.open("POST",url,false);
+	    AjaxDemon.setRequestHeader('Content-Type',
+				       'application/x-www-form-urlencoded; charset=UTF-8');
+	    try {
+		AjaxDemon.send(null);
+	    } catch(z){
+		return false;
+	    }
+
+            xjsOut  = AjaxDemon.responseText;
+	    //alert(xjsOut);
+	    if( trim(xjsOut) == xvalue ) return true;
+	    return false;//OK, detiene el proceso.
+	}
+
         /*++++++++++++++++++ Local Dependiente +++++++++++++++++++++*/
 
         function cambiaLocalDependiente(dlocal){
@@ -5432,12 +5643,33 @@ function convertirNumLetras(number){
             pool.select(codigobarras);
 
  	    var precio      = ( Local.TPV=='VC'    )? pool.get().pvc:pool.get().pvd;
- 	    var pool_precio = ( modo == "mproducto")? pool.get().costo : precio;
+ 	    var pool_precio = ( modo == "mproducto")? obtenerPrecioBaseMProducto( pool.get().costo ) : precio;
 
             this.Compra( codigobarras, pool.get().nombre, pool.get().referencia, pool_precio,
 			 pool.get().impuesto,unidades,pool.get().talla, pool.get().color, 
 			 pool.get().descuento,0);
 
+            //RecalculoTotal();***
+            return true;
+	}
+
+        tpv.AddCarritoMayoreo = function (codigobarras,unidades) 
+        {
+	    
+  	    var modo   = id("rgModosTicket").value;//MProducto
+
+            if (!pool.Existe(codigobarras)) return false;
+
+            setImagenProducto(codigobarras);
+
+            pool.select(codigobarras);
+
+ 	    var precio      =  pool.get().pvc;
+ 	    var pool_precio =  (modo == "mproducto")? obtenerPrecioBaseMProducto( pool.get().costo ) : precio;
+
+            this.Compra( codigobarras, pool.get().nombre, pool.get().referencia, pool_precio,
+			 pool.get().impuesto,unidades,pool.get().talla, pool.get().color, 
+			 pool.get().descuento,0);
             //RecalculoTotal();***
             return true;
 	}
@@ -5700,7 +5932,6 @@ function convertirNumLetras(number){
 	    }
 	    id("gridListarTPV").setAttribute('image','img/'+ximage);
 	    cListaProductos = xlista; 
-
 	    agnadirPorNombre();
 	}
 
@@ -5716,7 +5947,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 		    return;
 
 	    var modo       = id("rgModosTicket").value;//Mproducto
-	    var vprecio    = ( modo == "mproducto")? costo:precio;
+            var vprecio    = ( modo == "mproducto")? obtenerPrecioBaseMProducto(costo):precio;
 
             prodlist_cb[codigo] = 1;
 
@@ -5735,6 +5966,9 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	    var xmenudeo  = ( menudeo )? xcant+''+cont+'+'+xresto+''+xcont+' ' : false;
 	    var vdetalle  = '';
 
+            //Producto
+            var xnombreproducto = (parseInt(xnombre.length) >80)? xnombre.slice(0,81)+ '...':xnombre;
+
 	    switch(condventa){
 	    case 'CRM' : condventa = "C/RM.";	break;
 	    case 'CRMR': condventa = "C/RMR."; break;
@@ -5742,7 +5976,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	    }
 	    
 
-	    vdetalle  = ( mproducto )? '**MPRODUCTO** ' : vdetalle;
+	    vdetalle  = ( mproducto )? '**MIXPRODUCTO** ' : vdetalle;
 	    vdetalle  = ( oferta    )? '**OFERTA '+ofertaunid+''+unid+' c/u '+formatDinero(pvo)+'** '+vdetalle : vdetalle;
 	    vdetalle  = ( menudeo   )? vdetalle+xmenudeo : vdetalle;
 	    vdetalle  = ( ilimitado )? vdetalle+'**STOCK ILIMITADO** ' : vdetalle;
@@ -5759,10 +5993,8 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
             xref.setAttribute("id","ref_"+codigo);
 
             var xdescripcion = document.createElement("label");
-            //xdescripcion.setAttribute("value",xnombre);
-            xdescripcion.setAttribute("value",( xnombre.length > 80 )? xnombre.slice(0,81)+ '...':xnombre );
-            //if( xnombre.length > 70 ) xdescripcion.setAttribute("tooltiptext",xnombre);
 
+            xdescripcion.setAttribute("value",xnombreproducto);
             xdescripcion.setAttribute("id","descripcion_"+codigo);
 
             var xmarca = document.createElement("label");
@@ -5824,14 +6056,14 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 					     oferta,ofertaunid,pvo,condventa,
 					     mproducto){
 
-	    var modo         = id("rgModosTicket").value;//Mproducto
-	    var vprecio      = ( modo == "mproducto")? costo:precio;
-            var xref         = id("ref_"+codigo);
-            var xdescripcion = id("descripcion_"+codigo);
-            var xexistencias = id("stock_"+codigo);
-            var xprecio      = id("precio_"+codigo);
-            var xdetalle     = id("detalle_"+codigo);
-
+	    var modo            = id("rgModosTicket").value;//Mproducto
+	    var vprecio         = ( modo == "mproducto")? obtenerPrecioBaseMProducto(costo):precio;
+            var xref            = id("ref_"+codigo);
+            var xdescripcion    = id("descripcion_"+codigo);
+            var xexistencias    = id("stock_"+codigo);
+            var xprecio         = id("precio_"+codigo);
+            var xdetalle        = id("detalle_"+codigo);
+            var xnombreproducto = (parseInt(producto.length)>80)? producto.slice(0,81)+ '...':producto;
 	    //Detalle
 	    var xvence = ( vence )? vence[0].split(":") :false;
 	    var xlote  = ( lote  )? lote[0].split(":")  :false;
@@ -5851,7 +6083,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	    default    : condventa = false;
 	    }
 
-	    vdetalle  = ( mproducto )? '**MPRODUCTO** ' : vdetalle;
+	    vdetalle  = ( mproducto )? '**MIXPRODUCTO** ' : vdetalle;
 	    vdetalle  = ( oferta    )? '**OFERTA '+ofertaunid+''+unid+' c/u '+formatDinero(pvo)+'** '+vdetalle : vdetalle;
 	    vdetalle  = ( menudeo   )? vdetalle+xmenudeo      : vdetalle;
 	    vdetalle  = ( ilimitado )? vdetalle+'**STOCK ILIMITADO** ' : vdetalle;
@@ -5862,7 +6094,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	    vdetalle  = ( condventa )? vdetalle+' '+condventa : vdetalle;
 
 	    xref.setAttribute("value",referencia);
-	    xdescripcion.setAttribute("value",producto);
+	    xdescripcion.setAttribute("value", xnombreproducto);
 	    xexistencias.setAttribute("value",unidades+' '+unid );
 	    xprecio.setAttribute("value",formatDinero(vprecio));	
 	    xdetalle.setAttribute("style",cssdetalle);	
@@ -5934,7 +6166,8 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 		}	
             } catch(e){	
 		return endRunDemonTPV();
-            }		
+            }
+	    buscarCliente();
 	    endRunDemonTPV();
 	}
 
@@ -6024,7 +6257,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
         function getProductosTPV(){
 
 	    esSyncBoton('on');//Boton Sync
-	    mostrarMensajeTPV(1,'Cargando '+Local.productos+' productos...',2000);
+	    mostrarMensajeTPV(1,'Cargando productos...',2000);
 
  	    //Check Conecction
 	    var xres,url,prod,xjsOut,z;
@@ -6490,6 +6723,24 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	    }
 	}
 
+        function soloNumerosTelefono(e){
+	    key = e.keyCode || e.which;
+	    tecla = String.fromCharCode(key).toLowerCase();
+	    letras = "0123456789#* ";
+	    especiales = [8, 13, 9, 39, 46];
+	    tecla_especial = false
+	    for(var i in especiales){
+		if(key == especiales[i]){
+		    tecla_especial = true;
+		    break;
+		}
+	    }
+    
+	    if(letras.indexOf(tecla)==-1 && !tecla_especial){
+		return false;
+	    }
+	}
+
         /*++++++++++++++++++++++++ SERIE ++++++++++++++++++++++++++*/
 
         function quitaSeriesTicket(xcod,delSeries){
@@ -6617,7 +6868,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
        //setTimeout("cargarDatosInicio()",1000);//DATOS
 
        //Inicia demonios
-       setTimeout("Demon_syncTPV()",29999);//MENSAJES
+       //setTimeout("Demon_syncTPV()",29999);//MENSAJES
 
        function cargarDatosInicio(){
 	   getMProductos();   //METAPRODUCTOS
@@ -6625,6 +6876,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	   getPreventas();    //PEDIDOS
 	   getClientesTPV();  //CLIENTES
 	   getProductosTPV(); //PRODUCTOS
+	   setTimeout("Demon_syncTPV()",29999);//MENSAJES
        }
 
        function esValidaFechaTPV(day,month,year){
@@ -6688,13 +6940,13 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
     /*+++++++++++++++++ Clientes  ++++++++++++++++*/
 
     // Agnadir Cliente Contado     
-    aU( "Cliente Contado",1,0,'',0,0,'Interno','','','','Cliente Contado','','');
+    aU( "Cliente Contado",1,0,'',0,0,0,'Interno','','','','Cliente Contado','','');
 
     // Agnadir Otros Clientes
-    function aU(nombre,idcliente,debe,ruc,bono,promo,tipo,telf,email,dir,legal,naci,obs) {
+    function aU(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf,email,dir,legal,naci,obs) {
 	
 	if( usuarios[idcliente] )
-	    return saU(nombre,idcliente,debe,ruc,bono,promo,tipo,telf,email,dir,legal,naci,obs);
+	    return saU(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf,email,dir,legal,naci,obs);
 
         idusuarios.push(idcliente);
         usuarios[idcliente] = new Object();
@@ -6703,6 +6955,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
         usuarios[idcliente].id     = idcliente;	
         usuarios[idcliente].debe   = debe;	
         usuarios[idcliente].bono   = bono;	
+        usuarios[idcliente].credito = credito;	
         usuarios[idcliente].promo  = promo;	
         usuarios[idcliente].tipo   = tipo;	
         usuarios[idcliente].telf   = telf;
@@ -6712,15 +6965,16 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
         usuarios[idcliente].obs    = obs;
         usuarios[idcliente].naci   = naci;
 
-        addXUser(nombre,idcliente,debe,ruc,bono,promo,tipo);
+        addXUser(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf);
     }
 
-    function saU(nombre,idcliente,debe,ruc,bono,promo,tipo,telf,email,dir,legal,naci,obs) {
+    function saU(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf,email,dir,legal,naci,obs) {
 
         usuarios[idcliente].nombre = nombre;
         usuarios[idcliente].ruc    = ruc;
 	usuarios[idcliente].debe   = debe;
         usuarios[idcliente].bono   = bono;	
+        usuarios[idcliente].credito = credito;	
         usuarios[idcliente].promo  = promo;	
         usuarios[idcliente].tipo   = tipo;	
         usuarios[idcliente].telf   = telf;
@@ -6732,7 +6986,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
         //Lista...
         if(!id("user_picker_"+idcliente))
-            return addXUser(nombre,idcliente,debe,ruc,bono,promo,tipo);
+            return addXUser(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf);
 
         //Actualiza...
     	var xdebe = (debe>0)? cMoneda[1]['S']+" "+formatDinero(debe):"";
@@ -6751,6 +7005,8 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	//Sync
 	if( Local.esSyncClientes ) 
 	    setTimeout("runsyncTPV('Clientes')",800);
+
+	resizelistboxcliente( true );
     }
 
     function ToggleListadoUsuariosForm() {
@@ -6770,9 +7026,9 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
     var preSeleccionadoCliente = false;
 
    function SeleccionaCliente(idcliente,xthis){
-       
-       id("buscaClienteSelect").value = idcliente;
        preSeleccionadoCliente = idcliente;
+       id("buscaClienteSelect").value = preSeleccionadoCliente;
+       id("tab-suscripcion").setAttribute("collapsed",true); 
        id("tab-vistacliente").setAttribute("collapsed",true);
    }
 
@@ -6921,7 +7177,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
     }
 
     //INFO: agnade un usuario al listado de usuarios
-    function addXUser(nombreUser,iduser,debe,ruc,bono,promo,tipo){
+function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 
         var xroot    = id("clientPickArea");
         var xclient  =  document.createElement("listitem");
@@ -6929,11 +7185,15 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
         var xdebe    = document.createElement("listcell");
         var xicon    = document.createElement("listcell");
         var xbono    = document.createElement("listcell");
+	var xcredito = document.createElement("listcell");
         var xpromo   = document.createElement("listcell");
+	var xtelefono= document.createElement("listcell");
         var xnf      = document.createElement("listcell");
 	var txtdebe  = (debe)? cMoneda[1]['S']+" "+formatDinero(debe):"";
 	var txtbono  = (bono)? cMoneda[1]['S']+" "+formatDinero(bono):"";
+	var txtcredito  = (credito)? cMoneda[1]['S']+" "+formatDinero(credito):"";
 	var txtpromo = ( promo != '0' )? gettxtPromocion( promo ):"";
+	var txttelefono = telf;
 	var imgico   = 'gpos_clienteparticular.png';
 	imgico = (tipo == 'Empresa')? 'gpos_clienteempresa.png':imgico;
 	imgico = (tipo == 'Interno')? 'gpos_tpv_clientecontado.png':imgico;
@@ -6959,9 +7219,13 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
         xicon.setAttribute("class","listitem-iconic");
         xicon.setAttribute("image","img/"+imgico);
         xicon.setAttribute("id","user_picker_tipo_"+iduser);
-        xbono.setAttribute("label",txtbono);	
 
-        xpromo.setAttribute("label",txtpromo);	
+        xbono.setAttribute("label",txtbono);
+
+	xcredito.setAttribute("label",txtcredito);	
+
+        xpromo.setAttribute("label",txtpromo);
+	xtelefono.setAttribute("label",txttelefono);
 
         xclient.setAttribute("id","user_picker_"+iduser);
         xclient.setAttribute("ondblclick","pickClient("+iduser+",this)");	
@@ -6973,7 +7237,9 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
         xclient.appendChild( xnombre );
         xclient.appendChild( xdebe );
         xclient.appendChild( xbono );
+	xclient.appendChild( xcredito );
         xclient.appendChild( xpromo );
+	xclient.appendChild( xtelefono );
         xroot.appendChild( xclient);	
     }
     
@@ -7008,8 +7274,10 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 			 usuarios[idcliente].debe, 
 			 usuarios[idcliente].ruc, 
 			 usuarios[idcliente].bono, 
+			 usuarios[idcliente].credito, 
 			 usuarios[idcliente].promo,
-			 usuarios[idcliente].tipo);
+			 usuarios[idcliente].tipo,
+			 usuarios[idcliente].telf);
 	    }
         }else{
 
@@ -7035,8 +7303,10 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 			     usuarios[idcliente].debe, 
 			     usuarios[idcliente].ruc, 
 			     usuarios[idcliente].bono, 
+			     usuarios[idcliente].credito, 
 			     usuarios[idcliente].promo,
-			     usuarios[idcliente].tipo);
+			     usuarios[idcliente].tipo,
+			     usuarios[idcliente].telf);
 
 
 		    xcliente = ( theList.itemCount == 1 )? usuarios[idcliente].id:0;
@@ -7126,7 +7396,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	if(vlDireccion=='')
 	    xvalmsj += '\n       - Direccion';
 */
-	if( esNumeroFiscal )
+	if( esNumeroFiscal && esCorporativo )
 	    xvalmsj +=' \n       - '+txtNumeroFical;
 
 	if(xvalmsj)
@@ -7167,7 +7437,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	if(vlDireccion=='')
 	    xvalmsj += '\n        - Direccion';
 */
-	if( esNumeroFiscal )
+	if( esNumeroFiscal && esCorporativo )
 	    xvalmsj +=' \n       - '+txtNumeroFical;
 
 	if(xvalmsj)
@@ -7235,7 +7505,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
                 aU(decodeURIComponent(nombrecliente),
 		   parseInt(idCliente), 
-		   0,ruc,0,0,
+		   0,ruc,0,0,0,
 		   tipo,
 		   getDatoCliente(modificar,"Telefono1"),
 		   decodeURIComponent(getDatoCliente(modificar,"Email")),
@@ -7294,6 +7564,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
         cargarClienteId();
 
+	id("tab-suscripcion").setAttribute("collapsed",true); 
 	id("tab-vistacliente").setAttribute("collapsed",false);
 	id("tab-vistacliente").setAttribute("label", "Cliente: "+ id("visNombreComercial").value);
 	id("tab-vistacliente").setAttribute("selected",true);
@@ -7453,18 +7724,26 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	    case 'visNumeroFiscal':		 
 		xthis.value  =  validanifCliente(xthis.value,extranif);
 
-		if(!xthis.value ) return;
+		//if(!xthis.value ) return;
+		var xid = "";
+		if(usuarios[preSeleccionadoCliente])
+		    xid = usuarios[preSeleccionadoCliente].ruc;
+
+		if(xid && !xthis.value){
+		    id("visNumeroFiscal").value = xid;
+		    return;
+		}
 
 		for(var i=0;i<idusuarios.length;i++)
 		{
                     var idcliente = idusuarios[i];
 		    if( parseInt( usuarios[idcliente].ruc ) == parseInt( xthis.value ))
 		    {
-			if( extranif == '') LimpiarClienteForm();
+			if( extranif == '') id("NumeroFiscal").value = "";//LimpiarClienteForm();
 			return alert( c_gpos + '\n - El cliente '+
 				      usuarios[idcliente].nombre+
-				      ' esta registrado.\n'+
-				      ' - Busquelo por su Registro Fiscal: '+
+				      ' está registrado.\n'+
+				      ' - Búsquelo por su Registro Fiscal: '+
 				      usuarios[idcliente].ruc );
 		    }
 		}
@@ -7495,7 +7774,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	id("NumeroDocumento").readonly="false";
 
 	AjustarEtiquetaModo();
-	CancelarVenta(MANTENER_MODO);
+	//CancelarVenta(MANTENER_MODO);
 	TicketAjusta();
 
 	//Presupuestos
@@ -7559,8 +7838,26 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	var cr         = "\n";
 	var color      ="black";
 	var pendiente  = 0;
+	var abonopendiente = 0;
 	var xentrega   = id("peticionEntrega");
 	//xentrega.value = (trim( xentrega.value ) == '')? 0:xentrega.value;
+	var xpago = id("modoDePagoTicket").value;
+
+	//Bono
+	if(xpago == 10){
+	    if(xentrega.value > usuarios[UsuarioSeleccionado].bono)
+		xentrega.value = usuarios[UsuarioSeleccionado].bono;
+	}
+	//Credito
+	if(xpago == 9){
+	    if(xentrega.value > usuarios[UsuarioSeleccionado].credito)
+		xentrega.value = usuarios[UsuarioSeleccionado].credito;
+	}
+	
+	if(id("peticionBono")){
+	    if(id("peticionBono").value > usuarios[UsuarioSeleccionado].bono)
+		id("peticionBono").value = usuarios[UsuarioSeleccionado].bono;
+	}
 
 	if(!modoMultipago){
             var entrega = parseFloat(CleanMoney(xentrega.value));
@@ -7572,12 +7869,27 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	}
 
 	pendiente = parseFloat(entrega) - parseFloat( formatDinero(Global.totalbase) );
+	abonopendiente = parseFloat( Global.totalbase ) - parseFloat( entrega );
         color     = ( parseInt(pendiente*100) >=0.01)? "green":"red";
         //pendiente = ( parseInt(pendiente*100) >=0.01)? pendiente:'0.00'; 
-
+	
         id("peticionPendiente").setAttribute("label", formatDinero(pendiente));
 	id("peticionPendiente").style.color = color;
+	Local.AbonoClientePendiente = ( entrega < Global.totalbase )? abonopendiente:0;
     } 
+
+    function validarPagoCliente(){
+	var xpago  = id("modoDePagoTicket").value;
+	var xmonto = 0;
+
+	switch(xpago){
+	    case '10' : xmonto = usuarios[UsuarioSeleccionado].bono;    break;
+	    case '9'  : xmonto = usuarios[UsuarioSeleccionado].credito; break;
+	}
+
+	id("peticionEntrega").value = parseFloat(xmonto);
+	ActualizaPeticion();
+    }
 
     function AbrirPeticion(xval){
 
@@ -7590,6 +7902,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	var base      = formatDinero( Global.totalbase );	
 	var entregado = base;
 	var pendiente = "0.00";
+	var tcliente  = id("tCliente").label;
 
 	if( p_stock != "true" && IdPresupuesto !=0 && r_pedid != "true")
 	    return alert("gPOS: \n    Active check - [x] Stock - "+
@@ -7601,9 +7914,12 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
 	if ( checkPreTicket() ) return;
 
-	if ( UsuarioSeleccionado == 1 && ModoDeTicket == "pedidos")
-	    return alert('gPOS: Cotización \n\n Selecione un cliente diferente al - '+
-			 usuarios[UsuarioSeleccionado].nombre+' - ');
+	if ( UsuarioSeleccionado == 1) { 
+	    if(ModoDeTicket == "pedidos" || ModoDeTicket == "cesion"){
+	    	setdefaulttipocomprobante(tcliente,'Ticket');
+		return id("buscaCliente").focus();
+	    }
+	}
 	
 	switch( ModoDeTicket ){
 	case 'cesion':
@@ -7623,8 +7939,8 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	id("peticionEntrega").value = entregado;
 	id("peticionPendiente").setAttribute("label", formatDinero(0));	
 	id("NumeroDocumento").removeAttribute('readonly','readonly');	
-	id("comprobante").setAttribute("collapsed", "false");
-
+	id("comprobante").setAttribute("collapsed", false);
+	CambiarModoReserva(false);
 	ActualizaPeticion();
 
 	if(!esActivoServer) 
@@ -7757,7 +8073,8 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 		"tpv_serialrand="+sr+"&"+
 		"nroDocumento="+nroDocumento+"&"+
 		"sreDocumento="+sreDocumento+"&"+
-		"idDocumento="+idDocumento;
+		"idDocumento="+idDocumento+"&"+
+		"Reservar="+Local.Reservar;
             xrequest.open("POST",url,false);
             xrequest.setRequestHeader('Content-Type',
 				      'application/x-www-form-urlencoded; charset=UTF-8');
@@ -7890,10 +8207,17 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
 	//Lanzamos Impresion Comprobante
 	if( comprobante == 0 && Local.Imprimir) location.href=url;//Imprime Comprobante
+
     }
 
     function CambiarModoImpresion(xvalue){
 	Local.Imprimir = xvalue;
+    }
+
+    function CambiarModoReserva(xvalue){
+	Local.Reservar = (xvalue)? 1:0;
+        id("checkreservar").setAttribute("checked", xvalue);
+	id("checkreservar").setAttribute("collapsed", ( ModoDeTicket == 'pedidos' ));
     }
 
     function ValidaTicket(modo,xcheck,xprod){
@@ -8049,7 +8373,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
 	//Modo...
 	var modotpv       = (modo=="venta"|| modo=="cesion" )?1:0;
-	var alertpreventa = (modotpv == '0')?'\n - Selecione el modo - VENTA ó CESION - en el TPV.':'';
+	var alertpreventa = (modotpv == '0')?'\n - Selecione el modo - CONTADO ó CREDITO - en el TPV.':'';
 
 	//Existencias...
 	if(ticketlist.length == 0)
@@ -8141,12 +8465,12 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	var elemento      = id("gruponb");
 	var elemento2     = id("NumeroDocumento");
 	var modo          = id("rgModosTicket").value;
-	
+
 	//Albaran y Sesion
-	if(modo!="cesion"){
-	    radioalbaran.setAttribute("disabled", "true");
-	    radioalbaran.setAttribute("selected", "false");
-	}
+	/*if(modo!="cesion"){
+	    radioalbaran.setAttribute("disabled", true);
+	    radioalbaran.setAttribute("selected", false);
+	}*/
 
 	//Factura
 	if( opcion == 2 ){
@@ -8181,6 +8505,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 		    setTextDocumento('Proforma',opcion);
 		    CargarNroDocumentoVenta(opcion,0);
 		    elemento2.focus();
+
 		    return;
 		}
 	    }
@@ -8188,7 +8513,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
 		if ( UsuarioSeleccionado == 1 )
 		    alertuser = '\n - Selecione un cliente diferente al - '+tcliente+' - ';
-		alert('gPOS Proformas: \n - Selecione - COTIZACION - en el TPV '+alertuser);
+		alert('gPOS Proformas: \n - Selecione - PEDIDO - en el TPV '+alertuser);
   		setTextDocumento('',0);
 		radioproforma.setAttribute("selected", "false");
 		radioticket.setAttribute("selected", "true");
@@ -8235,7 +8560,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
 		if ( UsuarioSeleccionado == 1 )
 		    alertuser = '\n - Selecione un cliente diferente al - '+tcliente+' - ';
-		alert('gPOS Albaran: \n - Selecione - CESION - en el TPV '+alertuser);
+		alert('gPOS Albaran: \n - Selecione - CREDITO - en el TPV '+alertuser);
   		setTextDocumento('Boleta',1);
 		radioalbaran.setAttribute("selected", "false");
 		radioboleta.setAttribute("selected", "true");
@@ -8251,6 +8576,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	    radioticket.setAttribute("selected", "true");
 	    radioproforma.setAttribute("selected", "false");
 	    radioboleta.setAttribute("selected", "false");
+	    radioalbaran.setAttribute("selected", "false");
             elemento.setAttribute("collapsed", "true");
 	    id("NumeroDocumento").value='';
 	    setTextDocumento('',opcion);
@@ -8461,18 +8787,6 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	id("SerieNDocumento").value=Serie;
 	id("NumeroDocumento").value=1;
     }
-
-    function CargarDescripcionFichaProducto(cod){
-	var url =
-	    "services.php?&"+
-	    "modo=cargarDescripcionFichaProductoTPV"+"&"+
-	    "cb="+cod;
-	var xrequest = new XMLHttpRequest();
-	xrequest.open("GET",url,false);
-	xrequest.send(null);
-	return xrequest.responseText;
-    }
-
 
     function AjustarEtiquetaPedido(){
 	var radioboleta = id("radioboleta");
@@ -8944,8 +9258,8 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
             ticket[xcodigo] = null;
             ticketlist.splice(t,1);
 	    iticket--;
-	    mm_k  = ( esPedidodet )?  '  :::  ***RESUMEN KARDEX*** ' :'';
-	    mm_s  = ( esUnidades  )?  '  :::  ***STOCK 0*** ':'';
+	    mm_k  = ( esPedidodet )?  '\n  :::  ***RESUMEN KARDEX*** ' :'';
+	    mm_s  = ( esUnidades  )?  '\n  :::  ***STOCK 0*** ':'';
 	    mm   += "\n     - "+productos[xcodigo].producto+mm_k+mm_s; 
 	    
 	}
@@ -8978,7 +9292,6 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
         arreglotex = pool.get().nombre;
         referencia = pool.get().referencia;
         precio	   = pool.get().pvd;
-        impuesto   = pool.get().impuesto;
         impuesto   = pool.get().impuesto;			
         descuento  = pool.get().descuento;		
         nombre2	   = pool.get().nombre2;	
@@ -9006,14 +9319,16 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
         /*++++++++++++ ARREGLOS LISTA ++++++++++++++*/	
 
         function VerServicios(){
-            //return;	
-            id("panelDerecho").setAttribute("collapsed","true");
 
+            id("panelDerecho").setAttribute("collapsed",true);
+	    id("boxServicios").setAttribute("collapsed",false);	    
             var estado = 	document.getElementById("modoVisual").selectedIndex;	
             estado = (estado == 8)?0:8;
 
             id("modoVisual").setAttribute("selectedIndex",estado);	
-
+	    setTimeout('BuscarOrdenServicio()',400);
+	    setTimeout('checkServicios()',1000);
+	    resizelistboxticket(false);
         }
 
         var indiceListadoSubsidiario = 0;
@@ -9467,14 +9782,17 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 		    return;
 		}
 
-		auxSubsidiarioHab();
 		var subsid = id("tbox_subsidiario").value;
-		if(cSubsidiario == subsid) return;
+		if(cSubsidiario == subsid) {
+		    id("tbox_subsidiario").value = cSubsidiario;
+		    return;
+		}
 
 		var data = id("idsubsidiariohab").value;
 		var subsid = id("tbox_subsidiario").value;
 
 		id("arreglo_subsidiario_"+cIdTbjoSubsidiario).setAttribute('value',subsid);
+		cSubsidiario = subsid;
 		break;
 	    case 3:
 		//Estado
@@ -9642,15 +9960,18 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
         function auxSubsidiarioHab(){
 	    var url   = 'modulos/subsidiarios/selsubsidiario.php?modo=subsidiariopost';
 	    var tipo  = 'proveedorhab';
-	    var extra = "dialogWidth:" + "350" + "px;dialogHeight:" + "350" + "px";
-	    window.showModalDialog(url,tipo,extra);
-
-	    if(SubsidiarioPost) {
-		id("tbox_subsidiario").value = SubsidiarioPost;
-		id("idsubsidiariohab").value = IdSubsidiarioPost;
-	    }
+	    popup(url,tipo);
+	    
 	}
 
+        function loadSubsidiarioHab(){
+	    if(!SubsidiarioPost) return;
+	    if(cSubsidiario == SubsidiarioPost) return;
+	    id("tbox_subsidiario").value = SubsidiarioPost;
+	    id("idsubsidiariohab").value = IdSubsidiarioPost;
+
+	    ModificarServicio(2);
+	}
 /*+++++++++++++++++++++++++++++ SERVICIOS  ++++++++++++++++++++++++++++++++++*/
 
 
@@ -9675,6 +9996,8 @@ var seriecomprobantedevol = "";
 var cIdSuscripcionVenta   = 0;
 var cIdComprobanteDet     = 0;
 var esOrdenServicio       = 0;
+var cReservado            = 0;
+var cFechaEntrega         = "";
 
 // Busqueda abanzada
 var vFormaVenta    = true;
@@ -9682,6 +10005,9 @@ var vMoneda        = true;
 var vUsuario       = true;
 var vOP            = true;
 var vCodigo        = true;
+var vFechaRegistro = true;
+
+var aModificaFecha = Array();
 
 var RevDet = 0;
 
@@ -9716,8 +10042,8 @@ function RevisarVentaSeleccionada(){
     cSerieNroComprobante  = idex.childNodes[5].attributes.getNamedItem('label').nodeValue;
     cClienteComprobante   = idex.childNodes[6].attributes.getNamedItem('label').nodeValue;
     cIdClienteComprobante = idex.childNodes[6].attributes.getNamedItem('value').nodeValue;
-    cMontoComprobante     = idex.childNodes[9].attributes.getNamedItem('label').nodeValue;
-    cPendienteComprobante = idex.childNodes[10].attributes.getNamedItem('label').nodeValue;
+    cMontoComprobante     = idex.childNodes[10].attributes.getNamedItem('label').nodeValue;
+    cPendienteComprobante = idex.childNodes[11].attributes.getNamedItem('label').nodeValue;
     //idfacturaseleccionada = idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
     cCodigoComprobante    = idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
     var nrodocumento      = idex.childNodes[3].attributes.getNamedItem('label').nodeValue;
@@ -9730,12 +10056,16 @@ function RevisarVentaSeleccionada(){
     seriefac              = cadena.substring(0,posicion-1);
     idcomprobantedevol    = parseInt(idfac);
     seriecomprobantedevol = trim(seriefac);
-    cIdSuscripcionVenta   = idex.childNodes[13].attributes.getNamedItem('value').nodeValue;
+    cIdSuscripcionVenta   = idex.childNodes[15].attributes.getNamedItem('value').nodeValue;
+    cReservado            = id("venta_reservado_"+idex.value).getAttribute("value");
+    cFechaEntrega         = id("venta_fechareserva_"+idex.value).getAttribute("value");
 
     menuContextualVentasRealizadas(cIdComprobante,false,false);
 
     if(RevDet == 0 || RevDet != idex.value)
         setTimeout("loadDetallesVentas("+idex.value+")",100);
+    if(cEsCobroVenta) 
+	setTimeout("BuscarDetallesCobroVenta("+cIdComprobante+")",100);
 
     RevDet = idex.value;
 }
@@ -9842,6 +10172,7 @@ function checkDevolucionDetalle(xaccion){
     id("menuDevolverProducto").setAttribute("collapsed",xaccion);
     id("btnsDevolucion").setAttribute("collapsed",xaccion);
     id("btnreturndetventa").setAttribute("collapsed",xnoaccion);
+    id("VentaGarantiaComprobante").setAttribute("collapsed",xnoaccion);
 
     //Limpia 
     if ( cEsDevolucionDetalle ) 
@@ -9866,7 +10197,7 @@ function obtenerDevolucionList(){
     return xout;
 }
 
-function habilitaDevolucionVentaSeleccionada(){
+function habilitaDevolucionVentaSeleccionada(modo){
 
     //TipoDocumento
     switch( cComprobante )
@@ -9887,6 +10218,7 @@ function habilitaDevolucionVentaSeleccionada(){
 			 "  Debe -Abrir Caja- para continuar.")
 
         //Habilitamos Devolucion Detalle
+	cDevolucionModo      = modo;
 	cEsDevolucionDetalle = true
 	checkDevolucionDetalle(false);
     	break;
@@ -9912,6 +10244,10 @@ function DevolverVentaSeleccionada(){
 	
 	var resultado = esCajaCerrada();
 	var tcliente  = id("tCliente").label;
+
+	//Codigo Validacion
+	if( !Local.esAdmin )
+	    if( !validaCodigoAutorizacion(cIdComprobante,'Devolución' ) ) return;
 
 	//Caja...
 	if(resultado == 1)
@@ -9950,7 +10286,9 @@ function DevolverVentaSeleccionada(){
 	"&dependiente="+Local.IdDependiente+
 	"&concepto="+xdocumento+
 	"&comprobante="+cIdComprobante+
+	"&devolvermodo="+cDevolucionModo+
 	"&items="+xitems;
+
     var xrequest = new XMLHttpRequest();
     xrequest.open("GET",url,false);
     xrequest.send(null);
@@ -9960,13 +10298,20 @@ function DevolverVentaSeleccionada(){
 
     if ( !(parseInt(ares[0]) == 1) ) 
 	alert('gPOS: '+po_servidorocupado+'\n\n'+ares[0]);		     
-     
+
+    
     //Productos...
     syncProductosPostTicket();
     //PreVentas...
-    syncPresupuesto('Preventa');  
+    syncPresupuesto('Preventa');
+
+    //Clientes por Nota de Credito...
+    if( cDevolucionModo == 'credito' ) setTimeout('syncClientes()',600);
+
     //Limpia...
+    cDevolucionModo = '';
     checkDevolucionDetalle(true);
+
     //Ticket...
     VerTPV();  
     //Confirmar...
@@ -9990,7 +10335,7 @@ function verNSVentaSeleccionada(){
     var idex      = id("busquedaDetallesVenta").selectedItem;
     var cod       = idex.childNodes[2].attributes.getNamedItem('label').nodeValue;
     var producto  = idex.childNodes[3].attributes.getNamedItem('label').nodeValue;
-    var mseries   = idex.childNodes[9].attributes.getNamedItem('value').nodeValue;
+    var mseries   = idex.childNodes[10].attributes.getNamedItem('value').nodeValue;
     var reporte   = '';
     var bandera   = 0;
 
@@ -10026,7 +10371,7 @@ function verDetMPSeleccionada(){
     var idex      = id("busquedaDetallesVenta").selectedItem;
     var cod       = idex.childNodes[2].attributes.getNamedItem('label').nodeValue;
     var mproducto = idex.childNodes[3].attributes.getNamedItem('label').nodeValue;
-    var mseries   = idex.childNodes[9].attributes.getNamedItem('value').nodeValue;
+    var mseries   = idex.childNodes[10].attributes.getNamedItem('value').nodeValue;
     var reporte   = '';
     var xdetalle  = '';
     var bandera   = 0;
@@ -10089,22 +10434,66 @@ function  ReimprimirVentaSeleccionada(){
     t_RecuperaTicket(num,res[0]);
 }
 
+function  imprimirImportePendienteVentaSeleccionada(){
+    var idex = id("busquedaVentas").selectedItem;
+    var num  = idex.value;
+    //Local.AbonoPendiente = cPendienteComprobante;
+    t_RecuperaTicketAbonos(num);
+}
+
+function  imprimirFormatoDetalladoTicketSeleccionada(){
+    var idex = id("busquedaVentas").selectedItem;
+    var num  = idex.value;
+    Local.AbonoPendiente = cPendienteComprobante;
+    Local.ImprimirFormatoTicket = true;
+    t_RecuperaTicketAbonos(num);
+}
+
+function  imprimirFormatoImporteVentaSeleccionada(){
+    var idex = id("busquedaVentas").selectedItem;
+    var num  = idex.value;
+    Local.AbonoPendiente = cPendienteComprobante;
+    t_RecuperaTicketAbonos(num);
+}
+
+function  imprimirTicketAbonoClienteSeleccionado(){
+    t_RecuperaTicketAbonosCliente();
+}
+
+function  imprimirTicketCreditoClienteSeleccionado(){
+    t_RecuperaTicketCreditosCliente();
+}
+
+
 var Abonar = new Object();
+var modomultipagoabono = false;
 
 function VentanaAbonos(){
-    
     //Valida Alabaran
     var idex = id("busquedaVentas").selectedItem;
     var num  = idex.value;
     var res  = obtenerTipoComprobante(num);
-    
+    var xcod = false;
     if (res[0]=='Albaran'){
 	alert("gPOS:\n "
 	      +" - El Comprobante "+res[0]+" esta reservado."
 	      +" \n  - Facture este comprobante para poder - Abonar - ")
 	     return;
     }
-    
+
+    //Codigo Validacion
+    if( !Local.esCajaTPV )
+	if( !validaCodigoAutorizacion(num,'Abonar' ) ) return;
+
+    //seteamos la fecha
+    var f = new Date();
+    var fecha = f.getFullYear() + "-" + (f.getMonth() +1) + "-" + f.getDate();
+    var hora  = f.getHours()+":"+f.getMinutes()+":"+f.getSeconds();
+
+    id("dateFechaPago").value = fecha;
+    id("timeFechaPago").value = hora;
+    id("dateFechaEntrega").value = fecha;
+    id("timeFechaEntrega").value = hora;
     
 	 //VaciarDetallesVentas();
     LimpiarFormaAbonos();
@@ -10115,90 +10504,454 @@ function VentanaAbonos(){
     
     var IdComprobante = idex.value;
 	 
-    if (!IdComprobante) return;//seleccion invalidad	
-    
+    if (!IdComprobante) return;//seleccion invalidad
+
+    var doc      = id("venta_tipodocumento_"+IdComprobante).getAttribute("label");
+    var numdoc   = id("venta_num_bol_"+IdComprobante).getAttribute("label");	
     var xpen = id("venta_pendiente_"+IdComprobante);
     var dineropendiente = xpen.getAttribute("label");
     var serie = id("venta_serie_" + IdComprobante).getAttribute("label");
     var num = id("venta_num_" + IdComprobante).getAttribute("label");
     var serienumfactura = serie+num;
+    var cliente = id("venta_cliente_"+IdComprobante).getAttribute("label");
+    cliente = cliente.split(":");
+    id("titleAbonoVentana").setAttribute("label","Abonar: "+trim(doc)+" "+trim(numdoc));
 
     //resetea nuevo abono
     Abonar = new Object();	
     
     //fijamos la id actual
-    Abonar.IdComprobante = IdComprobante;	
+    Abonar.IdComprobante = IdComprobante;
     Abonar.Maximo = parseFloat(dineropendiente).toFixed(2);
-    
-    id("abono_Debe").setAttribute("label",formatDinero(Abonar.Maximo));
+    //Abonar.TotalImporte = cMontoComprobante;
+
+    id("abono_cliente").setAttribute("value",trim(cliente[1]));
+    id("abono_Debe").setAttribute("value",formatDinero(Abonar.Maximo));
     id("abono_Efectivo").setAttribute("value",formatDinero(Abonar.Maximo));
-    id("abono_numTicket").setAttribute("label",serienumfactura);
+    id("abono_numTicket").setAttribute("value",serie);
+
+    var xentrga = (cFechaEntrega == '0000-00-00 00:00:00' && cReservado == 1)? false:true;
+
+    id("rowReservaEntregado").setAttribute("collapsed",xentrga);
+    id("rowFechaReservaEntregado").setAttribute("collapsed",true);
+
+    if(acuentasb){
+	RegenEntidadFinanciera();
+	RegenCuentas();
+    }
     
     document.getElementById("modoVisual").setAttribute("selectedIndex",Vistas.abonar);	
+    id("abono_Monto").focus();
 }
 
+var esDocCobro = false;
+function verDetalleDocumentoCobros(){
+    var iddoc = id("modoDeAbonoTicket").value;
+    var esdoc = false;
+    esDocCobro= false;
+    //id("abono_Monto").value = 0;
+    ActualizaPeticionAbono();
+
+    switch(iddoc){
+    case '1':
+    case '9':
+	id("abono_Monto").value = usuarios[cIdClienteComprobante].credito;
+	id("DetallePagoDocumento").setAttribute("collapsed",!esdoc);
+	ActualizaPeticionAbono();
+	return;
+    case '10':
+	id("abono_Monto").value = usuarios[cIdClienteComprobante].bono;
+	id("DetallePagoDocumento").setAttribute("collapsed",!esdoc);
+	ActualizaPeticionAbono();
+	return;
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+	//if(!acuentasb) alert("gPOS:    \n\n - La modalidad de pago eligido requiere cuentas bancarias");
+	esdoc      = true;
+	esDocCobro = true;
+	break;
+    }
+
+    id("DetallePagoDocumento").setAttribute("collapsed",!esdoc);
+
+ 	    //Sincorniza Clientes ******
+	    //if(!usuarios[IdCliente])
+	//	syncClientes();
+}
 
 function ActualizaPeticionAbono() {
     var cr = "\n";
     var color ="black";
-    
-    var entrega = 0;
-    entrega += parseFloat(CleanMoney(document.getElementById("abono_Efectivo").value));	
-    entrega += parseFloat(CleanMoney(document.getElementById("abono_Bono").value));
-    entrega += parseFloat(CleanMoney(document.getElementById("abono_Tarjeta").value));
+    var xentrega = id("abono_Monto");
+
+    var xabono = id("modoDeAbonoTicket").value;
+    if(xabono == 10){
+	if(xentrega.value > usuarios[cIdClienteComprobante].bono)
+	    xentrega.value = usuarios[cIdClienteComprobante].bono;
+    }
+
+    if(xabono == 9){
+	if(xentrega.value > usuarios[cIdClienteComprobante].credito)
+	    xentrega.value = usuarios[cIdClienteComprobante].credito;
+    }
+
+    if(id("abono_Bono")){
+	if(id("abono_Bono").value > usuarios[cIdClienteComprobante].bono)
+	    id("abono_Bono").value = usuarios[cIdClienteComprobante].bono;
+    }
+
+    if(!modomultipagoabono){
+	var entrega = parseFloat(CleanMoney(xentrega.value));
+    }else{
+	var entrega = 0;
+	entrega += parseFloat(CleanMoney(document.getElementById("abono_Efectivo").value));
+	entrega += parseFloat(CleanMoney(document.getElementById("abono_Bono").value));
+	entrega += parseFloat(CleanMoney(document.getElementById("abono_Tarjeta").value));
+    }
     var pendiente = Abonar.Maximo - entrega;
-    id("abono_Pendiente").setAttribute("label", formatDinero(pendiente));
-    id("abono_nuevo").setAttribute("label", formatDinero(entrega));	
+
+    id("abono_Pendiente").setAttribute("value", formatDinero(pendiente));
+    id("abono_nuevo").setAttribute("value", formatDinero(entrega));
+
+        
+    Local.AbonoImporte = parseFloat( entrega );
+    Local.AbonoDebe    = parseFloat( Abonar.Maximo );
+    Local.AbonoPendiente = parseFloat( pendiente );
+}
+
+function validarFormularioAbono(){
+    if(!id("abono_Monto").value) id("abono_Monto").value       = 0;
+    if(!id("abono_Efectivo").value) id("abono_Efectivo").value = 0;
+    if(!id("abono_Bono").value) id("abono_Bono").value         = 0;
+    if(!id("abono_Tarjeta").value) id("abono_Tarjeta").value   = 0;
 }
 
 function LimpiarFormaAbonos(){
     id("abono_Efectivo").value = "0";
-    id("abono_Bono").value = "0";
-    id("abono_Tarjeta").value = "0";	
+    id("abono_Bono").value     = "0";
+    id("abono_Tarjeta").value  = "0";
+    id("abono_Monto").value    = "0";
+
     Abonar.Maximo = 0;
-    ActualizaPeticionAbono();	
+    modomultipagoabono = true;
+    ModoMultipagoAbono();
+    //ActualizaPeticionAbono();	
+}
+
+function LimpiarFormDocumentoCobro(){
+    id("CodigoOperacion").value = "000000";
+    id("NroDocumento").value    = "";
+    id("ObservacionesDocCobro").value = "";
+}
+
+function ModoMultipagoAbono(){
+    if(modomultipagoabono) {				
+        id("Abonos_1").setAttribute("collapsed","true");
+        id("Abonos_2").setAttribute("collapsed","true");
+        id("Abonos_3").setAttribute("collapsed","true");
+        id("Abono_Modo").setAttribute("collapsed","false");	
+        id("Fila-AbonoEntrega").setAttribute("collapsed","false");
+	id("abono_Bono").value = usuarios[cIdClienteComprobante].bono;		
+        modomultipagoabono  = false;
+    } else {
+        id("Abonos_1").setAttribute("collapsed","false");
+        id("Abonos_2").setAttribute("collapsed","false");
+        id("Abonos_3").setAttribute("collapsed","false");
+        id("Abono_Modo").setAttribute("collapsed","true");	
+        id("Fila-AbonoEntrega").setAttribute("collapsed","true");
+	id("modoDeAbonoTicket").value = 1;
+	esDocCobro = false;
+        modomultipagoabono  = true;
+    }
+
+    id("DetallePagoDocumento").setAttribute("collapsed",!modomultipagoabono);
+    ActualizaPeticionAbono();
 }
 
 
 function RealizarAbono(){
     var IdComprobante  = Abonar.IdComprobante;
-    var abono_efectivo = CleanMoney(id("abono_Efectivo").value);
-    var abono_tarjeta  = CleanMoney(id("abono_Tarjeta").value);
-    var abono_bono     = CleanMoney(id("abono_Bono").value);	
+    var abono_efectivo = (modomultipagoabono)? CleanMoney(id("abono_Efectivo").value):0;
+    var abono_tarjeta  = (modomultipagoabono)? CleanMoney(id("abono_Tarjeta").value):0;
+    var abono_bono     = (modomultipagoabono)? CleanMoney(id("abono_Bono").value):0;
     var xconcepto      = cComprobante+" "+cSerieNroComprobante+" Cod. "+cCodigoComprobante;
+    var entregado      = (id("checkReservaEntregago").checked)? 1:0;
+    var fechapago      = id("dateFechaPago").value+" "+id("timeFechaPago").value;
+    var fechaentrega   = (entregado)? id("dateFechaEntrega").value+" "+id("timeFechaEntrega").value:"";
+    var fechahoy       = calcularFechaActual('fecha')+" "+calcularFechaActual('hora');
+    var doc            = id("venta_tipodocumento_"+IdComprobante).getAttribute("label");
+    var numdoc         = id("venta_num_bol_"+IdComprobante).getAttribute("label");
+    var modalidadpago  = (!modomultipagoabono)? id("modoDeAbonoTicket").value:1;
+    abono_efectivo     = (!modomultipagoabono)? CleanMoney(id("abono_Monto").value):abono_efectivo;
 
+    if(abono_efectivo == 0 && abono_bono == 0 && abono_tarjeta == 0)
+	return alert("gPOS:   Abonando "+doc+" "+numdoc+"\n\n   - Ingrese monto del abono");
+
+    if(!modomultipagoabono && abono_efectivo > Abonar.Maximo) 
+	abono_efectivo = Abonar.Maximo;
+
+    if(modomultipagoabono){
+	var multiabono = parseFloat(abono_efectivo)+parseFloat(abono_bono)+parseFloat(abono_tarjeta);
+	if(multiabono > Abonar.Maximo)
+	    return alert("gPOS:   Abonando "+doc+" "+numdoc+"\n\n   - Monto abonado es mayor al monto Debe");
+    }
+
+    if(fechahoy < fechapago) 
+	return alert("gPOS:   Abonando "+doc+" "+numdoc+"\n\n   - Fecha de pago es mayor a fecha actual");
+    var DocCobro = "";
+
+    if(!modomultipagoabono && abono_efectivo > Abonar.Maximo)
+	return alert("gPOS:   Abonando "+doc+" "+numdoc+"\n\n   - Monto ingresa es mayor a total pendiente");
+
+    if(esDocCobro || (abono_tarjeta != 0 && modomultipagoabono)){
+
+	var idnrocuenta  = id("NroCtaEmpresa").value;
+	var codoperacion = trim(id("CodigoOperacion").value);
+	var nrodocumento = trim(id("NroDocumento").value);
+	var obscobro     = trim(id("ObservacionesDocCobro").value);
+	var xrd = "&";
+
+	codoperacion = (codoperacion == '' || codoperacion < '000000')? '000000':codoperacion;
+
+	DocCobro += xrd + "xidnrocta="+idnrocuenta;
+	DocCobro += xrd + "xcodop="+codoperacion;
+	DocCobro += xrd + "xnrodoc="+nrodocumento;
+	DocCobro += xrd + "xobs="+obscobro;
+
+	if(!idnrocuenta)
+	    return alert("gPOS:   \n\n - Elija Entidad Financiera");
+
+	if(codoperacion == "")
+	    return alert("gPOS:   \n\n - Ingrese Código de Opración del documento");
+
+    }
+
+    //Codigo Validacion
+    if( !Local.esCajaTPV )
+	if( !validaCodigoAutorizacion(IdComprobante,'Abonar' ) ) return;
+
+
+    //Caja...
+    if( esCajaCerrada() == 1)
+	return alert("gPOS Caja :\n\n"+
+		     "  ESTADO CAJA : CERRADO \n\n"+
+		     "  Debe -Abrir Caja- para continuar.")
+    
     var obj = new XMLHttpRequest();
     var url = "services.php?modo=realizarAbono&IdComprobante=" + escape(IdComprobante)
         + "&pago_efectivo=" + parseFloat(abono_efectivo)
         + "&pago_bono=" + parseFloat(abono_bono)
         + "&pago_tarjeta=" + parseFloat(abono_tarjeta)	
         + "&pago_concepto='" + xconcepto +"'"	
+        + "&entregado=" + entregado
+        + "&fechaentrega=" + fechaentrega
+        + "&fechapago=" + fechapago
+        + "&modalidadpago=" + modalidadpago
+        + "&iduser=" + Local.IdDependiente
+        + DocCobro
         + "&r=" + Math.random();		
-    
+
     obj.open("POST",url,false);
     obj.send("");	
     
     var text = obj.responseText;
     
-    if (!text) return alert('gPOS: '+po_servidorocupado);
+    var xpen   = id("venta_pendiente_"+IdComprobante);
+    var xstatus= id("venta_status_"+IdComprobante);
     
-    
-    var xpen = id("venta_pendiente_"+IdComprobante);
-    var xstatus = id("venta_status_"+IdComprobante);
-    
-    text = parseFloat(text);		
-    
-    xpen.setAttribute("label",parseFloat(text).toFixed(2));//Nuevo valor pendiente
-    
-    if (text<0.01){
-        if (xstatus)
-	    xstatus.setAttribute("label","PAGADA");//Correspondiente nuevo estado	
+    var ares = text.split("~");
+
+    if(ares[0] != ""){
+	alert('gPOS: '+po_servidorocupado+' \n\n    -Al Abonar el comprobante '+doc+' '+numdoc);
+	LimpiarFormaAbonos();
+	LimpiarFormDocumentoCobro();
+	return VolverVentas();
     }
     
+    if( ares[1] != '0' ){
+	var xval = ares[1].split(" ");
+	return alert("gPOS:   Abonando "+doc+" "+numdoc+"\n\n  - Fecha de pago es menor a la fecha de apertura de caja \n  - Fecha de apertura de caja ["+ares[2]+"]");
+    }
+    
+    if(ares[4] != '0'){
+	return alert("gPOS:   Abonando "+doc+" "+numdoc+"\n\n  - Código de Operación "+ares[4]+" ya está registrado");
+    }
+
+    if( ares[3] == "" ){
+	alert('gPOS: '+po_servidorocupado+' \n\n  -Al Abonar el comprobante '+doc+' '+numdoc);
+	LimpiarFormaAbonos();
+	LimpiarFormDocumentoCobro();
+	return VolverVentas();
+    }
+
+    xpen.setAttribute("label",parseFloat( ares[3]).toFixed(2) );//Nuevo valor pendiente
+
+    imprimirImportePendienteVentaSeleccionada();
+    
     LimpiarFormaAbonos();
+    LimpiarFormDocumentoCobro();
     VolverVentas();
+    setTimeout('syncClientes()',2000);
 }
 
+function AbonarPorCliente(){
+
+    if( preSeleccionadoCliente == 1 )
+	return alert(  c_gpos + " ABONAR EFECTIVO"+
+		      "\n\n -   Elija un cliente diferente a Cliente Contado. - ");
+
+    var xid    = preSeleccionadoCliente;
+    //Codigo Validacion
+    if( !Local.esCajaTPV)
+	if( !validaCodigoAutorizacionCliente(xid,'Abonar' ) ) return;
+
+
+    var xmonto = prompt( c_gpos + " ABONAR EFECTIVO \n"+
+			 "\n  CLIENTE        : "+ usuarios[ xid ].nombre +
+			 "\n  MODO PAGO  : EFECTIVO "+
+			 "\n  DEBE            : "+cMoneda[1]['S']+' '+formatDinero( usuarios[ xid ].debe )+
+			 "\n\n Ingrese monto abonar:\n", usuarios[ xid ].debe );
+    //cancelo?
+    if( xmonto == null)
+	return false;
+    
+    //monto vacio?
+    if ( !( parseFloat( xmonto ) > 0) || parseFloat( xmonto ) > usuarios[ xid ].debe ) {
+	alert( c_gpos + " ABONAR EFECTIVO \n"+
+	       "\n  CLIENTE        : "+ usuarios[ xid ].nombre +
+	       "\n  DEBE            : "+cMoneda[1]['S']+' '+formatDinero( usuarios[ xid ].debe )+
+	       "\n\n     -   Ingrese correctamente el monto abonar  - ");
+	return AbonarPorCliente();
+    }
+
+
+    if( !confirm( c_gpos + " ABONAR EFECTIVO \n"+
+		 "\n  CLIENTE           : "+ usuarios[ xid ].nombre +
+		  "\n  DEBE               : "+cMoneda[1]['S']+' '+formatDinero( usuarios[ xid ].debe )+
+		  "\n  ABONA           : "+cMoneda[1]['S']+' '+formatDinero( xmonto )+
+		  "\n  PENDIENTE      : "+cMoneda[1]['S']+' '+
+		  formatDinero( parseFloat( usuarios[ xid ].debe - xmonto ).toFixed(2) )+
+		  "\n\n se abonará el monto de "+cMoneda[1]['S']+' '+formatDinero( xmonto )+
+		  " en los ticket pendientes, ¿está seguro?") )
+	return;
+
+    //Codigo Validacion
+    if( !Local.esCajaTPV ) return;
+
+    //Caja...
+    if( esCajaCerrada() == 1)
+	return alert("gPOS Caja :\n\n"+
+		     "  ESTADO CAJA : CERRADO \n\n"+
+		     "  Debe -Abrir Caja- para continuar.")
+
+    //Mensaje de confirmacion
+    var obj = new XMLHttpRequest();
+    var url = "services.php?modo=realizarAbonoBrutal&IdCliente=" + escape(xid)
+        + "&xmonto=" + parseFloat(xmonto)
+        + "&r=" + Math.random();		
+
+    obj.open("POST",url,false);
+    obj.send(null);	
+    
+    var text = obj.responseText;
+    var ares = text.split("~");
+    
+    if(ares[0] != 1)
+	alert( c_gpos + " ABONAR EFECTIVO \n"+po_servidorocupado);
+    else {
+	var xpendiente              = parseFloat( ares[1] );
+	Local.AbonoClienteDebe      = usuarios[ xid ].debe;
+	Local.AbonoClienteImporte   = formatDinero( xmonto );
+	Local.AbonoClientePendiente = formatDinero( parseFloat( ares[1] ).toFixed(2) );
+	//parseFloat(usuarios[xid].debe-xmonto)
+	imprimirTicketAbonoClienteSeleccionado();
+    }
+    setTimeout('syncClientes()',600);
+
+}
+
+function AsignarCreditoPorCliente(){
+
+    if( preSeleccionadoCliente == 1 )
+	return alert(  c_gpos + " ASIGNAR CREDITO"+
+		      "\n\n -   Elija un cliente diferente a Cliente Contado. - ");
+
+    var xid    = preSeleccionadoCliente;
+    //Codigo Validacion
+    if( !Local.esCajaTPV)
+	if( !validaCodigoAutorizacionCliente(xid,'Abonar' ) ) return;
+
+    var xconcepto = prompt( c_gpos + " ASIGNAR CREDITO - CONCEPTO \n"+
+			    "\n  CLIENTE        : "+ usuarios[ xid ].nombre +
+			    "\n  MODO           : EFECTIVO "+
+			    "\n\n Ingrese el CONCEPTO por asignación de crédito:\n", '' );
+    //cancelo?
+    if( xconcepto == null || trim(xconcepto ) == '' ) return false;
+    
+    var xmonto = prompt( c_gpos + " ASIGNAR CREDITO - MONTO \n"+
+			 "\n  CLIENTE        : "+ usuarios[ xid ].nombre +
+			 "\n  MODO           : EFECTIVO "+
+			 "\n\n Ingrese MONTO asignado:\n", 0 );
+    //cancelo?
+    if( xmonto == null)
+	return false;
+    
+    //monto vacio?
+    if ( !( parseFloat( xmonto ) > 0) ) {
+	alert( c_gpos + " ASIGNAR CREDITO - MONTO \n"+
+	       "\n  CLIENTE         : "+ usuarios[ xid ].nombre +
+	       "\n  CREDITO        : "+cMoneda[1]['S']+' '+formatDinero( usuarios[ xid ].debe )+
+	       "\n\n     -   Ingrese correctamente el monto asignar  - ");
+	return AbonarPorCliente();
+    }
+
+
+    if( !confirm( c_gpos + " ASIGNAR CREDITO \n"+
+		  "\n  CLIENTE            : "+ usuarios[ xid ].nombre +
+		  "\n  CREDITO           : "+cMoneda[1]['S']+' '+formatDinero( xmonto )+
+		  "\n  CONCEPTO        : "+xconcepto+
+		  "\n\n se asignara el monto de "+cMoneda[1]['S']+' '+formatDinero( xmonto )+
+		  " como crédito, ¿está seguro?") )
+	return;
+
+    //Codigo Validacion
+    if( !Local.esCajaTPV ) return;
+
+    //Caja...
+    if( esCajaCerrada() == 1)
+	return alert("gPOS Caja :\n\n"+
+		     "  ESTADO CAJA : CERRADO \n\n"+
+		     "  Debe -Abrir Caja- para continuar.")
+
+    //Mensaje de confirmacion
+    var obj = new XMLHttpRequest();
+    var url = "services.php?"+
+	      "modo=realizarAsignacionCreditoBrutal&IdCliente=" + escape(xid) +
+	      "&dependiente="+Local.IdDependiente +
+              "&xmonto=" + parseFloat(xmonto) +
+	      "&xconcepto="+xconcepto+
+              "&r=" + Math.random();		
+
+    obj.open("POST",url,false);
+    obj.send(null);	
+    
+    var text = obj.responseText;
+    var ares = text.split("~");
+    if(ares[0] != 1)
+	alert( c_gpos + " ASIGNAR CREDITO \n"+po_servidorocupado);
+    else {
+	Local.CreditoClienteImporte   = parseFloat( usuarios[ xid ].credito );
+	Local.CreditoClienteEntregado = parseFloat( xmonto );
+	Local.CreditoClienteTotal     = parseFloat( usuarios[ xid ].credito ) + parseFloat( xmonto );
+	imprimirTicketCreditoClienteSeleccionado();
+    }
+    setTimeout('syncClientes()',600);
+
+}
 
 var serialNum = (Math.random()*9000).toFixed();
 
@@ -10283,7 +11036,7 @@ function AddLineaDetallesVenta(CodBar, Nombre,Talla, Color, unidades, Descuento,
     var xmenudeo  = ( menudeo == 1)? xcant+''+cont+'+'+xresto+''+xcont+' ' : false;
 
 
-    var vdetalle  = ( mproducto == 1)? '**MPRODUCTO** '       : '';
+    var vdetalle  = ( mproducto == 1)? '**MIXPRODUCTO** '       : '';
     var vdetalle  = ( menudeo   == 1)? vdetalle+xmenudeo      : vdetalle;
     var vdetalle  = ( serie!='false')? vdetalle+'NS. '+serie.slice(0,120)+' ' : vdetalle;
     var vdetalle  = ( vence!='false')? vdetalle+'FV. '+vence + ' ' : vdetalle;
@@ -10399,6 +11152,7 @@ function AddLineaDetallesVenta(CodBar, Nombre,Talla, Color, unidades, Descuento,
     xitem.appendChild( xPrecio );
     xitem.appendChild( xDescuento );	
     xitem.appendChild( xPV );
+    xitem.appendChild( xObservaciones );
     xitem.appendChild( xSerie );
     xitem.appendChild( xLote );
     xitem.appendChild( xVencimiento );
@@ -10406,7 +11160,6 @@ function AddLineaDetallesVenta(CodBar, Nombre,Talla, Color, unidades, Descuento,
     xitem.appendChild( xIdPedidoDet );
     xitem.appendChild( xCosto );
     xitem.appendChild( xOrdenServicio );
-    xitem.appendChild( xObservaciones );
     lista.appendChild( xitem );
 }
 
@@ -10456,6 +11209,10 @@ function t_CambiarClienteDocumento(TipoComprobante,iduser,num){
     
     var nroserie = id("venta_num_bol_" + num).getAttribute("label");
 
+    //Codigo Validacion
+    if( !Local.esAdmin )
+	if( !validaCodigoAutorizacion(cIdComprobante,'Cambiar cliente' ) ) return;
+
     if(!confirm("gPOS:\n\n  Cambiar - "+
 		usuarios[iduser].nombre+" - de documento "+
 		TipoComprobante+" "+nroserie+"? "))
@@ -10474,6 +11231,10 @@ function CambiarIdClienteDocumento(iduser){
 	return alert("gPOS:\n\n"+
 		     po_servidorocupado+
 		     '\n - Al cambiar Cliente -');
+    //Codigo Validacion
+    if( !Local.esAdmin )
+	if( !validaCodigoAutorizacion(cIdComprobante,'Cambiar cliente' ) ) return;
+
     //Cambia cliente
     setIdClienteDocumento(iduser);
     //Reinica valores
@@ -10509,20 +11270,31 @@ function ModificarNroDocumento(accion){
 
     var num  = idex.value;
     var res  = obtenerTipoComprobante(num);
+    var xaccion;
 
     switch(res[0]){
-    case 'Ticket':
     case 'AlbaranInt':
 	return alert("gPOS VENTAS:\n\n  El Nro. de "+res[0]+" es reservado.");
 	break;
-
+    case 'Ticket':
     case 'Factura':
     case 'Boleta':
     case 'Albaran':
 
 	switch(accion){
+	case "Modificar_FechaPago":
+	    xaccion = 'fechapago';
 	case "Modificar_FechaEmision":
-	    return t_ModificarFechaEmisionComprobante(num,res[0],accion,res[1]);
+	    xaccion = (accion == 'Modificar_FechaEmision')? 'fechaemision':xaccion;
+	    //Codigo Validacion
+	    if( !Local.esAdmin )
+		if( !validaCodigoAutorizacion(cIdComprobante,'Modificar Fecha Emisión' ) ) return;
+	    
+	    aModificaFecha["idcomprobante"] = num;
+	    aModificaFecha["tipocomprobante"] = res[0];
+	    aModificaFecha["accion"] = accion;
+	    aModificaFecha["serie"] = res[1];
+	    mostrarPanelModificarFecha(xaccion);
 	    break;
 	case "Anular":
 	case "Modificar":
@@ -10541,9 +11313,9 @@ function FacturarNroDocumento(accion){
     var idex = id("busquedaVentas").selectedItem;
     var num  = idex.value;
     var res  = obtenerTipoComprobante(num);
-    
-    if(res[2]==0)
-	return alert("gPOS TPV Albaranes: \n\n  "+
+
+    if(res[2] < 2)
+	return alert("gPOS:   TPV Albaranes \n\n  "+
 		     " - Opción reservada para "+
 		     " Ticket, Albaran y Boleta relacionado a un - Cliente -.");
     
@@ -10558,22 +11330,23 @@ function FacturarPorLote(){
     var num  = idex.value;
     var lnum = id("venta_num_bol_"+num).getAttribute('label');
     var res  = obtenerTipoComprobante(num);
-    
-    if ( res[0]!='Albaran'){
-	alert("gPOS TPV Albaranes: \n\n   - Opción reservada para Albaranes.")
-	return;
-    }
-    if ( res[0]=='Albaran')
-	v_FacturarPorLote(num,lnum,res[1],res[2]);
+
+    if ( res[0]=='Albaran' || res[0]=='Ticket')
+	v_FacturarPorLote(num,lnum,res[1],res[2],res[0]);
+    else
+	return alert("gPOS:  TPV Albaranes \n\n   - Opción reservada para Albaranes y Ticket.");
 }
 
-function v_FacturarPorLote(num,lnum,Serie,idclient){
-    
-    var t_mm = "gPOS TPV FACTURAR POR LOTE: ";
+function v_FacturarPorLote(num,lnum,Serie,idclient,cbte){
+
+    var t_mm = "gPOS:  TPV FACTURAR POR LOTE ";
+    if(idclient == 1)
+	return alert(t_mm+'\n\n '+
+		     ' El '+cbte+' '+lnum+' no está asociado a un Cliente');
     //Controla nro de albaranes por lote 
     if(nltPorFacturar==0){
 	var p = prompt(t_mm+" \n\n "+
-		       " Ingrese la cantidad de albaranes por facturar:", '');
+		       " Ingrese la cantidad de "+cbte+" por facturar:", '');
 	//Cancelar pront?
 	if( p == null) return;//Brutal termina proceso!!! 
 
@@ -10582,11 +11355,11 @@ function v_FacturarPorLote(num,lnum,Serie,idclient){
 	//Valida
 	if( p != ""){
 	    if(isNaN(p) || p=="" ||  p<=0 )
-		return v_FacturarPorLote(num,lnum);
+		return v_FacturarPorLote(num,lnum,Serie,idclient,cbte);
 	    if(p<2){
 		alert('gPOS: '+t_mm+'\n\n '+
-		      ' Seleccione mas de un Albaran, para facturar por lote.');
-		return v_FacturarPorLote(num,lnum);
+		      ' Seleccione mas de un '+cbte+', para facturar por lote.');
+		return v_FacturarPorLote(num,lnum,Serie,idclient,cbte);
 	    }
 	    //set variable global
 	    nltPorFacturar = p;
@@ -10596,13 +11369,13 @@ function v_FacturarPorLote(num,lnum,Serie,idclient){
     
     //Controla Cliente
     if(idclient!=cliPorFacturar)
-	return alert('gPOS: '+t_mm+'\n\n - Selecione albaranes del cliente - '+
+	return alert('gPOS: '+t_mm+'\n\n - Selecione '+cbte+' del cliente - '+
 		     usuarios[cliPorFacturar].nombre+' -');
     
     //Controla duplicados albaran
     if(lotePorFacturar[num])
 	return alert('gPOS: '+t_mm+nltPorFacturar+
-		     ' albaranes \n\n   - Albaran '+lnum+'esta seleccionado.');
+		     ' albaranes \n\n   - '+cbte+' '+lnum+'está seleccionado.');
     
 	 //Add item Albaran seleccionado 
     if ( parseInt( mltPorFacturar.length ) < parseInt( nltPorFacturar ) ) 
@@ -10616,13 +11389,13 @@ function v_FacturarPorLote(num,lnum,Serie,idclient){
     var ps = parseInt(nltPorFacturar) - parseInt(mltPorFacturar.length);
     
     if ( ps != 0 ) 
-	mm="\n\n  * Pendiente por seleccionar "+ps+" albaran(es).";
+	mm="\n\n  * Pendiente por seleccionar "+ps+" "+cbte+".";
     else 
-	mm="\n\n  * Facturar los "+nltPorFacturar+" albaranes?";
+	mm="\n\n  * Facturar los "+nltPorFacturar+" "+cbte+"?";
     
-    if( !confirm(t_mm+""+nltPorFacturar+" albaranes \n\n"+
+    if( !confirm(t_mm+""+nltPorFacturar+" "+cbte+" \n\n"+
 		 "  Factuar por lote, los siguientes:\n\n"+
-		 "     Albaran: "+mltPorFacturar.toString()+
+		 "     "+cbte+": "+mltPorFacturar.toString()+
 		      "    "+mm ) )
     {
 	//Reinicia variables globales, para salir
@@ -10697,7 +11470,8 @@ function t_FacturarPorLote(Serie){
 	+"&Serie="+Serie 
 	+"&ltAlbaran="+ltAlbaran
 	+"&cliAlbaran="+cliPorFacturar
-	+"&cidcomprobante="+cIdComprobante;
+	+"&cidcomprobante="+cIdComprobante
+	+"&IdUser="+Local.IdDependiente;
     var xrequest = new XMLHttpRequest();
     var g_mm     = '';
     xrequest.open("POST",url,false);
@@ -10757,6 +11531,7 @@ function t_BoletarNumeroComprobante(num,TipoComprobante,accion,Serie){
 		+"&tipocomprobante="+TipoComprobante
                 +"&IdComprobante="+num
 		+"&Serie="+Serie
+		+"&IdUser="+Local.IdDependiente
                 +'&accion='+accion;
 	    var xrequest = new XMLHttpRequest();
 	    xrequest.open("GET",url,false);
@@ -10816,6 +11591,7 @@ function t_FacturarNumeroComprobante(num,TipoComprobante,accion,Serie){
 		+"&tipocomprobante="+TipoComprobante
                 +"&IdComprobante="+num
 		+"&Serie="+Serie
+		+"&IdUser="+Local.IdDependiente
                 +'&accion='+accion;
 	    var xrequest = new XMLHttpRequest();
 	    xrequest.open("GET",url,false);
@@ -10834,7 +11610,11 @@ function t_FacturarNumeroComprobante(num,TipoComprobante,accion,Serie){
 }
  
 function t_ModificarNumeroComprobante(num,TipoComprobante,accion,Serie){
-    
+
+    //Codigo Validacion
+    if( !Local.esAdmin )
+	if( !validaCodigoAutorizacion(cIdComprobante,'Modificar Nro. Comprobante' ) ) return;
+
     if(accion!='Anular'){
 	var p = prompt("gPOS:\n\n"+
 		       "   Ingrese el - Nuevo Nro  "+TipoComprobante+" - de la Serie -"+Serie+"-\n\n", '');
@@ -10844,6 +11624,8 @@ function t_ModificarNumeroComprobante(num,TipoComprobante,accion,Serie){
 	var ap= snro.split('-');
 	var p = trim(ap[1]);
     }
+
+    if(!p) return;
     
     if(isNaN(p) || p=="" || p.lastIndexOf(' ')>-1 || p<=0 ){
 	alert("gPOS:\n\n  El Nro. de "+TipoComprobante+" es inválido, ingrese otra vez.");
@@ -10896,6 +11678,7 @@ function t_ModificarNumeroComprobante(num,TipoComprobante,accion,Serie){
 		+"&tipocomprobante="+TipoComprobante
 		+"&IdComprobante="+num
 		+"&Serie="+Serie
+		+"&IdUser="+Local.IdDependiente
 		+'&accion='+accion;
 	    
 	    var xrequest = new XMLHttpRequest();
@@ -10916,50 +11699,138 @@ function t_ModificarNumeroComprobante(num,TipoComprobante,accion,Serie){
     }
 }
 
-function t_ModificarFechaEmisionComprobante(num,TipoComprobante,accion,Serie){
-    var xfecha = id("venta_fecha_emision_"+num).getAttribute("label");
-    var afecha = xfecha.split("/");
-    var p = prompt("gPOS:\n\n"+
-		    "   Ingrese la - Fecha Emisión  "+TipoComprobante+" - de la Serie -"+Serie+"-\n\n", afecha[2]+"-"+afecha[1]+"-"+afecha[0]);    
-    
-    if(p==null) return;
-    if(trim(p) ==  afecha[2]+"-"+afecha[1]+"-"+afecha[0]) return;
+function mostrarPanelModificarFecha(xval){
 
-    if(!validaFechaTPV(trim(p)))
-	return alert("gPOS: \n\n       Ingrese la fecha correctamente");
-    
+    cargarDatosPanelModificaFecha(xval);
+    var xtop  = parseInt( window.screen.width)/2 - 350;
+    var xleft = parseInt( window.screen.height)/2 - 180;
+
+    id("hboxReservado").setAttribute("collapsed",true);
+    id("panelFechaEmision").openPopupAtScreen(xtop, xleft, false);
+
+}
+
+function cargarDatosPanelModificaFecha(xfecha){
+
+    var num = aModificaFecha["idcomprobante"];
+    var xfecha,wtitleFecha,xcommand;
+    var xval = false;
+    switch(xfecha){
+    case 'fechaemision':
+	xfecha = id("venta_fecha_emision_"+num).getAttribute("label");
+	wtitleFecha = "Modificar Fecha Emisión";
+	xcommand = "t_ModificarFechaEmisionComprobante()";
+	break;
+    case 'fechareserva':
+	xfecha = id("venta_fechareserva_"+num).getAttribute("label");
+	wtitleFecha = "Fecha Entrega";
+	xcommand = "registrarEntregaReserva()";
+	break;
+    case 'fechapago':
+	xfecha = id("venta_plazopago_"+num).getAttribute("label");
+	wtitleFecha = "Fecha Pago";
+	xcommand = "ModificarFechaPago()";
+	xval = true;
+	break;
+    }
+
+    //var xfecha = id("venta_fecha_emision_"+num).getAttribute("label");
+    if(trim(xfecha) != ''){
+	var afecha = xfecha.split(" ");
+	var dfecha = afecha[0].split("/");
+	var fecha  = dfecha[2]+"-"+dfecha[1]+"-"+dfecha[0];
+	var hora   = (afecha[1])? afecha[1]:'00:00:00';
+    }else{
+	var f = new Date();
+	var fecha = f.getFullYear() + "-" + (f.getMonth() +1) + "-" + f.getDate();
+	var hora  = f.getHours()+":"+f.getMinutes()+":"+f.getSeconds();
+    }
+
+    id("dateFechaEmision").value = fecha;
+    id("timeFechaEmision").value = hora;
+    id("timeFechaEmision").setAttribute("collapsed",xval);
+    id("dateFechaEmision").setAttribute("collapsed",false);
+
+    var snro   = trim(id("venta_num_bol_"+num).getAttribute("label"));
+    id("wtitleComprobanteVenta").setAttribute("label",aModificaFecha["tipocomprobante"]+" "+snro);
+    id("wtitleFechaEmision").setAttribute("label",wtitleFecha);
+    id("btnGuardarFechaEmision").setAttribute("oncommand",xcommand);    
+
+}
+
+function t_ModificarFechaEmisionComprobante(){
+    var xfecha = id("venta_fecha_emision_"+aModificaFecha["idcomprobante"]).getAttribute("label");
+    var afecha = xfecha.split(" ");
+    var dfecha = afecha[0].split("/");
+    var fechahora = dfecha[2]+"-"+dfecha[1]+"-"+dfecha[0]+" "+afecha[1]+":00";
+
+    var fecha = id("dateFechaEmision").value;
+    var hora  = id("timeFechaEmision").value;
+    var pfecha = fecha+" "+hora;
+    var fechahoy = calcularFechaActual('fecha')+" "+calcularFechaActual('hora');
+    var doc      = id("venta_tipodocumento_"+aModificaFecha["idcomprobante"]).getAttribute("label");
+    var numdoc   = id("venta_num_bol_"+aModificaFecha["idcomprobante"]).getAttribute("label");
+
+    id("panelFechaEmision").hidePopup();
+
+    if(fechahora == pfecha) 
+	return alert("gPOS:   Modificar Fecha Emisión "+doc+" "+numdoc+" \n\n   - Ingrese nueva fecha de emisión");
+
+    if(fechahoy < pfecha) 
+	return alert("gPOS:   Modificar Fecha Emisión "+doc+" "+numdoc+"\n\n   - La nueva fecha de emisión es mayor a fecha actual");
+
+    //Codigo Validacion
+    if( !Local.esAdmin )
+	if( !validaCodigoAutorizacion(cIdComprobante,'Modificar Fecha Emisión' ) ) return;
+
     var url = 
 	"services.php?"
-	+"modo=ModificarFechaEmicionComprobante&fecha="+p
-	+"&tipocomprobante="+TipoComprobante
-	+"&IdComprobante="+num
-	+'&accion='+accion;
+	+"modo=ModificarFechaEmicionComprobante&fecha="+pfecha
+	+"&tipocomprobante="+aModificaFecha["tipocomprobante"]
+	+"&IdComprobante="+aModificaFecha["idcomprobante"]
+	+'&accion='+aModificaFecha["accion"];
     
     var xrequest = new XMLHttpRequest();
     xrequest.open("GET",url,false);
     xrequest.send(null);
 
-    var xres = parseInt(xrequest.responseText);
-    if(xres == 1) {
-	alert("gPOS:\n\n       "+accion+" el Nro. de  "
-	      +TipoComprobante+"\n"+
+    var xres = xrequest.responseText;
+    var ares = xres.split("~");
+    if(ares[0] != "")
+	return alert('gPOS: '+po_servidorocupado+' \n Al modificar Fecha Emisión.');
+
+    if(parseInt(ares[1]) == 1) {
+	alert("gPOS:   Modificar Fecha Emisión  "+doc+" "+numdoc+"\n\n"+
 	      "      - Acción ejecutada con éxito.\n"+
-	      "      - Nueva Fecha Emisión : "+p+".");
+	      "      - Nueva Fecha Emisión : "+pfecha+".");
 	BuscarVentas();
     }else{
-	return alert('gPOS: '+po_servidorocupado+' \n Al modificar Fecha Emisión.');
+	if(ares[1] != 1){
+	    alert("gPOS:  Modificar Fecha Emisión \n\n    - La nueva fecha es menor a la fecha de apertura de caja \n    - Fecha de apertura de caja ["+ares[2]+"]");
+	}
     }
-    
 }
 
 var ilineabuscaventas = 0;
 
 function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,IdComprobante,
 			nombreCliente,NumeroDocumento,TipoDocumento,IdCliente,MotivoAlba,
-			IdSuscripcion,FechaEmision){
+			IdSuscripcion,FechaEmision,Reservado,FechaEntregaReserva,PlazoPago){
     var lista = id("busquedaVentas");
-    var xitem,xnumitem,xvendedor,xserie,xnum,xfecha,xtotal,xpendiente,xestado,xtipodoc,xop,xsucripcion,xfechaemision;
+    var xitem,xnumitem,xvendedor,xserie,xnum,xfecha,xtotal,xpendiente,xestado,xtipodoc,xop,xsucripcion,xfechaemision,xreserva,xfechareserva,xplazopago;
     
+    var vfecha = "0000-00-00 00:00:00";
+    var lfecha = "";
+    if(FechaEntregaReserva != ' '){
+	var afecha = FechaEntregaReserva.split("~");
+	vfecha = afecha[1];
+	lfecha = afecha[0];
+    } 
+
+    var aPlazo = PlazoPago.split("-");
+    FechaPlazo = aPlazo[2]+"/"+aPlazo[1]+"/"+aPlazo[0];
+    FechaPlazo = (PlazoPago == '0000-00-00')? "":FechaPlazo;
+ 
     xitem = document.createElement("listitem");
     xitem.value = IdComprobante;
     xitem.setAttribute("id","lineabuscaventa_"+ilineabuscaventas);
@@ -10998,7 +11869,8 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,IdC
     
     xfecha = document.createElement("listcell");
     xfecha.setAttribute("style","text-align:right");
-    xfecha.setAttribute("label", fecha);	
+    xfecha.setAttribute("label", fecha);
+    xfecha.setAttribute("collapsed",vFechaRegistro);
 
     xfechaemision = document.createElement("listcell");
     xfechaemision.setAttribute("style","text-align:right");
@@ -11020,7 +11892,6 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,IdC
     xestado.setAttribute("crop", "end");
     xestado.setAttribute("id","venta_status_"+IdComprobante);
     
-    
     xnombre = document.createElement("listcell");
     xnombre.setAttribute("label", nombreCliente);
     xnombre.setAttribute("value", IdCliente);
@@ -11041,6 +11912,21 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,IdC
     xsuscripcion.setAttribute("collapsed","true");
     xsuscripcion.setAttribute("id","venta_suscripcion_"+IdComprobante);
 
+    xreservado = document.createElement("listcell");
+    xreservado.setAttribute("value", Reservado);
+    xreservado.setAttribute("collapsed", "true");
+    xreservado.setAttribute("id","venta_reservado_"+IdComprobante);
+
+    xfechareserva = document.createElement("listcell");
+    xfechareserva.setAttribute("value", vfecha);
+    xfechareserva.setAttribute("label", lfecha);
+    xfechareserva.setAttribute("id","venta_fechareserva_"+IdComprobante);
+
+    xplazopago = document.createElement("listcell");
+    xplazopago.setAttribute("value", PlazoPago);
+    xplazopago.setAttribute("label", FechaPlazo);
+    xplazopago.setAttribute("style","text-align:right");
+    xplazopago.setAttribute("id","venta_plazopago_"+IdComprobante);
     
     xitem.appendChild( xnumitem );
     xitem.appendChild( xserie );
@@ -11051,11 +11937,14 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,IdC
     xitem.appendChild( xnombre );	
     xitem.appendChild( xfecha );
     xitem.appendChild( xfechaemision );
+    xitem.appendChild( xplazopago );
     xitem.appendChild( xtotal );
     xitem.appendChild( xpendiente );	
     xitem.appendChild( xestado );
+    xitem.appendChild( xfechareserva );
     xitem.appendChild( xvendedor );
     xitem.appendChild( xsuscripcion );
+    xitem.appendChild( xreservado );
 
     lista.appendChild( xitem );		
 }
@@ -11063,29 +11952,53 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,IdC
 
 function BuscarVentas(){
     VaciarBusquedaVentas();
+    VaciarDetallesCobrosVenta();
     checkDevolucionDetalle(true);//Limpia...
 
     var desde  = id("FechaBuscaVentas").value;
     var hasta  = id("FechaBuscaVentasHasta").value;
     var nombre = id("NombreClienteBusqueda").value;	
-    
-    var modo      = (id("modoConsultaVentas").checked)?"pendientes":"todos";
-    var modoserie = (id("modoConsultaVentasSerie").checked)?"cedidos":"todos";
-    var modosuscripcion = (id("modoConsultaVentasSuscripcion").checked)?"suscripcion":"todos";
+    var modoend         = (id("modoConsultaVentasFin").checked);
+    var modopen         = (id("modoConsultaVentasPen").checked);
+    var modotpventa     = id("modoConsultaTipoVenta").value;
+    var modoserie       = "todos";
+    var modocontado     = "todos";
+    var modosuscripcion = "todos";
+    var modoreserva     = "todos";
+
+    var modo            = "todos";    
+    //modo                = ( modoend && modopen )? "endypen":"todos";
+    modo                = ( modoend && !modopen )? "end":modo;
+    modo                = ( !modoend && modopen )? "pen":modo;
+
+    //alert(modotpventa);
+    switch( modotpventa ){
+    case "contado":     modoserie = "contado"; break;
+    case "credito":     modoserie = "cedidos"; break;
+    case "suscripcion": modosuscripcion = "suscripcion"; break;
+    case "reservas":    modoreserva = "reservados"; break;
+    }
+
+    //habilita tree
+    BuscarReservados();
+    BuscarPlazo();
 
     var filtrocodigo   = trim(id("busquedaCodigoSerie").value);
     var filtroventa    = id("FiltroVenta").value;
     var modofactura    = (filtroventa =="factura")?"factura":"todos";
     var modoboleta     = (filtroventa =="boleta")?"boleta":"todos";
     var modoticket     = (filtroventa == "ticket" )?"ticket":"todos";
-    var mododevolucion = (filtroventa =="devolucion")?"devolucion":"todos";
     var modoalbaran    = (filtroventa =="albaran")?"albaran":"todos";
     var modoalbaranint = (filtroventa =="albaranint")?"albaranint":"todos";
-    var forzarid        = (filtrocodigo != '' )? filtrocodigo:false;
+    var modocaja       = (filtroventa =="caja" && Local.esCajaTPV == 1 )? "caja":"todos";
+
+    var forzarid       = (filtrocodigo != '' )? filtrocodigo:false;
+    var usuario        = id("IdUsuarioVentas").getAttribute("value");
+    var tipoproducto   = id("TipoProducto").value;
     
     RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modofactura,modoboleta,
-		    mododevolucion,modoalbaran,modoalbaranint,modoticket,false,false,forzarid,
-		    AddLineaVentas);
+		    modoalbaran,modoalbaranint,modoticket,false,false,forzarid,usuario,
+		    modoreserva,modocaja,tipoproducto,AddLineaVentas);
     
     var elemento = id("busquedaCodigoSerie").value;
     if( elemento != '' ){
@@ -11094,25 +12007,29 @@ function BuscarVentas(){
 }
 
 
-function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modofactura,modoboleta,
-			 mododevolucion,modoalbaran,modoalbaranint,modoticket,
-			 IdComprobante,reimprimir,forzarid,FuncionProcesaLinea){
+function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modofactura,
+			 modoboleta,modoalbaran,modoalbaranint,modoticket,IdComprobante,
+			 reimprimir,forzarid,usuario,modoreserva,modocaja,tipoproducto,
+			 FuncionProcesaLinea){
 
     var url = "services.php?modo=mostrarVentas&desde=" + escape(desde) 
         + "&modoconsulta=" + escape(modo) 
         + "&hasta=" + escape(hasta) 
-        + "&nombre=" + escape(nombre)
+        + "&nombre=" + trim(nombre)
         + "&modoserie=" + escape(modoserie)
         + "&modosuscripcion=" + escape(modosuscripcion)
         + "&modoboleta=" + escape(modoboleta)
         + "&modoticket=" + escape(modoticket)
-        + "&mododevolucion=" + escape(mododevolucion)
         + "&modoalbaran=" + escape(modoalbaran)
         + "&modoalbaranint=" + escape(modoalbaranint)
         + "&modofactura=" + escape(modofactura)
         + "&esventas=off"
         + "&modoventa=tpv" 
         + "&forzarfactura=" + IdComprobante
+        + "&usuario=" + usuario
+        + "&modoreserva=" + modoreserva
+        + "&modocaja=" + modocaja
+        + "&tipoprod=" + tipoproducto
         + "&forzarid=" + forzarid;
 
     var obj = new XMLHttpRequest();
@@ -11122,7 +12039,7 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
     var tex = "";
     var cr = "\n";
     
-    var vendedor,serie,num,fecha,total,pendiente,estado,IdComprobante,NumeroDocumento,TipoDocumento,IdCliente,IdSuscripcion,FechaEmision;
+    var vendedor,serie,num,fecha,total,pendiente,estado,IdComprobante,NumeroDocumento,TipoDocumento,IdCliente,IdSuscripcion,FechaEmision,Reservado,FechaEntregaReserva,esContable,PlazoPago;
     var node,t,i,codventa,xLocal; 
     var totalVenta = 0;
     var totalVentaPendiente = 0;
@@ -11147,14 +12064,21 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
 	    num 	    = node.childNodes[t++].firstChild.nodeValue;
 	    fecha 	    = node.childNodes[t++].firstChild.nodeValue;
 	    total 	    = node.childNodes[t++].firstChild.nodeValue;
-	    totalVenta      = parseFloat(totalVenta) + parseFloat(total);
 	    pendiente 	    = node.childNodes[t++].firstChild.nodeValue;
-	    totalVentaPendiente = parseFloat(totalVentaPendiente) + parseFloat(pendiente);
 	    estado 	    = node.childNodes[t++].firstChild.nodeValue;
 	    IdComprobante   = node.childNodes[t++].firstChild.nodeValue;
 	    NumeroDocumento = node.childNodes[t++].firstChild.nodeValue;
 	    TipoDocumento   = node.childNodes[t++].firstChild.nodeValue;
 	    codventa        = serie+'-'+num;	    
+	    esContable      = (!(TipoDocumento == 'AlbaranInt')); 
+
+	    //alert(TipoDocumento+' es Contable -> ['+esContable+']'); 
+
+	    if ( esContable )
+	    {
+		totalVenta          = parseFloat(totalVenta) + parseFloat(total);
+		totalVentaPendiente =  parseFloat(totalVentaPendiente) + parseFloat(pendiente);   
+	    }
 	    if (TipoDocumento == 'Ticket') nrotickets++; 
 	    if (TipoDocumento == 'Boleta') nroboletas++; 
 	    if (TipoDocumento == 'Factura') nrofacturas++; 
@@ -11172,10 +12096,14 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
 	    MotivoAlba    = node.childNodes[t++].firstChild.nodeValue;
 	    IdSuscripcion = node.childNodes[t++].firstChild.nodeValue;
 	    FechaEmision  = node.childNodes[t++].firstChild.nodeValue;
+	    PlazoPago     = node.childNodes[t++].firstChild.nodeValue;
+	    Reservado     = node.childNodes[t+2].firstChild.nodeValue;
+	    FechaEntregaReserva = node.childNodes[t+3].firstChild.nodeValue;
 
 	    FuncionProcesaLinea(item,vendedor,serie,num,fecha,total,pendiente,estado,
 				IdComprobante,nombreCliente,NumeroDocumento,TipoDocumento,
-				IdCliente,MotivoAlba,IdSuscripcion,FechaEmision);
+				IdCliente,MotivoAlba,IdSuscripcion,FechaEmision,
+				Reservado,FechaEntregaReserva,PlazoPago);
 	    
 	    item--;
         }
@@ -11230,6 +12158,7 @@ function mostrarBusquedaAvanzada(xthis){
 	break;
     case "Usuario":
 	vUsuario       = xchecked;
+	if(xchecked) id("IdUsuarioVentas").value = 'todos';
 	break;
     case "OP" :
 	vOP            = xchecked;
@@ -11237,12 +12166,16 @@ function mostrarBusquedaAvanzada(xthis){
     case "Codigo":
 	vCodigo        = xchecked;
 	break;
+    case "Fecha_Registro":
+	vFechaRegistro = xchecked;
+	break;
     }
 
     if(id("vbox"+xlabel)) id("vbox"+xlabel).setAttribute("collapsed",xchecked);
     if(id("vlist"+xlabel)) id("vlist"+xlabel).setAttribute("collapsed",xchecked);
     if(id("vlistcol"+xlabel)) id("vlistcol"+xlabel).setAttribute("collapsed",xchecked);
-    BuscarVentas();
+
+    if( xlabel != 'Forma_Venta') BuscarVentas();
 }
 
 function menuContextualVentasRealizadas(xval,xvaldet,esGarantia){
@@ -11258,11 +12191,17 @@ function menuContextualVentasRealizadas(xval,xvaldet,esGarantia){
     id("VentaRealizadaCambioAnularNro").setAttribute("disabled",true);
     id("VentaRealizadaDetalleNS").setAttribute("disabled",true);
     id("VentaRealizadaDetalleMProducto").setAttribute("disabled",true);
+    id("VentaGarantiaComprobante").setAttribute("disabled",true);
+    id("VentaRealizadaEntregarReserva").setAttribute("disabled",true);
+    id("VentaRealizadaFechaPago").setAttribute("disabled",true);
+    id("VentaEstadoReserva").setAttribute("disabled",true);
 
     var esSuscripcionVenta = (cIdSuscripcionVenta == 0)? true:false;
     id("VentaSuscripcionImprimir").setAttribute("collapsed",esSuscripcionVenta);
 
     var esAbonar   =  ( id("venta_pendiente_"+xval).getAttribute("label") > 0 )? true:false
+    var tipodoc    = id("venta_tipodocumento_"+xval).getAttribute("label");
+    
     var esDevolver = false;
     var esBoletar  = false;
     var esFacturar = false;
@@ -11270,6 +12209,7 @@ function menuContextualVentasRealizadas(xval,xvaldet,esGarantia){
     var esCambioCliente = false;
     var esCambioNro = false;
     var esSeries    = xvaldet;
+    var esEntregado = false;
 
     switch( cComprobante )
     {
@@ -11278,12 +12218,28 @@ function menuContextualVentasRealizadas(xval,xvaldet,esGarantia){
 	esFacturarLote = true;
     case 'Ticket':
 	esBoletar = true;
+	esFacturar = true;
+	esFacturarLote = true;
     case 'Boleta' : 
     case 'Factura':
 	esCambioNro     = ( cComprobante =='Ticket' )? false: true;
 	esDevolver      = true;
 	esCambioCliente = true;
 	break;
+    }
+
+    if(cReservado == 1 && cFechaEntrega == '0000-00-00 00:00:00'){
+	esEntregado = true;
+    }
+
+    var xpendiente = id("venta_pendiente_"+xval).getAttribute("label");
+    var esPlazo = (xpendiente > 0)? true:false;
+    var esreserva = (cReservado == 1 && cFechaEntrega != '0000-00-00 00:00:00')? false:true;
+
+    if(tipodoc == 'AlbaranInt Devolución'){
+	esAbonar = false;
+	esEntregado = false;
+	esreserva = false;
     }
 
     //Abono
@@ -11298,9 +12254,662 @@ function menuContextualVentasRealizadas(xval,xvaldet,esGarantia){
     if ( esCambioNro ) id("VentaRealizadaCambioAnularNro").removeAttribute("disabled");
     if ( esSeries )    id("VentaRealizadaDetalleMProducto").removeAttribute("disabled");
     if ( esSeries )    id("VentaRealizadaDetalleNS").removeAttribute("disabled");
+    if ( esGarantia ) id("VentaGarantiaComprobante").removeAttribute("disabled");
+    if ( esEntregado ) id("VentaRealizadaEntregarReserva").removeAttribute("disabled");
+    if ( esPlazo)     id("VentaRealizadaFechaPago").removeAttribute("disabled");
+    if ( esreserva)   id("VentaEstadoReserva").removeAttribute("disabled");
 }
 
+function verGarantiaComprobante(){
+    var idex      = id("busquedaDetallesVenta").selectedItem;
+    if(!idex) return;
+    var esOrdenServicio = id("xdetalleventa_ordenservicio_"+idex.value).getAttribute("value");
+    var devuelto   = id("detalleventa_obs_"+idex.value).getAttribute("value");
+    var esGarantia = ((esOrdenServicio == 0) && (devuelto == 0))? true:false;
+    var Producto   = id("xdetalleventa_concepto_"+idex.value).getAttribute("label");
+
+    if(esGarantia)
+	if(!confirm("gPOS:   Garantía Producto \n\n"+
+		    " - Se va generar orden de servicio por garantía del Producto:\n"+
+		    "   "+Producto+"\n ¿Desea Continuar?")) return;
+
+    if(servicios.length == 0) 
+	return alert("gPOS: Registre por lo menos un servicio para garantías en: \n\n "+
+                     "      * Admin > Compras > Productos > Nuevo Producto" );
+
+    VerServicios();
+    RecibirGarantiaProducto();
+}
+
+function BuscarReservados(){
+    var xval = (id("modoConsultaTipoVenta").value == "reservas")? false:true;
+
+    id("vlistcolFechaEntrega").setAttribute("collapsed",xval);
+    id("vlistFechaEntrega").setAttribute("collapsed",xval);
+
+    //BuscarVentas();
+}
+
+function BuscarPlazo(){
+    var xval = (id("modoConsultaVentasPen").checked)? false:true;
+    var yval = ( id("modoConsultaTipoVenta").value == "credito" )? false:true;
+    xval     = (!xval || !yval)? false:true;
+
+    id("vlistcolPlazoPago").setAttribute("collapsed",xval);
+    id("vlistPlazoPago").setAttribute("collapsed",xval);
+    //BuscarVentas();
+}
+
+function EntregarReservas(){
+    var idex = id("busquedaVentas").selectedItem;
+    if(!idex) return;
+
+    if(cReservado == 1 && cFechaEntrega != '0000-00-00 00:00:00') return;
+    aModificaFecha["idcomprobante"] = cIdComprobante;
+    aModificaFecha["tipocomprobante"] = cComprobante;
+    aModificaFecha["accion"] = "";
+    aModificaFecha["serie"] = "";
+
+    mostrarPanelModificarFecha("fechareserva");
+}
+
+function formModificarEstadoReserva(){
+    var idex = id("busquedaVentas").selectedItem;
+    if(!idex) return;
+
+    if(cReservado == 1 && cFechaEntrega != '0000-00-00 00:00:00') return;
+
+    id("wtitleFechaEmision").setAttribute("label",'Modificar Estado Reserva');
+    id("dateFechaEmision").setAttribute("collapsed",true);
+    id("timeFechaEmision").setAttribute("collapsed",true);
+    id("hboxReservado").setAttribute("collapsed",false);
+    id("btnGuardarFechaEmision").setAttribute("oncommand",'ModificarEstadoReserva()');
+    var xreserva = (cReservado == 1)? true:false;
+    id("checkReserva").setAttribute("checked",xreserva);
+    id("wtitleComprobanteVenta").setAttribute("label",cComprobante+" "+trim(cSerieNroComprobante))
+
+    var xtop  = parseInt( window.screen.width)/2 - 250;
+    var xleft = parseInt( window.screen.height)/2 - 150;
+    
+    id("panelFechaEmision").openPopupAtScreen(xtop, xleft, false);
+}
+
+function ModificarEstadoReserva(){
+    id("panelFechaEmision").hidePopup();
+    id("hboxReservado").setAttribute("collapsed",true);
+
+    var reservado = (id("checkReserva").checked);
+    reservado = (reservado)? 1:0;
+
+    var obj = new XMLHttpRequest();
+    var url = "services.php?modo=ModificaEstadoReserva&IdComprobante=" + cIdComprobante
+        + "&xreserva="+reservado
+        + "&r=" + Math.random();		
+
+    obj.open("POST",url,false);
+    obj.send("");
+    
+    var text = obj.responseText;
+
+    if(!parseInt(text)) alert("gPOS:  Reservas \n\n   - No se cambió el estado de reserva de "+cComprobante+" "+trim(cSerieNroComprobante));
+    BuscarVentas();
+}
+
+
+function registrarEntregaReserva(){
+    id("panelFechaEmision").hidePopup();
+    
+    var fecha = id("dateFechaEmision").value;
+    var hora  = id("timeFechaEmision").value;
+    var pfecha = fecha+" "+hora;
+
+    var obj = new XMLHttpRequest();
+    var url = "services.php?modo=EntregarReserva&IdComprobante=" + cIdComprobante
+        + "&xfecha="+pfecha
+        + "&r=" + Math.random();		
+
+    obj.open("POST",url,false);
+    obj.send("");
+    
+    var text = obj.responseText;
+
+    if(!parseInt(text)) alert("gPOS:  Comprobantes Reservados \n\n   - No realizó la entrega del "+cComprobante+" "+trim(cSerieNroComprobante)+" reservado");
+    BuscarVentas();
+}
+
+function ModificarFechaPago(){
+    id("panelFechaEmision").hidePopup();
+    
+    var fecha = id("dateFechaEmision").value;
+    var pfecha = fecha;
+
+    var obj = new XMLHttpRequest();
+    var url = "services.php?modo=ModificaFechaPago&IdComprobante=" + cIdComprobante
+        + "&xfecha="+pfecha
+        + "&r=" + Math.random();		
+
+    obj.open("POST",url,false);
+    obj.send("");
+    
+    var text = obj.responseText;
+
+    if(!parseInt(text)) alert("gPOS:  Fecha de Pago \n\n   - No se modificó fecha de pago del "+cComprobante+" "+trim(cSerieNroComprobante));
+    BuscarVentas();
+}
+
+function VerFechaReservaEntregado(xval){
+    id("rowFechaReservaEntregado").setAttribute("collapsed",!xval);
+
+    if(xval){
+	id("dateFechaEntrega").value = id("dateFechaPago").value;
+	id("timeFechaEntrega").value = id("timeFechaPago").value;
+    }
+}
+
+var icuentas = 0;
+var acuentasb = "";
+var ientidadfinanciera = 0;
+function VaciarCuentas(){
+    var xlistitem = id("elementosCuenta");
+    var iditem;
+    var t = 0;
+    
+    while( el = id("cuenta_def_"+ t) ) {
+	if (el)	xlistitem.removeChild( el ) ;	
+	t = t + 1;
+    }
+    
+    icuentas = 0;
+    
+    id("NroCtaEmpresa").setAttribute("label","");	
+}
+
+function RegenCuentasBancarias(){
+    var idprov = 0;
+
+    var xrequest = new XMLHttpRequest();
+    var url = "services.php?modo=cuentasbancarias&idprov="+idprov+"&todo=0";
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+    var res = xrequest.responseText;
+    acuentasb = res;
+
+}
+
+function RegenCuentas() {
+    VaciarCuentas();
+    var entidad = id("EntidadFinanciera").getAttribute("label");
+
+    var lines = acuentasb.split("\n");
+    var actual,ent;
+    var xent = "";
+    var ln = lines.length-1;	
+    for(var t=0;t<ln;t++){
+	actual = lines[t];
+	actual = actual.split("=");
+	ent = actual[0].split("~");
+	if(ent[2] == entidad)
+	    AddCuentaLine('('+ent[0]+') '+ent[1],actual[1]);		
+    }				
+}
+
+function AddCuentaLine(nombre, valor) {
+    var xlistitem = id("elementosCuenta");	
+
+    var xcuenta = document.createElement("menuitem");
+    xcuenta.setAttribute("id","cuenta_def_" + icuentas);
+	
+    xcuenta.setAttribute("value",valor);
+    xcuenta.setAttribute("label",nombre);
+    xcuenta.setAttribute("selected",true);
+    
+    xlistitem.appendChild( xcuenta);
+    if(icuentas == 0) id("NroCtaEmpresa").value = valor;
+    icuentas ++;
+
+}
+
+function RegenEntidadFinanciera(){
+    VaciarEntidadFinanciera();
+    var lines = acuentasb.split("\n");
+    var actual,ent;
+    var xent = "";
+    var ln = lines.length-1;	
+    for(var t=0;t<ln;t++){
+	actual = lines[t];
+	actual = actual.split("=");
+	ent = actual[0].split("~");
+	if(ent[2] != xent)
+	    AddEntidadFinancieraLine(ent[2],actual[1]);
+	xent = ent[2];
+    }				   
+}
+
+function AddEntidadFinancieraLine(nombre, valor) {
+    var xlistitem = id("elementosEntFinanciera");	
+    
+    var xentidad = document.createElement("menuitem");
+    xentidad.setAttribute("id","entidad_def_" + ientidadfinanciera);
+    
+    xentidad.setAttribute("value",nombre);
+    xentidad.setAttribute("label",nombre);
+    
+    xlistitem.appendChild( xentidad);
+    if(ientidadfinanciera == 0) id("EntidadFinanciera").value = nombre;	
+    ientidadfinanciera++;
+}
+
+function VaciarEntidadFinanciera(){
+    var xlistitem = id("elementosEntFinanciera");
+    var iditem;
+    var t = 0;
+    
+    while( el = id("entidad_def_"+ t) ) {
+	if (el)	xlistitem.removeChild( el ) ;	
+	t = t + 1;
+    }
+    
+    ientidadfinanciera = 0;
+    
+    id("EntidadFinanciera").setAttribute("label","");	
+}
+
+function CogeNroCuenta(){
+    popup("modulos/pagoscobros/selcuentabancaria.php?modo=cuenta&xidprov=0&xcta=0",'cuenta');
+}
+
+
+function changeNroCuenta( quien, txtcuenta) {
+    RegenEntidadFinanciera();
+    id("EntidadFinanciera").value = txtcuenta;
+    RegenCuentas();
+    id("NroCtaEmpresa").value     = quien.value;
+}
+
+
+function validaCodigoAutorizacion(xid,xop){
+
+    var xcod;
+    
+    if ( Local.CodigoAutorizacion[xid] )
+        xcod = Local.CodigoAutorizacion[xid]; 
+    else
+	xcod = prompt( c_gpos + " Código de Autorización de Operaciones: \n"+
+		       "\n  CLIENTE "+ cClienteComprobante +
+		       "\n  COMPROBANTE       : "+ cComprobante +" "+ cSerieNroComprobante +
+		       "\n  OPERACION             : "+ xop +
+		       "\n\nIngrese el código de autorización de operaciones:\n\n", '');
+
+    //cancelo?
+    if( xcod == null)
+	return false;
+
+    //codigo vacio?
+    if ( xcod == '') {
+	alert( c_gpos + " Código de Autorización de Operaciones: \n"+
+	       "\n     -   Ingrese correctamente el código de autorización  - ");
+	return validaCodigoAutorizacion(xid,xop);
+    }
+
+    //servidor?
+    var url,xres,xarrcod;
+
+    url  = "services.php?modo=validaCodigoAutorizacionTPV"+
+	"&xid="+xid+
+	"&xcod="+xcod;
+    xres = new XMLHttpRequest();
+    xres.open("GET",url,false);
+    try{
+	xres.send(null);
+    } catch(z){
+	return;
+    }
+    
+    //alert( xres.responseText );
+    xarrcod = xres.responseText.split("~");
+
+    //respuesta del servidor
+    if(xarrcod[0] != 0 ){ 
+	alert(po_servidorocupado); return false; 
+    }
+    
+    Local.CodigoAutorizacion[xid] = ( xarrcod[1] == 1 )? xcod: false;
+
+    if( !Local.CodigoAutorizacion[xid] )
+	alert( c_gpos + " Código de Autorización de Operaciones: "+
+	       "\n\n    -   El código de autorización es incorrecto ó expiró  -\n");
+
+    return ( xarrcod[1] == 1 );
+}
+
+function validaCodigoAutorizacionCliente(xid,xop){
+
+    var xcod;
+    
+    if ( Local.CodigoAutorizacionCliente[xid] )
+        xcod = Local.CodigoAutorizacionCliente[xid]; 
+    else
+	xcod = prompt( c_gpos + " Código de Autorización de Operaciones: \n"+
+		       "\n  CLIENTE       :"+ usuarios[ preSeleccionadoCliente ].nombre +
+		       "\n  OPERACION  : "+ xop +
+		       "\n\nIngrese el código de autorización de operaciones:\n\n", '');
+    //cancelo?
+    if( xcod == null)
+	return false;
+
+    //codigo vacio?
+    if ( xcod == '') {
+	alert( c_gpos + " Código de Autorización de Operaciones: \n"+
+	       "\n     -   Ingrese correctamente el código de autorización  - ");
+	return validaCodigoAutorizacionCliente(xid,xop);
+    }
+
+    //servidor?
+    var url,xres,xarrcod;
+
+    url  = "services.php?modo=validaCodigoAutorizacionClienteTPV"+
+	"&xid="+xid+
+	"&xcod="+xcod;
+    xres = new XMLHttpRequest();
+    xres.open("GET",url,false);
+    try{
+	xres.send(null);
+    } catch(z){
+	return;
+    }
+    
+    //alert( xres.responseText );
+    xarrcod = xres.responseText.split("~");
+
+    //respuesta del servidor
+    if(xarrcod[0] != 0 ){ 
+	alert(po_servidorocupado); return false; 
+    }
+    
+    Local.CodigoAutorizacionCliente[xid] = ( xarrcod[1] == 1 )? xcod: false;
+
+    if( !Local.CodigoAutorizacionCliente[xid] )
+	alert( c_gpos + " Código de Autorización de Operaciones: "+
+	       "\n\n    -   El código de autorización es incorrecto ó expiró  -\n");
+
+    return ( xarrcod[1] == 1 );
+}
+
+function ckCodigoAutorizacionCliente(xaccion,xck){
+    if( preSeleccionadoCliente == 1 )
+	return alert( c_gpos + " Código de Autorización de Operaciones: "+
+		      "\n\n -   Elija un cliente diferente a Cliente Contado. - ");
+    ckCodigoAutorizacion(xaccion,xck,preSeleccionadoCliente,false);
+}
+
+
+function ckCodigoAutorizacion(xaccion,xck,xid,xreset){
+    var idex = id("busquedaVentas").selectedItem;
+    var xid  = ( xaccion == 'ck' )? idex.value:xid;
+    var url  = "services.php?modo=codigoAutorizacionTPV"+
+	       "&xid="+xid+
+	       "&xaccion="+xaccion;
+
+    var xres = new XMLHttpRequest();
+
+    xres.open("GET",url,false);
+    try{
+	xres.send(null);
+    } catch(z){
+	return;
+    }
+    //alert( xres.responseText );
+    var newaccion = 'reset'+xaccion; 
+    var xarrcod  = xres.responseText.split("~");
+    var xtrmsj   = ( !xarrcod[2] )? '\n\n      *** Nuevo Código Generado  ***':'';
+    var xmsj     = "";
+
+    if(xarrcod[0] != 0 )
+	return alert(po_servidorocupado);
+    if ( xaccion == 'ck' || xaccion == 'resetck' )
+	xmsj  = c_gpos + " Código de Autorización de Operaciones: \n"+
+	"\n  CLIENTE "+ cClienteComprobante +
+	"\n  COMPROBANTE        : "+ cComprobante +" "+ cSerieNroComprobante +
+	"\n  CODIGO                   : ***"+xarrcod[1]+xtrmsj;
+
+    if ( xaccion == 'ckcliente' || xaccion == 'resetckcliente' )
+	xmsj  = c_gpos + " Código de Autorización de Operaciones: \n"+
+	"\n  CLIENTE  : "+ usuarios[ preSeleccionadoCliente ].nombre +
+	"\n  CODIGO    : ***"+xarrcod[1]+xtrmsj;
+
+    //codigo nuevo
+    if( xreset )
+	return alert( xmsj+'\n' );
+
+    //codigo guardado
+    if( confirm( xmsj+"\n\n  desea generar un nuevo código de autorización?" ) )
+	ckCodigoAutorizacion('reset'+xaccion,false,xid,true);
+}
+
+
 /*+++++++++++++++++++++++++++++ VENTAS  ++++++++++++++++++++++++++++++++++*/
+
+
+/*+++++++++++++++++++++++++++++ VENTAS COBROS ++++++++++++++++++++++++++++++++++*/
+var cEsCobroVenta = false;
+var idetallescobroventa = 0;
+
+function mostrarDetalleVenta(xval){
+
+    switch(xval){
+      case 'comprobante':
+	var cbte = false;
+	var cbro = true;
+	cEsCobroVenta = false;
+	break;
+      case 'cobros':
+	var cbte = true;
+	var cbro = false;
+	cEsCobroVenta = true;
+	break;	
+    }
+
+    var xtitle = (cbte)? "Detalle Cobros":"Detalle Comprobantes";
+    id("boxDetalleComprobantes").setAttribute('collapsed',cbte);
+    id("t_detalle").setAttribute("checked",!cbte);
+    id("onlistDetalle").setAttribute("label",xtitle);
+    id("boxDetalleCobros").setAttribute('collapsed',cbro);
+    id("t_cobros").setAttribute("checked",!cbro);
+    if(cbro) id("btnsDevolucion").setAttribute('collapsed',true);
+
+    var idex = id("busquedaVentas").selectedItem;
+    if(!idex) return;
+    
+    if(!cbro) setTimeout("BuscarDetallesCobroVenta("+cIdComprobante+")",0);
+}
+
+function BuscarDetallesCobroVenta(IdComprobante){
+    VaciarDetallesCobrosVenta();
+    RawBuscarDetallesCobroVenta(IdComprobante, AddLineaDetallesCobro);
+}
+
+function VaciarDetallesCobrosVenta(){
+    var lista = id("busquedaDetallesCobroVenta");
+    
+    for (var i = 0; i < idetallescobroventa; i++) { 
+        kid = id("v_detallecobro_"+i);					
+        if (kid)	lista.removeChild( kid ); 
+    }
+    idetallescobroventa = 0;
+}
+
+function RawBuscarDetallesCobroVenta(IdComprobante,FuncionRecogerDetalles){
+
+    var obj = new XMLHttpRequest();
+    var z   = null;
+    var url = "services.php?modo=mostrarDetallesCobro&IdComprobante="+IdComprobante;
+    obj.open("GET",url,false);
+
+    try {
+	obj.send(null);
+    } catch(z){
+	return;
+    }
+
+    var tex = "";
+    var cr = "\n";
+    var item,ModoPago,FechaPago,ImportePago,IdComprobante,Usuario,Simbolo,Caja,Local,LocalPago,IdModalidad,TipoVenta;
+    var node,t,i;
+    var numitem = 0;
+
+    if (!obj.responseXML)
+        return alert(po_servidorocupado);
+    var xml  = obj.responseXML.documentElement;
+    var item = xml.childNodes.length;
+    var tC   = item;
+    var numitem = 0;
+
+    for (i=0; i<xml.childNodes.length; i++) {
+        node = xml.childNodes[i];
+        if (node){
+            t = 0;
+	    numitem++;
+	    if(node.childNodes[t].firstChild){
+		ModoPago     = node.childNodes[t++].firstChild.nodeValue;
+		FechaPago    = node.childNodes[t++].firstChild.nodeValue;
+		ImportePago  = node.childNodes[t++].firstChild.nodeValue;
+		Usuario      = node.childNodes[t++].firstChild.nodeValue;
+		IdOperacion  = node.childNodes[t++].firstChild.nodeValue;
+		Local        = node.childNodes[t++].firstChild.nodeValue;
+		IdModalidad  = node.childNodes[t++].firstChild.nodeValue;
+		TipoVenta    = node.childNodes[t++].firstChild.nodeValue;
+		LocalPago    = node.childNodes[t++].firstChild.nodeValue;
+		
+		FuncionRecogerDetalles(numitem,FechaPago,ImportePago,Usuario,ModoPago,
+				       IdOperacion,Local,LocalPago,IdModalidad,TipoVenta);
+            //item--;
+	    }
+        }
+    }
+}
+
+function AddLineaDetallesCobro(numitem,FechaPago,ImportePago,Usuario,ModoPago,
+			       IdOperacion,Local,LocalPago,IdModalidad,TipoVenta){
+
+    var lista = id("busquedaDetallesCobroVenta");
+    var xitem,xnumitem,xFechaPago,xModoPago,xUsuario,xIMportePago,xLocalPago,xTipoVenta;
+
+    xitem = document.createElement("listitem");
+    xitem.value = IdOperacion;
+    xitem.setAttribute("id","v_detallecobro_" + idetallescobroventa);
+    idetallescobroventa++;
+
+    xnumitem = document.createElement("listcell");
+    xnumitem.setAttribute("label", '  '+numitem+'. ');
+    xnumitem.setAttribute("style","text-align:left");
+
+    xModoPago = document.createElement("listcell");
+    xModoPago.setAttribute("label", ModoPago);
+    xModoPago.setAttribute("value", IdModalidad);
+    xModoPago.setAttribute("id","c_modopago_"+IdOperacion);
+
+    xFechaPago = document.createElement("listcell");
+    xFechaPago.setAttribute("label", FechaPago);
+    xFechaPago.setAttribute("id","c_fechapago_"+IdOperacion);
+
+    xImportePago = document.createElement("listcell");
+    xImportePago.setAttribute("label", formatDinero(ImportePago));
+    xImportePago.setAttribute("value",ImportePago);
+    xImportePago.setAttribute("style","font-weight:bold;text-align:right");
+    xImportePago.setAttribute("id","c_importe_"+IdOperacion);
+
+    xUsuario = document.createElement("listcell");
+    xUsuario.setAttribute("label", Usuario);
+    xUsuario.setAttribute("style","text-align:center");
+    xUsuario.setAttribute("id","c_usuario_"+IdOperacion);
+
+    xLocalPago = document.createElement("listcell");
+    xLocalPago.setAttribute("label", LocalPago+' - '+Local);
+    xLocalPago.setAttribute("style","text-align:center");
+    xLocalPago.setAttribute("id","c_localpago_"+IdOperacion);
+
+    xTipoVenta = document.createElement("listcell");
+    xTipoVenta.setAttribute("value", TipoVenta);
+    xTipoVenta.setAttribute("collapsed","true");
+    xTipoVenta.setAttribute("id","c_tipoventa_"+IdOperacion);
+
+    xitem.appendChild( xnumitem );
+    xitem.appendChild( xFechaPago );
+    xitem.appendChild( xModoPago );
+    xitem.appendChild( xImportePago );
+    xitem.appendChild( xLocalPago );
+    xitem.appendChild( xUsuario );
+    xitem.appendChild( xTipoVenta );
+    lista.appendChild( xitem );
+}
+
+
+function ImprimirCobroSeleccionadaVenta(){
+
+    var idex = id("busquedaVentas").selectedItem;
+    if(!idex) return;
+
+    var idoc          = idex.value;
+    var importe       = cMontoComprobante;
+    var moneda        = 1;
+    var importeletras = convertirNumLetras(importe,moneda);
+    importeletras     = importeletras.toUpperCase();
+    var url           = "modulos/fpdf/imprimir_cobros.php?idoc="+idoc+
+                        "&totaletras="+importeletras;
+    location.href=url;
+}
+
+function RevisarCobroSeleccionadaVenta(){
+    var idex = id("busquedaDetallesCobroVenta").selectedItem;
+    if(!idex) return;
+    //var idpago = idex.value;
+
+    ccIdOperacionCaja = idex.value;
+    ccIdModalidadPago = id("c_modopago_"+idex.value).getAttribute("value");
+    ccTipoVenta       = id("c_tipoventa_"+idex.value).getAttribute("value");
+    ccImporteCobro    = id("c_importe_"+idex.value).getAttribute("value");
+}
+
+function ModificarCobrosVenta(xval){
+    var idex = id("busquedaDetallesCobroVenta").selectedItem;
+    if(!idex) return;
+
+    //Codigo Validacion
+    if( !Local.esAdmin )
+	if( !validaCodigoAutorizacion(cIdComprobante,'Eliminar Abono' ) ) return;
+
+    var msj = "- Cliente: "+cClienteComprobante+"\n- Monto : "+ccImporteCobro;
+    if(!confirm('gPOS:  Eliminar Abonos Cliente \n\n'+msj+',\n'+'Va eliminar el abono.  ¿desea continuar?'))
+	return;
+
+    var obj = new XMLHttpRequest();
+    var url = "modulos/pagoscobros/modpagoscobros.php?modo=ModificarCobros"
+	+ "&idopcja=" + escape(ccIdOperacionCaja)
+        + "&idcbte=" + escape(cIdComprobante)
+        + "&idmod=" + escape(ccIdModalidadPago)
+        + "&idc=" + escape(cIdClienteComprobante)
+        + "&tv=" + escape(ccTipoVenta)
+        + "&ximp=" + escape(ccImporteCobro)
+        + "&xop=" + escape(xval);
+
+    obj.open("POST",url,false);
+    obj.send("");	
+    
+    var text = obj.responseText;    
+    var ares = text.split("~");
+    
+    if(ares[0] != '')
+	return alert('gPOS:  Eliminar Abono Cliente \n\n- Error al Eliminar \n'+po_servidorocupado+'\n'+ares[0]);
+
+    if(ares[1] == 'cjacda')
+	return alert("gPOS:  Eliminar Abono Cliente \n\n- No se eliminó el abono, la caja está cerrada");
+    if(ares[2]){
+	alert("gPOS:  Eliminar Abono Cliente \n\n- Se Eliminó el abono");
+	BuscarVentas();
+    }
+}
+
+/*+++++++++++++++++++++++++++++ VENTAS COBROS ++++++++++++++++++++++++++++++++++*/
 
 
 
@@ -11338,14 +12947,14 @@ function t_CrearTicket(esCopia,noticket) {
 	ticket.entregaCambio   = parseFloat(id("peticionPendiente").label); 
 	
 	switch(parseInt(modo)){
-	case 0://EFECTIVO
+	case 1://EFECTIVO
 	    ticket.entregaEfectivo = parseFloat(CleanMoney(id("peticionEntrega").value));
 	    break;
-	case 1://TARJERA
+	case 5://TARJERA
 	    ticket.entregaTarjeta = parseFloat(CleanMoney(id("peticionEntrega").value));
 	    //alert('entregado con tarjeta:'+ticket.entregaTarjeta);
 	    break;
-	case 5:///BONO
+	case 10:///BONO
 	    ticket.entregaBono    = parseFloat(CleanMoney(id("peticionEntrega").value));
 	    break;
 	default:
@@ -11359,10 +12968,9 @@ function t_CrearTicket(esCopia,noticket) {
     /*++++++++ Promociones +++++++++*/
     ticket.promocionID   = PromocionSeleccionado; 
     ticket.promocionBono = (PromocionSeleccionado)? promociones[ PromocionSeleccionado ].bono:0;
- 
     ticket.setDependiente(Local.nombreDependiente);
     ticket.SetModoPago( parseInt(id("modoDePagoTicket").value) );
-    
+    modospago[id("modoDePagoTicket").value] = id("modoDePagoTicket").getAttribute("label");
     //ATENCION: avanzamos numero de ticket		
     if (!esCopia) Local.numeroDeSerie = Local.numeroDeSerie + 1;
     
@@ -11381,10 +12989,7 @@ function t_RecuperaTicket(IdComprobante,TipoVenta){
     switch( TipoVenta )
     {
     case 'Ticket':
-	var res = Raw_t_RecuperaTicket(IdComprobante,TipoVenta);
-	top.TicketFinal = window.open(EncapsrTextoParaImprimir(res.text_data),
-				      "Consola Ticket",
-				      "width=400,height=600,scrollbars=1,resizable=1,dependent=yes","text/plain");	
+	imprimirFormatoDetalladoTicketSeleccionada();
 	break;
 	
     case 'Factura':
@@ -11427,6 +13032,32 @@ function t_RecuperaTicket(IdComprobante,TipoVenta){
     default:
 	return false;
     }		
+}
+
+function t_RecuperaTicketAbonos(IdComprobante){
+
+    var res = Raw_t_RecuperaTicketAbonos(IdComprobante); 
+    top.TicketFinal = window.open(EncapsrTextoParaImprimir(res.text_data),
+				  "Consola Ticket",
+				  "width=340,height=460,scrollbars=1,resizable=1,dependent=yes","text/plain");	
+}
+
+function t_RecuperaTicketAbonosCliente(){
+
+    var res = Raw_t_RecuperaTicketAbonosCliente();    
+    top.TicketFinal = window.open(EncapsrTextoParaImprimir(res.text_data),
+				  "Consola Ticket",
+				  "width=340,height=390,scrollbars=1,resizable=1,dependent=yes","text/plain");	
+    
+}
+
+function t_RecuperaTicketCreditosCliente(){
+
+    var res = Raw_t_RecuperaTicketCreditosCliente();    
+    top.TicketFinal = window.open(EncapsrTextoParaImprimir(res.text_data),
+				  "Consola Ticket",
+				  "width=340,height=390,scrollbars=1,resizable=1,dependent=yes","text/plain");	
+    
 }
 
 function ReimprimirVentaSuscripcion(){
@@ -11489,13 +13120,54 @@ function Raw_t_RecuperaTicket(IdComprobante,TipoVenta) {
     return res;
 }
 
+function Raw_t_RecuperaTicketAbonos(IdComprobante) {
+
+    var ticket          = new Ticket();
+    var newDetalles 	= t_BuscarDetallesVentaAntiguos(IdComprobante);
+    var newGlobal 	= t_BuscaGlobalesFactura(IdComprobante);
+
+    ticket.SetModoRemoto( IdComprobante, newGlobal, newDetalles );	
+    ticket.setDependiente( newGlobal.Dependiente );
+    ticket.setEntregado( newGlobal.DineroEntregado );	
+    ticket.SetModoPago( newGlobal.ModoDePago );
+    ticket.SetPendiente( newGlobal.pendiente );
+    ticket.SetCliente( newGlobal.nombreCliente );
+    ticket.SetComprobante( newGlobal.Comprobante );
+    ticket.SetNroComprobante( newGlobal.NroComprobante );
+    ticket.SetAlfaNumFactura( newGlobal.serie + "-" + newGlobal.num );
+
+    var res = new Object();	
+    res.text_data = ticket.generaTextTicketAbono();
+    return res;
+}
+
+
+function Raw_t_RecuperaTicketAbonosCliente() {
+
+    var ticket          = new Ticket();
+
+    var res = new Object();	
+    res.text_data = ticket.generaTextTicketAbonoCliente();
+    return res;
+}
+
+function Raw_t_RecuperaTicketCreditosCliente() {
+
+    var ticket          = new Ticket();
+
+    var res = new Object();	
+    res.text_data = ticket.generaTextTicketCreditoCliente();
+    return res;
+}
+
 
 /* Carga de datos del ticket */
 
 var GlobalNewTicket = new Object();
 
 function CargaVenta(item,vendedor,serie,num,fecha,total,pendiente,estado,IdComprobante,nombreCliente,NumeroDocumento,TipoDocumento){
-	GlobalNewTicket.Dependiente = vendedor;
+
+	GlobalNewTicket.Dependiente     = vendedor;
 	GlobalNewTicket.serie 		= serie;
 	GlobalNewTicket.num 		= num;
 	GlobalNewTicket.fecha 		= fecha;
@@ -11503,16 +13175,17 @@ function CargaVenta(item,vendedor,serie,num,fecha,total,pendiente,estado,IdCompr
 	GlobalNewTicket.pendiente 	= pendiente;
 	GlobalNewTicket.estado 		= estado;
 	GlobalNewTicket.IdComprobante	= IdComprobante;
+	GlobalNewTicket.Comprobante	= TipoDocumento;
+	GlobalNewTicket.NroComprobante	= NumeroDocumento;
 	GlobalNewTicket.nombreCliente 	= nombreCliente;	
 	GlobalNewTicket.DineroEntregado = 0;//TODO
-	GlobalNewTicket.ModoDePago 	= 0;	//TODO
-	
+	GlobalNewTicket.ModoDePago 	= 0;//TODO
 }
 
 function t_BuscaGlobalesFactura(IdComprobante) {
-
     GlobalNewTicket = new Object();
-    RawBuscarVentas("","","","","","","","","","","","",IdComprobante,true,false,CargaVenta);
+    RawBuscarVentas("","","","","","","","","","","",IdComprobante,true,false,"todos",'todos','todos','todos',CargaVenta);
+
     return GlobalNewTicket;
 }
 
@@ -11546,10 +13219,11 @@ function ColeccionarDetallesTicket(CodBar,Nombre,Talla,Color,Unidades,Descuento,
 }
 
 function t_BuscarDetallesVentaAntiguos(IdComprobante){
-	lineasTicketSombra = new Array();			
+	lineasTicketSombra = new Array();
 	RawBuscarDetallesVenta(IdComprobante, ColeccionarDetallesTicket);
 	return lineasTicketSombra;
 }
+
 
 /* IMPLEMENTACION TICKET */
 
@@ -11598,7 +13272,38 @@ Ticket.prototype.SetModoRemoto = function ( IdComprobante, newGlobal, newDetalle
 	this.esTicketRemoto = true;
 }
 	
-	
+Ticket.prototype.SetPendiente = function (newpendiente){
+	this.pendiente = newpendiente;	
+}
+
+Ticket.prototype.getPendiente = function(){
+	return this.pendiente;
+}
+
+Ticket.prototype.SetCliente = function (newcliente){
+	this.cliente = newcliente;	
+}
+
+Ticket.prototype.getCliente = function (){
+        return this.cliente;	
+}
+
+
+Ticket.prototype.SetComprobante = function (newcomprobante){
+	this.comprobante = newcomprobante;	
+}
+
+Ticket.prototype.getComprobante = function (){
+        return this.comprobante;	
+}
+
+Ticket.prototype.SetNroComprobante = function (newnrocomprobante){
+	this.nroComprobante = newnrocomprobante;	
+}
+
+Ticket.prototype.getNroComprobante = function (){
+        return this.nroComprobante;	
+}
 	
 Ticket.prototype.SetModoPago = function (newmodopago){
 	this.modopago = newmodopago;	
@@ -11988,19 +13693,43 @@ Ticket.prototype.generaTextTicket = function(){
         var nombrecliente = usuarios[UsuarioSeleccionado].nombre;
         //var dnicliente    = usuarios[UsuarioSeleccionado].ruc;
         //var dnicliente    = ( dnicliente == '' )? '...': dnicliente;  
-
+ 
 	//var len = new String(Local.Negocio).length;
         var len = new String(Local.promoMensaje).length;
 	pad = len - 10;
 	len = new String(Local.promoMensaje).length;
-        pad = len - 20;
+        pad = len - 10;
 
-	salida += "****** " + Local.Negocio +  " ******" + cr;
-	salida += "" + Local.promoMensaje + ""+cr+cr;
-	salida += "" + this.Colum( new Array( po_ticketde , this.LocalSombra.nombretienda)) + cr;
+        salida += "****** " + Local.Negocio +  " ******" + cr;
+	//salida += "" + Local.promoMensaje + "" + cr;
+        salida += "" + this.Colum( new Array( Local.promoMensaje.slice(0,35) ));
+        if(  Local.promoMensaje.length >35 )
+	  salida += "" + this.Colum( new Array( Local.promoMensaje.slice(35,65) ));
+        if(  Local.promoMensaje.length >65 )
+	   salida += "" + this.Colum( new Array( Local.promoMensaje.slice(65,95) ));
+
+        if(  Local.NegocioWeb != '')
+	    salida += "" + Local.NegocioWeb+ "" + cr+ cr;
+        else
+	    salida += "" + cr;
+
+        //salida += this.Linea();
+	salida += "" + this.Colum( new Array( po_tienda , this.LocalSombra.nombretienda)) + "" ;
+        if( Local.NegocioDireccion != '' ){
+	    salida += "" + this.Colum( new Array( Local.NegocioDireccion.slice(0,35) ));
+	    if(  Local.NegocioDireccion.length >35 )
+		salida += "" + this.Colum( new Array( Local.NegocioDireccion.slice(35,65) ));
+	    if(  Local.NegocioDireccion.length >65 )
+		salida += "" + this.Colum( new Array( Local.NegocioDireccion.slice(65,95) ));
+	}
+	salida += "" + po_telf +' '+ Local.NegocioTelef + "" + cr+ cr ;
+        salida += this.Linea();
+	salida += "" + this.Colum( new Array( po_boucherde ));
+        salida += this.Linea();
 	salida += this.Colum( new Array( po_numtic , this.alfanumFactura ));	
-        salida += po_ticketcliente+getSpaces(1)+nombrecliente+cr+cr;
-	salida += this.TexModoTicket(ModoDeTicket);		
+        salida += po_ticketcliente+getSpaces(1)+nombrecliente+cr;
+	salida += this.TexModoTicket(ModoDeTicket)+cr;	
+        salida += this.Linea();	
 	salida += this.Colum( new Array(po_unid,po_precio,po_descuento,po_Total));	
 	salida += this.Linea();
 	salida += this.GenerarTextoProductos();
@@ -12008,12 +13737,13 @@ Ticket.prototype.generaTextTicket = function(){
 	salida += this.Colum( new Array(po_TOTAL,"", formatDinero(this.TotalBase)) );
 	salida += this.Colum( new Array(po_Entregado,"", formatDinero(this.getEntregado())) );
 	salida += this.Colum( new Array(po_Cambio,"", formatDinero(this.genCambio())) );
+        salida += this.Colum( new Array(po_Pendiente,"",formatDinero(Local.AbonoClientePendiente)));
 
 	//salida += this.Linea();
         //salida += this.Colum( new Array(po_desgloseiva ,formatDinero(this.aportacionimpuestos)) );
 	
 	var modopago = this.modopago;
-	if (modopago>0)
+	if (modopago>1)
 		salida = salida + po_mododepago + " " + modospago[modopago] + cr;
 		
 	var po_15diaslimite_resultante = new String( po_15diaslimite );
@@ -12024,10 +13754,268 @@ Ticket.prototype.generaTextTicket = function(){
 	salida += this.Colum( new Array( po_leatendio + " ",  this.dependiente) );
 	salida += this.Fecha() 		+ cr;
 	salida += po_15diaslimite_resultante 	+ cr;
-	salida += cr + this.LocalSombra.motd 		+ cr;
+	//salida += cr + this.LocalSombra.motd 		+ cr;
+        salida += cr + this.Colum( new Array( this.LocalSombra.motd.slice(0,35) ));
+        if(  this.LocalSombra.motd.length >35 )
+	  salida += "" + this.Colum( new Array( this.LocalSombra.motd.slice(35,65) ));
+        if(  this.LocalSombra.motd.length >65 )
+	   salida += "" + this.Colum( new Array( this.LocalSombra.motd.slice(65,95) ));
+
 	return salida;
 
 }
+
+/* Preparamos la cadena de texto plano que representa el ticket */
+Ticket.prototype.generaTextTicketAbono = function(){
+	var cambio;
+	var salida = "";
+	var cr = this.cr;
+
+        var xnombrecliente = this.getCliente().split(" : ");//usuarios[UsuarioSeleccionado].nombre;
+        var nombrecliente  = xnombrecliente[1];
+        //var dnicliente    = usuarios[UsuarioSeleccionado].ruc;
+        //var dnicliente    = ( dnicliente == '' )? '...': dnicliente;  
+	//var len = new String(Local.Negocio).length;
+
+        var len = new String(Local.promoMensaje).length;
+	pad = len - 10;
+	len = new String(Local.promoMensaje).length;
+        pad = len - 20;
+
+
+        salida += "****** " + Local.Negocio +  " ******" + cr;
+	//salida += "" + Local.promoMensaje + "" + cr;
+        salida += "" + this.Colum( new Array( Local.promoMensaje.slice(0,35) ));
+        if(  Local.promoMensaje.length >35 )
+	  salida += "" + this.Colum( new Array( Local.promoMensaje.slice(35,65) ));
+        if(  Local.promoMensaje.length >65 )
+	   salida += "" + this.Colum( new Array( Local.promoMensaje.slice(65,95) ));
+
+        if(  Local.NegocioWeb != '')
+	    salida += "" + Local.NegocioWeb+ "" + cr+ cr;
+        else
+	    salida += "" + cr;
+
+        //salida += this.Linea();
+	salida += "" + this.Colum( new Array( po_tienda , this.LocalSombra.nombretienda)) + "" ;
+        if( Local.NegocioDireccion != '' ){
+	    salida += "" + this.Colum( new Array( Local.NegocioDireccion.slice(0,35) ));
+	    if(  Local.NegocioDireccion.length >35 )
+		salida += "" + this.Colum( new Array( Local.NegocioDireccion.slice(35,65) ));
+	    if(  Local.NegocioDireccion.length >65 )
+		salida += "" + this.Colum( new Array( Local.NegocioDireccion.slice(65,95) ));
+        }
+	salida += "" + po_telf +' '+ Local.NegocioTelef + "" + cr+ cr ;
+        salida += this.Linea();
+	salida += "" + this.Colum( new Array( po_boucherde ));
+        salida += this.Linea();
+        salida += this.Colum( new Array( po_comprobante,this.getComprobante()+' '+this.getNroComprobante()));
+	salida += this.Colum( new Array( po_numtic , this.alfanumFactura ));	
+        salida += po_ticketcliente+getSpaces(1)+nombrecliente+cr;
+	salida += this.TexModoTicket(ModoDeTicket)+cr;		
+
+        //Formato Ticket
+        if( Local.ImprimirFormatoTicket )
+        {
+            salida += this.Linea();
+            salida += this.Colum( new Array(po_unid,po_precio,po_descuento,po_Total));	
+	    salida += this.Linea();
+            salida += this.GenerarTextoProductos();
+	} else 
+            var nosalida = this.GenerarTextoProductos();
+	salida += this.Linea();
+	salida += this.Colum( new Array(po_TOTAL,"", formatDinero( cMontoComprobante )) );
+
+        if( Local.AbonoImporte >0 ){
+	    salida += this.Colum( new Array(po_TOTALDEUDA,"", formatDinero( Local.AbonoDebe )) );
+	    salida += this.Colum( new Array(po_Abonado,"", formatDinero( Local.AbonoImporte )) );
+	}
+	//salida += this.Colum( new Array(po_Cambio,"", formatDinero(this.genCambio())) );
+        salida += this.Colum( new Array(po_Pendiente,"",formatDinero( Local.AbonoPendiente )));
+
+	//salida += this.Linea();
+        //salida += this.Colum( new Array(po_desgloseiva ,formatDinero(this.aportacionimpuestos)) );
+	
+	var modopago = this.modopago;
+	if (modopago>1)
+		salida = salida + po_mododepago + " " + modospago[modopago] + cr;
+		
+	var po_15diaslimite_resultante = new String( po_15diaslimite );
+	po_15diaslimite_resultante = po_15diaslimite_resultante.replace(/\\n/,cr);			
+	po_15diaslimite_resultante = po_15diaslimite_resultante.replace("%d",this.LocalSombra.diasLimiteDevolucion);	
+		
+	salida += this.Linea();
+	salida += this.Colum( new Array( po_leatendio + " ",  this.dependiente) );
+	salida += this.Fecha() + cr;
+        //salida += po_15diaslimite_resultante 	+ cr;
+	//salida += cr + this.LocalSombra.motd + cr;
+        salida += cr + this.Colum( new Array( this.LocalSombra.motd.slice(0,35) ));
+        if(  this.LocalSombra.motd.length >35 )
+	  salida += "" + this.Colum( new Array( this.LocalSombra.motd.slice(35,65) ));
+        if(  this.LocalSombra.motd.length >65 )
+	   salida += "" + this.Colum( new Array( this.LocalSombra.motd.slice(65,95) ));
+
+
+        //Formato Ticket
+        Local.ImprimirFormatoTicket = false;
+        Local.AbonoImporte          = 0;
+        Local.AbonoDebe             = 0;
+        Local.AbonoPendiente        = 0;
+	return salida;
+
+}
+
+/* Preparamos la cadena de texto plano que representa el ticket */
+Ticket.prototype.generaTextTicketAbonoCliente = function(){
+	var cambio;
+	var salida = "";
+	var cr = this.cr;
+
+        var nombrecliente  = usuarios[ preSeleccionadoCliente ].nombre; 
+        //var dnicliente    = usuarios[UsuarioSeleccionado].ruc;
+        //var dnicliente    = ( dnicliente == '' )? '...': dnicliente;  
+ 
+	//var len = new String(Local.Negocio).length;
+        var len = new String(Local.promoMensaje).length;
+	pad = len - 10;
+	len = new String(Local.promoMensaje).length;
+        pad = len - 20;
+
+
+        salida += "****** " + Local.Negocio +  " ******" + cr;
+	//salida += "" + Local.promoMensaje + "" + cr;
+        salida += "" + this.Colum( new Array( Local.promoMensaje.slice(0,35) ));
+        if(  Local.promoMensaje.length >35 )
+	  salida += "" + this.Colum( new Array( Local.promoMensaje.slice(35,65) ));
+        if(  Local.promoMensaje.length >65 )
+	   salida += "" + this.Colum( new Array( Local.promoMensaje.slice(65,95) ));
+
+        if(  Local.NegocioWeb != '')
+	    salida += "" + Local.NegocioWeb+ "" + cr+ cr;
+        else
+	    salida += "" + cr;
+
+        //salida += this.Linea();
+	salida += "" + this.Colum( new Array( po_tienda , this.LocalSombra.nombretienda)) + "" ;
+        if( Local.NegocioDireccion != '' ){
+	    salida += "" + this.Colum( new Array( Local.NegocioDireccion.slice(0,35) ));
+	    if(  Local.NegocioDireccion.length >35 )
+		salida += "" + this.Colum( new Array( Local.NegocioDireccion.slice(35,65) ));
+	    if(  Local.NegocioDireccion.length >65 )
+		salida += "" + this.Colum( new Array( Local.NegocioDireccion.slice(65,95) ));
+	}
+	salida += "" + po_telf +' '+ Local.NegocioTelef + "" + cr+ cr ;
+        salida += this.Linea();
+	salida += "" + this.Colum( new Array( po_boucherde ));
+        salida += this.Linea();
+        salida += po_ticketcliente+getSpaces(1)+nombrecliente+cr;
+	salida += this.TexModoTicket(ModoDeTicket);		
+	salida += this.Linea();
+        salida += this.Colum( new Array(po_TOTALDEUDA,"", formatDinero( Local.AbonoClienteDebe )) );
+        salida += this.Colum( new Array(po_Abonado,"", formatDinero( Local.AbonoClienteImporte )) );
+        salida += this.Colum( new Array(po_Pendiente,"", formatDinero( Local.AbonoClientePendiente )) );
+
+	//salida += this.Linea();
+        //salida += this.Colum( new Array(po_desgloseiva ,formatDinero(this.aportacionimpuestos)) );
+	
+	var modopago = this.modopago;
+	if (modopago>1)
+		salida = salida + po_mododepago + " " + modospago[modopago] + cr;
+		
+	salida += this.Linea();
+	salida += this.Colum( new Array( po_leatendio + " ",  Local.nombreDependiente ) );
+	salida += this.Fecha() + cr;
+	//salida += cr + this.LocalSombra.motd + cr;
+        salida += cr + this.Colum( new Array( this.LocalSombra.motd.slice(0,35) ));
+        if(  this.LocalSombra.motd.length >35 )
+	  salida += "" + this.Colum( new Array( this.LocalSombra.motd.slice(35,65) ));
+        if(  this.LocalSombra.motd.length >65 )
+	   salida += "" + this.Colum( new Array( this.LocalSombra.motd.slice(65,95) ));
+
+        //Formato Ticket
+        Local.AbonoClienteImporte   = 0;
+        Local.AbonoClientePendiente = 0;
+        Local.AbonoClienteDebe      = 0;
+
+
+	return salida;
+
+}
+
+/* Preparamos la cadena de texto plano que representa el ticket */
+Ticket.prototype.generaTextTicketCreditoCliente = function(){
+	var cambio;
+	var salida = "";
+	var cr = this.cr;
+
+        var nombrecliente  = usuarios[ preSeleccionadoCliente ].nombre; 
+ 
+	//var len = new String(Local.Negocio).length;
+        var len = new String(Local.promoMensaje).length;
+	pad = len - 10;
+	len = new String(Local.promoMensaje).length;
+        pad = len - 20;
+
+
+        salida += "****** " + Local.Negocio +  " ******" + cr;
+	//salida += "" + Local.promoMensaje + "" + cr;
+        salida += "" + this.Colum( new Array( Local.promoMensaje.slice(0,35) ));
+        if(  Local.promoMensaje.length >35 )
+	  salida += "" + this.Colum( new Array( Local.promoMensaje.slice(35,65) ));
+        if(  Local.promoMensaje.length >65 )
+	   salida += "" + this.Colum( new Array( Local.promoMensaje.slice(65,95) ));
+
+        if(  Local.NegocioWeb != '')
+	    salida += "" + Local.NegocioWeb+ "" + cr+ cr;
+        else
+	    salida += "" + cr;
+
+        //salida += this.Linea();
+	salida += "" + this.Colum( new Array( po_tienda , this.LocalSombra.nombretienda)) + "" ;
+        if( Local.NegocioDireccion != '' ){
+	    salida += "" + this.Colum( new Array( Local.NegocioDireccion.slice(0,35) ));
+	    if(  Local.NegocioDireccion.length >35 )
+		salida += "" + this.Colum( new Array( Local.NegocioDireccion.slice(35,65) ));
+	    if(  Local.NegocioDireccion.length >65 )
+		salida += "" + this.Colum( new Array( Local.NegocioDireccion.slice(65,95) ));
+	}
+	salida += "" + po_telf +' '+ Local.NegocioTelef + "" + cr+ cr ;
+        salida += this.Linea();
+	salida += "" + this.Colum( new Array( po_boucherdecredito ));
+        salida += this.Linea();
+        salida += po_ticketcliente+getSpaces(1)+nombrecliente+cr;
+	salida += this.TexModoTicket(ModoDeTicket);		
+        salida += this.Linea();
+    salida += this.Colum( new Array( po_CreditoCliente,"",formatDinero( Local.CreditoClienteImporte )) );
+        salida += this.Colum( new Array( po_Credito,"",formatDinero( Local.CreditoClienteEntregado )) );
+        salida += this.Colum( new Array(po_TOTALCREDITO,"",formatDinero( Local.CreditoClienteTotal )) );
+
+
+	//salida += this.Linea();
+        //salida += this.Colum( new Array(po_desgloseiva ,formatDinero(this.aportacionimpuestos)) );
+	
+	var modopago = this.modopago;
+	if (modopago>1)
+		salida = salida + po_mododepago + " " + modospago[modopago] + cr;
+		
+	salida += this.Linea();
+	salida += this.Colum( new Array( po_leatendio + " ",  Local.nombreDependiente ) );
+	salida += this.Fecha() + cr;
+	//salida += cr + this.LocalSombra.motd + cr;
+        salida += cr + this.Colum( new Array( this.LocalSombra.motd.slice(0,35) ));
+        if(  this.LocalSombra.motd.length >35 )
+	  salida += "" + this.Colum( new Array( this.LocalSombra.motd.slice(35,65) ));
+        if(  this.LocalSombra.motd.length >65 )
+	   salida += "" + this.Colum( new Array( this.LocalSombra.motd.slice(65,95) ));
+
+        //Formato Ticket
+        Local.CreditoClienteImporte   = 0;
+        Local.CreditoClienteEntregado = 0;
+        Local.CreditoClienteTotal     = 0;
+
+        return salida;
+}
+
 Ticket.prototype.generaTextTicketPreVenta = function(){
 
         var fecha= new Date();
@@ -12059,7 +14047,7 @@ Ticket.prototype.generaTextTicketPreVenta = function(){
 
 
         var modopago = this.modopago;
-        if (modopago>0)
+        if (modopago>1)
             salida = salida + po_mododepago + " " + modospago[modopago] + cr;
 
         var po_15diaslimite_resultante = new String( po_15diaslimite );
@@ -12121,13 +14109,14 @@ Ticket.prototype.generaPostData = function(){
 	data += "numticket="        + escape( this.numeroserie ) + crd;		
 	data += "entrega_efectivo=" + escape( this.entregaEfectivo ) + crd;		
 	data += "entrega_bono="     + escape( this.entregaBono ) + crd;			
-	data += "entrega_tarjeta="  + escape( this.entregaTarjeta ) + crd;			
+	data += "entrega_tarjeta="  + escape( this.entregaTarjeta ) + crd;
 	data += "entrega_cambio="   + escape( this.entregaCambio ) + crd;
 	data += "promocion_id="     + escape( this.promocionID ) + crd;	
 	data += "promocion_bono="   + escape( this.promocionBono ) + crd;		
 	data += this.datos_post_productos + crd;		
 	data += "numlines="         + escape(iticket) + crd;		
 	data += "UsuarioSeleccionado=" + UsuarioSeleccionado + crd;
+	data += "modopago_id="      + escape( this.modopago ) + crd;	
 	return data;
 }
 
@@ -12196,17 +14185,24 @@ Ticket.prototype.AlfaNumFac = function (Serie,Modo){
 Ticket.prototype.TexModoTicket = function(Modo){
 	
 	switch( Modo ){
-		case "interno":
-			return po_ticketarreglointerno + this.cr;
-		case "cesion":
-			return po_ticketcesionprenda + this.cr;
-		case "venta":		
-			return "";
+	case "interno":
+	    return po_ticketarreglointerno + this.cr;
+	case "cesion":
+	    if(Local.Reservar)
+		return po_ticketcesionprendareserva + this.cr;
+	    else
+		return po_ticketcesionprenda + this.cr;
+	    
+	case "venta":		
+	    if(Local.Reservar)
+		return po_ticketcesionprendareserva + this.cr;
+	    else
+		return "";
 	}
 }
 
 Ticket.prototype.Fecha = function (){
-	return "Fecha:"+ this.cr + this.LocalGlobal.fechahoy + this.cr;
+	return "Fecha:"+ this.cr + this.LocalGlobal.fechahoy +' ' +calcularFechaActual('hora');+ this.cr;
 }
 
 Ticket.prototype.pgetIdSubsidiario = function (){
@@ -12336,7 +14332,7 @@ Ticket.prototype.genSombraDesdeRemota = function(){
 	datos["nombre"] 	= prod.nombre;
 	datos["concepto"] 	= prod.concepto;
 	datos["idsubsidiario"]	= prod.idsubsidiario;
-	datos["codigo"] 	= prod.codigo;
+	datos["codigo"] 	= prod.codigobarra;//prod.codigobarra
 	datos["codigobarra"] 	= prod.codigobarra;
 	this.productoSombra     = datos;
 }
@@ -12351,7 +14347,6 @@ Ticket.prototype.GenerarTextoProductos = function(){
     this.indiceProductoSombra = 0;
     var agnadidos = new Array();
     for (var t=0;t<maxproductos;t++) {
-
         if(!this.esTicketRemoto)
             codigo = ticketlist[t];	
         else { 
@@ -12364,7 +14359,7 @@ Ticket.prototype.GenerarTextoProductos = function(){
             this.indiceProductoSombra = this.indiceProductoSombra + 1;
             agnadidos[codigo] = 1;		
         } 
-
+	
     }
 /**    if(comprobante==0){
         max=31-maxproductos;
@@ -12422,7 +14417,7 @@ Ticket.prototype.GeneraProducto = function(codigo, indiceDeEntrada){
 	prod.concepto	   = this.pgetConcepto();
 	prod.unid	   = this.pgetUnid();
 	prod.codigo	   = codigo;
-
+	
     	//alert("datos lee:\n con:"+prod.pedidodet+",nom:"+prod.nombre);
 	this.RawGeneraProducto(prod);
 }	
@@ -12436,7 +14431,7 @@ Ticket.prototype.RawGeneraProducto = function(prod){
     nombreenticket     = ( prod.idsubsidiario>0 )? prod.concepto:prod.nombre;
     prod.concepto      = ( prod.concepto != "undefined")? prod.concepto:"";
     pvp  	       = parseFloat(prod.precio);//Impuesto incluido
-    total 	       = parseFloat(pvp) * parseFloat(prod.unidades);
+    total 	       = formatDineroTotal( parseFloat(pvp) * parseFloat(prod.unidades) );
 
     if (prod.descuento>0) 
         total = parseFloat(parseFloat(total)-(parseFloat(total)*(parseFloat(prod.descuento)/100.0)));
@@ -12445,6 +14440,7 @@ Ticket.prototype.RawGeneraProducto = function(prod){
     //this.aportacionimpuestos  += parseFloat(total) * prod.impuesto;
 
     //Total del ticket
+    total = Math.round(total*10)/10;
     this.TotalBase = parseFloat(this.TotalBase) + parseFloat(total);
     var salida = "";
 
@@ -12605,7 +14601,7 @@ Meca.generaCruzadoProductos = function (victima, base){
 	    xtreecol = Dom.create("treecol","flex="+flex+",label="+nombre+",id=treecol_"+nombre+"_"+t);
 	    xtreecol.setAttribute("style","font-weight: bold");
 	    if (t==1){
-		xtreecol.setAttribute("label","MODELO");
+		xtreecol.setAttribute("label"," ");
 		//xtreecol.setAttribute("flex","1");
 		xtreecol.setAttribute("style","min-width: 100px;font-weight: bold");			
 	    }
@@ -12845,9 +14841,489 @@ Meca.cargarXML = function (revisor) {
 
 /*++++++++++++++++++++++++ CADENAS  ++++++++++++++++++++++++++++*/
 
-var po_numtic='Código :';var po_unid='Unid.';var po_precio='Precio';var po_costo='Costo';var po_descuento='Desc.';var po_Total='Total';var po_TOTAL='TOTAL:';var po_Entregado='Entregado:';var po_Cambio='Cambio:';var po_desgloseiva='Desglose de IGV:';var po_leatendio='Le atendió:';var po_ticketarreglointerno='Ticket arreglo interno';var po_ticketcesionprenda='Ticket cesión de prenda';var po_ticketdevolucionprenda='Ticket devolución de prenda';var po_ticketnoserver='El servidor no ha podido autorizar la impresión de este ticket. Inténtelo mas tarde';var po_txtTicketVenta='Comprobante de venta';var po_txtTicketCesion='Ticket cesión';var po_txtTicketDevolucion='Ticket devolución';var po_txtTicketPedido='Presupuestos';var po_txtTicketMProducto='Meta Productos';var po_txtTicketServicioInterno='Ticket servicio';var po_imprimircopia='Impr. copia';var po_cerrar='Cerrar';var po_servidorocupado='Servidor ocupado, inténtelo más tarde';var po_nopuedeseliminarcontado='¡No puedes eliminar el cliente contado!';var po_seguroborrarcliente='¿Quieren borrar este cliente?';var po_clienteeliminado='Cliente eliminado del sistema';var po_noseborra='No se puede borrar ese cliente';var po_nuevocreado='Nuevo cliente creado';var po_clientemodificado='Cliente modificado';var po_operacionincompleta='Operacion con cliente incompleta, inténtelo mas tarde';var po_mensajeenviado='Mensaje enviado';var po_modopago='Modo de pago:';var po_nombreclientecontado='Cliente Contado';var po_ticketcliente='Cliente:';var po_Elige='Elije...';var po_15diaslimite='No se admiten devoluciones.\\nCambios dentro de las 24 horas.';var po_cuentascopias='¿Cuántas copias del código de barras necesita imprimir?';var po_cuantasunidadesquiere='¿Cuántas unidades del producto requiere?';var po_cuantasunidades='¿Cuántas unidades?';var po_faltadefcolor='Falta definir Modelo';var po_faltadeftalla='Falta definir Detalles';var po_faltadefcb='Falta definir el CB';var po_errorrepcod='Código de barras repetido';var po_tallacolrep='Detalle o Modelo repetidos';var po_unidadescompra='Debe especificar unidades de compra';var po_modnombreprod='Debe modificar el nombre del producto';var po_especificarref='Debe especificar una referencia';var po_especifiprecioventa='Debe especificar un precio de venta';var po_especificoste='Debe especificar un coste';var po_nuevoproducto='Nuevo producto';var po_nohayproductos='No hay productos';var po_sehandadodealtacodigos='Se han dado de alta %d códigos';var po_segurocancelar='¿Esta seguro que quiere cancelar?';var po_imprimircodigos='Imprimir CB';var po_borrar='Eliminar';var po_avisoborrar='¿Desea eliminar?';var po_nombre='Nombre';var po_talla='Concentración/Detalle';var po_color='Presentación/Modelo';var po_unidades='Unid.';var po_local='Local';var po_almacen='Almacén';var po_nombrecorto='Nombre de cliente demasiado corto';var po_quierecerrar='Seguro que quiere proceder al \'CIERRE DE CAJA\'?';var po_quiereabrir='Seguro que quiere proceder a \'ABRIR CAJA\'?';var po_sugerenciarecibida='Sugerencia recibida';var po_incidenciaanotada='Incidencia anotada';var po_notaenviada='Nota enviada';var po_confirmatraslado='¿Esta seguro?';var po_destino='Destino:';var po_mododepago='Modo de pago';var po_cuantascopias='¿Cuantas copias?';var po_moviendoa='Moviendo mercancía a: ';var po_importereal='Importe real de la caja:';var po_error=po_servidorocupado;var po_pagmas=">>";var po_pagmenos="<<";
+var po_numtic='Código :'; var po_dir='Dir.'; var po_web='Web.'; var po_telf='Telefono:'; var po_movil='Movil.';var po_comprobante='Doc.   :';var po_unid='Unid.';var po_precio='Precio';var po_costo='Costo';var po_descuento='Desc.';var po_Total='Total';var po_TOTAL='TOTAL:';var po_TOTALDEUDA='Debe:';var po_TOTALCREDITO='TOTAL:';var po_Entregado='Entregado:';var po_Abonado='Abonado:';var po_Credito='Entregado:';var po_CreditoCliente='Credito:';var po_Cambio='Vuelto:';var po_Pendiente='Pendiente:';var po_desgloseiva='Desglose de IGV:';var po_leatendio='Le atendió:';var po_ticketarreglointerno='Ticket arreglo interno';var po_ticketcesionprenda='Ticket crédito de producto';var po_ticketcesionprendareserva='Ticket reserva de producto';var po_boucherde = 'Ticket de Pago '; var po_boucherdecredito = 'Ticket de asignación de crédito '; var po_tienda = 'Tienda : '; var po_ticketdevolucionprenda='Ticket devolución de prenda';var po_ticketnoserver='El servidor no ha podido autorizar la impresión de este ticket. Inténtelo mas tarde';var po_txtTicketVenta='Comprobante de venta';var po_txtTicketCesion='Ticket cesión';var po_txtTicketDevolucion='Ticket devolución';var po_txtTicketPedido='Presupuestos';var po_txtTicketMProducto='Meta Productos';var po_txtTicketServicioInterno='Ticket servicio';var po_imprimircopia='Impr. copia';var po_cerrar='Cerrar';var po_servidorocupado='Servidor ocupado, inténtelo más tarde';var po_nopuedeseliminarcontado='¡No puedes eliminar el cliente contado!';var po_seguroborrarcliente='¿Quieren borrar este cliente?';var po_clienteeliminado='Cliente eliminado del sistema';var po_noseborra='No se puede borrar ese cliente';var po_nuevocreado='Nuevo cliente creado';var po_clientemodificado='Cliente modificado';var po_operacionincompleta='Operacion con cliente incompleta, inténtelo mas tarde';var po_mensajeenviado='Mensaje enviado';var po_modopago='Modo de pago:';var po_nombreclientecontado='Cliente Contado';var po_ticketcliente='Cliente:';var po_Elige='Elije...';var po_15diaslimite='No se admiten devoluciones.\\nCambios dentro de las 24 horas.';var po_cuentascopias='¿Cuántas copias del código de barras necesita imprimir?';var po_cuantasunidadesquiere='¿Cuántas unidades del producto requiere?';var po_cuantasunidades='¿Cuántas unidades?';var po_faltadefcolor='Falta definir Modelo';var po_faltadeftalla='Falta definir Detalles';var po_faltadefcb='Falta definir el CB';var po_errorrepcod='Código de barras repetido';var po_tallacolrep='Detalle o Modelo repetidos';var po_unidadescompra='Debe especificar unidades de compra';var po_modnombreprod='Debe modificar el nombre del producto';var po_especificarref='Debe especificar una referencia';var po_especifiprecioventa='Debe especificar un precio de venta';var po_especificoste='Debe especificar un coste';var po_nuevoproducto='Nuevo producto';var po_nohayproductos='No hay productos';var po_sehandadodealtacodigos='Se han dado de alta %d códigos';var po_segurocancelar='¿Esta seguro que quiere cancelar?';var po_imprimircodigos='Imprimir CB';var po_borrar='Eliminar';var po_avisoborrar='¿Desea eliminar?';var po_nombre='Nombre';var po_talla='Concentración/Detalle';var po_color='Presentación/Modelo';var po_unidades='Unid.';var po_local='Local';var po_almacen='Almacén';var po_nombrecorto='Nombre de cliente demasiado corto';var po_quierecerrar='Seguro que quiere proceder al \'CIERRE DE CAJA\'?';var po_quiereabrir='Seguro que quiere proceder a \'ABRIR CAJA\'?';var po_sugerenciarecibida='Sugerencia recibida';var po_incidenciaanotada='Incidencia anotada';var po_notaenviada='Nota enviada';var po_confirmatraslado='¿Esta seguro?';var po_destino='Destino:';var po_mododepago='Modo de pago';var po_cuantascopias='¿Cuantas copias?';var po_moviendoa='Moviendo mercancía a: ';var po_importereal='Importe real de la caja:';var po_error=po_servidorocupado;var po_pagmas=">>";var po_pagmenos="<<";
 
 /*++++++++++++++++++++++++ CADENAS  ++++++++++++++++++++++++++++*/
+
+
+/*++++++++++++++++++++++++ SUSCRIPCION ++++++++++++++++++++++++++++*/
+//
+
+var cIdSuscripcionDet = 0;
+var cSuscripcionDetalleLineas = 0;
+var cIdSuscripcion    = 0;
+var cIdTipoSuscripcion= 0;
+var cSuscripcionContratosComboLineas = 0;
+var cEstadoSuscripcion          = 0;
+var cIdClienteSuscripcion       = 0;
+
+function cargarSuscripcion(){
+
+    var xid = id("buscaClienteSelect").value;
+    var xml = '';
+    if( xid == 1 ) return;
+    if( !id("user_picker_"+xid) ) return;
+
+    cIdClienteSuscripcion = preSeleccionadoCliente;
+
+    id("tab-vistacliente").setAttribute("collapsed",true);
+    id("tab-suscripcion").setAttribute("collapsed",false); 
+    id("tab-suscripcion").setAttribute("label", " Suscripción: "+ usuarios[ cIdClienteSuscripcion ].nombre);
+    id("tab-suscripcion").setAttribute("selected",true);
+    id("tab-selcliente").setAttribute("selected",false);
+    id("tab-boxclient").setAttribute("selectedIndex",3);
+
+    vaciarSuscripcionDetalle();
+    crearSuscripcion2XML( obtenerSuscripcionesCliente() );
+}
+
+function formularioDetalleLinea(xcod,xvalue,xop){
+
+    var xtop         = parseInt( window.screen.width)/2 - 200;
+    var xleft        = parseInt( window.screen.height)/2 - 150;
+    var xtitlesusrip = "";
+    var xcommand     = "";
+    var xbtnlabel    = "";
+    var xessuscrip   = false;
+    var xnumserie    = true;
+
+    id("rowMostrarInformacionExtra").setAttribute("collapsed",true);
+    id("MostrarInformacionExtra").value = "";
+    id("rowOrdenServicioNumeroSerie").setAttribute("collapsed",true);
+    id("OrdenServicioNumeroSerie").value = "";
+
+    id("btnSuscricpionLineaCancel").setAttribute("label",'Cancelar');
+    id("btnSuscricpionLinea").setAttribute("collapsed",false);
+
+    switch(xvalue){
+
+    case 'NuevaSuscripcion':
+
+	cIdSuscripcionDet = 0;
+
+	id("suscripLineaConcepto").value    = productos[xcod].producto;
+	id("suscripLineaCantidad").value    = 1;
+	id("suscripLineaPrecio").value      = productos[xcod].pvd;
+	id("suscripLineaImporte").value     = productos[xcod].pvd;
+	id("suscripProductoServicio").value = productos[xcod].idproducto;
+	id("suscripEstadoLinea").value      = 'Activo';
+	id("suscripUnidadIntervalo").value  = 'Mes';
+	id("suscripLineaIntervalo").value   = 1;
+	id("suscripAdelantoPlazo").value    = 0;
+	id("suscripAdelantoPlazoImporte").value = 0;
+	id("suscripPlazoPago").value        = 1;
+
+	xtitlesusrip = 'Nueva Suscripcion';
+	xcommand     = "registrarSuscripcionLinea()";
+	xbtnlabel    = "Aceptar";
+	break;
+
+    case 'EditarSuscripcion':
+
+	id("suscripLineaConcepto").value    = slcConcepto;
+	id("suscripProductoServicio").value = slcIdProducto;
+	id("suscripLineaCantidad").value    = slcCantidad;
+	id("suscripLineaPrecio").value      = slcPrecio;
+	id("suscripLineaDescuento").value   = slcDescuento;
+	id("suscripLineaImporte").value     = slcImporte;
+	id("suscripLineaIntervalo").value   = slcIntervalo;
+	id("suscripUnidadIntervalo").value  = slcUndIntervalo;
+	id("suscripEstadoLinea").value      = slcEstado;
+	id("suscripAdelantoPlazo").value    = slcAdelandoPlazo;
+	id("suscripPlazoPago").value        = slcPlazoPago;
+
+	id("suscripDiaFacturacion").value   = slcDiaFacturacion;
+
+	xcommand     = "registrarSuscripcionLinea()";
+	xbtnlabel    = "Modificar";
+	xtitlesusrip = 'Modificando Suscripcion Servicio';
+
+	calcularImporteSuscripcionAdelantoLinea();
+
+	break;
+
+    case 'NuevoOrdenServicio':
+	id("suscripLineaConcepto").value = productos[xcod].producto;
+	id("suscripLineaCantidad").value = 1;
+	id("suscripLineaPrecio").value   = productos[xcod].pvd;
+	id("suscripLineaImporte").value  = productos[xcod].pvd;
+	id("suscripProductoServicio").value         = productos[xcod].idproducto;
+	id("suscripProductoCodigoBarras").value     = productos[xcod].codigobarras;
+	id("suscripProductoCodigoReferencia").value = productos[xcod].referencia;
+
+	xnumserie    = (productos[xcod].serie)? false:true;
+	xtitlesusrip = 'Nuevo Producto';
+	xcommand     = "AgregarProductoOrdenServicio("+!xnumserie+")";
+	xbtnlabel    = "Aceptar";
+	xessuscrip   = true;
+	break;
+
+    case 'EditarOrdenServicio':
+	var xiddet = cIdOrdenServicioDet;
+	id("suscripLineaConcepto").value   = ordenserviciodet[ xiddet ].concepto;
+	id("suscripProductoServicio").value= ordenserviciodet[ xiddet ].idproducto;
+	id("suscripLineaCantidad").value   = ordenserviciodet[ xiddet ].unidades;
+	id("suscripLineaPrecio").value     = ordenserviciodet[ xiddet ].precio;
+	id("suscripLineaImporte").value    = ordenserviciodet[ xiddet ].importe;
+
+        var xserie = (ordenserviciodet[ xiddet ].serie).split(",");
+        var nseries = "";
+        var xsep = "";
+        for(var i= 0; i < xserie.length; i++){
+           var aserie = xserie[i].split(":");
+           nseries += xsep+aserie[1];
+           xsep = ",";
+        }
+	id("OrdenServicioNumeroSerie").value = nseries;//ordenserviciodet[ xiddet ].serie;
+
+	xcommand     = "ModificarServicioProducto()";
+	xbtnlabel    = "Modificar";
+	xtitlesusrip = 'Modificando Producto';
+
+	xessuscrip   = true;
+	xnumserie    = (trim(osdNumeroSerie) != '')? false:true;
+
+        if(xop == 'Ver'){
+          xtitlesusrip = 'Detalle Producto';
+          id("btnSuscricpionLineaCancel").setAttribute("label",'Cerrar');
+          id("btnSuscricpionLinea").setAttribute("collapsed",true);
+        }
+	break;
+    }
+
+    id("rowOrdenServicioNumeroSerie").setAttribute("collapsed",xnumserie);
+    id("rowSuscripcionIntervalo").setAttribute('collapsed',xessuscrip);
+    id("vboxSuscripcionLineaEstado").setAttribute('collapsed',xessuscrip);
+    //id("vboxSuscripcionLineaAdelantoPlazoImporte").setAttribute('collapsed',xessuscrip);
+    //id("vboxSuscripcionLineaAdelantoPlazo").setAttribute('collapsed',xessuscrip);
+    id("vboxSuscripcionLineaDiaFacturacion").setAttribute('collapsed',xessuscrip);
+    id("vboxSuscripcionLineaPlazoPago").setAttribute('collapsed',xessuscrip);
+    id("rowSuscripcionDescuento").setAttribute('collapsed',xessuscrip);
+
+    id("titleSuscripcionLinea").label = xtitlesusrip;
+    id("btnSuscricpionLinea").setAttribute('label',xbtnlabel);
+    id("btnSuscricpionLinea").setAttribute('oncommand',xcommand);
+    id("panelSuscripcionLinea").openPopupAtScreen(xtop, xleft, false);
+}
+
+function calcularImporteSuscripcionLinea(){
+    var xcantidad = id("suscripLineaCantidad").value;
+    var xprecio   = id("suscripLineaPrecio").value;
+    var xdescuento= id("suscripLineaDescuento").value;
+
+    if(trim(xcantidad) == '' || trim(xcantidad) == 0)
+	xcantidad = 1;
+
+    if(trim(xprecio) == '')
+	xprecio = 0;
+
+    if(trim(xdescuento) == '')
+	xdescuento = 0;
+
+    var ximporte  = (parseFloat(xcantidad)*parseFloat(xprecio) - parseFloat(xdescuento));
+    id("suscripLineaCantidad").value = xcantidad;
+    id("suscripLineaPrecio").value = formatDinero(xprecio);
+    id("suscripLineaDescuento").value = formatDinero(xdescuento);
+    id("suscripLineaImporte").value = formatDinero(ximporte);
+    calcularImporteSuscripcionAdelantoLinea();
+}
+
+function calcularImporteSuscripcionAdelantoLinea(){
+    var xperiodos  = id("suscripAdelantoPlazo").value;
+    var ximporte   = id("suscripLineaImporte").value;
+
+    if(trim(xperiodos) == '') xperiodos = 0;
+
+    id("suscripAdelantoPlazoImporte").value = formatDinero( parseFloat(xperiodos)*parseFloat(ximporte) );
+    id("suscripAdelantoPlazo").value        = xperiodos;
+}
+
+function recargaComboSuscripcionContratos() {
+ 
+    vaciarComboSuscripcionContratos();
+
+    if( !suscripcionesclient[ cIdClienteSuscripcion ] )	return;
+
+    var xid       = 0;
+    var finit,ffin,fechainicio,fechafin,xsuscrip;
+
+    for (var i = 0; i < suscripcionesclient[ cIdClienteSuscripcion ].length; i++){ 
+
+	xid         = suscripcionesclient[ cIdClienteSuscripcion ][i];
+	finit       = suscripciones[ xid ].fechainicio.split("-");
+	ffin        = suscripciones[ xid ].fechafin.split("-");
+	fechainicio = finit[2]+'/'+finit[1]+'/'+finit[0];
+	fechafin    = ( suscripciones[ xid ].fechafin == '0000-00-00')? '':' al '+ffin[2]+'/'+ffin[1]+'/'+ffin[0];
+	xsuscrip    = suscripciones[ xid ].tiposuscripcion +' - '+suscripciones[ xid ].estado+' - '+fechainicio+fechafin;
+
+	addLineaComboSuscripcionContratos(xsuscrip,xid,false,false);
+	
+	if(i==0) cargarSuscripcionCliente(xid);
+    } 
+}
+
+function addLineaComboSuscripcionContratos(xnombre, xvalor,xbase,xselect) {
+
+    var xlistitem    = id("elementosSuscripcion");
+    var xsuscripcion = document.createElement("menuitem");
+    var xfunction    = (xbase)? "nuevoSuscripcionCliente();":"cargarSuscripcionCliente("+xvalor+")";
+
+    xsuscripcion = document.createElement("menuitem");
+    xsuscripcion.setAttribute("id","suscripcion_def_" + cSuscripcionContratosComboLineas);	
+    xsuscripcion.setAttribute("value",xvalor);
+    xsuscripcion.setAttribute("label",xnombre);
+    xsuscripcion.setAttribute("oncommand",xfunction);
+
+    if( xbase   ) xsuscripcion.setAttribute("style","font-weight:bold");
+    if( xselect ) xsuscripcion.setAttribute("selected","true");
+
+    xlistitem.appendChild( xsuscripcion );
+    cSuscripcionContratosComboLineas++;
+}
+
+function vaciarComboSuscripcionContratos(){
+
+    var xlistitem = id("elementosSuscripcion");
+    var xmenulist = id("suscripComboContratos");
+
+    for (var i = 0; i < cSuscripcionContratosComboLineas; i++) { 
+
+        kid = id("suscripcion_def_"+i);					
+        if (kid)
+	    xlistitem.removeChild( kid ); 
+    }
+
+    cSuscripcionContratosComboLineas = 0;
+    xmenulist.setAttribute("value",0 );	
+
+    addLineaComboSuscripcionContratos('Nuevo Contrato', 0, true,true);
+    nuevoSuscripcionCliente();
+    id("suscripComboContratos").label = 'Nuevo Contrato';
+    id("suscripComboContratos").value = 0;
+}
+
+function addLineaComboTipoSuscripcion(nombre, valor) {
+
+    var xlistitem = id("elementosTipoSuscripcion");
+    var xtiposuscripcion = document.createElement("menuitem");
+    xtiposuscripcion.setAttribute("value",valor);
+    xtiposuscripcion.setAttribute("label",nombre);
+    xtiposuscripcion.setAttribute("oncommand","RegistrarSuscripcionCliente()");
+    xlistitem.appendChild( xtiposuscripcion );
+
+}
+
+function salirSuscripcionLinea(){
+    id("panelSuscripcionLinea").hidePopup();
+}
+
+function editarSuscripcionLinea(){
+
+    var idx = id("listSuscripcionLinea").selectedItem;
+    if(!idx) return;
+
+    cIdSuscripcionDet = idx.value;
+    slcConcepto       = id("sl_concepto_"+idx.value).getAttribute('label');
+    slcIdProducto     = id("sl_concepto_"+idx.value).getAttribute('value');
+    slcCantidad       = id("sl_cantidad_"+idx.value).getAttribute('label');
+    slcPrecio         = id("sl_precio_"+idx.value).getAttribute('value');
+    slcDescuento      = id("sl_descuento_"+idx.value).getAttribute('value');
+    slcImporte        = id("sl_importe_"+idx.value).getAttribute('value');
+    slcIntervalo      = id("sl_intervalo_"+idx.value).getAttribute('value');
+    slcUndIntervalo   = id("sl_undintervalo_"+idx.value).getAttribute('value');
+    slcEstado         = id("sl_estado_"+idx.value).getAttribute('label');      
+    slcDiaFacturacion = id("sl_diafacturacion_"+idx.value).getAttribute('value');      
+    slcAdelandoPlazo  = id("sl_adelantoplazo_"+idx.value).getAttribute('value');      
+    slcPlazoPago      = id("sl_plazopago_"+idx.value).getAttribute('value');      
+
+    if( cIdSuscripcionDet == idx.value )
+	formularioDetalleLinea(false,'EditarSuscripcion',false);
+}
+
+function cleanSuscripcion(){
+    var f = new Date();
+    var fecha  = f.getFullYear() + "-" + (f.getMonth() +1) + "-" + f.getDate();
+
+    id("suscripTipoSuscripcion").value  = '';
+    id("suscripTipoPago").value         = 'Postpago';
+    id("suscripProlongacion").value     = 'Ilimitado';
+    id("suscripFechaInicio").value      = fecha;
+    id("suscripFechaFin").value         = fecha;
+    id("suscripEstado").value           = 'Pendiente';
+    id("suscripComprobante").value      = 'Factura';
+    id("suscripSerieComprobante").value = '1';
+    id("suscripComentarios").value      = '';
+    id("suscripTipoSuscripcion").setAttribute('label', 'Elige...');
+
+    id("rowFechaFinSuscripcion").setAttribute("collapsed",true);//Ilimitado
+    id("rowSuscripcionSerieComprobante").setAttribute("collapsed",false);
+}
+
+function nuevoSuscripcionCliente(){
+    cIdSuscripcion = 0;
+    cleanSuscripcion();
+    vaciarSuscripcionDetalle();
+    xmenuSuscripcionLinea();
+    
+    verAccionesExtraSuscripcion();
+}
+
+function filtrarComboEstadoSuscripcion(){
+
+    var xpendiente  = true;
+    var xejecucion  = true;
+    var xcancelado  = true;
+    var xfinalizado = true;
+    var xsuspendido = true;
+
+    switch( cEstadoSuscripcion ){
+    case 'Pendiente':
+	xejecucion  = false;
+	xcancelado  = false;
+	xpendiente  = false;
+	xfinalizado = true;
+	break;
+    case 'Ejecucion':
+	xpendiente  = true;
+	xfinalizado = false;
+	xsuspendido = false;
+	xejecucion  = false;
+	break;
+    case 'Finalizado':
+	xejecucion  = true;
+	xejecucion  = false;
+	break;
+    case 'Suspendido':
+	xejecucion = false;
+	break;
+    case 'Cancelado':
+	xpendiente  = false;
+	break;
+    }
+
+    id("itemSuscripcionEjecucion").setAttribute('collapsed',xejecucion);
+    id("itemSuscripcionPendiente").setAttribute('collapsed',xpendiente);
+    id("itemSuscripcionCancelado").setAttribute('collapsed',xcancelado);
+    id("itemSuscripcionFinalizado").setAttribute('collapsed',xfinalizado);
+    id("itemSuscripcionSuspendido").setAttribute('collapsed',xsuspendido);
+}
+
+function mostrarNuevoTipoSuscripcion(xvalue){
+
+    if ( suscripciones[ cIdSuscripcion ] )
+	if(suscripciones[ cIdSuscripcion ].estado != 'Pendiente') 
+	    return cargarSuscripcionCliente( cIdSuscripcion );
+
+    id("rowTipoSuscripcion").setAttribute("collapsed",xvalue);
+    id("rowNuevoTipoSuscripcion").setAttribute("collapsed",!xvalue);
+    if(id("suscripComboContratos").value == 0 && !xvalue) 
+	return nuevoSuscripcionCliente();
+    if(id("suscripTipoSuscripcion").value == 0 && !xvalue) 
+	return cargarSuscripcionCliente( cIdSuscripcion );
+    if(xvalue) id("textNuevoTipoSuscripcion").focus();
+}
+
+function mostrarSuscripcionProlongacion(xprolongacion){
+    var xprolong = (xprolongacion == 'Limitado')? false:true;
+    id("rowFechaFinSuscripcion").setAttribute("collapsed",xprolong);
+}
+
+function mostrarSuscripcionComprobante(xcomprobante){
+    var xcbte = (xcomprobante == 'Ticket')? true:false;
+    id("rowSuscripcionSerieComprobante").setAttribute("collapsed",xcbte);
+}
+
+
+function ValidarSerieComprobanteSuscripcion(){
+    var serie = id("suscripSerieComprobante").value;
+
+    if(serie == 0 || trim(serie) == '')
+	id("suscripSerieComprobante").value = 1;
+}
+
+function RegistrarTipoSuscripcion(xtiposuscrip){
+
+    if( trim(xtiposuscrip) == "")
+	return mostrarNuevoTipoSuscripcion(false);
+    
+    var url      = "modulos/suscripciones/modsuscripciones.php?modo=CreaTipoSuscripcion&xtiposuscrip="+xtiposuscrip;
+    var xrequest = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+
+    var xres  = xrequest.responseText.split("~");
+
+    if( xres[0] != '0')
+        return alert('gPOS: '+po_servidorocupado+" "+xrequest.responseText);
+    
+    var xid    = parseInt(xres[1]);
+
+    var text   = id("textNuevoTipoSuscripcion");
+
+    addLineaComboTipoSuscripcion(xtiposuscrip.toUpperCase(), xid);     
+    //elije nuevo elemento como seleted
+    text.value         = "";
+    //cIdTipoSuscripcion = xid;
+    mostrarNuevoTipoSuscripcion(false);
+    //RegistrarSuscripcionCliente();
+}
+
+function RegistrarSuscripcionCliente(){
+
+    var IdTipoSuscripcion = id("suscripTipoSuscripcion").value;
+    var TipoSuscripcion   = id("suscripTipoSuscripcion").label;
+    var Serie             = id("suscripSerieComprobante").value;
+
+    //Modificar...
+    if(id("suscripComboContratos").value != 0)
+	return ModificarSuscripcionCliente('1');
+
+    //Nuevo...
+    if(!confirm(c_gpos + " NUEVO CONTRATO DE SUSCRIPCION\n"+
+	       "\n TIPO SUSCRIPCIÓN  : "+TipoSuscripcion+
+	       "\n CLIENTE                    : "+usuarios[ cIdClienteSuscripcion ].nombre+
+	       "\n\nregistrar nueva suscripción, ¿desea continuar?")) 
+	return nuevoSuscripcionCliente();
+
+    var url = "modulos/suscripciones/modsuscripciones.php?modo=CreaSuscripcion"+
+	      "&xtiposusc="+IdTipoSuscripcion+
+	      "&xclient="+cIdClienteSuscripcion+
+	      "&xserie="+Serie;
+
+    var xrequest = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+    var res = xrequest.responseText;
+    var xid = parseInt(res);
+
+    setTimeout("mostrarMensajeTPVHead(1,'Nueva Suscripción')",50);
+    crearSuscripcion2XML( obtenerSuscripcionesCliente() );
+}
+
+function cambiarSucripcionCliente(elemento,xsuscrip){
+        var busca = trim(elemento);
+    if(busca.length == 0) return;
+    var lista = id("suscripComboContratos");
+    var xvalue = 0;
+    var xlabel = "";
+    n = lista.itemCount;
+
+    if(n==0) return; 
+
+    for (var i = 0; i < n; i++) {
+        var texto2  = lista.getItemAtIndex(i);
+        var cadena  = texto2.getAttribute('value');
+
+	if ( busca == cadena)
+	{
+	    //xvalue = texto2.getAttribute("value");
+	    texto2.setAttribute("label",xsuscrip);
+	    texto2.label = xsuscrip;
+	    break;
+        }
+    }
+
+}
 
 function mostrarMensajeTPVHead(xval,xmensaje){
 
@@ -12870,15 +15346,719 @@ function mostrarMensajeTPV(xval,xmensaje,xsettime){
     setTimeout("mostrarMensajeTPV(0,'',2500)",xsettime);
 }
 
+function ModificarSuscripcionCliente(xitem){
+    if(id("suscripComboContratos").value == 0) return;
+
+    if(id("suscripComboContratos").value == 0)
+	return alert("gPOS: Seleccione un Contrato");
+
+    //Control
+    switch(xitem){
+    case '1':
+	if(suscripciones[ cIdSuscripcion ].estado != 'Pendiente') 
+	    return cargarSuscripcionCliente( cIdSuscripcion );
+    case '6':
+	var xlinea = id("listSuscripcionLinea").itemCount;
+	if(id("suscripEstado").value != 'Pendiente' && xlinea == 0)
+	    return cargarSuscripcionCliente( cIdSuscripcion );
+	xmensaje = 'Contrato de suscripción';
+	var xconfirm = c_gpos + " MODIFICAR CONTRATO DE SUSCRIPCION\n"+
+		    "\n TIPO SUSCRIPCIÓN  : "+ id("suscripTipoSuscripcion").label+
+		    "\n ESTADO                    : "+ id("suscripEstado").value+
+		    "\n CLIENTE                    : "+usuarios[ cIdClienteSuscripcion ].nombre+
+		    "\n OBSERVACIÓN            : "+suscripciones[ cIdSuscripcion ].observaciones+
+	            "\n\n salvar los cambios, ¿desea continuar?";
+
+	break;
+    case '9': xmensaje = 'observaciones'; break;
+    case '2': xmensaje = 'tipo pago'; 
+    case '3': xmensaje = 'prolongación'; 
+    case '4': xmensaje = 'fecha inicio'; 
+    case '5': xmensaje = 'fecha fin'; 
+    case '7': xmensaje = 'combrobante'; 
+    case '8': xmensaje = 'serie comprobante'; 
+    default:
+        var xestado = suscripciones[ cIdSuscripcion ].estado;
+	if(xestado == 'Ejecucion' || xestado == 'Cancelado' || xestado == 'Finalizado') 
+	    return cargarSuscripcionCliente( cIdSuscripcion );
+    }
+    //setTimeout("mostrarMensajeTPVHead(1,xmensaje)",100);
+ 
+    var xdato;
+    switch(xitem){
+    case '1':
+	//Tipo Suscripcion
+	if(suscripciones[ cIdSuscripcion ].estado != 'Pendiente') 
+	    return cargarSuscripcionCliente( cIdSuscripcion );
+
+	xdato = id("suscripTipoSuscripcion").value;
+        if(suscripciones[ cIdSuscripcion ].idtiposuscripcion == xdato) return;
+
+	if(!confirm(xconfirm))
+	    return cargarSuscripcionCliente( cIdSuscripcion );
+
+	id("suscripComboContratos").value = cIdSuscripcion;
+	break;
+    case '2':
+	//Tipo Pago
+	xdato = id("suscripTipoPago").value;
+        if(suscripciones[ cIdSuscripcion ].tipopago == xdato) return;
+
+	break;
+    case '3'://Prolongacion
+	xdato = id("suscripProlongacion").value;
+        if(suscripciones[ cIdSuscripcion ].prolongacion == xdato) return;
+	var fechafin = id("suscripFechaFin").value;
+	xdato = (xdato != 'Iliminatdo')? xdato+"~"+fechafin: xdato+"~0000-00-00";
+	break;
+    case '4'://Fecha Inicio
+        if(id("suscripTipoSuscripcion").value == 0) return;
+	xdato = id("suscripFechaInicio").value;
+        if(suscripciones[ cIdSuscripcion ].fechainicio == xdato) return;
+	break;
+    case '5'://Fecha Fin
+        if(id("suscripTipoSuscripcion").value == 0) return;
+	var Prolongacion   = id("suscripProlongacion").value;
+	xdato = id("suscripFechaFin").value;
+        if(suscripciones[ cIdSuscripcion ].fechafin == xdato) return;
+	xmensaje = 'fecha fin';
+	xdato = (Prolongacion == 'Ilimitado')? '0000-00-00':xdato;
+	break;
+    case '6'://Estado
+	xdato = id("suscripEstado").value;
+        if(suscripciones[ cIdSuscripcion ].estado == xdato) return;
+
+	if(!confirm(xconfirm))
+	    return cargarSuscripcionCliente( cIdSuscripcion );
+
+	break;
+    case '7'://Comprobante
+	xdato = id("suscripComprobante").value;
+        if(suscripciones[ cIdSuscripcion ].comprobante == xdato) return;
+	break;
+    case '8'://Serie Comprobante
+	var Comprobante    = id("suscripComprobante").value;
+	xdato = id("suscripSerieComprobante").value;
+        if(suscripciones[ cIdSuscripcion ].serie == xdato) return;
+	xdato = (Comprobante == 'Ticket')? '0':xdato;
+	break;
+    case '9'://Comentarios
+	xdato = trim(id("suscripComentarios").value);
+        if(trim(suscripciones[ cIdSuscripcion ].observaciones) == xdato) return;
+	break;
+    }
+    setTimeout("mostrarMensajeTPVHead(1,xmensaje)",100);
+    var xml = '';
+    var xcontrato = id("suscripComboContratos").value;
+
+    var opcion = (xcontrato != 0)? 'Editar':'Nuevo';
+    var url = "modulos/suscripciones/modsuscripciones.php?modo=ModificaSuscripcion"+
+	      "&xdato="+xdato+
+	      "&xitem="+xitem+
+	      "&xopcion="+opcion+
+	      "&xclient="+cIdClienteSuscripcion+
+	      "&xids="+xcontrato;
+    var obj = new XMLHttpRequest();
+    obj.open("GET",url,false);
+    try{
+	obj.send(null);
+    } catch(z){
+	return;
+    }
+    crearSuscripcion2XML( obj.responseXML.documentElement );
+    cargarSuscripcionCliente( xcontrato );
+}
+
+function obtenerSuscripcionesCliente(){
+
+    var z   = null;
+    var url = "modulos/suscripciones/modsuscripciones.php?modo=ObtenerSuscripcionCliente"+
+	           "&xclient="+cIdClienteSuscripcion;
+    var obj = new XMLHttpRequest();
+    obj.open("GET",url,false);
+    try{
+	obj.send(null);
+    } catch(z){
+	return;
+    }
+    return obj.responseXML.documentElement;
+}
+
+function crearSuscripcion2XML(xml){
+
+    var idsuscipcion,idcliente,idtiposuscripcion,tiposuscripcion,fechainicio,fechafin,estado,prolongacion,comprobante,tipopago,observaciones,detalle;
+    
+    for (var i=0; i<xml.childNodes.length; i++) {
+        node = xml.childNodes[i];
+        if (node){
+	    t = 0;
+ 	    idsuscipcion      = node.childNodes[t++].firstChild.nodeValue;
+	    idcliente         = node.childNodes[t++].firstChild.nodeValue;
+	    idtiposuscripcion = node.childNodes[t++].firstChild.nodeValue;
+	    tiposuscripcion   = node.childNodes[t++].firstChild.nodeValue;
+	    fechainicio	      = node.childNodes[t++].firstChild.nodeValue;
+	    fechafin 	      = node.childNodes[t++].firstChild.nodeValue;
+	    estado            = node.childNodes[t++].firstChild.nodeValue;
+	    prolongacion      = node.childNodes[t++].firstChild.nodeValue;
+	    comprobante       = node.childNodes[t++].firstChild.nodeValue;
+	    serie             = node.childNodes[t++].firstChild.nodeValue;
+	    tipopago  	      = node.childNodes[t++].firstChild.nodeValue;
+	    observaciones     = node.childNodes[t++].firstChild.nodeValue;
+	    detalle           = node.childNodes[t++].firstChild.nodeValue;
+
+	    crearSuscripcion2Cliente(idsuscipcion,idcliente,idtiposuscripcion,tiposuscripcion,fechainicio,fechafin,estado,prolongacion,comprobante,tipopago,observaciones,serie,detalle);
+
+        }
+    }
+    recargaComboSuscripcionContratos();
+}
+
+function crearSuscripcion2Cliente( xid,xidcliente,xidtiposuscripcion,xtiposuscripcion,xfechainicio,
+				   xfechafin,xestado,xprolongacion,xcomprobante,xtipopago,
+				   xobservaciones,xserie,xdetalle ){
+    
+
+    if( suscripciones[ xid ] )
+	return updateSuscripcion2Cliente( xid,xidcliente,xidtiposuscripcion,xtiposuscripcion,xfechainicio,
+					  xfechafin,xestado,xprolongacion,xcomprobante,xtipopago,
+					  xobservaciones,xserie,xdetalle );
+    //Suscripcion
+    suscripciones[ xid ]                   = new Object();	
+    suscripciones[ xid ].idsuscripcion     = xid;
+    suscripciones[ xid ].idcliente         = xidcliente;
+    suscripciones[ xid ].idtiposuscripcion = xidtiposuscripcion;
+    suscripciones[ xid ].tiposuscripcion   = xtiposuscripcion;
+    suscripciones[ xid ].fechainicio       = xfechainicio;
+    suscripciones[ xid ].fechafin          = xfechafin;
+    suscripciones[ xid ].estado            = xestado;
+    suscripciones[ xid ].prolongacion      = xprolongacion;
+    suscripciones[ xid ].comprobante       = xcomprobante;
+    suscripciones[ xid ].serie             = xserie;
+    suscripciones[ xid ].tipopago          = xtipopago;
+    suscripciones[ xid ].observaciones     = xobservaciones;
+    suscripciones[ xid ].detalle           = xdetalle;
+
+    //Cliente
+    if( !suscripcionesclient[ xidcliente ] ) 
+	suscripcionesclient[ xidcliente ] = new Array();
+    suscripcionesclient[ xidcliente ].push(xid);
+    suscripcionesclient[ xidcliente ].sort(function(a,b){return a - b});
+    suscripcionesclient[ xidcliente ].reverse();
+}
+function updateSuscripcion2Cliente( xid,xidcliente,xidtiposuscripcion,xtiposuscripcion,xfechainicio,
+				    xfechafin,xestado,xprolongacion,xcomprobante,xtipopago,
+				    xobservaciones,xserie,xdetalle ){
+    
+    suscripciones[ xid ].idtiposuscripcion = xidtiposuscripcion;
+    suscripciones[ xid ].tiposuscripcion   = xtiposuscripcion;
+    suscripciones[ xid ].fechainicio       = xfechainicio;
+    suscripciones[ xid ].fechafin          = xfechafin;
+    suscripciones[ xid ].estado            = xestado;
+    suscripciones[ xid ].prolongacion      = xprolongacion;
+    suscripciones[ xid ].comprobante       = xcomprobante;
+    suscripciones[ xid ].serie             = xserie;
+    suscripciones[ xid ].tipopago          = xtipopago;
+    suscripciones[ xid ].observaciones     = xobservaciones;
+    suscripciones[ xid ].detalle           = xdetalle;
+}
+    
+function cargarSuscripcionCliente(xid){
+    var f              = new Date();
+    var fecha          = f.getFullYear() + "-" + (f.getMonth() +7) + "-" + f.getDate();
+    var xprolong       = ( suscripciones[ xid ].prolongacion  == 'Limitado')? false:true;
+    var xcbte          = ( suscripciones[ xid ].comprobante == 'Ticket')? true:false;
+
+    cIdSuscripcion     = suscripciones[ xid ].idsuscripcion;
+    cEstadoSuscripcion = suscripciones[ xid ].estado;
+
+    id("suscripComboContratos").value  = xid;
+    id("suscripTipoSuscripcion").value =  suscripciones[ xid ].idtiposuscripcion;
+    id("suscripFechaInicio").value     =  suscripciones[ xid ].fechainicio;
+    id("suscripFechaFin").value        = ( suscripciones[ xid ].fechafin == '0000-00-00' )? fecha:suscripciones[ xid ].fechafin;
+    id("suscripEstado").value          = suscripciones[ xid ].estado;
+    id("suscripProlongacion").value    = suscripciones[ xid ].prolongacion;
+    id("suscripComprobante").value     = suscripciones[ xid ].comprobante;
+    id("suscripSerieComprobante").value= suscripciones[ xid ].serie;
+    id("suscripTipoPago").value        = suscripciones[ xid ].tipopago;
+    id("suscripComentarios").value     = trim(suscripciones[ xid ].observaciones);
+
+    id("rowFechaFinSuscripcion").setAttribute("collapsed",xprolong);
+    id("rowSuscripcionSerieComprobante").setAttribute("collapsed",xcbte);
+
+    filtrarComboEstadoSuscripcion();
+    cargarSuscripcionDetalle();
+    setTimeout('BuscarSuscripcionComprobante()',600);
+    xmenuSuscripcionLinea();
+
+    verAccionesExtraSuscripcion();
+}
+
+function cargarSuscripcionDetalle(){
+
+    vaciarSuscripcionDetalle();
+    if( !trim(suscripciones[cIdSuscripcion].detalle) ) return;
+
+    var filas,celdas='';
+    var slIdSuscripcionDet,slConcepto,slIdProducto,slCantidad,slPrecio,slDescuento,slImporte,slIntervalo,slUndIntervalo,slEstado,slDiaFacturacion,slAdelandoPlazo,slPlazoPago;
+
+    filas = suscripciones[cIdSuscripcion].detalle.split(";");
+    
+    for(var i = 0; i<filas.length; i++){
+	celdas    = filas[i].split("~");
+ 
+	slIdSuscripcionDet= celdas[0];
+	slIdProducto      = celdas[2];
+	slConcepto        = celdas[3];
+	slIntervalo       = celdas[4];
+	slUndIntervalo    = celdas[5];
+	slEstado          = celdas[6];
+	slCantidad        = celdas[7];
+	slPrecio          = celdas[8];
+	slDescuento       = celdas[9];
+	slImporte         = celdas[10];
+	slDiaFacturacion  = celdas[11];
+	slAdelandoPlazo   = celdas[12];
+	slPlazoPago       = celdas[13];
+
+	generarListaSuscripcionLinea(slConcepto,slIdProducto,slCantidad,slPrecio,slDescuento,
+				     slImporte,slIntervalo,slUndIntervalo,slEstado,
+				     slIdSuscripcionDet,slDiaFacturacion,slAdelandoPlazo,slPlazoPago);
+    }
+
+}
+
+function generarListaSuscripcionLinea(slConcepto,slIdProducto,slCantidad,slPrecio,
+				      slDescuento,slImporte,slIntervalo,slUndIntervalo,
+				      slEstado,IdSuscripcionDet,slDiaFacturacion,
+				      slAdelandoPlazo,slPlazoPago){
+
+    var listaSuscripcionLinea = id("listSuscripcionLinea");
+    var ldiaFacturar          = ( slDiaFacturacion == 0 )? 'Auto':'Día '+slDiaFacturacion;
+    var xrow = document.createElement("listitem");
+    xrow.setAttribute("value",IdSuscripcionDet);
+    xrow.setAttribute("id","sl_lista_"+cSuscripcionDetalleLineas);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("label",cSuscripcionDetalleLineas+1 );
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("label",slEstado );
+    xcell.setAttribute("id",'sl_estado_'+IdSuscripcionDet );
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("label",slConcepto );
+    xcell.setAttribute("value",slIdProducto );
+    xcell.setAttribute("id",'sl_concepto_'+IdSuscripcionDet );
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("label",slCantidad );
+    xcell.setAttribute("style","text-align:right" );
+    xcell.setAttribute("id",'sl_cantidad_'+IdSuscripcionDet );
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("label",formatDinero(slPrecio) );
+    xcell.setAttribute("value",slPrecio );
+    xcell.setAttribute("style","text-align:right" );
+    xcell.setAttribute("id",'sl_precio_'+IdSuscripcionDet );
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("label",formatDinero(slDescuento) );
+    xcell.setAttribute("value",slDescuento );
+    xcell.setAttribute("style","text-align:right" );
+    xcell.setAttribute("id",'sl_descuento_'+IdSuscripcionDet );
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("label",formatDinero(slImporte) );
+    xcell.setAttribute("value",slImporte );
+    xcell.setAttribute("style","text-align:right" );
+    xcell.setAttribute("id",'sl_importe_'+IdSuscripcionDet );
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("label",slIntervalo +' '+slUndIntervalo);
+    xcell.setAttribute("value",slIntervalo);
+    xcell.setAttribute("style","text-align:center" );
+    xcell.setAttribute("id",'sl_intervalo_'+IdSuscripcionDet );
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("style","text-align:center" );
+    xcell.setAttribute("label",ldiaFacturar);
+    xcell.setAttribute("value",slDiaFacturacion);
+    xcell.setAttribute("id",'sl_diafacturacion_'+IdSuscripcionDet );
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("value",slUndIntervalo);
+    xcell.setAttribute("collapsed",true );
+    xcell.setAttribute("id",'sl_undintervalo_'+IdSuscripcionDet );
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("value",slAdelandoPlazo);
+    xcell.setAttribute("collapsed",true );
+    xcell.setAttribute("id",'sl_adelantoplazo_'+IdSuscripcionDet );
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("value",slPlazoPago);
+    xcell.setAttribute("collapsed",true );
+    xcell.setAttribute("id",'sl_plazopago_'+IdSuscripcionDet );
+    xrow.appendChild(xcell);
+
+    listaSuscripcionLinea.appendChild(xrow);			
+    cSuscripcionDetalleLineas++;
+}
+
+function vaciarSuscripcionDetalle(){	
+
+    var lista = id("listSuscripcionLinea");
+
+    for (var i = 0; i < cSuscripcionDetalleLineas; i++) { 
+        kid = id("sl_lista_"+i);					
+        if (kid)	lista.removeChild( kid ); 
+    }
+
+    cSuscripcionDetalleLineas = 0;		
+}
+
+function validasuscripDiaFacturacion(xthis){
+    if(parseInt(xthis.value) > 28) return xthis.value = 28;
+    if(parseInt(xthis.value) == 0 || parseInt(xthis.value) == 0 ) return xthis.value = 1;
+}
+
+function registrarSuscripcionLinea(){
+    var slConcepto       = id("suscripLineaConcepto").value;
+    var slIdProducto     = id("suscripProductoServicio").value;
+    var slCantidad       = id("suscripLineaCantidad").value;
+    var slPrecio         = id("suscripLineaPrecio").value;
+    var slDescuento      = id("suscripLineaDescuento").value;
+    var slImporte        = id("suscripLineaImporte").value;
+    var slIntervalo      = id("suscripLineaIntervalo").value;
+    var slUndIntervalo   = id("suscripUnidadIntervalo").value;
+    var slEstado         = id("suscripEstadoLinea").value;
+    var slDiaFacturacion = id("suscripDiaFacturacion").value;
+    var slAdelandoPlazo  = id("suscripAdelantoPlazo").value;
+    var slPlazoPago      = id("suscripPlazoPago").value;
+    var xids             = cIdSuscripcion;
+    var xrequest = new XMLHttpRequest();
+    var url = "modulos/suscripciones/modsuscripciones.php?modo=CreaSuscripcionLinea"+
+	      "&xconcepto="+slConcepto+
+	      "&xidprod="+slIdProducto+
+	      "&xcant="+slCantidad+
+	      "&xprecio="+slPrecio+
+	      "&xdscto="+slDescuento+
+	      "&ximpte="+slImporte+
+	      "&xintervalo="+slIntervalo+
+	      "&xundinter="+slUndIntervalo+
+	      "&xestado="+slEstado+
+	      "&xdiafacturar="+slDiaFacturacion+
+	      "&xadelanto="+slAdelandoPlazo+
+	      "&xplazopago="+slPlazoPago+
+	      "&xidsd="+cIdSuscripcionDet+
+	      "&xclient="+cIdClienteSuscripcion+
+	      "&xids="+xids;
+    var obj = new XMLHttpRequest();
+    obj.open("GET",url,false);
+    try{
+	obj.send(null);
+    } catch(z){
+	return;
+    }
+    setTimeout("mostrarMensajeTPVHead(1,'lineas')",100);
+    id("panelSuscripcionLinea").hidePopup();
+    crearSuscripcion2XML( obj.responseXML.documentElement );
+    cargarSuscripcionCliente( xids );
+}
+
+// Comprobantes de Suscripciones
+var ilineaSuscripcionComprobante = 0
+
+function vaciarSuscripcionComprobantes(){
+    var lista = id("listComprobantesSuscripcion");
+
+    for (var i = 0; i < ilineaSuscripcionComprobante; i++) { 
+        kid = id("lineabuscaventasuscripcion_"+i);					
+        if (kid)	lista.removeChild( kid ); 
+    }
+    ilineaSuscripcionComprobante = 0;    
+}
+
+function BuscarSuscripcionComprobante(){
+
+    vaciarSuscripcionComprobantes();
+
+    var desde           = id('FechaComprobanteSuscripcion').value;
+    var hasta           = id("FechaComprobanteSuscripcionHasta").value;
+    var filtrocodigo    = id("busquedaCodigoSerie").value;
+    var filtroventa     = id("FiltroSuscripcionDocumento").value;
+    var nombre          = "";
+    var modo            = (id("FiltroEstadoComprobante").value=="Pendiente")? "pendientes":"todos";
+    var modoserie       = "todos";
+    var modosuscripcion = "suscripcion";
+    var modofactura     = (filtroventa =="Factura")?"factura":"todos";
+    var modoboleta      = (filtroventa =="Boleta")?"boleta":"todos";
+    var modoticket      = (filtroventa =="Ticket" )?"ticket":"todos";
+    var mododevolucion  = "todos";
+    var modoalbaran     = "todos";
+    var modoalbaranint  = "todos";
+    var forzarid        = false;
+
+    RawBuscarVentasSuscripcion(desde,hasta,nombre,modo,modoserie,modosuscripcion,modofactura,
+			       modoboleta,mododevolucion,modoalbaran,modoalbaranint,modoticket,
+			       false,false,forzarid,AddLineaVentasSuscripcion);
+}
+
+function RawBuscarVentasSuscripcion(desde,hasta,nombre,modo,modoserie,modosuscripcion,modofactura,
+				    modoboleta,mododevolucion,modoalbaran,modoalbaranint,modoticket,
+				    IdComprobante,reimprimir,forzarid,FuncionProcesaLineaSuscripcion){
+
+    var url = "services.php?modo=mostrarVentas&desde=" + escape(desde) 
+        + "&modoconsulta=" + escape(modo) 
+        + "&hasta=" + escape(hasta) 
+        + "&nombre=" + escape(nombre)
+        + "&modoserie=" + escape(modoserie)
+        + "&modosuscripcion=" + escape(modosuscripcion)
+        + "&modoboleta=" + escape(modoboleta)
+        + "&modoticket=" + escape(modoticket)
+        + "&mododevolucion=" + escape(mododevolucion)
+        + "&modoalbaran=" + escape(modoalbaran)
+        + "&modoalbaranint=" + escape(modoalbaranint)
+        + "&modofactura=" + escape(modofactura)
+        + "&esventas=off"
+        + "&modoventa=tpv" 
+	+ "&idsuscripcion="+ cIdSuscripcion
+        + "&forzarfactura=" + IdComprobante
+        + "&forzarid=" + forzarid;
+
+    var obj = new XMLHttpRequest();
+    obj.open("GET",url,false);
+    obj.send(null);
+
+    var tex = "";
+    var cr = "\n";
+    
+    var vendedor,serie,num,fecha,total,pendiente,estado,IdComprobante,NumeroDocumento,TipoDocumento,IdCliente,sIdSuscripcion,FechaEmision;
+    var node,t,i,codventa,xLocal; 
+    var totalVenta = 0;
+    var totalVentaPendiente = 0;
+    var ImporteTotalVentas = 0;
+    if (!obj.responseXML)
+        return alert('gPOS: '+po_servidorocupado);
+
+    var xml = obj.responseXML.documentElement;
+    var item = xml.childNodes.length;
+    
+    for (i=0; i<xml.childNodes.length; i++) {
+        node = xml.childNodes[i];
+        if (node){
+	    t = 0;
+	    vendedor 	    = node.childNodes[t++].firstChild.nodeValue;
+	    serie 	    = node.childNodes[t++].firstChild.nodeValue;
+	    num 	    = node.childNodes[t++].firstChild.nodeValue;
+	    fecha 	    = node.childNodes[t++].firstChild.nodeValue;
+	    total 	    = node.childNodes[t++].firstChild.nodeValue;
+	    totalVenta      = parseFloat(totalVenta) + parseFloat(total);
+	    pendiente 	    = node.childNodes[t++].firstChild.nodeValue;
+	    totalVentaPendiente = parseFloat(totalVentaPendiente) + parseFloat(pendiente);
+	    estado 	    = node.childNodes[t++].firstChild.nodeValue;
+	    IdComprobante   = node.childNodes[t++].firstChild.nodeValue;
+	    NumeroDocumento = node.childNodes[t++].firstChild.nodeValue;
+	    TipoDocumento   = node.childNodes[t++].firstChild.nodeValue;
+	    codventa        = serie+'-'+num;	    
+	    
+	    if (node.childNodes[t].firstChild)
+                nombreCliente = node.childNodes[t++].firstChild.nodeValue;
+	    else 
+                nombreCliente = "";
+
+	    IdCliente     = node.childNodes[t++].firstChild.nodeValue;
+	    xLocal        = node.childNodes[t++].firstChild.nodeValue;
+	    IdLocal       = node.childNodes[t++].firstChild.nodeValue;
+	    MotivoAlba    = node.childNodes[t++].firstChild.nodeValue;
+	    sIdSuscripcion= node.childNodes[t++].firstChild.nodeValue;
+	    FechaEmision  = node.childNodes[t++].firstChild.nodeValue;
+
+	    FuncionProcesaLineaSuscripcion(item,vendedor,serie,num,fecha,total,pendiente,estado,
+					   IdComprobante,nombreCliente,NumeroDocumento,TipoDocumento,
+					   IdCliente,MotivoAlba,FechaEmision);
+	    item--;
+        }
+    }    
+}
+
+function AddLineaVentasSuscripcion(item,vendedor,serie,num,fecha,total,pendiente,estado,IdComprobante,
+				   nombreCliente,NumeroDocumento,TipoDocumento,IdCliente,MotivoAlba,FechaEmision){
+
+    var lista = id("listComprobantesSuscripcion");
+    var xitem, xnumitem, xvendedor,xserie,xnum,xfecha,xtotal,xpendiente,xestado,xtipodoc,xop;
+    
+    xitem = document.createElement("listitem");
+    xitem.value = IdComprobante;
+    xitem.setAttribute("id","lineabuscaventasuscripcion_"+ilineaSuscripcionComprobante);
+    ilineaSuscripcionComprobante++;
+    
+    xnumitem = document.createElement("listcell");
+    xnumitem.setAttribute("label",'  '+item+'.');
+    xnumitem.setAttribute("style","text-align:left");
+    
+    xtipodoc = document.createElement("listcell");
+    xtipodoc.setAttribute("label",TipoDocumento+' '+MotivoAlba);
+    xtipodoc.setAttribute("value",TipoDocumento);
+    xtipodoc.setAttribute("style","text-align:left");
+    
+    xserie = document.createElement("listcell");
+    xserie.setAttribute("label", serie+"-"+num);
+    xserie.setAttribute("style","text-align:left");
+    xserie.setAttribute("id","ventasuscripcion_serie_"+IdComprobante);
+    
+    xfecha = document.createElement("listcell");
+    xfecha.setAttribute("style","text-align:right");
+    xfecha.setAttribute("label", FechaEmision);	
+    
+    xtotal = document.createElement("listcell");
+    xtotal.setAttribute("label", parseFloat(total).toFixed(2));
+    xtotal.setAttribute("style","text-align:right");
+
+    xpendiente = document.createElement("listcell");
+    xpendiente.setAttribute("label", parseFloat(pendiente).toFixed(2));
+    xpendiente.setAttribute("style","text-align:right");
+    xpendiente.setAttribute("id","ventasuscripcion_pendiente_"+IdComprobante);
+
+    xestado = document.createElement("listcell");
+    xestado.setAttribute("label", estado);
+    xestado.setAttribute("style","text-align:center","width: 8em");
+    xestado.setAttribute("crop", "end");
+    xestado.setAttribute("id","ventasuscripcion_status_"+IdComprobante);
+
+    if(NumeroDocumento=='0')
+	NumeroDocumento = num;
+     
+    xnumdoc = document.createElement("listcell");
+    xnumdoc.setAttribute("label", NumeroDocumento+'  ');
+    xnumdoc.setAttribute("style","text-align:left");
+    xnumdoc.setAttribute("id","ventasuscripcion_num_bol_"+IdComprobante);
+    
+    xitem.appendChild( xnumitem );
+    xitem.appendChild( xtipodoc );
+    xitem.appendChild( xserie );
+    xitem.appendChild( xnumdoc );
+    xitem.appendChild( xfecha );
+    xitem.appendChild( xtotal );
+    xitem.appendChild( xpendiente );	
+    xitem.appendChild( xestado );
+    lista.appendChild( xitem );		
+}
+
+function verComprobanteVentaSuscripcion(){
+
+    var idx      = id("listComprobantesSuscripcion").selectedItem;
+
+    if(!idx) return;
+
+    var xcodigo  = idx.childNodes[2].attributes.getNamedItem('label').nodeValue;
+    id("busquedaCodigoSerie").value = xcodigo;
+    BuscarVentas();
+    setTimeout("VerVentas()",200);
+    buscarPorCodSerie(xcodigo);
+}
+
+function xmenuSuscripcionLinea(){
+    var idx = id("listSuscripcionLinea").selectedItem;
+    var agregar = (cIdSuscripcion == 0)? true:false;
+    var editar  = (!idx )? true:false;
+
+    switch( cEstadoSuscripcion ){
+    case 'Finalizado' :
+    case 'Ejecucion' :
+    case 'Cancelado'  :
+	agregar = true;
+	editar  = true;
+	break;
+    }
+
+    id("itemAgregarSuscripcionLinea").setAttribute('disabled',agregar);
+    id("itemEditarSuscripcionLinea").setAttribute('disabled',editar);
+}
+
+function mostrarFormSuscripcionToOrdenServicio(){
+    if(cIdSuscripcion == 0) return;
+    id("SuscripToOrdenCliente").setAttribute("label",usuarios[cIdClienteSuscripcion].nombre);
+    id("vboxAccionesExtraSuscripcion").setAttribute("collapsed",true);
+    id("formSuscripcionToOrdenServicio").setAttribute("collapsed",false);
+    id("suscripToOrdenObs").focus();
+}
+
+function registrarSuscripOrdenServicio(){
+    if(cIdSuscripcion == 0) return;
+
+
+    if(servicios.length == 0) 
+	return alert("gPOS: Registre por lo menos un servicio para garantías en: \n\n "+
+                     "      * Admin > Compras > Productos > Nuevo Producto" );
+
+    var Obs       = id("suscripToOrdenObs").value;
+    var Prioridad = id("suscripToOrdenPrioridad").value;
+
+    salirSuscripToOrden();
+    VerServicios();
+    RecibirSuscripcionOrdenServicio(Obs,Prioridad);
+}
+
+function RecibirSuscripcionOrdenServicio(Obs,Prioridad){
+    oscClon = false;
+
+    id("idClienteOrdenServicio").value = cIdClienteSuscripcion;
+    id("FiltroPrioridad").value        = '1';
+    id("TipoOrdenServicio").value      = 'Regular';
+    id("TipoOrdenServicio").setAttribute('value','Regular');
+    id("FiltroPrioridad").value        = Prioridad;
+    obtenerSerieNumeroOrdenServicio();
+    RegistrarOrdenServicio(cIdSuscripcion);
+
+    id("ObservacionServicio").value    = Obs;
+    verProductoSat(false);
+    var tiposerv = id("FiltroTipoServicio").label;
+    id("ConceptoServicio").value = tiposerv;
+    //if(ospDetalleSat == 1)
+	//vertabProductoDetalleSat(true);
+    mostrarPanelOrdenServicioDet(true,false);    
+}
+
+function salirSuscripToOrden(){
+    id("formSuscripcionToOrdenServicio").setAttribute("collapsed",true);
+    id("suscripToOrdenObs").value = "";
+    id("suscripToOrdenPrioridad").value = 1;
+    id("vboxAccionesExtraSuscripcion").setAttribute("collapsed",false);
+}
+
+function verAccionesExtraSuscripcion(){
+    salirSuscripToOrden();
+    var xval = (cIdSuscripcion == 0)? true:false;
+    id("vboxAccionesExtraSuscripcion").setAttribute("collapsed",xval);
+}
+
+function mostrarSuscripcionFichaTecnica(xop){
+    alert("línea:15422");
+}
+/*++++++++++++++++++++++++ SUSCRIPCION ++++++++++++++++++++++++++++*/
 
 /*++++++++++++++++++++++++ PANEL PRODUCTO ++++++++++++++++++++++++++++*/
 
     function elijePanelProducto(xmodulo){
 	var xtop  = parseInt( window.screen.width)/2 - 350;
 	var xleft = parseInt( window.screen.height)/2 - 180;
-
+	var xwidth = parseInt( window.screen.width)/1.6;
 	cLoadModulo = xmodulo;
+
 	id("panelElijeProducto").openPopupAtScreen(xtop, xleft, false);
+	id("panelElijeProducto").style.width = xwidth+'px';
 	id("panelNOM").focus();
     }
 
@@ -12906,10 +16086,10 @@ function mostrarMensajeTPV(xval,xmensaje,xsettime){
 
 	switch( cLoadModulo ){
 	case 'OrdenServicio':
-            formularioDetalleLinea(cod,'NuevoOrdenServicio');   
+            formularioDetalleLinea(cod,'NuevoOrdenServicio',false);   
 	    break;
 	case 'Suscripcion':
-	    formularioDetalleLinea(cod,'NuevaSuscripcion');
+	    formularioDetalleLinea(cod,'NuevaSuscripcion',false);
 	    break;
 	default: 
 	    return;
@@ -13089,11 +16269,11 @@ function mostrarMensajeTPV(xval,xmensaje,xsettime){
 	    {
 		k      = productos[cod];
 		precio = (Local.TPV=='VC')? k.pvc:k.pvd;
-		
+		/*
 		if( k.lote  || 
 		    k.vence ||
 		    k.mproducto ) continue;
-
+                */
 		if(cadena2=="")
 		{
 		    CrearPanelEntradaEnProductos(k.producto,k.codigobarras,k.referencia,precio,
@@ -13156,7 +16336,7 @@ function mostrarMensajeTPV(xval,xmensaje,xsettime){
 	}
 	
 	
-	vdetalle  = ( mproducto )? '**MPRODUCTO** ' : vdetalle;
+	vdetalle  = ( mproducto )? '**MIXPRODUCTO** ' : vdetalle;
 	vdetalle  = ( oferta    )? '**OFERTA '+ofertaunid+''+unid+' c/u '+formatDinero(pvo)+'** '+vdetalle : vdetalle;
 	vdetalle  = ( menudeo   )? vdetalle+xmenudeo : vdetalle;
 	vdetalle  = ( ilimitado )? vdetalle+'**STOCK ILIMITADO** ' : vdetalle;
@@ -13201,7 +16381,7 @@ function mostrarMensajeTPV(xval,xmensaje,xsettime){
         xlistitem.appendChild( xexistencias);
         xlistitem.appendChild( xprecio );
         xlistadoProductos.appendChild( xlistitem );
-	
+	xlistitem.setAttribute("tooltiptext",producto);	
         prodlist_tag[iprod] = xlistitem;
         prodlist[iprod++]   = codigo;	 	
     }
@@ -13254,6 +16434,7 @@ function mostrarMensajeTPV(xval,xmensaje,xsettime){
 			      usuarios[idcliente].debe, 
 			      usuarios[idcliente].ruc, 
 			      usuarios[idcliente].bono, 
+			      usuarios[idcliente].credito, 
 			      usuarios[idcliente].promo,
 			      usuarios[idcliente].tipo);
 	    }
@@ -13281,6 +16462,7 @@ function mostrarMensajeTPV(xval,xmensaje,xsettime){
 				  usuarios[idcliente].debe, 
 				  usuarios[idcliente].ruc, 
 				  usuarios[idcliente].bono, 
+				  usuarios[idcliente].credito, 
 				  usuarios[idcliente].promo,
 				  usuarios[idcliente].tipo);
 
@@ -13299,7 +16481,7 @@ function mostrarMensajeTPV(xval,xmensaje,xsettime){
 	}
     }
 
-    function paneladdXUser(nombreUser,iduser,debe,ruc,bono,promo,tipo){
+function paneladdXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo){
 
         var xroot    = id("panelclientPickArea");
         var xclient  =  document.createElement("listitem");
@@ -13359,4 +16541,3372 @@ function mostrarMensajeTPV(xval,xmensaje,xsettime){
 	id("panelbuscaClienteSelect").value = (xdex > 1 )? xdex:0;
     }
 /*++++++++++++++++++++++++ PANEL CLIENTE  ++++++++++++++++++++++++++++*/
+
+/*++++++++++++++++++++++++ ORDEN SERVICIO  ++++++++++++++++++++++++++++*/
+
+var oscNewRegMarca   = false;
+var ospNewMarca      = '';
+var oscNewRegModelo  = false;
+var ospNewModelo     = '';
+var oscNewRegProdSat = false;
+var ospNewProdSat    = '';
+var oscNewRegMotivo  = false;
+var ospNewMotivo     = '';
+
+var oscEstado        = "";
+var oscPrioridad     = "";
+var oscTipo          = "";
+var osciTipoServicio = 0;
+var osciModelos      = 0;
+var osciMarcas       = 1;
+var osciProductos    = 1;
+var osciMotivos      = 1;
+var oscContador      = 0;
+var oscLista         = "";
+var oscDetalleSat    = false;
+var cIdOrdenServicio = 0;
+var oscIdCliente     = 0;
+var oscCliente       = "Elije cliente...";
+var oscEstado        = "";
+var oscSerie         = 0;
+var oscNumero        = 0;
+var oscImpuesto      = 0;
+var oscImporte       = 0;
+var oscFacturacion   = 0;
+var oscNuevo         = 'Nuevo';
+var oscClon          = false;
+var oscIdSuscripcion = 0;
+
+var cIdOrdenServicioDet = 0;
+var ilinealistaordenservicio = 0;
+
+var osdEstado      = "";
+var osdImporte     = 0;
+
+var osdEstadoEntga = "";
+
+var osdServicioSat = "";
+
+var osdTipoProducto = "";
+var osdNumeroSerie  = "";
+var osdCodigoBarras = "";
+
+var osdDireccion    = "";
+var osdUbicacion    = "";
+
+
+
+var cIdProductoSat = 0;
+var ospIdMarca     = 0;
+var ospIdModeloSat = 0;
+var ospIdMotivoSat = 0;
+var ospIdProducto  = 0;
+var ospMarca       = "";
+var ospModeloSat   = "";
+var ospMotivoSat   = "";
+var ospProducto    = "";
+var ospNumeroSerie = "";
+var ospDescripcion = "";
+var ospSolucion    = "";
+var ospDiagnostico = "";
+var ospDetalleSat  = 0;
+var ospUbicacion   = "";
+
+var ilinealistaordenserviciodet = 0;
+var ilinealistaproductodetallesat = 0;
+
+var RevDet = 0;
+var regOSDet = '';
+var IdOrdenServicioSeleccionada = 0;
+var ItemSeleccionada = 0;
+
+// Busqueda avanzada orden servicio detalle
+var vosFechaFin       = true;
+var vosEstadoSolucion = true;
+var vosNumeroSerie    = true;
+var vosEstadoGarantia = true;
+var vosEstadoEntrega  = true;
+var vosFechaEntrega   = true;
+var vosUsuarioRegistro= true;
+var vosUsuarioEntrega = true;
+
+var editaNumeroOS     = false;
+
+var ordenserviciodet     = new Array();
+var ordenserviciodetlist = new Array();
+var ordenserviciodetserv = new Array();
+var iordenserviciodet    = 0;
+
+function mostrarServicios(xid){
+    var xordenservicio = true,xoutsourcing = true;
+    switch(xid){
+    case "OrdenServicio":
+	xordenservicio = false;
+	break;
+    case "Outsourcing":
+	xoutsourcing = false;
+	break;
+    default :
+	return;
+    }
+
+    id("boxOrdenservicio").setAttribute("collapsed",xordenservicio);
+    id("boxOutsourcing").setAttribute("collapsed",xoutsourcing);
+
+}
+
+function mostrarFormOrdenServicio(xvalue){
+    if(xvalue == 'Editar'){
+	var idx = id("listadoOrdenServicio").selectedItem;
+	if(!idx) return;
+    }
+
+    id("btnOrdenServicioDet").setAttribute("collapsed",true);
+    id("vboxFormOrdenServicio").setAttribute('collapsed',false);
+
+    var btnOSLabel   = " Aceptar";
+    var btnOSCommand = "RegistrarOrdenServicio("+false+")";
+    var xtitulo      = "Nueva Incidencia";
+    var listboxOS    = false;
+    var listboxOSDet = true;
+    var btnCancel    = "volverOrdenServicio('"+xvalue+"')";
+    var stadoserv    = true;
+
+    switch(xvalue){
+    case 'Nuevo':
+	cleanFormOrdenServicio();
+	cIdOrdenServicio = 0;
+
+	var xlist   = id("listadoOrdenServicio");
+	var rowlist = xlist.getRowCount(); 
+	
+	for (var i = 0; i < rowlist; i++) { 
+            kid = id("linealistaordenservicio_"+i);					
+            if (kid) kid.removeAttribute('selected');
+	}
+	id("nombreClienteOrdenServicio").value      = "Elije cliente...";
+	obtenerSerieNumeroOrdenServicio();
+	id("FiltroPrioridad").value = 1;
+	id("numOrdenServicio").focus();
+	break;
+    case 'Editar':
+	xtitulo      = " Modificando Incidencia";
+	btnOSLabel   = " Modificar";
+	btnOSCommand = "ModificarOrdenServicio()";
+	listboxOS    = true;
+	listboxOSDet = true;
+	stadoserv    = false;
+	editaNumeroOS= true;
+
+	id("serieOrdenServicio").value = oscSerie;
+	id("numOrdenServicio").value   = oscNumero;
+	id("nombreClienteOrdenServicio").value      = oscCliente;
+	id("idClienteOrdenServicio").value          = oscIdCliente;
+	id("FiltroEstado").value       = oscEstado;
+	id("FiltroPrioridad").value    = oscPrioridad;
+	id("TipoOrdenServicio").value  = oscTipo;
+
+	mostrarEstadoOrdenServicio();
+
+	break;
+    }
+
+    id("btnOrdenServicioCancel").setAttribute("oncommand",btnCancel);
+    id("btnOrdenServicioAceptar").setAttribute("label",btnOSLabel);
+    id("btnOrdenServicioAceptar").setAttribute("oncommand",btnOSCommand);
+    id("resumenOrdenServicio").setAttribute("collapsed",listboxOS);
+    id("listadoOrdenServicio").setAttribute("collapsed",listboxOS);
+    id("resumenOrdenServicioDetalle").setAttribute("collapsed",listboxOSDet);
+    id("listadoOrdenServicioDetalle").setAttribute("collapsed",listboxOSDet);
+    id("wtitleFormOrdenServicio").label = xtitulo;
+    id("rowEstadoOrdenServicio").setAttribute('collapsed',stadoserv);
+}
+
+function obtenerSerieNumeroOrdenServicio(){
+    var xrequest  = new XMLHttpRequest();
+    var url       = "modulos/ordenservicio/modordenservicio.php?modo=ObtenerSerieNumeroOS";
+
+    xrequest.open("GET",url,false);
+
+    try {
+        xrequest.send(null);
+        res = xrequest.responseText;
+    } catch(e) {
+        res = false;	
+    }
+
+    var xres    = res.split("~");
+
+    id("serieOrdenServicio").value = xres[0];
+    id("numOrdenServicio").value   = xres[1];
+}
+
+function mostrarEstadoOrdenServicio(){
+    var xpendiente   = true;
+    var xejecucion  = true;
+    var xcancelado  = true;
+    var xfinalizado = true;
+
+    switch(oscEstado){
+
+    case 'Pendiente':
+	xcancelado = false;
+	break;
+    case 'Ejecucion':
+	xcancelado = false;
+    case 'Finalizado':
+	break;
+    case 'Cancelado':
+	xpendiente = false;
+	break;
+    }
+
+    id("itmEstadoPendiente").setAttribute('collapsed',xpendiente);
+    id("itmEstadoCancelado").setAttribute('collapsed',xcancelado);
+}
+
+function cleanFormOrdenServicio(){
+    id("nombreClienteOrdenServicio").value = "";
+    id("idClienteOrdenServicio").value     = 0;
+    id("FiltroEstado").value               = "Pendiente";
+
+}
+
+function calcularFechaActual(xvalue){
+    var f = new Date();
+    var fecha  = f.getFullYear() + "-" + (f.getMonth() +1) + "-" + f.getDate();
+    var hora   = f.getHours() + ":" + f.getMinutes() + ":" + f.getSeconds();
+    var actual = (xvalue == 'fecha')? fecha : hora;
+
+    return actual;
+}
+
+function BuscarOrdenServicio(){
+    VaciarBusquedaOrdenServicio();
+
+    var osdesde       = id("FechaBuscaDesde").value;
+    var oshasta       = id("FechaBuscaHasta").value;
+    var oscliente     = id("NombreBusqueda").value;
+    var osusuario     = id("UsuarioBusqueda").value;
+    var osestado      = id("EstadoBusqueda").value;
+    var oscodigo      = id("CodigoBusqueda").value;
+    var osfacturado   = id("EstadoBusquedaFacturacion").value;
+    var ostipo        = id("TipoBusqueda").value;
+
+    RawBuscarOrdenServicio(osdesde,oshasta,oscliente,osestado,oscodigo,osfacturado,
+			   osusuario,ostipo,AddLineaOrdenServicio);
+
+    RevDet = 0;
+}
+
+function VaciarBusquedaOrdenServicio(){
+    var oslista = id("listadoOrdenServicio");
+
+    for (var i = 0; i < ilinealistaordenservicio; i++) { 
+        kid = id("linealistaordenservicio_"+i);					
+        if (kid)	oslista.removeChild( kid ); 
+    }
+    ilinealistaordenservicio = 0;
+}
+
+function RawBuscarOrdenServicio(osdesde,oshasta,oscliente,osestado,oscodigo,osfacturado,
+				osusuario,ostipo,FuncionProcesaLineaOrdenServicio){
+
+    var url = "modulos/ordenservicio/modordenservicio.php?modo=ObtenerOrdenServicio"
+	+ "&xdesde=" + escape(osdesde)
+        + "&xhasta=" + escape(oshasta)
+        + "&xcliente=" + escape(oscliente)
+        + "&xestado=" + escape(osestado)
+        + "&xfact=" + escape(osfacturado)
+        + "&xuser=" + escape(osusuario)
+        + "&xtipo=" + escape(ostipo)
+        + "&xcodigo=" + escape(oscodigo);
+
+    var obj = new XMLHttpRequest();
+    obj.open("GET",url,false); 
+    obj.send(null);
+    
+    var IdOrdenServicio,osIdCliente,osIdUsuario,osIdLocal,osIdUsuarioEntrega,osUsuarioEntrega,osUsuario,osCliente,osLocal,osFechaIngreso,osFechaEntrega,osEstado,osSerie,osCodigo,osNumeroOrden,osImpuesto,osImporte,osFacturacion,osPrioridad,osIdSuscripcion;
+
+    var tex = "";
+    var cr = "\n";
+    var Cliente;
+
+    var node,t,i;
+    var totalOrdenServicio  = 0;
+    var totalPendiente  = 0;
+    var totalEjecucion  = 0;
+    var totalFinalizado = 0;
+    var totalCancelado  = 0;
+    var totalFacturado  = 0;
+
+    if (!obj.responseXML)
+        return alert(po_servidorocupado);
+
+    var xml  = obj.responseXML.documentElement;
+    var item = xml.childNodes.length;
+    var tC   = item;
+    var sldoc=false;
+
+    for (i=0; i<xml.childNodes.length; i++) {
+        node = xml.childNodes[i];
+        if (node){
+            t = 0;
+	    osIdLocal          = node.childNodes[t++].firstChild.nodeValue;
+	    osLocal            = node.childNodes[t++].firstChild.nodeValue;
+	    osUsuario          = node.childNodes[t++].firstChild.nodeValue;
+	    osIdCliente        = node.childNodes[t++].firstChild.nodeValue;
+	    osCliente          = node.childNodes[t++].firstChild.nodeValue;
+	    IdOrdenServicio    = node.childNodes[t++].firstChild.nodeValue;
+	    osUsuarioEntrega   = node.childNodes[t++].firstChild.nodeValue;
+	    osFechaIngreso     = node.childNodes[t++].firstChild.nodeValue;
+	    osFechaEntrega     = node.childNodes[t++].firstChild.nodeValue;
+	    osEstado           = node.childNodes[t++].firstChild.nodeValue;
+	    osCodigo           = node.childNodes[t++].firstChild.nodeValue;
+	    osSerie            = node.childNodes[t++].firstChild.nodeValue;
+	    osNumeroOrden      = node.childNodes[t++].firstChild.nodeValue;
+	    osImpuesto         = node.childNodes[t++].firstChild.nodeValue;
+	    osImporte          = node.childNodes[t++].firstChild.nodeValue;  
+	    osFacturacion      = node.childNodes[t++].firstChild.nodeValue;
+	    osPrioridad        = node.childNodes[t++].firstChild.nodeValue;
+	    osTipo             = node.childNodes[t++].firstChild.nodeValue;
+	    osIdSuscripcion    = node.childNodes[t++].firstChild.nodeValue;
+
+ 	    totalOrdenServicio++;
+	    var acomprobante = osFacturacion.split('~');
+
+	    if(osEstado == 'Pendiente') totalPendiente++;
+	    if(osEstado == 'Ejecucion') totalEjecucion++;
+	    if(osEstado == 'Finalizado') totalFinalizado++;
+	    if(osEstado == 'Cancelado') totalCancelado++;
+	    if(acomprobante[0] == 1) totalFacturado++;
+
+            FuncionProcesaLineaOrdenServicio(item,osIdLocal,osLocal,osUsuario,osIdCliente,
+					     osCliente,IdOrdenServicio,osUsuarioEntrega,
+					     osFechaIngreso,osFechaEntrega,osEstado,
+					     osCodigo,osSerie,osNumeroOrden,osImpuesto,
+					     osImporte,osFacturacion,osPrioridad,osTipo,
+					     osIdSuscripcion);
+
+	    item--;
+        }
+    }
+
+    var srt = (totalOrdenServicio > 1 )? 's':'';
+    id("TotalOrdenServicio").value  = totalOrdenServicio+' Incidencia'+srt;
+    id("TotalFacturado").value  = totalFacturado;
+}
+
+function AddLineaOrdenServicio(item,osIdLocal,osLocal,osUsuario,osIdCliente,
+			       osCliente,IdOrdenServicio,osUsuarioEntrega,
+			       osFechaIngreso,osFechaEntrega,osEstado,
+			       osCodigo,osSerie,osNumeroOrden,osImpuesto,
+			       osImporte,osFacturacion,osPrioridad,osTipo,
+			       osIdSuscripcion){
+    var acomprobante = osFacturacion.split('~');
+    var lista    = id("listadoOrdenServicio");
+
+    var xUsuarioEntrega,xUsuario,xCliente,xLocal,xFechaIngreso,xFechaEntrega,xEstado,xSerie,xCodigo,xNumeroOrden,xImpuesto,xImporte,xIdOrdenServicio,xFacturacion,xPrioridad,xTipo,xIdSuscripcion;
+
+    var FechaR,pFechaRegistro,iFechaRegistro,aFechaRegistro,oHoraRegistro,FechaE,pFechaEntrega,aFechaEntrega,oFechaEntrega,oHoraEntrega,vFacturacion;
+
+    vFacturacion = (acomprobante[0] == 1)? acomprobante[2] : 'Pendiente';
+    vFacturacion = (osEstado != 'Finalizado')? ' ' : vFacturacion;
+    
+    //Fecha Registro
+    FechaR = osFechaIngreso.split('~');
+    pFechaRegistro = FechaR[0];
+    iFechaRegistro = FechaR[1];
+    aFechaRegistro = iFechaRegistro.split(' ');
+    oFechaRegistro = aFechaRegistro[0];
+    oHoraRegistro  = aFechaRegistro[1];
+
+    FechaE = osFechaEntrega.split('~');
+    pFechaEntrega = FechaE[0];
+    iFechaEntrega = FechaE[1];
+    aFechaEntrega = iFechaEntrega.split(' ');
+    oFechaEntrega = aFechaEntrega[0];
+    oHoraEntrega  = aFechaEntrega[1];
+
+    var fEntregra = (pFechaEntrega == '00/00/0000 00:00')? " ":pFechaEntrega
+    var lPrioridad;
+
+    if(osPrioridad == 1) lPrioridad = 'Normal';
+    if(osPrioridad == 2) lPrioridad = 'Alta';
+    if(osPrioridad == 3) lPrioridad = 'Muy Alta';
+
+    xclass        = (item%2)?'parrow':'imparrow';      
+    xitem         = document.createElement("listitem");
+    xitem.value   = IdOrdenServicio;
+
+    xitem.setAttribute('class',xclass);
+    xitem.setAttribute("id","linealistaordenservicio_"+ilinealistaordenservicio);
+    ilinealistaordenservicio++;
+
+    xnumitem = document.createElement("listcell");
+    xnumitem.setAttribute("label",'  '+item+'.');
+    xnumitem.setAttribute("style","text-align:left");
+
+    xIdOrdenServicio = document.createElement("listcell");
+    xIdOrdenServicio.setAttribute("value",IdOrdenServicio);
+    xIdOrdenServicio.setAttribute("collapsed","true");
+    xIdOrdenServicio.setAttribute("id","os_idordenservicio_"+IdOrdenServicio);
+    
+
+    xLocal = document.createElement("listcell");
+    xLocal.setAttribute("label",osLocal);
+    xLocal.setAttribute("value",osIdLocal);
+    xLocal.setAttribute("style","text-align:left");
+    xLocal.setAttribute("id","os_local_"+IdOrdenServicio);
+
+    xCliente = document.createElement("listcell");
+    xCliente.setAttribute("label",osCliente);
+    xCliente.setAttribute("value",osIdCliente);
+    xCliente.setAttribute("style","text-align:left");
+    xCliente.setAttribute("id","os_cliente_"+IdOrdenServicio);
+
+    xUsuario = document.createElement("listcell");
+    xUsuario.setAttribute("label",osUsuario);
+    //xUsuario.setAttribute("value",osIdUsuario);
+    xUsuario.setAttribute("style","text-align:center");
+    xUsuario.setAttribute("collapsed",vosUsuarioRegistro);
+    xUsuario.setAttribute("id","os_usuario_"+IdOrdenServicio);
+
+    xUsuarioEntrega = document.createElement("listcell");
+    xUsuarioEntrega.setAttribute("label",osUsuarioEntrega);
+    //xUsuarioEntrega.setAttribute("value",IdUsuarioEntrega);
+    xUsuarioEntrega.setAttribute("style","text-align:left");
+    xUsuarioEntrega.setAttribute("collapsed",vosUsuarioEntrega);
+    xUsuarioEntrega.setAttribute("id","os_usuarioentrega_"+IdOrdenServicio);
+
+    xFIngreso = document.createElement("listcell");
+    xFIngreso.setAttribute("label",pFechaRegistro);
+    //xFIngreso.setAttribute("value",IdFIngreso);
+    xFIngreso.setAttribute("style","text-align:left");
+    xFIngreso.setAttribute("id","os_fingreso_"+IdOrdenServicio);
+
+    xFEntrega = document.createElement("listcell");
+    xFEntrega.setAttribute("label",fEntregra);
+    //xFEntrega.setAttribute("value",IdFEntrega);
+    xFEntrega.setAttribute("style","text-align:left");
+    xFEntrega.setAttribute("collapsed",vosFechaEntrega);
+    xFEntrega.setAttribute("id","os_fentrega_"+IdOrdenServicio);
+
+    xEstado = document.createElement("listcell");
+    xEstado.setAttribute("label",osEstado);
+    xEstado.setAttribute("style","text-align:left");
+    xEstado.setAttribute("id","os_estado_"+IdOrdenServicio);
+
+    xCodigo = document.createElement("listcell");
+    xCodigo.setAttribute("label",osCodigo);
+    xCodigo.setAttribute("style","text-align:left");
+    xCodigo.setAttribute("id","os_codigo_"+IdOrdenServicio);
+
+    xSerie = document.createElement("listcell");
+    xSerie.setAttribute("label",osSerie);
+    xSerie.setAttribute("style","text-align:left");
+    xSerie.setAttribute("collapsed",true);
+    xSerie.setAttribute("id","os_serie_"+IdOrdenServicio);
+
+    xNumeroOrden = document.createElement("listcell");
+    xNumeroOrden.setAttribute("label",osNumeroOrden);
+    xNumeroOrden.setAttribute("style","text-align:left");
+    xNumeroOrden.setAttribute("collapsed",true);
+    xNumeroOrden.setAttribute("id","os_numeroorden_"+IdOrdenServicio);
+
+    xImpuesto = document.createElement("listcell");
+    xImpuesto.setAttribute("label",formatDinero(osImpuesto));
+    xImpuesto.setAttribute("value",osImpuesto);
+    xImpuesto.setAttribute("style","text-align:right");
+    xImpuesto.setAttribute("id","os_impuesto_"+IdOrdenServicio);
+
+    xImporte = document.createElement("listcell");
+    xImporte.setAttribute("label",formatDinero(osImporte));
+    xImporte.setAttribute("value",osImporte);
+    xImporte.setAttribute("style","text-align:right");
+    xImporte.setAttribute("id","os_importe_"+IdOrdenServicio);
+
+    xFacturacion = document.createElement("listcell");
+    xFacturacion.setAttribute("label",vFacturacion);
+    xFacturacion.setAttribute("value",acomprobante[1]);
+    xFacturacion.setAttribute("style","text-align:left");
+    xFacturacion.setAttribute("id","os_facturacion_"+IdOrdenServicio);
+
+    xPrioridad = document.createElement("listcell");
+    xPrioridad.setAttribute("label",lPrioridad);
+    xPrioridad.setAttribute("value",osPrioridad);
+    xPrioridad.setAttribute("style","text-align:left");
+    xPrioridad.setAttribute("id","os_prioridad_"+IdOrdenServicio);
+
+    xTipo = document.createElement("listcell");
+    xTipo.setAttribute("label",osTipo);
+    xTipo.setAttribute("value",osTipo);
+    xTipo.setAttribute("style","text-align:left");
+    xTipo.setAttribute("collapsed","true");
+    xTipo.setAttribute("id","os_tipo_"+IdOrdenServicio);
+
+    xIdSuscripcion = document.createElement("listcell");
+    xIdSuscripcion.setAttribute("value",osIdSuscripcion);
+    xIdSuscripcion.setAttribute("style","text-align:left");
+    xIdSuscripcion.setAttribute("collapsed","true");
+    xIdSuscripcion.setAttribute("id","os_idsuscripcion_"+IdOrdenServicio);
+
+
+    xitem.appendChild( xnumitem );
+    xitem.appendChild( xLocal );
+    xitem.appendChild( xCodigo );
+    xitem.appendChild( xEstado );
+    xitem.appendChild( xPrioridad );
+    xitem.appendChild( xFIngreso );
+    xitem.appendChild( xFacturacion );
+    xitem.appendChild( xCliente );
+    xitem.appendChild( xFEntrega );
+    xitem.appendChild( xImpuesto );
+    xitem.appendChild( xImporte );
+    xitem.appendChild( xUsuario );
+    xitem.appendChild( xUsuarioEntrega );
+    xitem.appendChild( xSerie );
+    xitem.appendChild( xNumeroOrden );
+    xitem.appendChild( xIdOrdenServicio );
+    xitem.appendChild( xTipo );
+    xitem.appendChild( xIdSuscripcion );
+    lista.appendChild( xitem );	
+}
+
+function RevisarOrdenServicioSeleccionada(){
+    if (id("listadoOrdenServicio").getAttribute('disabled'))
+	vboxOrdenServicioDisplay('unblock');
+
+    var idex       = id("listadoOrdenServicio").selectedItem;
+    
+    if(!idex) return;
+
+    cIdOrdenServicio = idex.value;
+
+    oscIdCliente = id("os_cliente_"+idex.value).getAttribute("value");
+    oscCliente   = id("os_cliente_"+idex.value).getAttribute("label");
+    oscEstado    = id("os_estado_"+idex.value).getAttribute("label");
+    oscSerie     = id("os_serie_"+idex.value).getAttribute("label");
+    oscNumero    = id("os_numeroorden_"+idex.value).getAttribute("label");
+    oscImpuesto  = id("os_impuesto_"+idex.value).getAttribute("value");
+    oscImporte   = id("os_importe_"+idex.value).getAttribute("value");
+    oscFacturacion = id("os_facturacion_"+idex.value).getAttribute("value");
+    oscPrioridad   = id("os_prioridad_"+idex.value).getAttribute("value");
+    oscCodigo      = id("os_codigo_"+idex.value).getAttribute("label");
+    oscTipo        = id("os_tipo_"+idex.value).getAttribute("value");
+    oscIdSuscripcion = id("os_idsuscripcion_"+idex.value).getAttribute("value");
+    
+    id("btnOrdenServicioDet").setAttribute("collapsed",false);
+    id("resumenOrdenServicioDetalle").setAttribute("collapsed",false);
+    id("listadoOrdenServicioDetalle").setAttribute("collapsed",false);
+    id("vboxFormOrdenServicio").setAttribute("collapsed",true);
+    id("btnOrdenServicio").setAttribute("collapsed",false);
+
+    if(RevDet != idex.value)
+	crearOrdenServicioDetalle2XML(obtenerOrdenServicioDetalle());
+
+    BuscarDetalleOrdenServicio(idex.value);
+    RevDet = idex.value;
+    xmenuOrdenServicio();
+    xmenuOrdenServicioDetalle();
+}
+
+/**** DETALLE ORDEN SERVICIO ******/
+
+function mostrarFormOrdenServicioDet(xvalue,xset){
+    if(osdTipoProducto == 'Producto' && xvalue != 'Nuevo'){
+	formularioDetalleLinea(false,'EditarOrdenServicio',xvalue);
+	return;
+    }
+
+    var xtitle              = "";
+    var btnlabelcancel      = 'Cancelar';
+    var btncollapsedaceptar = false;
+    var btniconcancel       = 'img/gpos_cancelar.png';
+    oscNuevoServicio        = 'Nuevo';
+
+    var btnOSDetOncommand, btnOSDetLabel, btnOSDetCollapsed;
+    regOSDet = xvalue;
+
+    if(servicios.length == 0) 
+	return alert("gPOS: Registre por lo menos un servicio en: \n\n "+
+                     "      * Admin > Compras > Productos > Nuevo Producto" );
+
+    switch(xvalue){
+    case 'Nuevo':
+	xtitle            = 'Nuevo Servicio';
+	btnOSDetLabel     = 'Aceptar';
+	btnOSDetOncommand = "RegistrarOrdenServicioDet()";
+	btnOSDetCollapsed = false;
+	osdEstado         = 'Pendiente';
+	checkServicios();
+	if(!oscClon){
+	    if(oscEstado == 'Finalizado' || oscEstado == 'Cancelado') return;
+	    if(xset) resetFormOrdenServicioDet();
+	    ospDetalleSat = 0;
+	}
+	mostrarUbicacionServicio('Local');
+	break;
+    case 'Ver':
+	var idx = id("listadoOrdenServicioDetalle").selectedItem;
+	if(!idx) return;
+
+	xtitle              = 'Detalle Servicio';
+	btnOSDetCollapsed   = true;
+
+	btnlabelcancel      = 'Cerrar';
+	btncollapsedaceptar = true;
+
+	CargarOrdenServicioDet();
+	verOrdenServicioDetalle(false,xvalue);
+	verProductoSat(false);
+
+	id("btnCancelServicioDet").setAttribute('label','Cerrar');
+
+	break;
+    case 'Editar':
+	var idx = id("listadoOrdenServicioDetalle").selectedItem;
+	if(!idx) return;
+
+	var estadoOSDet     = ordenserviciodet[ cIdOrdenServicioDet ].estado;
+	oscNuevoServicio    = 'Modifica';
+	btnOSDetCollapsed   = false;
+
+	btnlabelcancel      = (estadoOSDet == 'Finalizado')? 'Cerrar':btnlabelcancel;
+	btncollapsedaceptar = (estadoOSDet == 'Finalizado')? true:btncollapsedaceptar;
+	btniconcancel       = (estadoOSDet == 'Finalizado')? 'img/gpos_cancelar.png':btniconcancel;
+
+	btnOSDetLabel       = 'Modificar';
+	btnOSDetOncommand   = "ModificarOrdenServicioDet()";
+	xtitle              = 'Modificando Servicio';
+
+	CargarOrdenServicioDet();
+	mostrarUbicacionServicio(ordenserviciodet[ cIdOrdenServicioDet ].ubicacion);
+	verOrdenServicioDetalle(true,xvalue);
+	verificarEstadoOrdenServicioDet(estadoOSDet);
+	verProductoSat(false);
+
+	break;
+
+    default:
+	return;
+    }
+
+    id("wtitleFormOrdenServicioDet").setAttribute('label',xtitle);
+    id("btnAceptarServicioDet").setAttribute('label',btnOSDetLabel);
+    id("btnAceptarServicioDet").setAttribute('oncommand',btnOSDetOncommand);
+    id("btnAceptarServicioDet").setAttribute('collapsed',btnOSDetCollapsed);
+
+
+    id("MostrarInformacionExtraServicio").value = '';
+    id("rowMostrarInformacionExtraServicio").setAttribute("collapsed",true);
+
+    mostrarPanelOrdenServicioDet(true,xvalue);
+}
+
+function verOrdenServicioDetalle(xver,xedit){
+    var xval = (xedit != 'Nuevo')? true:!xver;
+
+    id("rowTipoServicio").setAttribute('collapsed',xval);
+    id("rowDescTipoServicio").setAttribute('collapsed',!xval);
+
+    id("rowEstadoOrdenSericioDet").setAttribute('collapsed',!xver);
+    id("rowdtnEstadoOrdenServicioDet").setAttribute('collapsed',xver);
+    id("rowListaUsuario").setAttribute('collapsed',!xver);
+    id("rowdtnListaUsuario").setAttribute('collapsed',xver);
+    id("rowFechaInicioServicio").setAttribute('collapsed',!xver);
+    id("rowdtnFechaInicioServicio").setAttribute('collapsed',xver);
+    id("rowFechaFinServicio").setAttribute('collapsed',!xver);
+    id("rowdtnFechaFinServicio").setAttribute('collapsed',xver);
+    id("rowObservacionServicio").setAttribute('collapsed',!xver);
+    id("rowdtnObservacionServicio").setAttribute('collapsed',xver);
+    id("rowCantidadServivio").setAttribute('collapsed',!xver);
+    id("rowdtnCantidadServivio").setAttribute('collapsed',xver);
+    id("rowPrecioServicio").setAttribute('collapsed',!xver);
+    id("rowdtnPrecioServicio").setAttribute('collapsed',xver);
+    id("rowImporteServicio").setAttribute('collapsed',!xver);
+    id("rowdtnImporteServicio").setAttribute('collapsed',xver);
+    
+    id("rowUbicacionServicio").setAttribute('collapsed',!xver);
+    id("rowdtnUbicacionServicio").setAttribute('collapsed',xver);
+    id("rowEstadoSolucion").setAttribute('collapsed',!xver);
+    id("rowdtnEstadoSolucion").setAttribute('collapsed',xver);
+    
+    var xgtia = true;
+    var ygtia = true;
+
+    if(ordenserviciodet[cIdOrdenServicioDet]){
+	xgtia = (trim(ordenserviciodet[cIdOrdenServicioDet].ordenanterior) == '')? true:!xver;
+	ygtia = (trim(ordenserviciodet[cIdOrdenServicioDet].ordenanterior) == '')? true:xver;
+    }
+
+    id("rowGarantiaCondicion").setAttribute('collapsed',xgtia);
+    id("rowdtnGarantiaCondicion").setAttribute('collapsed',ygtia);
+
+    if(osdServicioSat == 0){
+	id("rowConceptoServicio").setAttribute('collapsed',!xver);
+	id("rowdtnConceptoServicio").setAttribute('collapsed',xver);
+    }else
+	id("rowConceptoServicio").setAttribute("collapsed",true);
+
+    if(osdUbicacion == 'Externo'){
+	id("rowDireccionServicio").setAttribute('collapsed',!xver);
+	id("rowdtnDireccionServicio").setAttribute('collapsed',xver);
+    }else{
+	if(ordenserviciodet[cIdOrdenServicioDet])
+	    mostrarUbicacionServicio(ordenserviciodet[ cIdOrdenServicioDet ].ubicacion);
+    }
+
+    var xx = ((xedit == 'Ver' || xedit == 'Editar') && osdServicioSat == 0)? true:!xver;
+    var yy = ((xedit == 'Ver' || xedit == 'Editar') && osdServicioSat == 0)? true:xver;
+
+    id("rowMotivoSat").setAttribute('collapsed',xx);
+    id("rowdtnMotivoSat").setAttribute('collapsed',yy);
+    id("rowUbicacionProducto").setAttribute('collapsed',xx);
+    id("rowdtnUbicacionProducto").setAttribute('collapsed',yy);
+
+    id("rowDiagnostico").setAttribute('collapsed',xx);
+    id("rowdtnDiagnostico").setAttribute('collapsed',yy);
+    id("rowResultado").setAttribute('collapsed',xx);
+    id("rowdtnResultado").setAttribute('collapsed',yy);
+
+
+}
+
+function CargarOrdenServicioDet(xvalue){
+    var fechaini = ordenserviciodet[ cIdOrdenServicioDet ].fechainicio.split("~");
+    var fechafin = ordenserviciodet[ cIdOrdenServicioDet ].fechafin.split("~");
+    var xdateini = fechaini[1].split(' ');
+    var xdatefin = fechafin[1].split(' ');
+
+    var condgarantia = '';
+
+    if(ordenserviciodet[ cIdOrdenServicioDet ].condiciongarantia == 0) condgarantia = '';
+    if(ordenserviciodet[ cIdOrdenServicioDet ].condiciongarantia == 1) condgarantia = 'Aplica';
+    if(ordenserviciodet[ cIdOrdenServicioDet ].condiciongarantia == 2) condgarantia = 'No aplica';
+
+    var tiposerv     = ordenserviciodet[ cIdOrdenServicioDet ].tiposervicio.split("~");
+    var prodServicio = tiposerv[0];
+    var fServicioSat = tiposerv[1];
+
+    var vTipoServicio = ordenserviciodet[ cIdOrdenServicioDet ].idproducto+'~'+fServicioSat;
+    var lTipoServicio = prodServicio+'-'+ordenserviciodet[ cIdOrdenServicioDet ].producto;
+
+    var xdir        = trim(ordenserviciodet[ cIdOrdenServicioDet ].direccion);
+    var dirServicio = (xdir)? xdir:usuarios[oscIdCliente].dir;
+
+    id("FiltroTipoServicio").value      = vTipoServicio+':'+ordenserviciodet[ cIdOrdenServicioDet ].codigobarras;
+
+    id("FiltroTipoServicio").label      = lTipoServicio;
+    id("fInicioAtencionServicio").value = (xdateini[0] == '0000-00-00')? calcularFechaActual('fecha'):xdateini[0];
+    id("hInicioAtencionServicio").value = xdateini[1];
+    id("fFinAtencionServicio").value    = (xdatefin[0] == '0000-00-00')? calcularFechaActual('fecha'):xdatefin[0];
+    id("hFinAtencionServicio").value    = xdatefin[1];
+    id("FiltroEstadoOSDet").value       = ordenserviciodet[ cIdOrdenServicioDet ].estado;
+    id("listIdUsuario").value           = ordenserviciodet[ cIdOrdenServicioDet ].iduserresponsable;
+    id("listGarantiaCondicion").value   = ordenserviciodet[ cIdOrdenServicioDet ].condiciongarantia;
+    id("listEstadoSolucion").value      = ordenserviciodet[ cIdOrdenServicioDet ].solucion;
+    id("ConceptoServicio").value        = ordenserviciodet[ cIdOrdenServicioDet ].concepto;
+    id("CantidadServicio").value        = ordenserviciodet[ cIdOrdenServicioDet ].unidades;
+    id("PrecioServicio").value          = ordenserviciodet[ cIdOrdenServicioDet ].precio;
+    id("ImporteServicio").value         = ordenserviciodet[ cIdOrdenServicioDet ].importe;
+    id("UbicacionServicio").value       = ordenserviciodet[ cIdOrdenServicioDet ].ubicacion;
+    id("DireccionServicio").value       = dirServicio;
+    id("ObservacionServicio").value     = trim(ordenserviciodet[ cIdOrdenServicioDet ].observaciones);
+
+    id("dctTipoServicio").value         = ordenserviciodet[ cIdOrdenServicioDet ].producto;
+    id("dtnEstadoOrdenServicioDet").value = ordenserviciodet[ cIdOrdenServicioDet ].estado;
+    id("dtnListaUsuario").value         = ordenserviciodet[ cIdOrdenServicioDet ].responsable;
+    id("dtnFechaInicioServicio").value  = fechaini[1];
+    id("dtnFechaFinServicio").value     = fechafin[1];
+    id("dtnUbicacionServicio").value    = ordenserviciodet[ cIdOrdenServicioDet ].ubicacion;
+    id("dtnGarantiaCondicion").value    = condgarantia;
+    id("dtnEstadoSolucion").value       = ordenserviciodet[ cIdOrdenServicioDet ].solucion;
+    id("dtnObservacionServicio").textContent = ordenserviciodet[ cIdOrdenServicioDet ].observaciones;
+    id("dtnImporteServicio").value      = formatDinero(ordenserviciodet[ cIdOrdenServicioDet ].importe);
+    id("dtnPrecioServicio").value       = formatDinero(ordenserviciodet[ cIdOrdenServicioDet ].precio);
+    id("dtnCantidadServivio").value     = ordenserviciodet[ cIdOrdenServicioDet ].unidades;
+    id("dtnDireccionServicio").textContent = ordenserviciodet[ cIdOrdenServicioDet ].direccion;
+    id("dtnConceptoServicio").textContent = ordenserviciodet[ cIdOrdenServicioDet ].concepto;
+
+    if(ordenserviciodet[ cIdOrdenServicioDet ].essat == 1){
+	var xprod    = ordenserviciodet[ cIdOrdenServicioDet ].productosat.split(';;');
+	var xprodsat = xprod[0].split('~');
+	id("listMotivoSat").value  = xprodsat[3];
+	id("DiagnosticoSat").value = trim(xprodsat[12]);
+	id("ResultadoSat").value   = trim(xprodsat[11]);
+	id("listUbicacionProducto").value = xprodsat[14];
+
+	id("dtnUbicacionProducto").value    = xprodsat[14];
+	id("dtnMotivoSat").value            = xprodsat[7];
+	id("dtnDiagnosticoSat").textContent = trim(xprodsat[12]);
+	id("dtnResultadoSat").textContent   = trim(xprodsat[11]);
+	cIdProductoSat = xprodsat[0];
+
+	CargarProductosSat();
+    }
+    verTabFormProductoSat(xvalue);
+}
+
+function verTabFormProductoSat(xvalue){
+    var xprod       = id("FiltroTipoServicio").value.split(":");
+    var prodtipo    = xprod[0].split("~");
+    var esProdSat   = (prodtipo[1] == 1)? false:true;
+    osdCodigoBarras = xprod[1];    
+
+    id("tab-servicios-sat-oc").setAttribute("collapsed",esProdSat);
+    id("rowConceptoServicio").setAttribute("collapsed",!esProdSat);
+    id("rowUbicacionProducto").setAttribute("collapsed",esProdSat);
+    id("titleEvaluacion").setAttribute("collapsed",esProdSat);
+    id("rowMotivoSat").setAttribute("collapsed",esProdSat);
+    id("rowDiagnostico").setAttribute("collapsed",esProdSat);
+    id("rowResultado").setAttribute("collapsed",esProdSat);
+    if(esProdSat) id("idDetalleSat").setAttribute("checked",false);
+    verificarEstadoOrdenServicioDet('Pendiente');
+}
+
+function LoadProductosSat(){
+    if(oscNuevoServicio != 'Nuevo')
+	setTimeout("CargarProductosSat()",100);
+}
+
+function verProductoSat(xver){
+    id("rowProducto").setAttribute('collapsed',!xver);
+    id("rowdtnProducto").setAttribute('collapsed',xver);
+    id("rowDescripcion").setAttribute('collapsed',!xver);
+    id("rowdtnDescripcion").setAttribute('collapsed',xver);
+    id("rowMarca").setAttribute('collapsed',!xver);
+    id("rowdtnMarca").setAttribute('collapsed',xver);
+    id("rowModeloSat").setAttribute('collapsed',!xver);
+    id("rowdtnModeloSat").setAttribute('collapsed',xver);
+    id("rowNumeroSerie").setAttribute('collapsed',!xver);
+    id("rowdtnNumeroSerie").setAttribute('collapsed',xver);
+}
+
+function CargarProductosSat(){
+    if(ordenserviciodet[ cIdOrdenServicioDet ].essat == 1){
+	var xprod    = ordenserviciodet[ cIdOrdenServicioDet ].productosat.split(";;");
+	var xprodsat = xprod[0].split('~');
+
+	id("tab-servicios-sat-oc").setAttribute('collapsed',false);
+
+	if(!oscClon)
+	    id("idDetalleSat").setAttribute("disabled",true);
+
+	id("dtnProducto").value    = xprodsat[8];
+	id("dtnDescripcion").textContent = xprodsat[10];
+	id("dtnMarca").value       = xprodsat[5];
+	id("dtnModeloSat").value   = xprodsat[6];
+	id("dtnNumeroSerie").value = xprodsat[9];
+
+	id("listProductoSat").value= xprodsat[4];
+	id("DescripcionSat").value = xprodsat[10];
+	id("listMarca").value      = xprodsat[1];
+	id("listModeloSat").value  = xprodsat[2];
+	id("NumeroSerieSat").value = xprodsat[9];
+
+	if(xprodsat[13] == 1) {
+	    id("idDetalleSat").setAttribute("checked",true);
+	    RevisarServicioProductoSatDet();
+	    vertabProductoDetalleSat(true);
+	    id("itemAgregarProductoSatDet").setAttribute('disabled',true);
+	    id("itemModificarProductoSatDet").setAttribute('disabled',true);
+	}
+    }
+}
+
+function mostrarPanelOrdenServicioDet(xval=false,xedit=false){
+    if((oscFacturacion != 0) && (xedit!='Ver') && !oscClon) return;
+    vboxOrdenServicioDisplay('block');
+
+    id("tab-servicios-sat-oc").setAttribute("selected",false);
+    id("tab-servicios-oc").setAttribute("selected",true);
+    id("tab-boxservicios").setAttribute("selectedIndex",0);
+
+    var xleft   = parseInt( window.screen.width)/2;
+    var xtop    = parseInt( window.screen.height)/2;
+    var idpanel = id("boxFormOrdenServicioDet");
+
+    xleft  = xleft - 340;
+    xtop   = xtop - 210;
+    idpanel.openPopupAtScreen(xleft,xtop,false);
+}
+
+function mostrarPanelElijeCliente(){
+
+    var xleft   = parseInt(window.screen.width)/2;
+    var xtop    = parseInt(window.screen.height)/2;
+    var idpanel = id("panelElijeCliente");
+
+    xleft  = xleft - 380;
+    xtop   = xtop - 160;
+
+    id("panelbuscaCliente").value='';
+    id("panelbuscaClienteSelect").value = 0;
+    panelbuscarCliente();
+
+    idpanel.openPopupAtScreen(xleft,xtop,false);
+    id("panelbuscaCliente").focus();
+}
+
+
+function cleanFormOrdenServicioDet(){
+    var Fecha = calcularFechaActual('fecha');
+
+    id("fInicioAtencionServicio").value = Fecha;
+    id("hInicioAtencionServicio").value = '00:00:00';
+    id("fFinAtencionServicio").value    = Fecha;
+    id("hFinAtencionServicio").value    = '00:00:00';
+    id("FiltroEstadoOSDet").value       = 'Pendiente';
+    id("listIdUsuario").value           = 0;
+    id("ConceptoServicio").value        = '';
+    id("CantidadServicio").value        = 1;
+    id("wtitleFormOrdenServicioDet").label = 'Nuevo Servicio';
+    id("UbicacionServicio").value       = 'Local';
+    id("DireccionServicio").value       = (oscIdCliente != 0)? usuarios[oscIdCliente].dir:'';
+    id("ObservacionServicio").value     = '';
+    id("idDetalleSat").setAttribute('checked',false);
+    mostrarUbicacionServicio('Local');
+}
+
+function cleanFormProductoSat(){
+    id("idDetalleSat").setAttribute("checked",false);
+    id("idDetalleSat").removeAttribute("disabled");
+    id("ResultadoSat").value       = "";
+    id("DiagnosticoSat").value     = "";
+    id("NumeroSerieSat").value     = "";
+    id("DescripcionSat").value     = "";
+    id("listProductoSat").value    = (id("listProductoSat").itemCount > 1)? 1:0;
+    id("listProductoDetSat").value = (id("listProductoDetSat").itemCount > 1)? 1:0;
+    id("listMotivoSat").value      = (id("listMotivoSat").itemCount > 1)? 1:0;
+    id("NumeroSerieDetSat").value  = "";
+    VaciarDeHijosTag("listadoProductoDetalleSat","esMov");
+}
+
+function VaciarBuscarDetalleOrdenServicio(){
+    var oslista = id("listadoOrdenServicioDetalle");
+
+    for (var i = 0; i < ilinealistaordenserviciodet; i++) { 
+        kid = id("linealistaordenserviciodet_"+i);					
+        if (kid)	oslista.removeChild( kid ); 
+    }
+    ilinealistaordenserviciodet = 0;
+}
+
+function BuscarDetalleOrdenServicio(idordenservicio){
+    VaciarBuscarDetalleOrdenServicio();
+    RawBuscarDetalleOrdenServicio(idordenservicio,AddLineaOrdenServicioDetalle);
+}
+
+function RawBuscarDetalleOrdenServicio(idordenservicio,
+				       FuncionProcesaLineaOrdenServicioDetalle){
+    if(!ordenserviciodetserv[ cIdOrdenServicio ]) return;
+    var IdOrdenServicioDet,osIdProducto,osProducto,osIdUsuarioResponsable,osIdComprobante,osFechaInicio,osFechaFin,osEstado,osGarantia,osEstadoGarantia,osGarantiaCondicion,osEstadoSolucion,osConcepto,osNumeroSerie,osUnidades,osPrecio,osImporte,osUsuarioResponsable,osTipoServicio,osTipoProducto,osCodigoBarras,osUbicacion,osDireccion,osObservacion,osProdSat;
+
+    var item = 0,i,j;
+
+    for (i=0; i<ordenserviciodetserv[ cIdOrdenServicio ].length; i++) {
+	item++;
+	j = ordenserviciodetserv[ cIdOrdenServicio ][i];
+
+	IdOrdenServicioDet    = ordenserviciodet[ j ].idordenserviciodet;
+	osIdProducto          = ordenserviciodet[ j ].idproducto;
+	osIdUserResponsable   = ordenserviciodet[ j ].iduserresponsable;
+	osIdComprobante       = ordenserviciodet[ j ].idcomprobante;
+	osFechaInicio         = ordenserviciodet[ j ].fechainicio;
+	osFechaFin            = ordenserviciodet[ j ].fechafin;
+	osEstado              = ordenserviciodet[ j ].estado;
+	osGarantia	      = ordenserviciodet[ j ].garantia;
+	osEstadoGarantia      = ordenserviciodet[ j ].estadogarantia;
+	osGarantiaCondicion   = ordenserviciodet[ j ].condiciongarantia;
+	osEstadoSolucion      = ordenserviciodet[ j ].solucion;
+	osConcepto            = ordenserviciodet[ j ].concepto;
+	osNumeroSerie         = ordenserviciodet[ j ].serie;
+	osUnidades            = ordenserviciodet[ j ].unidades;
+	osPrecio              = ordenserviciodet[ j ].precio;
+	osImporte             = ordenserviciodet[ j ].importe;
+	osProducto            = ordenserviciodet[ j ].producto;
+	osUsuarioResponsable  = ordenserviciodet[ j ].responsable;
+	osTipoServicio        = ordenserviciodet[ j ].tiposervicio;
+	osTipoProducto        = ordenserviciodet[ j ].tipoproducto;
+	osCodigoBarras        = ordenserviciodet[ j ].codigobarras;
+	osUbicacion           = ordenserviciodet[ j ].ubicacion;
+	osDireccion           = ordenserviciodet[ j ].direccion;
+	osObservacion         = ordenserviciodet[ j ].observaciones;
+	osProdSat             = ordenserviciodet[ j ].essat;
+	
+        FuncionProcesaLineaOrdenServicioDetalle(item,IdOrdenServicioDet,osIdProducto,
+						osIdUserResponsable,osIdComprobante,
+						osFechaInicio,osFechaFin,osEstado,
+						osGarantia,osEstadoGarantia,
+						osGarantiaCondicion,osEstadoSolucion,
+						osConcepto,osNumeroSerie,
+						osUnidades,osPrecio,osImporte,osProducto,
+						osUsuarioResponsable,osTipoServicio,
+						osTipoProducto,osCodigoBarras,
+						osUbicacion,osDireccion,osObservacion,
+						osProdSat);
+
+							         
+    }						           
+}
+
+function AddLineaOrdenServicioDetalle(item,IdOrdenServicioDet,osIdProducto,
+				      osIdUserResponsable,osIdComprobante,
+				      osFechaInicio,osFechaFin,osEstado,
+				      osGarantia,osEstadoGarantia,
+				      osGarantiaCondicion,osEstadoSolucion,
+				      osConcepto,osNumeroSerie,
+				      osUnidades,osPrecio,osImporte,osProducto,
+				      osUsuarioResponsable,osTipoServicio,
+				      osTipoProducto,osCodigoBarras,osUbicacion,
+				      osDireccion,osObservacion,osProdSat){
+    
+    var lista    = id("listadoOrdenServicioDetalle");
+
+    var xProducto,xUsuarioResponsable,xComprobante,xFechaInicio,xFechaFin,xEstado,xGarantia,xEstadoGarantia,xGarantiaCondicion,xEstadoSolucion,xConcepto,xNumeroSerie,xUnidaes,xPrecio,xTipoServicio,xTipoProducto,xCodigoBarras,xUbicacion,xDireccion,xObservacion,xProdSat;
+    osConcepto           = osConcepto.replace(/    /g, ' ');
+    osConcepto           = osConcepto.replace(/   /g, ' ');
+    osConcepto           = osConcepto.replace(/  /g, ' ');
+    
+    //filtro Producto
+    if(osTipoProducto == 'Producto'){
+	osEstado = "";
+	osEstadoSolucion = "";
+	osEstadoGarantia = "";
+    }
+
+    //Fecha Inicio
+    var FechaI         = osFechaInicio.split('~');
+    var vFechaInicio   = (osTipoProducto == 'Producto')? '':FechaI[0];
+    var zFechaInicio   = vFechaInicio.split(' ');
+    var yFechaInicio   = zFechaInicio[0];
+    var iFechaInicio   = FechaI[1];
+    var aFechaInicio   = iFechaInicio.split(' ');
+    var oFechaInicio   = aFechaInicio[0];
+    var oHoraInicio    = aFechaInicio[1];
+    vFechaInicio       = (FechaI[1] != '0000-00-00 00:00:00')? vFechaInicio:'';
+
+    //Fecha Fin
+    var FechaF      = osFechaFin.split('~');
+    var vFechaFin   = (osTipoProducto == 'Producto')? '':FechaF[0];
+    var zFechaFin   = vFechaFin.split(' ');
+    var yFechaFin   = zFechaFin[0];
+    var iFechaFin   = FechaF[1];
+    var aFechaFin   = iFechaFin.split(' ');
+    var oFechaFin   = aFechaFin[0];
+    var oHoraFin    = aFechaFin[1];
+    vFechaFin       = (FechaF[1] != '0000-00-00 00:00:00')? vFechaFin:'';
+
+    // Tipo servicio
+    var tiposerv = osTipoServicio.split("~");
+    var prodServicio = tiposerv[0];
+    var fServicioSat = tiposerv[1];
+
+    var vTipoServicio = osIdProducto+'~'+fServicioSat;
+    var lTipoServicio = prodServicio+'-'+osProducto;
+
+    xclass       = (item%2)?'imparrow':'parrow';  
+    xitem        = document.createElement("listitem");
+    xitem.value  = IdOrdenServicioDet;
+
+    xitem.setAttribute('class',xclass);
+    xitem.setAttribute("id","linealistaordenserviciodet_"+ilinealistaordenserviciodet);
+    ilinealistaordenserviciodet++;
+
+    xnumitem = document.createElement("listcell");
+    xnumitem.setAttribute("label",'  '+item+'.');
+    xnumitem.setAttribute("style","text-align:left");
+
+    xProducto = document.createElement("listcell");
+    xProducto.setAttribute("label",osProducto);
+    xProducto.setAttribute("value",osIdProducto);
+    xProducto.setAttribute("collapsed",true);
+    xProducto.setAttribute("id","osd_producto_"+IdOrdenServicioDet);
+
+    xUsuario = document.createElement("listcell");
+    xUsuario.setAttribute("label",osUsuarioResponsable);
+    xUsuario.setAttribute("value",osIdUserResponsable);
+    xUsuario.setAttribute("style","text-align:left");
+    xUsuario.setAttribute("id","osd_usuariores_"+IdOrdenServicioDet);
+
+    xFechaInicio = document.createElement("listcell");
+    xFechaInicio.setAttribute("label",vFechaInicio);
+    xFechaInicio.setAttribute("value",iFechaInicio);
+    xFechaInicio.setAttribute("style","text-align:left");
+    xFechaInicio.setAttribute("id","osd_fechainicio_"+IdOrdenServicioDet);
+
+    xFechaFin = document.createElement("listcell");
+    xFechaFin.setAttribute("label",vFechaFin);
+    xFechaFin.setAttribute("value",iFechaFin);
+    xFechaFin.setAttribute("style","text-align:left");
+    xFechaFin.setAttribute("collapsed",vosFechaFin);
+    xFechaFin.setAttribute("id","osd_fechafin_"+IdOrdenServicioDet);
+
+    xConcepto = document.createElement("listcell");
+    xConcepto.setAttribute("label",osConcepto);
+    xConcepto.setAttribute("style","text-align:left");
+    xConcepto.setAttribute("id","osd_concepto_"+IdOrdenServicioDet);
+
+    xEstado = document.createElement("listcell");
+    xEstado.setAttribute("label",osEstado);
+    xEstado.setAttribute("style","text-align:center");
+    xEstado.setAttribute("id","osd_estado_"+IdOrdenServicioDet);
+
+    xGarantia = document.createElement("listcell");
+    xGarantia.setAttribute("label",osGarantia);
+    xGarantia.setAttribute("style","text-align:left");
+    xGarantia.setAttribute("collapsed",true);
+    xGarantia.setAttribute("id","osd_garantia_"+IdOrdenServicioDet);
+
+    xEstadoGarantia = document.createElement("listcell");
+    xEstadoGarantia.setAttribute("label",osEstadoGarantia);
+    xEstadoGarantia.setAttribute("style","text-align:left");
+    xEstadoGarantia.setAttribute("collapsed",vosEstadoGarantia);
+    xEstadoGarantia.setAttribute("id","osd_estadogarantia_"+IdOrdenServicioDet);
+
+    xGarantiaCondicion = document.createElement("listcell");
+    xGarantiaCondicion.setAttribute("label",osGarantiaCondicion);
+    xGarantiaCondicion.setAttribute("style","text-align:left");
+    xGarantiaCondicion.setAttribute("collapsed",true);
+    xGarantiaCondicion.setAttribute("id","osd_garantiacondicion_"+IdOrdenServicioDet);
+
+    xEstadoSolucion = document.createElement("listcell");
+    xEstadoSolucion.setAttribute("label",osEstadoSolucion);
+    xEstadoSolucion.setAttribute("style","text-align:left");
+    xEstadoSolucion.setAttribute("collapsed",vosEstadoSolucion);
+    xEstadoSolucion.setAttribute("id","osd_estadosolucion_"+IdOrdenServicioDet);
+
+    xNumeroSerie = document.createElement("listcell");
+    xNumeroSerie.setAttribute("label",osNumeroSerie);
+    xNumeroSerie.setAttribute("style","text-align:left");
+    xNumeroSerie.setAttribute("collapsed",vosNumeroSerie);
+    xNumeroSerie.setAttribute("id","osd_numeroserie_"+IdOrdenServicioDet);
+
+    xUnidades = document.createElement("listcell");
+    xUnidades.setAttribute("label",osUnidades);
+    xUnidades.setAttribute("style","text-align:right");
+    xUnidades.setAttribute("id","osd_unidades_"+IdOrdenServicioDet);
+
+    xPrecio = document.createElement("listcell");
+    xPrecio.setAttribute("label",formatDinero(osPrecio));
+    xPrecio.setAttribute("value",osPrecio);
+    xPrecio.setAttribute("style","text-align:right");
+    xPrecio.setAttribute("id","osd_precio_"+IdOrdenServicioDet);
+
+    xImporte = document.createElement("listcell");
+    xImporte.setAttribute("label",formatDinero(osImporte));
+    xImporte.setAttribute("value",osImporte);
+    xImporte.setAttribute("style","text-align:right");
+    xImporte.setAttribute("id","osd_importe_"+IdOrdenServicioDet);
+
+    xUsuarioResponsable = document.createElement("listcell");
+    xUsuarioResponsable.setAttribute("label",osUsuarioResponsable);
+    xUsuarioResponsable.setAttribute("value",osIdUserResponsable);
+    xUsuarioResponsable.setAttribute("style","text-align:center");
+    xUsuarioResponsable.setAttribute("id","osd_usuarioresp_"+IdOrdenServicioDet);
+
+    xComprobante = document.createElement("listcell");
+    xComprobante.setAttribute("value",osIdComprobante);
+    xComprobante.setAttribute("style","text-align:left");
+    xComprobante.setAttribute("collapsed",true);
+    xComprobante.setAttribute("id","osd_comprobante_"+IdOrdenServicioDet);
+
+    xTipoServicio = document.createElement("listcell");
+    xTipoServicio.setAttribute("value",vTipoServicio);
+    xTipoServicio.setAttribute("label",lTipoServicio);
+    xTipoServicio.setAttribute("style","text-align:left");
+    xTipoServicio.setAttribute("collapsed",true);
+    xTipoServicio.setAttribute("id","osd_tiposervicio_"+IdOrdenServicioDet);
+
+    xServicioSat = document.createElement("listcell");
+    xServicioSat.setAttribute("value",fServicioSat);
+    xServicioSat.setAttribute("style","text-align:left");
+    xServicioSat.setAttribute("collapsed",true);
+    xServicioSat.setAttribute("id","osd_serviciosat_"+IdOrdenServicioDet);
+
+    xTipoProducto = document.createElement("listcell");
+    xTipoProducto.setAttribute("value",osTipoProducto);
+    xTipoProducto.setAttribute("style","text-align:left");
+    xTipoProducto.setAttribute("collapsed",true);
+    xTipoProducto.setAttribute("id","osd_tipoproducto_"+IdOrdenServicioDet);
+
+    xCodigoBarras = document.createElement("listcell");
+    xCodigoBarras.setAttribute("value",osCodigoBarras);
+    xCodigoBarras.setAttribute("style","text-align:left");
+    xCodigoBarras.setAttribute("collapsed",true);
+    xCodigoBarras.setAttribute("id","osd_codigobarras_"+IdOrdenServicioDet);
+
+    xUbicacion = document.createElement("listcell");
+    xUbicacion.setAttribute("value",osUbicacion);
+    xUbicacion.setAttribute("style","text-align:left");
+    xUbicacion.setAttribute("collapsed",true);
+    xUbicacion.setAttribute("id","osd_ubicacion_"+IdOrdenServicioDet);
+
+    xDireccion = document.createElement("listcell");
+    xDireccion.setAttribute("value",trim(osDireccion));
+    xDireccion.setAttribute("style","text-align:left");
+    xDireccion.setAttribute("collapsed",true);
+    xDireccion.setAttribute("id","osd_direccion_"+IdOrdenServicioDet);
+
+    xObservacion = document.createElement("listcell");
+    xObservacion.setAttribute("value",trim(osObservacion));
+    xObservacion.setAttribute("style","text-align:left");
+    xObservacion.setAttribute("collapsed",true);
+    xObservacion.setAttribute("id","osd_observacion_"+IdOrdenServicioDet);
+
+    xProdSat = document.createElement("listcell");
+    xProdSat.setAttribute("label",osProdSat);
+    xProdSat.setAttribute("collapsed",true);
+    xProdSat.setAttribute("id","osd_prodsat_"+IdOrdenServicioDet);
+
+    xitem.appendChild( xnumitem );
+    xitem.appendChild( xConcepto );
+    xitem.appendChild( xFechaInicio );
+    xitem.appendChild( xFechaFin );
+    xitem.appendChild( xEstado );
+    xitem.appendChild( xEstadoGarantia );
+    xitem.appendChild( xEstadoSolucion );
+    xitem.appendChild( xNumeroSerie );
+    xitem.appendChild( xUnidades );
+    xitem.appendChild( xPrecio );
+    xitem.appendChild( xImporte );
+    xitem.appendChild( xUsuarioResponsable );
+    xitem.appendChild( xGarantia );
+    xitem.appendChild( xGarantiaCondicion );
+    xitem.appendChild( xComprobante );
+    xitem.appendChild( xTipoServicio );
+    xitem.appendChild( xServicioSat );
+    xitem.appendChild( xProducto );
+    xitem.appendChild( xTipoProducto );
+    xitem.appendChild( xCodigoBarras );
+    xitem.appendChild( xUbicacion );
+    xitem.appendChild( xDireccion );
+    xitem.appendChild( xObservacion );
+    xitem.appendChild( xProdSat );
+    lista.appendChild( xitem );
+
+}
+
+function RevisarOrdenServicioDetSeleccionada(){
+    if (id("listadoOrdenServicioDetalle").getAttribute('disabled'))
+	vboxOrdenServicioDisplay('unblock');
+
+    VaciarDeHijosTag("listadoProductoDetalleSat","esMov");
+
+    var idex       = id("listadoOrdenServicioDetalle").selectedItem;
+    if(!idex) return;
+
+    cIdOrdenServicioDet = idex.value;
+
+    osdEstado       = ordenserviciodet[ cIdOrdenServicioDet ].estado;
+    osdImporte      = ordenserviciodet[ cIdOrdenServicioDet ].importe;
+    osdServicioSat  = ordenserviciodet[ cIdOrdenServicioDet ].essat;
+    osdTipoProducto = ordenserviciodet[ cIdOrdenServicioDet ].tipoproducto;
+    osdNumeroSerie  = ordenserviciodet[ cIdOrdenServicioDet ].serie;
+    osdCodigoBarras = ordenserviciodet[ cIdOrdenServicioDet ].codigobarras;
+    osdDireccion    = ordenserviciodet[ cIdOrdenServicioDet ].direccion;
+    osdUbicacion    = ordenserviciodet[ cIdOrdenServicioDet ].ubicacion;
+
+    xmenuOrdenServicioDetalle();
+}
+
+function RevisarServicioProductoSatDet(){
+    cleanListaOrdenServicioSatDet();
+    var xprodsat = ordenserviciodet[ cIdOrdenServicioDet ].productosat.split(';;');
+    var xproddet = xprodsat[1].split('::');
+
+    for (i=0; i<xproddet.length; i++) {
+	var detitem = xproddet[i].split('~');
+	IdProductoSatDet  = detitem[0];
+	psdIdMarcaSat     = detitem[1];
+	psdIdModeloSat    = detitem[2];
+	psdIdProductoSat  = detitem[3];
+	psdMarcaSat       = detitem[4];
+	psdModeloSat      = detitem[5];
+	psdProductoSat    = detitem[6];
+	psdNSSat          = detitem[7];
+
+	GenerarListaProductoDetSat(psdIdMarcaSat,psdMarcaSat,psdIdModeloSat,psdModeloSat,
+				   psdIdProductoSat,psdProductoSat,psdNSSat,
+				   IdProductoSatDet);
+    }
+}
+
+function cleanListaOrdenServicioSatDet(){
+    var oslista = id("listadoProductoDetalleSat");
+    
+    for (var i = 0; i < oscContador; i++) { 
+        kid = id("os_lista_"+i);					
+        if (kid)	oslista.removeChild( kid ); 
+    }
+    
+    oscContador = 0;
+}
+
+function mostrarProductoSat(){
+    verTabFormProductoSat();
+    id("PrecioServicio").value = productos[osdCodigoBarras].pvd;
+    id("ConceptoServicio").value = id("FiltroTipoServicio").label;
+    calcularImporteOSDet();
+}
+
+function vertabProductoDetalleSat(xvalue){
+    id("listProductoSatDetalle").setAttribute('collapsed',!xvalue);
+    id("formProductoSatDetalle").setAttribute('collapsed',true);
+}
+
+function cancelProductoDetSat(){
+    vertabProductoDetalleSat(true);
+}
+
+function volverOrdenServicio(xvalue){
+    cleanFormOrdenServicio();
+
+    if(xvalue == 'Editar'){
+	id("resumenOrdenServicio").setAttribute("collapsed",false);
+	id("listadoOrdenServicio").setAttribute("collapsed",false);
+	id("resumenOrdenServicioDetalle").setAttribute("collapsed",false);
+	id("listadoOrdenServicioDetalle").setAttribute("collapsed",false);
+	id("btnOrdenServicioDet").setAttribute("collapsed",false);
+    }
+
+    id("vboxFormOrdenServicio").setAttribute("collapsed",true);
+    id("btnOrdenServicio").setAttribute("collapsed",false);
+
+}
+
+function AgregarProductoOrdenServicio(xesserie){
+    var osConcepto     = id("suscripLineaConcepto").value;
+    var osIdProducto   = id("suscripProductoServicio").value;
+    var osCantidad     = id("suscripLineaCantidad").value;
+    var osPrecio       = id("suscripLineaPrecio").value;
+    var osDescuento    = id("suscripLineaDescuento").value;
+    var osImporte      = id("suscripLineaImporte").value;
+    var osvFechaInicio = "0000-00-00 00:00:00";
+    var osvFechaFin    = "0000-00-00 00:00:00";
+    var osIdUsuarioRes = 0;
+    var osEstado       = 'Pendiente';
+    var osUbicacion    = 'Local';
+    var osNumeroSerie  = id("OrdenServicioNumeroSerie").value;
+    var osCodigoBarras = id("suscripProductoCodigoBarras").value;
+    var osCodReferencia= id("suscripProductoCodigoReferencia").value;
+
+    var existeProducto = validarOSExisteProducto(osIdProducto);
+
+    if(existeProducto != 0) {
+	id("panelSuscripcionLinea").hidePopup();
+	return;
+    }
+
+    osNumeroSerie = (xesserie)? validarOSNumeroSerie(osNumeroSerie,osCantidad,
+						     osCodigoBarras):'';
+    if(osNumeroSerie == '~' || cIdOrdenServicioDet == 0) return;
+
+    var url       = "modulos/ordenservicio/modordenservicio.php?modo=CreaOrdenServicioDet"+
+	            "&xidps="+osIdProducto+
+                    "&xfinit="+osvFechaInicio+
+                    "&xffin="+osvFechaFin+
+                    "&xestado="+osEstado+
+	            "&xidures="+osIdUsuarioRes+
+	            "&xcpto="+osConcepto+
+	            "&xns="+osNumeroSerie+
+	            "&xcant="+osCantidad+
+	            "&xprecio="+osPrecio+
+ 	            "&ximpte="+osImporte+
+	            "&xtipoprod=Producto"+
+	            "&xubi="+osUbicacion+
+	            "&xcb="+osCodigoBarras+
+	            "&xref="+osCodReferencia+
+	            "&xidos="+cIdOrdenServicio+
+	            "&xidosdet="+cIdOrdenServicioDet;
+
+    var xrequest  = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+
+    id("panelSuscripcionLinea").hidePopup();
+
+    try {
+        xrequest.send(null);
+        res = xrequest.responseText;
+    } catch(e) {
+        res = false;
+    }
+
+    if(!(res))
+	return alert(po_servidorocupado);
+
+    var xosdet = res.split('~');
+    cIdOrdenServicioDet = parseInt(xosdet[0]);
+
+    var osImporteOS  = parseFloat(oscImporte) + parseFloat(osImporte);
+    var osImpuestoOS = (parseFloat(osImporteOS)*parseFloat(Local.Impuesto)/100);
+    oscImpuesto = osImpuestoOS;
+    oscImporte  = osImporteOS;
+
+    actualizarListaOrdenServicio(oscSerie,oscNumero,oscCliente,oscIdCliente,oscEstado,
+				 osImpuestoOS,osImporteOS,oscPrioridad);
+
+    crearOrdenServicioDetalle2XML( obtenerOrdenServicioDetalle() );
+    BuscarDetalleOrdenServicio(cIdOrdenServicio);
+}
+
+function validarOSExisteProducto(osIdProducto){
+    var url = "modulos/ordenservicio/modordenservicio.php?modo=VerificaProductoOrdenServicioDet"+    
+	            "&xidps="+osIdProducto+
+	            "&xidosd="+cIdOrdenServicioDet;
+
+    var xrequest  = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+
+    try {
+        xrequest.send(null);
+        res = xrequest.responseText;
+    } catch(e) {
+        res = false;
+    }
+    
+    return res;
+}
+
+function validarOSNumeroSerie(xseries,xcantidad,xcod){
+
+    var aNumeroSerie    = xseries.split(',');
+    var loadNumeroSerie = Array();
+
+    aNumeroSerie = unique(aNumeroSerie);
+    var t = '';
+    var msj = '';
+
+    if(xcantidad != aNumeroSerie.length || trim(xseries) == ''){
+	msj = 'Nro Series no es igual a Cantidad';
+	t = t+'~';
+    }
+
+    var aseries = Array();
+    var pseries = Array();
+    var totalseries = "";
+    var osdSeries = productos[xcod].serie;
+
+    for(var x=0; x<osdSeries.length; x++){
+	pseries = osdSeries[x].split(":");
+	aseries = pseries[1].split(",");
+	totalseries = (!totalseries)? aseries:totalseries+','+aseries;
+    }
+    totalseries = totalseries.toString();
+    totalseries = totalseries.split(',');
+
+    for(var i = aNumeroSerie.length - 1 ;i>=0; i--){
+
+	var index = totalseries.indexOf(aNumeroSerie[i])
+
+	if(index == -1)
+	{
+	    var xindex = aNumeroSerie.indexOf(aNumeroSerie[i]);
+	    aNumeroSerie.splice(xindex,1);
+	    t = t+'~';
+	    msj = 'Algunas series no coinciden';
+	    
+	} 
+	else
+	{
+	    //Agrega IdpedidoDet por Serie
+	    for(var x=0; x < osdSeries.length; x++)
+	    {
+		pseries = osdSeries[x].split(":");
+		aseries = pseries[1].split(",");
+
+		//busca serie
+		if( !( loadNumeroSerie.indexOf( pseries[0]+':'+aNumeroSerie[i]) != -1 ) )
+		    for(var z=0; z<aseries.length; z++){
+
+			if( !( loadNumeroSerie.indexOf( pseries[0]+':'+aNumeroSerie[i]) != -1 ) )
+			    
+			    if ( aseries.indexOf( aNumeroSerie[i] ) != -1 )
+				loadNumeroSerie.push( pseries[0]+':'+aNumeroSerie[i] );//add serie
+		    }
+	    }
+	}
+    }
+
+
+    if(t != ''){
+	id("rowMostrarInformacionExtra").setAttribute('collapsed',false);
+	id("MostrarInformacionExtra").value = msj;
+	id("OrdenServicioNumeroSerie").value = aNumeroSerie.toString();
+	id("OrdenServicioNumeroSerie").focus();
+	return '~';	
+    }
+
+    //return aNumeroSerie.toString();
+    return loadNumeroSerie.toString()
+}
+
+
+function ModificarServicioProducto(){
+    var osConcepto     = id("suscripLineaConcepto").value;
+    var osCantidad     = id("suscripLineaCantidad").value;
+    var osPrecio       = id("suscripLineaPrecio").value;
+    var osDescuento    = id("suscripLineaDescuento").value;
+    var osImporte      = id("suscripLineaImporte").value;
+    var osvFechaInicio = "0000-00-00 00:00:00";
+    var osvFechaFin    = "0000-00-00 00:00:00";
+    var osIdUsuarioRes = 0;
+    var osEstado       = 'Pendiente';
+    var osNumeroSerie  = id("OrdenServicioNumeroSerie").value;
+    var osEtdoEntrega  = 'Almacen';
+    var osEtdoSolucion = 'Completa';
+    var osGtiaCondicion= 0;
+
+    osNumeroSerie = (trim(osdNumeroSerie) != '')? validarOSNumeroSerie(osNumeroSerie,
+								       osCantidad,
+								       ordenserviciodet[ cIdOrdenServicioDet ].codigobarras):'';
+    if(osNumeroSerie == '~') return;
+
+    var data  = "";
+    var url   = "modulos/ordenservicio/modordenservicio.php?modo=ModificaOrdenServicioDet";
+    data = data + "&xfinit="+osvFechaInicio;
+    data = data + "&xffin="+osvFechaFin;
+    data = data + "&xestado="+osEstado;
+    data = data + "&xidures="+osIdUsuarioRes;
+    data = data + "&xcpto="+osConcepto;
+    data = data + "&xns="+osNumeroSerie;
+    data = data + "&xcant="+osCantidad;
+    data = data + "&xprecio="+osPrecio;
+    data = data + "&ximpte="+osImporte;
+    data = data + "&xstdoentrega="+osEtdoEntrega;
+    data = data + "&xstdosol="+osEtdoSolucion;
+    data = data + "&xgtiacond="+osGtiaCondicion;
+    data = data + "&xtipoprod=Producto";
+    data = data + "&xidos="+cIdOrdenServicio;
+    data = data + "&xidosdet="+cIdOrdenServicioDet;
+    data = data + "&xubi=Local";
+    data = data + "&xtienesat=0";
+
+    var xrequest  = new XMLHttpRequest();
+    xrequest.open("POST",url,false);
+    xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+    var res = '';
+    id("panelSuscripcionLinea").hidePopup();
+
+    try {
+        xrequest.send(data);
+        res = xrequest.responseText;
+    } catch(e) {
+        res = false;
+    }
+
+    if(!(res))
+	return alert(po_servidorocupado);
+
+    if(ordenserviciodet[ cIdOrdenServicioDet ].essat == 1 && ordenserviciodet[ cIdOrdenServicioDet ].tipoproducto == 'Servicio') ModificarProductoSat();
+
+    var osImporteOS  = parseFloat(oscImporte)-parseFloat(osdImporte) + parseFloat(osImporte);
+    var osImpuestoOS = (parseFloat(osImporteOS)*parseFloat(Local.Impuesto)/100);
+    oscImpuesto = osImpuestoOS;
+    oscImporte  = osImporteOS;
+
+
+    actualizarListaOrdenServicio(oscSerie,oscNumero,oscCliente,oscIdCliente,oscEstado,
+				 osImpuestoOS,osImporteOS,oscPrioridad);
+
+    crearOrdenServicioDetalle2XML( obtenerOrdenServicioDetalle() );
+    BuscarDetalleOrdenServicio(cIdOrdenServicio);
+}
+
+function quitarProductoOrdenServicioDet(){
+    var idx = id("listadoOrdenServicioDetalle").selectedItem;
+    if(!idx || cIdOrdenServicioDet == 0) return;
+
+    var osImporteOS  = parseFloat(oscImporte)-parseFloat(ordenserviciodet[ cIdOrdenServicioDet ].importe);
+    var osImpuestoOS = (parseFloat(osImporteOS)*parseFloat(Local.Impuesto)/100);
+
+    var url = "modulos/ordenservicio/modordenservicio.php?modo=QuitaProductoOrdenServicioDet"+
+	      "&xidosd="+cIdOrdenServicioDet+
+	      "&xidos="+cIdOrdenServicio+
+	      "&ximporte="+osImporteOS+
+	      "&ximpuesto="+osImpuestoOS;
+    var xrequest  = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    try {
+        xrequest.send(null);
+        res = xrequest.responseText;
+    } catch(e) {
+        res = false;
+    }
+    var osImporteOS  = parseFloat(oscImporte)-parseFloat(ordenserviciodet[ cIdOrdenServicioDet ].importe);
+    var osImpuestoOS = (parseFloat(osImporteOS)*parseFloat(Local.Impuesto)/100);
+    oscImpuesto = osImpuestoOS;
+    oscImporte  = osImporteOS;
+
+    actualizarListaOrdenServicio(oscSerie,oscNumero,oscCliente,oscIdCliente,oscEstado,
+				 osImpuestoOS,osImporteOS,oscPrioridad);
+
+    crearOrdenServicioDetalle2XML( obtenerOrdenServicioDetalle() );
+    BuscarDetalleOrdenServicio(cIdOrdenServicio);
+}
+
+function SeleccionarUsuario() {     
+    selUsuarioAux();
+
+    if(!UsuarioPost) return;
+
+    id("nombreUsuario").value = UsuarioPost;
+    id("idUsuario").value     = IdUsuarioPost;
+}
+
+function RegenTipoServicios() {
+    VaciarServicios();
+    
+    var xmenulist = id("FiltroTipoServicio");
+    var actual;
+    var xvalue,xlabel,xsat;
+
+    for(var t=0;t<servicios.length;t++){
+	actual = servicios[t];
+	actual = actual.split("~");
+	xsat   = (actual[1] == 2)? 1:0;
+	xvalue = productos[actual[0]].idproducto+'~'+xsat+':'+actual[0];
+	xlabel = productos[actual[0]].nombre+' '+
+	         productos[actual[0]].marca+' '+
+	         productos[actual[0]].color+' '+
+	         productos[actual[0]].talla+' '+
+	         productos[actual[0]].laboratorio;
+	AddTipoServicio(xlabel,xvalue);
+	if(t==0){
+	    xmenulist.value=xvalue;
+	    mostrarProductoSat();
+	}
+    }
+}
+
+function checkServicios(){
+    var cmbServicios = id("FiltroTipoServicio").itemCount;
+    if(servicios.length != cmbServicios){
+	RegenTipoServicios();
+    }
+}
+
+function VaciarServicios(){
+    var xlistitem = id("elementosServicios");
+    var iditem;
+    var t = 0;
+    
+    while( el = id("tiposerv_def_"+ t) ) {
+	if (el) xlistitem.removeChild( el ) ;	
+	t = t + 1;
+    }
+    
+    osciTipoServicio = 0;
+    
+    id("FiltroTipoServicio").setAttribute("label","");
+}
+
+
+function AddTipoServicio(nombre, valor) {
+	var xlistitem = id("elementosServicios");	
+	
+	var xtiposerv = document.createElement("menuitem");
+	xtiposerv.setAttribute("id","tiposerv_def_" + osciTipoServicio);
+			
+	xtiposerv.setAttribute("value",valor);
+	xtiposerv.setAttribute("label",nombre);
+	
+	xlistitem.appendChild( xtiposerv);
+	osciTipoServicio++;
+}
+
+function verificarSerieNumOrdenServicio(xserienum,xvalue){
+    if(!xvalue || xvalue == 0){ 
+	obtenerSerieNumeroOrdenServicio();
+	return;
+    }
+    
+    switch(xserienum){
+    case 'Serie':
+	var xrequest  = new XMLHttpRequest(); 
+	var url       = "modulos/ordenservicio/modordenservicio.php?modo=VerificaSerieNumeroOS"+
+	                "&xserie="+xvalue+
+	                "&xserienum="+xserienum;
+	xrequest.open("GET",url,false);
+        xrequest.send(null);
+        res = xrequest.responseText;
+	
+	var xres = res.split("~");
+
+	id("serieOrdenServicio").value = xres[0];
+	id("numOrdenServicio").value   = xres[1];
+	break;
+
+    case 'Numero':
+	var xserie = id("serieOrdenServicio").value;
+	var xrequest  = new XMLHttpRequest(); 
+	var url       = "modulos/ordenservicio/modordenservicio.php?modo=VerificaSerieNumeroOS"+
+	                "&xserie="+xserie+
+	                "&xnum="+xvalue+
+	                "&xserienum="+xserienum;
+	xrequest.open("GET",url,false);
+        xrequest.send(null);
+        res = xrequest.responseText;
+
+	if(parseInt(res) == xvalue){
+	    mostrarFormOrdenServicio('Editar');
+	    alert("gPOS: \n\n           el Número de Orden  -"+xvalue+"-  de la Serie  -"+xserie+"-  ya esta registrado");
+	    if(!editaNumeroOS) obtenerSerieNumeroOrdenServicio();
+	    break;
+	}
+	var xnum = (res == 0)? xvalue:res;
+	id("numOrdenServicio").value   = xnum;
+
+	break;
+    }
+}
+
+function RegistrarOrdenServicio(idsuscrip){
+
+    var osSerie     = id("serieOrdenServicio").value;
+    var osNumOrden  = id("numOrdenServicio").value;
+    var osCliente   = id("nombreClienteOrdenServicio").value;
+    var osIdCliente = id("idClienteOrdenServicio").value;
+    var osPrioridad = id("FiltroPrioridad").value;
+    var osTipo      = id("TipoOrdenServicio").value;
+    var osIdSuscrip = (idsuscrip)? idsuscrip:0;
+
+    var xrequest  = new XMLHttpRequest();
+    var url       = "modulos/ordenservicio/modordenservicio.php?modo=CreaOrdenServicio"+
+	            "&xclient=" + osIdCliente +
+	            "&xserie=" +osSerie +
+	            "&xnumorden=" +osNumOrden+
+	            "&xtipo=" +osTipo+
+	            "&xprioridad=" +osPrioridad+
+	            "&xidsuscrip=" +osIdSuscrip+
+	            "&xuser="+Local.IdDependiente;
+
+    if(osIdCliente == 0) 
+	return alert("gPOS:  \n\n         Seleccione un Cliente ");
+
+    xrequest.open("GET",url,false);
+
+    try {
+        xrequest.send(null);
+        res = xrequest.responseText;
+    } catch(e) {
+        res = false;	
+    }
+
+    if(!parseInt(res)) 
+	return alert("gPOS: \n\n"+po_servidorocupado+'\n\n -'+res+'-');
+    
+    var xid = parseInt(res);
+    volverOrdenServicio('Editar');
+    BuscarOrdenServicio();
+    VaciarBuscarDetalleOrdenServicio();
+    buscarIdOrdenServicio(xid);
+}
+
+function buscarIdOrdenServicio(elemento){
+
+    var busca = parseInt(elemento);
+    if(busca.length == 0) return;
+    var lista = id("listadoOrdenServicio");
+    n = lista.itemCount;
+    if(n==0) return; 
+
+    for (var i = 0; i < n; i++) {
+	x=i+1;
+        var texto2  = lista.getItemAtIndex(i);
+        var celdas = texto2.getElementsByTagName('listcell');
+        var cadena = celdas[15].getAttribute('value');
+
+	if( busca == cadena )
+	{
+            lista.selectItem(texto2);
+            RevisarOrdenServicioSeleccionada();
+	    checkServicios();
+	    var xitem = (oscClon)? 'Editar':'Nuevo';
+	    if(!oscClon) mostrarFormOrdenServicioDet(xitem,true);
+            return;
+        }
+    }
+}
+
+function ModificarOrdenServicio(){
+    var datacb      = "";
+    var osSerie     = id("serieOrdenServicio").value;
+    var osNumOrden  = id("numOrdenServicio").value;
+    var osCliente   = id("nombreClienteOrdenServicio").value;
+    var osIdCliente = id("idClienteOrdenServicio").value;
+    var osEstado    = id("FiltroEstado").value;
+    var osPrioridad = id("FiltroPrioridad").value;
+    var osTipo      = id("TipoOrdenServicio").value;
+
+    datacb = (osIdCliente != oscIdCliente)? datacb + "&xclient="+osIdCliente:datacb+"";
+    datacb = (osSerie != oscSerie )? datacb + "&xserie="+osSerie:datacb+"";
+    datacb = (osNumOrden != oscNumero)? datacb + "&xnumorden="+osNumOrden:datacb+"";
+    datacb = (osEstado != oscEstado)? datacb + "&xestado="+osEstado:datacb+"";
+    datacb = (osPrioridad != oscPrioridad)? datacb + "&xprioridad="+osPrioridad:datacb+"";
+
+    if(!datacb) return;
+
+    var xrequest  = new XMLHttpRequest();
+    var url       = "modulos/ordenservicio/modordenservicio.php?modo=ModificaOrdenServicio"+
+	            "&xidos="+cIdOrdenServicio+
+	            "&xserie="+osSerie+
+	            "&xnumorden="+osNumOrden+
+	            "&xestado="+osEstado+
+	            "&xprioridad="+osPrioridad+
+	            "&xtipo=" +osTipo+
+	            "&xclient="+osIdCliente;
+
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+    res = xrequest.responseText;
+
+    if(parseInt(res) == 0 ){
+	mostrarFormOrdenServicio('Editar');
+	return alert("gPOS:\n\n        el Número Orden  -"+osNumOrden+
+		     "-  de la Serie  -"+osSerie+"-  ya esta registrado");
+    }
+
+    if(oscEstado != osEstado)
+	crearOrdenServicioDetalle2XML( obtenerOrdenServicioDetalle() );
+
+    oscEstado = osEstado;
+    actualizarListaOrdenServicio(osSerie,osNumOrden,osCliente,osIdCliente,osEstado,
+				 false,false,osPrioridad);
+
+    BuscarDetalleOrdenServicio(cIdOrdenServicio);
+
+    volverOrdenServicio('Editar');
+}
+
+function actualizarListaOrdenServicio(osSerie,osNumOrden,osCliente,osIdCliente,osEstado,
+				      osImpuesto,osImporte,osPrioridad){
+    var idx  = cIdOrdenServicio;
+    var lPrioridad;
+    if(osPrioridad == 1) lPrioridad = 'Normal';
+    if(osPrioridad == 2) lPrioridad = 'Alta';
+    if(osPrioridad == 3) lPrioridad = 'Muy Alta';
+
+
+    id("os_codigo_"+idx).setAttribute("label",osSerie+"-"+osNumOrden);	   
+    id("os_serie_"+idx).setAttribute("label",osSerie);	   
+    id("os_numeroorden_"+idx).setAttribute("label",osNumOrden);	   
+    id("os_cliente_"+idx).setAttribute("label",osCliente);
+    id("os_cliente_"+idx).setAttribute("value",osIdCliente);
+    id("os_estado_"+idx).setAttribute("label",osEstado); 
+    id("os_impuesto_"+idx).setAttribute("value",osImpuesto); 
+    id("os_impuesto_"+idx).setAttribute("label",formatDinero(osImpuesto)); 
+    id("os_importe_"+idx).setAttribute("value",osImporte); 
+    id("os_importe_"+idx).setAttribute("label",formatDinero(osImporte)); 
+    id("os_prioridad_"+idx).setAttribute("value",osPrioridad); 
+    id("os_prioridad_"+idx).setAttribute("label",lPrioridad); 
+}
+
+function ModificarOrdenServicioDet(){
+    //Orden de servicio Detalle
+    var osFechaInicio    = id("fInicioAtencionServicio").value;
+    var osHoraInicio     = id("hInicioAtencionServicio").value;
+    var osvFechaInicio   = osFechaInicio+' '+osHoraInicio;
+    var osFechaFin       = id("fFinAtencionServicio").value;
+    var osHoraFin        = id("hFinAtencionServicio").value;
+    var osvFechaFin      = osFechaFin+' '+osHoraFin;
+    var osEstado         = id("FiltroEstadoOSDet").value;
+    var osIdUsuarioRes   = id("listIdUsuario").value;
+    var osConcepto       = id("ConceptoServicio").value;
+    var osCantidad       = id("CantidadServicio").value;
+    var osPrecio         = id("PrecioServicio").value;
+    var osImporte        = id("ImporteServicio").value;
+    var osEtdoSolucion   = id("listEstadoSolucion").value;
+    var osGtiaCondicion  = id("listGarantiaCondicion").value;
+    var osServicio       = id("FiltroTipoServicio").label;
+    var osUbicacion      = id("UbicacionServicio").value;
+    var osDireccion      = trim(id("DireccionServicio").value);
+    var osObservacion    = trim(id("ObservacionServicio").value);
+
+    if(ordenserviciodet[ cIdOrdenServicioDet ]){
+	var fechaini = ordenserviciodet[ cIdOrdenServicioDet ].fechainicio.split("~");
+	var fechafin = ordenserviciodet[ cIdOrdenServicioDet ].fechafin.split("~");
+	osvFechaInicio = fechaini[1];
+	osvFechaFin    = fechafin[1];
+    }
+
+
+    //Producto Sat
+    if(osdServicioSat == 1){
+	var osDiagnostico = id("DiagnosticoSat").value;
+	var osMotivo      = id("listMotivoSat").value;
+	var osResultado   = id("ResultadoSat").value;
+	var osUbicacionSat= id("listUbicacionProducto").value;
+	var xMarca        = id("listMarca").label;
+	var xModelo       = id("listModeloSat").label;
+	var xProducto     = id("listProductoSat").label;
+	osUbicacionSat       = (osEstado == 'Finalizado')? 'Almacen':osUbicacionSat;
+    }
+
+    var xmsj             = "" ;
+    var yval             = true;
+
+    if(osEstado == 'Finalizado' && osdServicioSat == 1){
+	var diag = trim(id("DiagnosticoSat").value);
+	var res  = trim(id("ResultadoSat").value);
+	yval = false;
+	xmsj = (diag == '')? xmsj+'diagnóstico ':xmsj;
+	xmsj = (res == '')? xmsj+'resultado':xmsj;
+	xmsj = trim(xmsj);
+	xmsj = (xmsj != '')? 'Registre el '+xmsj.replace(/ /g, ' y ')+'.':'';
+    }
+
+    if(osEstado == 'Ejecucion' ){
+	yval = false;
+	xmsj = (osIdUsuarioRes == 0)? xmsj+' Asigne un responsable. ':xmsj;
+    }
+
+    if(xmsj != ''){
+	id("MostrarInformacionExtraServicio").value = xmsj;
+	id("rowMostrarInformacionExtraServicio").setAttribute("collapsed",yval);
+	return;
+    }
+    var data  = "";
+    var url   = "modulos/ordenservicio/modordenservicio.php?modo=ModificaOrdenServicioDet";
+    data = data + "&xfinit="+osvFechaInicio;
+    data = data + "&xffin="+osvFechaFin;
+    data = data + "&xestado="+osEstado;
+    data = data + "&xidures="+osIdUsuarioRes;
+    data = data + "&xcpto="+osConcepto;
+    data = data + "&xcant="+osCantidad;
+    data = data + "&xprecio="+osPrecio;
+    data = data + "&ximpte="+osImporte;
+    data = data + "&xstdosol="+osEtdoSolucion;
+    data = data + "&xgtiacond="+osGtiaCondicion;
+    data = data + "&xtipoprod=Servicio";
+    data = data + "&xubi="+osUbicacion;
+    data = data + "&xdir="+osDireccion;
+    data = data + "&xobs="+osObservacion;
+    data = data + "&xidos="+cIdOrdenServicio;
+    data = data + "&xidosdet="+cIdOrdenServicioDet;
+    data = data + "&xtienesat="+osdServicioSat;
+
+    if(osdServicioSat == 1){
+	data = data + "&xdiag="+ osDiagnostico;
+	data = data + "&xmotivo="+ osMotivo;
+	data = data + "&xresul="+ osResultado;
+	data = data + "&xidpsat="+ cIdProductoSat;
+	data = data + "&xubisat="+ osUbicacionSat;
+    }
+
+    var xrequest  = new XMLHttpRequest();
+
+    ocultarpanelOrdenServicioDet();
+
+    xrequest.open("POST",url,false);
+    xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+    try {
+        xrequest.send(data);
+        res = xrequest.responseText;
+    } catch(e) {
+        res = false;	
+    }
+
+    var xosdet = res.split('~');
+    
+    if(xosdet[0] != '')
+	return alert('gPOS: \n\n'+po_servidorocupado+'\n\n -'+xosdet[0]+'-');
+
+    osEstado = xosdet[2];
+    oscEstado = osEstado;
+
+    var osImporteOS  = parseFloat(oscImporte)-parseFloat(osdImporte) + parseFloat(osImporte);
+    var osImpuestoOS = (parseFloat(osImporteOS)*parseFloat(Local.Impuesto)/100);
+    oscImpuesto = osImpuestoOS;
+    oscImporte  = osImporteOS;
+
+    actualizarListaOrdenServicio(oscSerie,oscNumero,oscCliente,oscIdCliente,osEstado,
+				 osImpuestoOS,osImporteOS,oscPrioridad);
+
+    crearOrdenServicioDetalle2XML( obtenerOrdenServicioDetalle() );
+    resetFormOrdenServicioDet();
+    BuscarDetalleOrdenServicio(cIdOrdenServicio);
+    ItemSeleccionada = 0;
+}
+
+function ModificarProductoSat(){
+    var url       = "modulos/ordenservicio/modordenservicio.php?modo=ModificaProductoSat"
+    var xrequest  = new XMLHttpRequest();
+    var data      = "";
+
+    var osEstado         = id("FiltroEstadoOSDet").value;
+    
+    var osMarca       = id("listMarca").value;
+    var osModelo      = id("listModeloSat").value;
+    var osProducto    = id("listProductoSat").value;
+    var osDescripcion = id("DescripcionSat").value;
+    var osNS          = id("NumeroSerieSat").value;
+    var osDiagnostico = id("DiagnosticoSat").value;
+    var osMotivo      = id("listMotivoSat").value;
+    var osResultado   = id("ResultadoSat").value;
+    var osDetalleSat  = id("idDetalleSat").checked;
+    var osUbicacion   = id("listUbicacionProducto").value;
+    var xMarca        = id("listMarca").label;
+    var xModelo       = id("listModeloSat").label;
+    var xProducto     = id("listProductoSat").label;
+    osUbicacion       = (osEstado == 'Finalizado')? 'Almacen':osUbicacion;
+
+    data = data + "&xmarca="+ osMarca;
+    data = data + "&xmodelo="+ osModelo;
+    data = data + "&xprod="+ osProducto;
+    data = data + "&xdesc="+ osDescripcion;
+    data = data + "&xns="+ osNS;
+    data = data + "&xdiag="+ osDiagnostico;
+    data = data + "&xmotivo="+ osMotivo;
+    data = data + "&xresul="+ osResultado;
+    data = data + "&xidpsat="+ cIdProductoSat;
+    data = data + "&xubi="+ osUbicacion;
+
+    xrequest.open("POST",url,false);
+    xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+    try {
+        xrequest.send(data);
+        res = xrequest.responseText;
+    } catch(e) {
+        res = false;	
+    }
+
+    if(!parseInt(res)) 
+	return alert("gPOS: \n\n"+po_servidorocupado+'\n\n -'+res+'-');
+
+    crearOrdenServicioDetalle2XML( obtenerOrdenServicioDetalle() );
+    
+}
+
+function mostrarFormProductoSatDetalle(xvalue){
+    id("formProductoSatDetalle").setAttribute('collapsed',!xvalue);
+    id("listProductoSatDetalle").setAttribute('collapsed',xvalue);
+}
+
+
+function RegistrarOrdenServicioDet(){
+    var xprod            = id("FiltroTipoServicio").value.split(":");
+    var ostiposerv       = xprod[0].split("~");
+    var osIdProducto     = ostiposerv[0];
+    var osFechaInicio    = id("fInicioAtencionServicio").value;
+    var osHoraInicio     = id("hInicioAtencionServicio").value;
+    var osvFechaInicio   = '0000-00-00 00:00:00';//osFechaInicio+' '+osHoraInicio;
+    var osFechaFin       = id("fFinAtencionServicio").value;
+    var osHoraFin        = id("hFinAtencionServicio").value;
+    var osvFechaFin      = '0000-00-00 00:00:00';//osFechaFin+' '+osHoraFin;
+    var osEstado         = id("FiltroEstadoOSDet").value;
+    var osIdUsuarioRes   = id("listIdUsuario").value;
+    var osConcepto       = trim(id("ConceptoServicio").value);
+    var osCantidad       = id("CantidadServicio").value;
+    var osPrecio         = id("PrecioServicio").value;
+    var osImporte        = id("ImporteServicio").value;
+    var osServicio       = id("FiltroTipoServicio").label;
+    var CodigoBarras     = xprod[1];
+    var Referencia       = productos[xprod[1]].referencia;
+    var osUbicacion      = id("UbicacionServicio").value;
+    var osDireccion      = trim(id("DireccionServicio").value);
+    var osObservacion    = trim(id("ObservacionServicio").value);
+    osCantidad           = (ostiposerv[1] == 1)? 1:osCantidad;
+    var CodigoAnterior   = (oscClon)? oscCodigo:"";
+
+    
+
+    osdServicioSat     = ostiposerv[1];
+
+    if(osdServicioSat == 1){
+	var xMarca    = trim(id("listMarca").label);
+	var xModelo   = trim(id("listModeloSat").label);
+	var xProducto = trim(id("listProductoSat").label);
+
+	osConcepto    = osServicio+'- '+xProducto+' '+xMarca+' '+xModelo;
+    }
+
+    if(trim(ostiposerv) == ""){
+	id("MostrarInformacionExtraServicio").value = 'Seleccione un Servicio';
+	id("rowMostrarInformacionExtraServicio").setAttribute("collapsed",false);
+	return;
+    }
+
+    if(osEstado == 'Ejecucion'){
+	if(osIdUsuarioRes == 0){
+	    id("MostrarInformacionExtraServicio").value = 'Asigne un responsable';
+	    id("rowMostrarInformacionExtraServicio").setAttribute("collapsed",false);
+	    return;
+	}
+    }
+
+    if(ostiposerv[1] == 1){
+	var osMarca       = trim(id("listMarca").value);
+	var osModelo      = trim(id("listModeloSat").value);
+	var osProducto    = trim(id("listProductoSat").value);
+	var osMotivo      = trim(id("listMotivoSat").value);
+	var msj = "";
+
+	msj = (osProducto == 0)? msj+'producto ':msj;
+	msj = (osMarca == 0)? msj+'marca ':msj;
+	msj = (osModelo == 0 || osModelo == 'undefined')? msj+'modelo ':msj;
+	msj = (osMotivo == 0)? msj+'motivo':msj;	
+	msj = trim(msj);
+	msj = msj.replace(/ /g, ', ');
+
+	if(msj != ''){
+	    id("MostrarInformacionExtraServicio").value = 'Seleccione '+msj;
+	    id("rowMostrarInformacionExtraServicio").setAttribute("collapsed",false);
+	    return;
+	}
+
+    }
+
+    if(cIdOrdenServicio == 0) return;
+
+    var url       = "modulos/ordenservicio/modordenservicio.php?modo=CreaOrdenServicioDet"+
+	            "&xidps="+osIdProducto+
+                    "&xfinit="+osvFechaInicio+
+                    "&xffin="+osvFechaFin+
+                    "&xestado="+osEstado+
+	            "&xidures="+osIdUsuarioRes+
+	            "&xcpto="+osConcepto+
+	            "&xcant="+osCantidad+
+	            "&xprecio="+osPrecio+
+ 	            "&ximpte="+osImporte+
+	            "&xtipoprod=Servicio"+
+	            "&xidos="+cIdOrdenServicio+
+	            "&xcb="+CodigoBarras+
+	            "&xref="+Referencia+
+	            "&xubi="+osUbicacion+
+	            "&xdir="+osDireccion+
+	            "&xobs="+osObservacion+
+	            "&xcod="+CodigoAnterior;
+
+    var xrequest  = new XMLHttpRequest();
+
+    ocultarpanelOrdenServicioDet();
+
+    xrequest.open("GET",url,false);
+
+    try {
+        xrequest.send(null);
+        res = xrequest.responseText;
+    } catch(e) {
+        res = false;	
+    }
+
+    if(!(res))
+	return alert(po_servidorocupado);
+
+    var xosdet = res.split('~');
+    osEstado = xosdet[1];
+    oscEstado = (oscEstado == 'Ejecucion')? oscEstado:osEstado;
+
+    cIdOrdenServicioDet = parseInt(xosdet[0]);
+
+    if(ostiposerv[1] == 1) RegistrarProductoSat();
+
+    var osImporteOS  = parseFloat(oscImporte) + parseFloat(osImporte);
+    var osImpuestoOS = (parseFloat(osImporteOS)*parseFloat(Local.Impuesto)/100);
+    oscImpuesto = osImpuestoOS;
+    oscImporte  = osImporteOS;
+
+    actualizarListaOrdenServicio(oscSerie,oscNumero,oscCliente,oscIdCliente,oscEstado,
+				 osImpuestoOS,osImporteOS,oscPrioridad);
+
+    //ordenserviciodetserv[ cIdOrdenServicio ].length = 0;
+    crearOrdenServicioDetalle2XML( obtenerOrdenServicioDetalle() );
+    resetFormOrdenServicioDet();
+    BuscarDetalleOrdenServicio(cIdOrdenServicio);
+}
+
+function calcularImporteOSDet(){
+    var xprod            = id("FiltroTipoServicio").value.split(":");
+    var ostiposerv       = xprod[0].split("~");
+    var osIdProducto     = ostiposerv[0];
+
+    var osCantidad = trim(id("CantidadServicio").value);
+    var osPrecio   = id("PrecioServicio").value;
+
+    if(osCantidad == '' || osCantidad == 0 )
+	osCantidad = 1;
+    
+    if(ostiposerv[1] == 1 && osCantidad > 1)
+	osCantidad = 1;
+    
+    if(trim(osPrecio) == '')
+	osPrecio = 0;
+    
+    var osImporte  = parseFloat(osCantidad)*parseFloat(osPrecio);
+    id("PrecioServicio").value = formatDineroTotal(osPrecio);
+    id("CantidadServicio").value = osCantidad;
+    id("ImporteServicio").value = formatDineroTotal(osImporte);
+}
+
+function CancelarOrdenServicioDet(){
+    ocultarpanelOrdenServicioDet();
+    resetFormOrdenServicioDet();
+}
+
+function resetFormOrdenServicioDet(){
+    cleanFormOrdenServicioDet();
+    cleanFormProductoSat();
+    id("btnCancelServicioDet").setAttribute('label',"Cancelar");
+    id("btnCancelServicioDet").setAttribute('image',"img/gpos_cancelar.png");
+
+    id("btnAceptarServicioDet").setAttribute('collapsed',false);
+    id("btnAceptarServicioDet").setAttribute('label','Aceptar');
+    id("btnAceptarServicioDet").setAttribute('oncommand','RegistrarOrdenServicioDet()');
+
+    id("rowTipoServicio").setAttribute('collapsed',false);
+    id("rowDescTipoServicio").setAttribute('collapsed',true);
+
+    id("MostrarInformacionExtraServicio").value = '';
+    id("rowMostrarInformacionExtraServicio").setAttribute("collapsed",true);
+
+    id("rowDetalleProductoSat").setAttribute("collapsed",false);
+
+    id("itemAgregarProductoSatDet").setAttribute('disabled',false);
+    id("itemModificarProductoSatDet").setAttribute('disabled',false);
+    
+    cleanListaOrdenServicioSatDet();
+    verOrdenServicioDetalle(true,'Nuevo');
+    verProductoSat(true);
+    vertabProductoDetalleSat(false);
+    mostrarProductoSat();
+
+    verificarEstadoOrdenServicioDet('Pendiente');
+    osdEstado  = "Pendiente";
+
+}
+
+function ocultarpanelOrdenServicioDet(){
+    id("boxFormOrdenServicioDet").hidePopup();
+    vboxOrdenServicioDisplay('unblock');
+}
+
+//////////////////// Productos SAT 
+
+function changeMarca(xdet){
+    setTimeout("RegenModeloSat("+xdet+")",50);
+}
+
+function AddMarcaLine(nombre, valor, xdet) {
+    
+    var xlistitem = (xdet == 0)? id("elementosMarca") : id("elementosMarcaDetSat");
+
+    var xmarca = document.createElement("menuitem");
+    var idxmarca = (xdet == 0)? "marca_def_":"marcadet_def_";
+    xmarca.setAttribute("id",idxmarca + osciMarcas);	
+    xmarca.setAttribute("value",valor);
+    xmarca.setAttribute("label",nombre);
+    xlistitem.appendChild( xmarca );
+
+    osciMarcas++;
+    if(xdet == 0) AddMarcaLine(nombre, valor, 1);
+}
+
+function RegenModeloSat(xdet) {
+    VaciarModeloSat(xdet);
+
+    var osidmarca = (xdet == 0)? id("listMarca").value : id("listMarcaDetSat").value;
+    var xmenulist = (xdet == 0)? id("listModeloSat") : id("listModeloDetSat");
+
+    var xrequest = new XMLHttpRequest();
+    var url = "modulos/ordenservicio/modordenservicio.php?modo=ObtnerModeloSat&xidmarca="+osidmarca;
+
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+    var res = xrequest.responseText;
+
+    var lines = res.split("\n");
+    var actual;
+    var ln = lines.length-1;
+    ln = (ln == 0)? 1:ln;
+    for(var t=0;t<ln;t++){
+	actual = lines[t];
+	actual = actual.split("=");
+	AddModeloLine(actual[0],actual[1],xdet);
+	if(t==0){
+	    xmenulist.value=actual[1];
+	    xmenulist.label=actual[0];
+	}		
+    }				
+}
+
+function AddModeloLine(nombre, valor, xdet) {
+    var xlistitem = (xdet == 0)? id("elementosModeloSat") : id("elementosModeloDetSat");
+    
+    if(osciModelos == 0){
+	var btnmodelo = (xdet==0)? "mostrarNuevoModelo('true',0)":"mostrarNuevoModelo('true',1)";
+	var xmodelo   = document.createElement("menuitem");
+	var idxmodelo = (xdet == 0)? "modelo_def_":"modelodet_def_";
+	xmodelo.setAttribute("id",idxmodelo + osciModelos);	
+	xmodelo.setAttribute("value",0);
+	xmodelo.setAttribute("label",'Nuevo Modelo');
+	xmodelo.setAttribute("oncommand",btnmodelo);
+	xmodelo.setAttribute("style","font-weight: bold;");
+	xlistitem.appendChild( xmodelo );
+	osciModelos++;
+
+    }
+ 
+    var xmodelo   = document.createElement("menuitem");
+    var idxmodelo = (xdet == 0)? "modelo_def_":"modelodet_def_";
+    xmodelo.setAttribute("id",idxmodelo + osciModelos);
+    xmodelo.setAttribute("value",valor);
+    xmodelo.setAttribute("label",nombre);
+    xlistitem.appendChild( xmodelo);
+
+    osciModelos++;
+}
+
+function VaciarModeloSat(xdet){
+    var xlistitem = (xdet == 0)? id("elementosModeloSat") : id("elementosModeloDetSat");
+    var xmenulist = (xdet == 0)? id("listModeloSat") : id("listModeloDetSat");
+    var idxmodelo = (xdet == 0)? "modelo_def_":"modelodet_def_";
+
+    var t = 0;
+    while( el = id(idxmodelo + t ) ) {
+	if (el) xlistitem.removeChild( el ) ;	
+	t = t + 1;
+    }
+
+    osciModelos = 0;
+    xmenulist.setAttribute("value",0 );
+}
+
+function AddProductoLine(nombre, valor, xdet) {
+    var xlistitem   = (xdet == 0)? id("elementosProductoSat"):id("elementosProductoDetSat");
+    var idxproducto = (xdet == 0)? "producto_def_":"productodet_def_";
+    var xproducto = document.createElement("menuitem");
+    xproducto.setAttribute("value",valor);
+    xproducto.setAttribute("label",nombre);
+    xlistitem.appendChild( xproducto );
+    osciProductos++;
+    if(xdet == 0) AddProductoLine(nombre, valor, 1);
+}
+
+function AddMotivoLine(nombre, valor) {
+    var xlistitem = id("elementosMotivoSat");
+
+    var xmotivo = document.createElement("menuitem");
+    xmotivo.setAttribute("id","motivo_def_" + osciMotivos);
+    xmotivo.setAttribute("value",valor);
+    xmotivo.setAttribute("label",nombre);
+    xlistitem.appendChild( xmotivo);
+    osciMotivos++;
+}
+
+function SeleccionarMarcaRegistrada(elemento,xdet){
+
+    var busca = trim(elemento);
+    if(busca.length == 0) return;
+    var lista = (xdet == 0)? id("listMarca"):id("listMarcaDetSat");
+    var xvalue = 0;
+    var xlabel = "";
+    n = lista.itemCount;
+
+    if(n==0) return; 
+    busca = busca.toUpperCase();
+
+    for (var i = 0; i < n; i++) {
+        var texto2  = lista.getItemAtIndex(i);
+        var cadena  = texto2.getAttribute('label').toUpperCase();
+
+	if(!elemento && i == 1){
+	    xvalue = texto2.getAttribute("value");
+	    xlabel = texto2.getAttribute("label");
+	    break;
+	}
+
+	if ( busca == cadena)
+	{
+	    xvalue = texto2.getAttribute("value");
+	    xlabel = texto2.getAttribute("label");
+	    break;
+        }
+    }
+    
+    lista.value = xvalue;
+    lista.label = xlabel;
+
+    changeMarca(xdet);
+    return lista.label;
+}
+
+function SeleccionarModeloSatDeLista(elemento,xdet){
+
+    var busca = trim(elemento);
+
+    if(busca.length == 0) return;
+    var lista = (xdet == 0)? id("listModeloSat"):id("listModeloDetSat");
+    var xvalue = 0;
+    var xlabel = "";
+    n = lista.itemCount;
+
+    if(n==0) return; 
+    busca = busca.toUpperCase();
+
+    for (var i = 0; i < n; i++) {
+        var texto2  = lista.getItemAtIndex(i);
+        var cadena  = texto2.getAttribute('label').toUpperCase();
+
+	if(!elemento && i == 1){
+	    xvalue = texto2.getAttribute("value");
+	    xlabel = texto2.getAttribute("label");
+	    break;
+	}
+
+	if ( busca == cadena){
+	    xvalue = texto2.getAttribute("value");
+	    xlabel = texto2.getAttribute("label");
+	    break;
+        }
+    }
+    
+    lista.value = xvalue;
+    lista.label = xlabel;
+
+    return lista.label;
+}
+
+function SeleccionarProductoSatDeLista(elemento,xdet){
+
+    var busca = trim(elemento);
+    if(busca.length == 0) return;
+    var lista = (xdet == 0)? id("listProductoSat"):id("listProductoDetSat");
+    var xvalue = 0;
+    var xlabel = "";
+    n = lista.itemCount;
+
+    if(n==0) return; 
+    busca = busca.toUpperCase();
+
+    for (var i = 0; i < n; i++) {
+        var texto2  = lista.getItemAtIndex(i);
+        var cadena = texto2.getAttribute('label').toUpperCase();
+
+	if(!elemento && i == 1){
+	    xvalue = texto2.getAttribute("value");
+	    xlabel = texto2.getAttribute("label");
+	    break;
+	}
+
+	if ( busca == cadena){
+	    xvalue = texto2.getAttribute("value");
+	    xlabel = texto2.getAttribute("label");
+	    break;
+        }
+    }
+    
+    lista.value = xvalue;
+    lista.label = xlabel;
+
+    return lista.label;
+}
+
+function SeleccionarMotivoSatDeLista(elemento){
+
+    var busca = trim(elemento);
+    if(busca.length == 0) return;
+    var lista = id("listMotivoSat");
+    var xvalue = 0;
+    var xlabel = "";
+    n = lista.itemCount;
+
+    if(n==0) return; 
+    busca = busca.toUpperCase();
+
+    for (var i = 0; i < n; i++) {
+        var texto2  = lista.getItemAtIndex(i);
+        var cadena = texto2.getAttribute('label').toUpperCase();
+
+	if(!elemento && i == 1){
+	    xvalue = texto2.getAttribute("value");
+	    xlabel = texto2.getAttribute("label");
+	    continue;
+	}
+
+	if ( busca == cadena){
+	    xvalue = texto2.getAttribute("value");
+	    xlabel = texto2.getAttribute("label");
+	    continue;
+        }
+    }
+    
+    lista.value = xvalue;
+    lista.label = xlabel;
+
+    return lista.label;
+}
+
+
+function RegistrarMarcaSat(marca,xdet){
+    ospMarca = "";
+    if(trim(marca) == 'Nueva Marca' || trim(marca) == '')
+	return mostrarNuevoMarca(false,xdet,false);
+
+    var part      = trim(marca).slice(0,5);
+    part          = (part == "Nuevo" || trim(marca) == "")? true:false;
+    if(part) return mostrarNuevoMarca(false,xdet,false);
+
+    var existe = SeleccionarMarcaRegistrada(marca,xdet);
+    existe     = existe.toUpperCase();
+    marca      = marca.toUpperCase();
+
+    if(existe == marca){
+	oscNewRegMarca = true;
+	ospNewMarca    = marca;
+	return mostrarNuevoMarca(false,xdet);
+    }
+
+    var url      = "modulos/productos/selmarca.php?modo=salvamarcasat&marca="+marca.toUpperCase();
+    var xrequest = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+    var text   = (xdet == 1)? id("txtMarcaDetSat"):id("txtMarca");
+    var xres = xrequest.responseText.split('~');
+
+    if(xres[0] != '') 
+	return alert('gPOS: '+po_servidorocupado+'\n\n'+xres[0]);
+
+    AddMarcaLine(marca,parseInt(xres[1]),0);
+    ospNewMarca = marca;
+    oscNewRegMarca = true;
+    mostrarNuevoMarca(false,xdet);
+    text.value = "";
+}
+
+function RegistrarModeloSat(modelo,xdet){
+    if(trim(modelo) == 'Nuevo Modelo') return mostrarNuevoModelo(false,xdet);
+
+    var part     = trim(modelo).slice(0,5);
+    part         = (part == "Nuevo" || trim(modelo) == "")? true:false;
+    if(part) return mostrarNuevoModelo(false,xdet);
+
+    var existe = SeleccionarModeloSatDeLista(modelo,xdet);
+    existe     = existe.toUpperCase();
+    modelo     = modelo.toUpperCase();
+
+    if(existe == modelo){
+	oscNewRegModelo = true;
+	ospNewModelo    = modelo;
+	return mostrarNuevoModelo(false,xdet);
+    }
+
+    var idmarca  = (xdet == 1)? id("listMarcaDetSat").value: id("listMarca").value;
+    idmarca      = (idmarca == 0)? 1:idmarca;
+
+    var url      = "modulos/ordenservicio/modordenservicio.php?modo=CreaModeloSat&modelo="+modelo+
+	           "&xmarca="+idmarca;
+    var xrequest = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+    var res    = xrequest.responseText;
+    var list   = (xdet == 1)? id("listModeloDetSat"):id("listModeloSat");
+    var text   = (xdet == 1)? id("txtModeloDetSat"):id("txtModeloSat");
+
+    AddModeloLine(modelo,parseInt(res),xdet);
+    ospNewModelo    = modelo;
+    oscNewRegModelo = true;
+    mostrarNuevoModelo(false,xdet);
+    text.value = "";
+    list.value = parseInt(res);
+}
+
+function RegistrarProductoIdiomaSat(producto,xdet){
+    if(trim(producto) == 'Nuevo Producto') return mostrarNuevoProductoSat(false,xdet);
+
+    var part  = trim(producto).slice(0,5);
+    part      = (part == "Nuevo" || trim(producto) == "")? true:false;
+    if(part) return mostrarNuevoProductoSat(false,xdet);
+
+    var list   = (xdet == 1)? id("listProductoDetSat"):id("listProductoSat");
+    var text   = (xdet == 1)? id("txtProductoDetSat"):id("txtProductoSat");
+
+    var existe = SeleccionarProductoSatDeLista(producto,xdet);
+    existe     = existe.toUpperCase();
+    producto   = producto.toUpperCase();
+
+    if(existe == producto){
+	oscNewRegProdSat = true;
+	ospNewProdSat    = producto;
+	text.value       = "";
+	return mostrarNuevoProductoSat(false,xdet);
+    }
+
+    var url      = "modulos/ordenservicio/modordenservicio.php?modo=CreaProductoIdiomaSat"+
+	           "&xprod="+producto;
+    var xrequest = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+
+    var res  = xrequest.responseText;
+    var xres = res.split('~');
+    var xid  = (xres[0] == '')? xres[1]:xres[0];
+
+    AddProductoLine(producto,parseInt(xid),0);
+    list.value = parseInt(xid);
+    ospNewProdSat    = producto;
+    oscNewRegProdSat = true;
+    mostrarNuevoProductoSat(false,xdet);
+    text.value = "";
+}
+
+function RegistrarMotivoSat(motivo){
+    if(trim(motivo) == 'Nuevo Motivo') return mostrarNuevoMotivoSat(false);
+
+    var part     = trim(motivo).slice(0,5);
+    part         = (part == "Nuevo" || trim(motivo) == "")? true:false;
+    if(part) return mostrarNuevoMotivoSat(false);
+
+    var existe = SeleccionarMotivoSatDeLista(motivo);
+    existe     = existe.toUpperCase();
+    motivo     = motivo.toUpperCase();
+
+    if(existe == motivo){
+	oscNewRegMotivo = true;
+	ospNewMotivo    = motivo;
+	return mostrarNuevoMotivoSat(false);
+    }
+
+    var url      = "modulos/ordenservicio/modordenservicio.php?modo=CreaMotivoSat&motivo="+motivo;
+    var xrequest = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+    var res    = xrequest.responseText;
+
+    AddMotivoLine(motivo,parseInt(res));
+    ospNewMotivo    = motivo;
+    oscNewRegMotivo = true;
+    mostrarNuevoMotivoSat(false);
+    id("txtMotivoSat").value  = "";
+
+}
+
+function RegistrarProductoSat(){
+    var url       = "modulos/ordenservicio/modordenservicio.php?modo=CreaProductoSat"
+    var xrequest  = new XMLHttpRequest();
+    var data      = "";
+    
+    var osMarca       = id("listMarca").value;
+    var osModelo      = id("listModeloSat").value;
+    var osProducto    = id("listProductoSat").value;
+    var osDescripcion = id("DescripcionSat").value;
+    var osNS          = id("NumeroSerieSat").value;
+    var osDiagnostico = id("DiagnosticoSat").value;
+    var osMotivo      = id("listMotivoSat").value;
+    var osResultado   = id("ResultadoSat").value;
+    var osUbicacion   = id("listUbicacionProducto").value;
+
+    var xMarca        = id("listMarca").label;
+    var xModelo       = id("listModeloSat").label;
+    var xProducto     = id("listProductoSat").label;
+
+    oscDetalleSat     = id("idDetalleSat").checked;
+    var esDetalle     = (oscDetalleSat)? 1:0;
+    esDetalle         = (oscContador > 0)? esDetalle:0;
+
+    data = data + "&xmarca="+ osMarca;
+    data = data + "&xmodelo="+ osModelo;
+    data = data + "&xprod="+ osProducto;
+    data = data + "&xdesc="+ osDescripcion;
+    data = data + "&xns="+ osNS;
+    data = data + "&xdiag="+ osDiagnostico;
+    data = data + "&xmotivo="+ osMotivo;
+    data = data + "&xresul="+ osResultado;
+    data = data + "&xidosd="+ cIdOrdenServicioDet;
+    data = data + "&xesdet="+ esDetalle;
+    data = data + "&xubi="+ osUbicacion;
+
+    xrequest.open("POST",url,false);
+    xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+    try {
+        xrequest.send(data);
+        res = xrequest.responseText;
+    } catch(e) {
+        res = false;	
+    }
+
+    if(!parseInt(res)) 
+	return alert("gPOS: \n\n"+po_servidorocupado+'\n\n -'+res+'-');
+    
+    var IdProductoSat = parseInt(res);
+
+    if(oscDetalleSat) RegistrarProductoDetSat(IdProductoSat);
+}
+
+function RegistrarProductoDetSat(IdProductoSat){
+    var t = 0;
+    firma = "os_lista_";
+    
+    while( t < oscContador ) { 
+
+	var xrequest  = new XMLHttpRequest();
+	
+	var osMarcaSat       = id(firma+t+"_marcasat").getAttribute("value");
+	var osModeloSat      = id(firma+t+"_modelosat").getAttribute("value");
+	var osProductoSat    = id(firma+t+"_producto").getAttribute("value");
+	var osNumeroSerieSat = id(firma+t+"_nssat").getAttribute("label");
+
+	var url = "modulos/ordenservicio/modordenservicio.php?modo=CreaProductoDetSat"+
+	          "&xidps="+IdProductoSat+
+	          "&xmarca="+osMarcaSat+
+	          "&xmodelo="+osModeloSat+
+	          "&xprod="+osProductoSat+
+ 	          "&xnssat="+osNumeroSerieSat;
+
+	xrequest.open("GET",url,false);
+
+	try {
+            xrequest.send(null);
+            //res = xrequest.responseText;
+	} catch(e) {
+            //res = false;
+	}
+	
+	t++;
+    }
+
+    VaciarDeHijosTag("listadoProductoDetalleSat","esMov");
+}
+
+function VaciarDeHijosTag(padreNombre,Tag){	
+    var padre = id(padreNombre);
+    while( padre.childNodes.length && padre.lastChild && padre.lastChild.getAttribute(Tag) ){
+	padre.removeChild( padre.lastChild );
+    }		
+}
+
+
+function AgregarProductoDetSat(){
+    var psdIdMarcaSat    = id("listMarcaDetSat").value;
+    var psdMarcaSat      = id("listMarcaDetSat").label;
+    var psdIdModeloSat   = id("listModeloDetSat").value;
+    var psdModeloSat     = id("listModeloDetSat").label;
+    var psdIdProductoSat = id("listProductoDetSat").value;
+    var psdProductoSat   = id("listProductoDetSat").label;
+    var psdNSSat         = id("NumeroSerieDetSat").value;
+
+    GenerarListaProductoDetSat(psdIdMarcaSat,psdMarcaSat,psdIdModeloSat,psdModeloSat,
+			       psdIdProductoSat,psdProductoSat,psdNSSat,false);
+    id("NumeroSerieDetSat").value = "";
+    vertabProductoDetalleSat(true);
+}
+
+function GenerarListaProductoDetSat(psdIdMarcaSat,psdMarcaSat,psdIdModeloSat,psdModeloSat,
+				    psdIdProductoSat,psdProductoSat,psdNSSat,
+				    IdProductoSatDet){
+    
+    var listaProd = id("listadoProductoDetalleSat");
+
+    var xrow = document.createElement("listitem");
+    oscLista = "os_lista_"+oscContador;
+    xrow.setAttribute("esMov",true);
+    xrow.setAttribute("value",IdProductoSatDet);
+    xrow.setAttribute("id",oscLista);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("esMov",true);
+    xcell.setAttribute("label",oscContador+1 );
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("esMov",true);
+    xcell.setAttribute("value",psdIdProductoSat);
+    xcell.setAttribute("label", psdProductoSat+" "+psdMarcaSat+" "+psdModeloSat);
+    xcell.setAttribute("id",oscLista+"_producto");
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("esMov",true);
+    xcell.setAttribute("label",psdNSSat);
+    xcell.setAttribute("id",oscLista+"_nssat");
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("esMov",true);
+    xcell.setAttribute("value",psdIdMarcaSat);
+    xcell.setAttribute("label",psdMarcaSat);
+    xcell.setAttribute("id",oscLista+"_marcasat");
+    xcell.setAttribute("collapsed",true);
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("esMov",true);
+    xcell.setAttribute("value",psdIdModeloSat);
+    xcell.setAttribute("label",psdModeloSat);
+    xcell.setAttribute("id",oscLista+"_modelosat");
+    xcell.setAttribute("collapsed",true);
+    xrow.appendChild(xcell);
+
+    xcell = document.createElement("listcell"); 
+    xcell.setAttribute("esMov",true);
+    xcell.setAttribute("value",IdProductoSatDet);
+    xcell.setAttribute("id",oscLista+"_prodsatdet");
+    xcell.setAttribute("collapsed",true);
+    xrow.appendChild(xcell);
+
+    listaProd.appendChild(xrow);			
+    
+    oscContador++;
+}
+
+function mostrarNuevoMarca(xvalue,xdet){
+    var marca    = (xdet == 0)? id("rowMarca")    : id("rowMarcaDetSat");
+    var newmarca = (xdet == 0)? id("rowNewMarca") : id("rowNewMarcaDetSat");
+    var texmarca = (xdet == 0)? id("txtMarca")    : id("txtMarcaDetSat");
+    marca.setAttribute("collapsed",xvalue);
+    newmarca.setAttribute("collapsed",!xvalue);
+    if(xvalue) texmarca.focus();
+    if(!xvalue) SeleccionarMarcaRegistrada(false,xdet);
+    if(oscNewRegMarca) 	SeleccionarMarcaRegistrada(ospNewMarca,xdet);
+}
+
+function mostrarNuevoModelo(xvalue,xdet){
+    var modelo    = (xdet == 0)? id("rowModeloSat")    : id("rowModeloDetSat");
+    var newmodelo = (xdet == 0)? id("rowNewModeloSat") : id("rowNewModeloDetSat");
+    var texmodelo = (xdet == 0)? id("txtModeloSat")    : id("txtModeloDetSat");
+    modelo.setAttribute("collapsed",xvalue);
+    newmodelo.setAttribute("collapsed",!xvalue);
+    if(xvalue) texmodelo.focus();
+    if(!xvalue) SeleccionarModeloSatDeLista(false,xdet);
+    if(oscNewRegModelo) SeleccionarModeloSatDeLista(ospNewModelo,xdet);
+}
+
+function mostrarNuevoProductoSat(xvalue,xdet){
+    var prod        = (xdet == 0)? id("rowProducto")       : id("rowProductoDetSat");
+    var newprod     = (xdet == 0)? id("rowNewProductoSat") : id("rowNewProductoDetSat");
+    var texproducto = (xdet == 0)? id("txtProductoSat")    : id("txtProductoDetSat");
+    prod.setAttribute("collapsed",xvalue);
+    newprod.setAttribute("collapsed",!xvalue);
+    if(xvalue) texproducto.focus();
+    if(!xvalue) SeleccionarProductoSatDeLista(false,xdet);
+    if(oscNewRegProdSat) SeleccionarProductoSatDeLista(ospNewProdSat,xdet);
+}
+
+function mostrarNuevoMotivoSat(xvalue){
+    id("rowMotivoSat").setAttribute("collapsed",xvalue);
+    id("rowNewMotivoSat").setAttribute("collapsed",!xvalue);
+    if(xvalue) id("txtMotivoSat").focus();
+    if(!xvalue) SeleccionarProductoSatDeLista(false);
+    if(oscNewRegMotivo) SeleccionarMotivoSatDeLista(ospNewMotivo);
+}
+
+function verificarEstadoOrdenServicioDet(xvalue){
+    var xpendiente  = true;
+    var xejecucion  = true;
+    var xfinalizado = true;
+    var xcancelado  = true;
+
+    var	xrowprecio = true;
+    var	xrowcant   = true;
+    var	xrowimport = true;
+    var	xrowdiag   = true;
+    var xrowsol    = true;
+
+    var xgtiacond  = true;
+    var xstdosol   = true;
+    var xuserresp  = true;
+    var xfechaservi= true;
+    var xfechaservf= true;
+    
+    var xestado    = osdEstado;
+
+    switch(xvalue){
+    case 'Pendiente':
+	xejecucion = false;
+	xcancelado = (xestado == 'Pendiente')? false:true;
+	xrowcant   = false;
+	xuserresp  = false;
+	xrowprecio = false;
+	xrowimport = false;
+	break;
+    case 'Ejecucion':
+	xpendiente = ((trim(xestado) == "") || (xestado == 'Pendiente'))? false:true;
+	xfinalizado = ((xestado == 'Pendiente') || (trim(xestado) == ""))? true:false;
+	xrowprecio = false;
+	xrowcant   = false;
+	xrowimport = false;
+	xrowdiag   = (osdServicioSat == 0)? true:false;
+	xgtiacond  = false;
+	xuserresp  = false;
+	xfechaservi= false;
+	xcancelado = (xestado == 'Ejecucion')? false:true;
+	break;
+    case 'Cancelado':
+	xpendiente = (xestado == 'Pendiente' || xestado == 'Cancelado')? false:true;
+	xejecucion = (xestado == 'Ejecucion')? false:true;
+	break;
+    case 'Finalizado':
+	xejecucion = (xestado == 'Ejecucion')? false:true;
+	xrowprecio = false;
+	xrowcant   = false;
+	xrowimport = false;
+	xrowdiag   = (osdServicioSat == 0)? true:false;
+	xrowsol    = (osdServicioSat == 0)? true:false;
+	xgtiacond  = false;
+	xstdosol   = false;
+	xuserresp  = false;
+	xfechaservi= false;
+	xfechaservf= false;
+	id("fFinAtencionServicio").value = calcularFechaActual('fecha');
+	id("listUbicacionProducto").value = 'Almacen';
+	break;
+    }
+    var xorden = (cIdOrdenServicioDet != 0)? ordenserviciodet[cIdOrdenServicioDet].ordenanterior:false;
+    xgtiacond = (trim(xorden))? xgtiacond:true;
+
+    id("itmEstadoEjecucionDet").setAttribute('collapsed',xejecucion);
+    id("itmEstadoPendienteDet").setAttribute('collapsed',xpendiente);
+    id("itmEstadoCanceladoDet").setAttribute('collapsed',xcancelado);
+    id("itmEstadoFinalizadoDet").setAttribute('collapsed',xfinalizado);
+
+    id("rowCantidadServivio").setAttribute("collapsed",xrowcant);
+    id("rowPrecioServicio").setAttribute("collapsed",xrowprecio);
+    id("rowImporteServicio").setAttribute("collapsed",xrowimport);
+    id("rowDiagnostico").setAttribute("collapsed",xrowdiag);
+    id("rowResultado").setAttribute("collapsed",xrowsol);
+
+    id("rowEstadoSolucion").setAttribute("collapsed",xstdosol);
+    id("rowGarantiaCondicion").setAttribute("collapsed",xgtiacond);
+    id("rowListaUsuario").setAttribute("collapsed",xuserresp);
+    id("rowFechaInicioServicio").setAttribute("collapsed",xfechaservi);
+    id("rowFechaFinServicio").setAttribute("collapsed",xfechaservf);
+}
+
+function mostrarBusquedaAvanzadaOrdenServicioDet(xthis){
+
+    var xchecked = (xthis.getAttribute('checked'))? false:true;
+    var xlabel   = xthis.label.replace(" ","_");
+    var xdet     = true;
+
+    switch(xlabel){
+    case "Fecha_Fin": 
+	vosFechaFin       = xchecked;
+	break;
+    case "Estado_Solucion":
+	vosEstadoSolucion = xchecked;
+	break;
+    case "Numero_Serie" : 
+	vosNumeroSerie    = xchecked;
+	break;
+    case "Estado_Garantia" :
+	vosEstadoGarantia = xchecked;
+	break;
+    case "Fecha_Entrega":
+	vosFechaEntrega   = xchecked;
+	xdet              = false;
+	break;
+    case "Registrado_por":
+	vosUsuarioRegistro= xchecked;
+	xdet              = false;
+	break;
+    case "Entregado_por":
+	vosUsuarioEntrega = xchecked;
+	xdet              = false;
+	break;
+    case "Asignado_a":
+	xdet              = false;
+	break;
+    case "Tipo_Servicio":
+	xdet              = false;
+	break;
+    case "Facturacion":
+	xdet              = false;
+	break;
+    }
+
+    if(id("vbox"+xlabel)) id("vbox"+xlabel).setAttribute("collapsed",xchecked);
+    if(id("vlist"+xlabel)) id("vlist"+xlabel).setAttribute("collapsed",xchecked);
+    if(id("vlistcol"+xlabel)) id("vlistcol"+xlabel).setAttribute("collapsed",xchecked);
+    
+    (xdet)? BuscarDetalleOrdenServicio(cIdOrdenServicio):BuscarOrdenServicio();
+}
+
+function xmenuOrdenServicioDetalle(){
+    var editar  = true;
+    var agregar = true;
+    var quitar  = true;
+    var ver     = false;
+    var hidx    = id("listadoOrdenServicio").selectedItem;
+    var idx     = id("listadoOrdenServicioDetalle").selectedItem;
+    var esselect = (!idx || id("listadoOrdenServicioDetalle").itemCount == 0)? true:false;
+
+    var agregarserv = (oscEstado == 'Finalizado')? true:false;
+    agregarserv     = (oscEstado == 'Cancelado')? true:agregarserv;
+    agregarserv     = (oscTipo   == 'Garantia')? true:agregarserv;
+    var agregarprod = (oscEstado == 'Cancelado' )? true:false;
+    agregarprod = (osdTipoProducto == 'Producto')? true:agregarprod;
+    agregarprod = (oscFacturacion != 0)? true:agregarprod;
+
+    switch(osdEstado){
+    case 'Pendiente':
+	agregar   = (oscEstado != 'Cancelado')? false:true;
+	editar    = false;
+	quitar    = false;
+	break
+    case 'Ejecucion':
+	agregar   = (oscEstado != 'Cancelado')? false:true;
+	editar    = false;
+	break;
+    case 'Finalizado':
+	editar    = false;
+	break;
+    case 'Cancelado':
+	editar    = false;
+	quitar    = false;
+	agregarprod = true;
+	break;
+    }
+
+    //editar = (osdTipoProducto == 'Producto')? false:editar;
+    editar = (oscEstado == 'Cancelado')? true:editar;
+    editar = (oscFacturacion != 0 )? true:editar;
+
+    //var quitar = (osdTipoProducto != 'Producto')? true:false;
+    quitar     = (!idx)? true:quitar;
+    quitar     = (oscFacturacion != 0 || oscEstado == "Cancelado")? true:quitar;
+    var clonar = (oscEstado == 'Finalizado')? false:true;
+    clonar     = (osdTipoProducto == 'Servicio')? clonar:true;
+
+    if(esselect){
+	editar = true;
+	ver    = true;
+	clonar = true;
+	agregar= true;
+	agregarprod = true;
+    }
+
+    if(Local.esSAT == 1) id("itemEditarOrdenServicioDet").setAttribute('disabled',editar);
+    id("itemVerOrdenServicioDet").setAttribute('disabled',ver);
+    if(Local.esSAT == 1) id("itemAgregarServicio").setAttribute('disabled',agregarserv);
+    if(Local.esSAT == 1) id("itemAgregarProducto").setAttribute('disabled',agregarprod);
+    if(Local.esSAT == 1) id("itemQuitarProducto").setAttribute('disabled',quitar);
+    if(Local.esSAT == 1) id("itemClonarServicio").setAttribute('disabled',clonar);
+}
+
+function imprimirOrdenServicio(){
+    var idx = id("listadoOrdenServicio").selectedItem;
+    if(!idx) return;
+    var osImporte       = id("os_importe_"+idx.value).getAttribute("value");
+    var moneda        = 1;
+    var importeletras = convertirNumLetras(osImporte,moneda);
+    importeletras     = (osImporte > 0)? importeletras.toUpperCase():"";
+
+    var url= "modulos/fpdf/imprimir_ordenservicio.php?idoc="+idx.value+
+	     "&totaletras="+importeletras;
+    location.href=url;
+}
+
+function vboxOrdenServicioDisplay(xval){
+    var listosdet = id("listadoOrdenServicioDetalle");
+    var listos    = id("listadoOrdenServicio");
+
+    switch(xval){
+    case 'block':
+	listosdet.setAttribute('disabled',true);
+	listos.setAttribute('disabled',true);
+	break;
+    case 'unblock':
+	listosdet.removeAttribute('disabled');
+	listos.removeAttribute('disabled');
+	break;
+    }
+
+}
+
+function facturarOrdenServicio(){
+
+    var idx = id("listadoOrdenServicio").selectedItem;
+
+    if(!idx) return;
+
+    if(oscEstado != 'Finalizado' || oscFacturacion != 0) return;
+
+    var xrequest = new XMLHttpRequest();
+    var url = "modulos/ordenservicio/modordenservicio.php?modo=FacturarOrdenServicio" 
+	+ "&xid=" + parseInt(idx.value)
+	+ "&xlocal=" + Local.IdLocalActivo
+	+ "&xdependiente=" + Local.IdDependiente;
+
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+    xres = xrequest.responseText;
+
+    var xres = xres.split('~');
+
+    if (xres[0] != '0')
+        return alert(po_servidorocupado+
+		     '\n\n  :::: '+xres[0])+' ::::';
+    //Productos...
+    syncProductosPostTicket();
+    //PreVentas...
+    syncPresupuesto('Preventa');  
+    //Ticket...
+    VerTPV();  
+    //Confirmar...
+    if(!confirm("gPOS TICKET PREVENTA  - "+xres[2]+" - \n"+
+		"\n  ORDEN DE SERVICIO : " +oscSerie+' - '+oscNumero+
+		"\n  CLIENTE                    : "+oscCliente+
+		"\n  IMPORTE                     : "+cMoneda[1]['S']+" "+oscImporte+
+		"\n\n Se creo un - TICKET PREVENTA - con el detalle, desea cargarlo? ")) 
+	return;
+    //Ticket PreVenta...
+    selTipoPresupuesto(1);
+    cargarDetPresupuestoACarrito(xres[1],oscIdCliente,0);
+}
+
+function xmenuOrdenServicio(){
+    var editar   = true;
+    var facturar = true;
+    var hidx     = id("listadoOrdenServicio").selectedItem;
+    var imprimir = (id("listadoOrdenServicioDetalle").itemCount != 0)? false:true;
+
+    switch(oscEstado){
+    case 'Pendiente':
+	editar = false;
+	break
+    case 'Ejecucion':
+	editar = false;
+	break;
+    case 'Finalizado':
+	facturar = false;
+	editar   = (oscFacturacion != 0)? true:false;
+	break;
+    case 'Cancelado':
+	editar = false;
+	break;
+    }
+
+    facturar = (oscFacturacion != 0)? true:facturar;
+
+    if(Local.esSAT == 1) id("itemEditarOrdenServicio").setAttribute('disabled',editar);
+    id("itemFacturarOrdenServicio").setAttribute('disabled',facturar);
+    id("itemImprimirOrdenServicio").setAttribute('disabled',imprimir);
+}
+
+function mostrarUbicacionServicio(xvalue,xedit=false){
+    var xval = (xvalue == 'Local')? true:false;
+    id("rowDireccionServicio").setAttribute('collapsed',xval);
+}
+
+function clonarOrdenServicioDet(){
+    oscClon = true;
+    var idex   = id("listadoOrdenServicio").selectedItem;
+    var codigo = id("os_codigo_"+idex.value).getAttribute('label');
+    id("idClienteOrdenServicio").value = oscIdCliente;
+    id("FiltroPrioridad").value = '1';
+    
+    obtenerSerieNumeroOrdenServicio();
+    RegistrarOrdenServicio(false);
+    verProductoSat(true);
+    CargarProductosSat();
+    if(ospDetalleSat == 1)
+	vertabProductoDetalleSat(true);
+    mostrarPanelOrdenServicioDet(true,false);
+}
+
+function obtenerOrdenServicioDetalle(){
+
+    var z   = null;
+    var url = "modulos/ordenservicio/modordenservicio.php?modo=ObtenerOrdenServicioDetalle"+
+        "&xidos="+cIdOrdenServicio;
+
+    var obj = new XMLHttpRequest();
+    obj.open("GET",url,false);
+    try{
+	obj.send(null);
+    } catch(z){
+	return;
+    }
+    return obj.responseXML.documentElement;
+}
+
+function crearOrdenServicioDetalle2XML(xml){
+
+    var idsuscipcion,idcliente,idtiposuscripcion,tiposuscripcion,fechainicio,fechafin,estado,prolongacion,comprobante,tipopago,observaciones,detalle,osOrdenAnterior;
+    if(ordenserviciodetserv[ cIdOrdenServicio ])
+	ordenserviciodetserv[ cIdOrdenServicio ] = new Array();
+
+    for (var i=0; i<xml.childNodes.length; i++) {
+        node = xml.childNodes[i];
+        if (node){
+	    t = 0;
+
+	    IdOrdenServicioDet    = node.childNodes[t++].firstChild.nodeValue;
+	    osIdProducto          = node.childNodes[t++].firstChild.nodeValue;
+	    osIdUserResponsable   = node.childNodes[t++].firstChild.nodeValue;
+	    osIdComprobante       = node.childNodes[t++].firstChild.nodeValue;
+	    osFechaInicio         = node.childNodes[t++].firstChild.nodeValue;
+	    osFechaFin            = node.childNodes[t++].firstChild.nodeValue;
+	    osEstado              = node.childNodes[t++].firstChild.nodeValue;
+	    osGarantia	          = node.childNodes[t++].firstChild.nodeValue;
+	    osEstadoGarantia      = node.childNodes[t++].firstChild.nodeValue;
+	    osGarantiaCondicion   = node.childNodes[t++].firstChild.nodeValue;
+	    osEstadoSolucion      = node.childNodes[t++].firstChild.nodeValue;
+	    osConcepto            = node.childNodes[t++].firstChild.nodeValue;
+	    osNumeroSerie         = node.childNodes[t++].firstChild.nodeValue;
+	    osUnidades            = node.childNodes[t++].firstChild.nodeValue;
+	    osPrecio              = node.childNodes[t++].firstChild.nodeValue;
+	    osImporte             = node.childNodes[t++].firstChild.nodeValue;
+	    osProducto            = node.childNodes[t++].firstChild.nodeValue;
+	    osUsuarioResponsable  = node.childNodes[t++].firstChild.nodeValue;
+	    osTipoServicio        = node.childNodes[t++].firstChild.nodeValue;
+	    osTipoProducto        = node.childNodes[t++].firstChild.nodeValue;
+	    osCodigoBarras        = node.childNodes[t++].firstChild.nodeValue;
+	    osUbicacion           = node.childNodes[t++].firstChild.nodeValue;
+	    osDireccion           = node.childNodes[t++].firstChild.nodeValue;
+	    osObservacion         = node.childNodes[t++].firstChild.nodeValue;
+	    osOrdenAnterior       = node.childNodes[t++].firstChild.nodeValue;
+	    osEsProductoSat       = node.childNodes[t++].firstChild.nodeValue;
+	    osProductoSat         = node.childNodes[t++].firstChild.nodeValue;
+
+
+	    crearOrdenServicioDetalle2Servicio(IdOrdenServicioDet,osIdProducto,
+					       osIdUserResponsable,osIdComprobante,
+					       osFechaInicio,osFechaFin,osEstado,osGarantia,
+					       osEstadoGarantia,osGarantiaCondicion,  
+					       osEstadoSolucion,osConcepto,osNumeroSerie,
+					       osUnidades,osPrecio,osImporte,osProducto,
+					       osUsuarioResponsable,osTipoServicio,       
+					       osTipoProducto,osCodigoBarras,osUbicacion,
+					       osDireccion,osObservacion,osEsProductoSat,
+					       osProductoSat,osOrdenAnterior); 
+        }
+    }
+}
+
+function crearOrdenServicioDetalle2Servicio(xiddet,xIdProducto,
+					    xIdUserResponsable,xIdComprobante,
+					    xFechaInicio,xFechaFin,xEstado,xGarantia,
+					    xEstadoGarantia,xGarantiaCondicion,  
+					    xEstadoSolucion,xConcepto,xNumeroSerie,
+					    xUnidades,xPrecio,xImporte,xProducto,
+					    xUsuarioResponsable,xTipoServicio,       
+					    xTipoProducto,xCodigoBarras,xUbicacion,
+					    xDireccion,xObservacion,xEsProductoSat,      
+					    xProductoSat,xOrdenAnterior){
+
+    if( !ordenserviciodetserv[ cIdOrdenServicio ] ) 
+	ordenserviciodetserv[ cIdOrdenServicio ] = new Array();
+    ordenserviciodetserv[ cIdOrdenServicio ].push(xiddet);
+
+
+    if( ordenserviciodet[ xiddet ] )
+	return updateOrdenServicioDetalle2Servicio(xiddet,xIdProducto,
+						   xIdUserResponsable,xIdComprobante,
+						   xFechaInicio,xFechaFin,xEstado,xGarantia,
+						   xEstadoGarantia,xGarantiaCondicion,  
+						   xEstadoSolucion,xConcepto,xNumeroSerie,
+						   xUnidades,xPrecio,xImporte,xProducto,
+						   xUsuarioResponsable,xTipoServicio,       
+						   xTipoProducto,xCodigoBarras,xUbicacion,
+						   xDireccion,xObservacion,xEsProductoSat,
+						   xProductoSat,xOrdenAnterior);
+
+    //Orden Servicio Detalle
+    ordenserviciodetlist[ iordenserviciodet++ ]   = xiddet;		
+    ordenserviciodet[ xiddet ]                    = new Object();	
+    ordenserviciodet[ xiddet ].idordenserviciodet = xiddet;
+    ordenserviciodet[ xiddet ].idproducto         = xIdProducto;
+    ordenserviciodet[ xiddet ].iduserresponsable  = xIdUserResponsable;
+    ordenserviciodet[ xiddet ].idcomprobante      = xIdComprobante;
+    ordenserviciodet[ xiddet ].fechainicio        = xFechaInicio;
+    ordenserviciodet[ xiddet ].fechafin           = xFechaFin;
+    ordenserviciodet[ xiddet ].estado             = xEstado;
+    ordenserviciodet[ xiddet ].garantia           = xGarantia;
+    ordenserviciodet[ xiddet ].estadogarantia     = xEstadoGarantia;
+    ordenserviciodet[ xiddet ].condiciongarantia  = xGarantiaCondicion;
+    ordenserviciodet[ xiddet ].solucion           = xEstadoSolucion;
+    ordenserviciodet[ xiddet ].concepto           = xConcepto;
+    ordenserviciodet[ xiddet ].serie              = xNumeroSerie;
+    ordenserviciodet[ xiddet ].unidades           = xUnidades;
+    ordenserviciodet[ xiddet ].precio             = xPrecio;
+    ordenserviciodet[ xiddet ].importe            = xImporte;
+    ordenserviciodet[ xiddet ].producto           = xProducto;
+    ordenserviciodet[ xiddet ].responsable        = xUsuarioResponsable;
+    ordenserviciodet[ xiddet ].tiposervicio       = xTipoServicio; 
+    ordenserviciodet[ xiddet ].tipoproducto       = xTipoProducto; 
+    ordenserviciodet[ xiddet ].codigobarras       = xCodigoBarras; 
+    ordenserviciodet[ xiddet ].ubicacion          = xUbicacion; 
+    ordenserviciodet[ xiddet ].direccion          = xDireccion; 
+    ordenserviciodet[ xiddet ].observaciones      = xObservacion;
+    ordenserviciodet[ xiddet ].essat              = xEsProductoSat;
+    ordenserviciodet[ xiddet ].productosat        = xProductoSat;
+    ordenserviciodet[ xiddet ].ordenanterior      = xOrdenAnterior;
+
+
+}
+function updateOrdenServicioDetalle2Servicio(xiddet,xIdProducto,
+					    xIdUserResponsable,xIdComprobante,
+					    xFechaInicio,xFechaFin,xEstado,xGarantia,
+					    xEstadoGarantia,xGarantiaCondicion,  
+					    xEstadoSolucion,xConcepto,xNumeroSerie,
+					    xUnidades,xPrecio,xImporte,xProducto,
+					    xUsuarioResponsable,xTipoServicio,       
+					    xTipoProducto,xCodigoBarras,xUbicacion,
+					    xDireccion,xObservacion,xEsProductoSat,      
+					     xProductoSat,xOrdenAnterior){
+
+    ordenserviciodet[ xiddet ].idproducto         = xIdProducto;
+    ordenserviciodet[ xiddet ].iduserresponsable  = xIdUserResponsable;
+    ordenserviciodet[ xiddet ].idcomprobante      = xIdComprobante;
+    ordenserviciodet[ xiddet ].fechainicio        = xFechaInicio;
+    ordenserviciodet[ xiddet ].fechafin           = xFechaFin;
+    ordenserviciodet[ xiddet ].estado             = xEstado;
+    ordenserviciodet[ xiddet ].garantia           = xGarantia;
+    ordenserviciodet[ xiddet ].estadogarantia     = xEstadoGarantia;
+    ordenserviciodet[ xiddet ].condiciongarantia  = xGarantiaCondicion;
+    ordenserviciodet[ xiddet ].solucion           = xEstadoSolucion;
+    ordenserviciodet[ xiddet ].concepto           = xConcepto;
+    ordenserviciodet[ xiddet ].serie              = xNumeroSerie;
+    ordenserviciodet[ xiddet ].unidades           = xUnidades;
+    ordenserviciodet[ xiddet ].precio             = xPrecio;
+    ordenserviciodet[ xiddet ].importe            = xImporte;
+    ordenserviciodet[ xiddet ].producto           = xProducto;
+    ordenserviciodet[ xiddet ].responsable        = xUsuarioResponsable;
+    ordenserviciodet[ xiddet ].tiposervicio       = xTipoServicio; 
+    ordenserviciodet[ xiddet ].tipoproducto       = xTipoProducto; 
+    ordenserviciodet[ xiddet ].codigobarras       = xCodigoBarras; 
+    ordenserviciodet[ xiddet ].ubicacion          = xUbicacion; 
+    ordenserviciodet[ xiddet ].direccion          = xDireccion; 
+    ordenserviciodet[ xiddet ].observaciones      = xObservacion;
+    ordenserviciodet[ xiddet ].essat              = xEsProductoSat;
+    ordenserviciodet[ xiddet ].productosat        = xProductoSat;
+    ordenserviciodet[ xiddet ].ordenanterior      = xOrdenAnterior;
+}
+
+function RecibirGarantiaProducto(){
+    oscClon = false;
+
+    id("idClienteOrdenServicio").value = cIdClienteComprobante;
+    id("FiltroPrioridad").value        = '1';
+    id("TipoOrdenServicio").value      = 'Garantia';
+    id("TipoOrdenServicio").setAttribute('value','Garantia');
+    obtenerSerieNumeroOrdenServicio();
+    RegistrarOrdenServicio(false);
+    actualizarGarantiaComprobante();
+
+    id("ObservacionServicio").value    = 'Garantía, '+cComprobante+': '+cSerieNroComprobante;
+    verProductoSat(true);
+
+    if(ospDetalleSat == 1)
+	vertabProductoDetalleSat(true);
+    mostrarPanelOrdenServicioDet(true,false);
+}
+
+function actualizarGarantiaComprobante(){
+
+    var url = "modulos/ordenservicio/modordenservicio.php?"+
+              "modo=ActualizarGarantiaComprobanteDet"+
+	      "&xidos="+cIdOrdenServicio+
+ 	      "&xidcd="+cIdComprobanteDet;
+
+    var xrequest = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+
+    id("xdetalleventa_ordenservicio_"+cIdComprobanteDet).setAttribute("value",cIdOrdenServicio);
+    
+}
+/*++++++++++++++++++++++++ ORDEN SERVICIO  ++++++++++++++++++++++++++++*/
 

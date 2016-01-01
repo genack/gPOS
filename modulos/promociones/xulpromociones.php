@@ -1,15 +1,8 @@
 <?php
 SimpleAutentificacionAutomatica("visual-xulframe");
-header("Content-type: application/vnd.mozilla.xul+xml");
-echo '<?xml version="1.0" encoding="UTF-8"?>';
-echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';
-echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
+StartXul('Promociones',$predata="",$css='');
+StartJs($js='modulos/promociones/promociones.js?v=1');
 ?>
-<window id="MovimientoVista" title="Movimientos Kardex"
-	xmlns:html="http://www.w3.org/1999/xhtml"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/promociones/promociones.js" />
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js" />
 
   <script>//<![CDATA[
 
@@ -23,20 +16,19 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
 
 <!-- Promociones -->
-<vbox id="vboxPromociones">
+<vbox id="vboxPromociones" class="box">
   <!--  Encabezado-->
   <vbox> 
     <vbox pack="center" align="center">
-      <caption id="wtitlePromociones" style="padding:-1em;font-size: 14px;font-weight: bold;"
+      <caption id="wtitlePromociones" class="h1"
 	       label="<?php echo _("Promociones") ?>" />
     </vbox>
-    <spacer style="height:4px"/>
   </vbox> 
 
   <!-- Cuerpo principal -->
 
-  <vbox id="busquedaPromociones">
-    <hbox align="start" pack="center" style="background-color: #d7d7d7;padding:3px;">
+  <vbox id="busquedaPromociones" class="box">
+    <hbox align="start" pack="center" >
       <vbox>
 	<?php if(getSesionDato("esAlmacenCentral")){?>
 	<description>Local:</description>
@@ -56,15 +48,15 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       </vbox>
       <vbox>
 	<description>Desde:</description>
-	<datepicker id="FechaBuscaPromocion" type="popup" onblur="BuscarPromocion()"/>
+	<datepicker id="FechaBuscaPromocion" type="popup" />
       </vbox>
       <vbox>
 	<description>Hasta:</description>
-	<datepicker id="FechaBuscaPromocionHasta" type="popup" onblur="BuscarPromocion()"/>
+	<datepicker id="FechaBuscaPromocionHasta" type="popup" />
       </vbox>
       <vbox>
 	<description>Promoción:</description>
-	<textbox onfocus="select()" id="NombreBusqueda" style="width: 21em"
+	<textbox onfocus="select()" id="NombreBusqueda" 
 		 onkeyup="if (event.which == 13) BuscarPromocion()"
 		 onkeypress="return soloAlfaNumerico(event);"/>
       </vbox>
@@ -74,7 +66,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  <menupopup>
 	    <menuitem label="Todos" value="Todos" style="font-weight: bold" />
 	    <menuitem label="Borrador" value="Borrador"/>
-	    <menuitem label="Ejecucion" value="Ejecucion"/>
+	    <menuitem label="Ejecución" value="Ejecucion"/>
 	    <menuitem label="Finalizado" value="Finalizado"/>
 	    <menuitem label="Suspendido" value="Suspendido"/>
 	    <menuitem label="Cancelado" value="Cancelado"/>
@@ -97,8 +89,8 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	<menulist  id="idTipoVenta" oncommand="BuscarPromocion()">
 	  <menupopup>
 	    <menuitem label="Todos" value="Todos" style="font-weight: bold"/>
-	    <menuitem label="B2C" value="VD"/>
-	    <menuitem label="B2B" value="VC"/>
+	    <menuitem label="Personal" value="VD"/>
+	    <menuitem label="Corporativo" value="VC"/>
 	  </menupopup>
 	</menulist>
       </vbox>
@@ -109,56 +101,45 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	<checkbox checked="true" id="modoPromocionHistorialCompra"
 		  label="Historial Compra" oncommand="BuscarPromocion()"/>
       </vbox>
-      <vbox style="margin-top:1.2em">
+      <vbox style="margin-top:1em">
 	<menu>
-	  <toolbarbutton image="<?php echo $_BasePath; ?>img/gpos_busqueda_avanzada.png" />
+	  <toolbarbutton style="min-height: 2.7em;"
+                         image="<?php echo $_BasePath; ?>img/gpos_busqueda_avanzada.png" />
 	  <menupopup >
-	    <menuitem type="checkbox" label="Tipo" checked="false"
+	    <menuitem type="checkbox" value="Tipo" label="Tipo" checked="false"
 		      oncommand = "mostrarBusquedaAvanzada(this);"/>
-	    <menuitem type="checkbox" label="Tipo Venta" checked="false"
+	    <menuitem type="checkbox" value="Tipo Venta" label="Tipo Venta" checked="false"
 		      oncommand = "mostrarBusquedaAvanzada(this);"/>
-	    <menuitem type="checkbox" label="Modalidad" checked="false"
+	    <menuitem type="checkbox" value="Modalidad" label="Modalidad" checked="false"
 		      oncommand = "mostrarBusquedaAvanzada(this);"/>
 	    <menuseparator />
-	    <menuitem type="checkbox" label="Local"
+	    <menuitem type="checkbox" value="Local" label="Local"
 		      oncommand = "mostrarBusquedaAvanzada(this);"/>
-	    <menuitem type="checkbox" label="Categoria Cliente"
+	    <menuitem type="checkbox" value="Categoria Cliente" label="Categoría Cliente"
 		      oncommand = "mostrarBusquedaAvanzada(this);"/>
-	    <menuitem type="checkbox" label="Fecha Registro" checked="false"
+	    <menuitem type="checkbox" value="Fecha Registro" label="Fecha Registro" 
+                      checked="false"
 		      oncommand = "mostrarBusquedaAvanzada(this);"/>
-	    <menuitem type="checkbox" label="Usuario" checked="false"
+	    <menuitem type="checkbox" value="Usuario" label="Usuario" checked="false"
 		      oncommand = "mostrarBusquedaAvanzada(this);"/>
 	  </menupopup>
 	</menu>
       </vbox>
-      <vbox style="margin-top:.9em">
-	<button id="btnbuscar" label=" Buscar " image="<?php echo $_BasePath; ?>img/gpos_buscar.png"
+      <vbox style="margin-top:1.1em">
+	<button id="btnbuscar" label=" Buscar " class="btn"
+                image="<?php echo $_BasePath; ?>img/gpos_buscar.png"
 		oncommand="BuscarPromocion()"/>
       </vbox>
     </hbox>
   </vbox>
 
-  <!-- Resumen Promociones  -->
-  <vbox id="resumenPromociones" >
-    <spacer style="height:5px"/>
+
+  <vbox>
     <hbox flex="1">
-      <caption style="font-size:10px; font-weight: bold;" 
-	       label="<?php echo _("Promociones") ?>" />
-      <description id="TotalPromocion" value="0 Promociones listados" />
-      <hbox  flex="1" pack="center">
-	<label value="Borrador:"/>
-	<description id="TotalBorrador" value=" 0"/>
-	<label value="Ejecución:"/>
-	<description id="TotalEjecucion" value=" 0 "/>
-	<label value="Finalizado:"/>
-	<description id="TotalFinalizado" value=" 0 "/>
-	<label value="Cancelado:"/>
-	<description id="TotalCancelado" value="0"/>
-      </hbox>
+      <caption class="box" label="<?php echo _("Promociones") ?>" />
     </hbox>
   </vbox>
 </vbox>
-<!-- Resumen Promociones  -->
 
 <!-- Lista de Promociones-->
 <listbox flex="1" id="listadoPromocion"
@@ -203,7 +184,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
   <listhead>
     <listheader label=" # " style="font-style:italic;"/>
     <listheader label="Local" id="vlistLocal" collapsed="true"/>
-    <listheader label="Categoria Cliente" id="vlistCategoria_Cliente" collapsed="true"/>
+    <listheader label="Categoría Cliente" id="vlistCategoria_Cliente" collapsed="true"/>
     <listheader label="Promoción"/>
     <listheader label="Estado"/>
     <listheader label="Tipo Venta" id="vlistTipo_Venta" collapsed="true"/>
@@ -223,17 +204,33 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
   <!-- Lista de Promociones -->
 
+  <!-- Resumen Promociones  -->
+  <vbox id="resumenPromociones" class="box">
+      <caption class="box" label="<?php echo _("Resumen Promociones") ?>" />
+
+      <hbox class="resumen" pack="center" align="left">
+	<label value="Total:"/>
+        <description id="TotalPromocion" value="0 Promociones listados" />
+	<label value="Borrador:"/>
+	<description id="TotalBorrador" value=" 0"/>
+	<label value="Ejecución:"/>
+	<description id="TotalEjecucion" value=" 0 "/>
+	<label value="Finalizado:"/>
+	<description id="TotalFinalizado" value=" 0 "/>
+	<label value="Cancelado:"/>
+	<description id="TotalCancelado" value="0"/>
+      </hbox>
+  </vbox>
+
   <!-- Formulario de Promociones -->
-<vbox id="vboxFormPromocion" collapsed="true">
+<vbox id="vboxFormPromocion" collapsed="true" class="box">
   <vbox align="center"  pack="top">
     <vbox>
-      <spacer style="height:6px"/>
       <vbox pack="center" align="center">
 	<caption id="wtitleFormPromociones"
-		 style="padding:0.4em;font-size: 14px;font-weight: bold;"
+		 class="h1"
 		 label="<?php echo _("Nueva Promoción") ?>" />
       </vbox>
-      <spacer style="height:8px"/>
     </vbox>
     <hbox>
       <vbox>
@@ -241,13 +238,13 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	<grid>
 	  <rows>
 	    <row>
-	      <description value="Nombre"/>
+	      <caption label="    Nombre"/>
 	      <textbox id="nombrePromocion" value=""
 		       onchange="guardaPromocion()"
 		       onkeypress="return soloAlfaNumerico(event);"/>
 	    </row>
 	    <row>
-	      <description value="Modalidad"/>
+	      <caption label="    Modalidad"/>
 	      <menulist id="FiltroCondicionPromocion" label="FiltrosCategoriaCliente"
 			oncommand="SeleccionarCondicionPromocion(this.value);
 				   guardaPromocion()">
@@ -258,7 +255,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	      </menulist>
 	    </row>
 	    <row>
-	      <description value="Tipo"/>
+	      <caption label="    Tipo"/>
 	      <menulist id="FiltroTipoPromocion" label="FiltrosTipoPromocion"
 			oncommand="SeleccionarTipoPromocion(this.value);
 				   guardaPromocion()">
@@ -271,7 +268,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	    </row>
 	   <?php if(getSesionDato("esAlmacenCentral")){?>
 	    <row >
-	      <description value="Local"/>
+	      <caption label="    Local"/>
 	      <menulist id="FiltroDisponibilidadLocal"
 			label="FiltrosDisponibilidadLocal"
 			oncommand="guardaPromocion()">
@@ -285,13 +282,13 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	    <textbox id="FiltroDisponibilidadLocal" value="Actual" collapsed="true"/>
 	    <?php }?>
 	    <row>
-	      <description value="Tipo Venta"/>
+	      <caption label="    Tipo Venta"/>
 	      <menulist id="FiltroTipoVenta"
 			label="FiltrosTipoVenta"
 			oncommand="guardaPromocion()">
 		<menupopup id="combotipoventa">
-		  <menuitem label="B2C" value="VD" selected="true"/>
-		  <menuitem label="B2B" value="VC"/>
+		  <menuitem label="Personal" value="VD" selected="true"/>
+		  <menuitem label="Corporativo" value="VC"/>
 		</menupopup>
 	      </menulist>
 	    </row>
@@ -299,37 +296,37 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
 	    <caption label="Periodo:"/>
 	    <row>
-	      <description value="Inicio"/>
+	      <caption label="    Inicio"/>
 	      <datepicker id="InicioPeriodoPromocion" type="popup" 
 			  onchange="guardaPromocion()"/>
 	    </row>
 	    <row>
-	      <description value="Fin"/>
+	      <caption label="    Fin"/>
 	      <datepicker id="FinPeriodoPromocion" type="popup" 
 			  onchange="guardaPromocion()"/>
 	    </row>
 	  </rows>
 	</grid>
       </vbox>
-      <spacer style="width:2em"/>
+      <spacer style="width:10em"/>
       <vbox>
 	<caption label="Condición de Oferta Ticket:"/>
 	<grid>
 	  <rows>
 	    <row id="rowMontoActualPromocion">
-	      <description value="Importe Mayor a"/>
+	      <caption label="    Importe Mayor a"/>
 	      <textbox id="MontoActualPromocion" value="0" 
 		       onchange="guardaPromocion()"
 		       onkeypress="return soloNumerosEnteros(event,this.value);"/>
 	    </row>
 	    <row id="rowCategoriaCliente" collapsed="true">
-	      <description value="Categoría Cliente"/>
+	      <caption label="    Categoría Cliente"/>
 	      <menulist id="FiltroCategoriaCliente" label="FiltrosCategoriaCliente"
 			oncommand="guardaPromocion()">
 	      </menulist>
 	    </row>
 	    <row id="rowPrioridadPromocion" collapsed="true">
-	      <description value="Prioridad"/>
+	      <caption label="    Prioridad"/>
 	      <menulist id="FiltroPrioridadPromocion" label="FiltrosPrioridadPromocion"
 			oncommand="guardaPromocion()">
 		<menupopup id="comboprioridadpromocion">
@@ -344,26 +341,26 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	    <caption label="Oferta:"/>
 	    <description id="descProductoOferta" value="Producto" collapsed="true"/>
 	    <row id="rowProductoPromocion1" collapsed="true">
-	      <description value="Código de Barras"/>
+	      <caption label="    Código de Barras"/>
 	      <textbox id="ProductoPromocion1" value=""
 		       onkeypress="return soloNumerosEnteros(event,this.value);"
 		       onchange="guardaPromocion()"/>
 	      </row>
 	    <row id="rowProductoPromocion2" collapsed="true">
-	      <description value="Código de Barras"/>
+	      <caption label="    Código de Barras"/>
 	      <textbox id="ProductoPromocion2" value=""
 		       onchange="guardaPromocion()"
 		       onkeypress="return soloNumerosEnteros(event,this.value);"
 		       placeholder="Alternativo"/>
 	    </row>
 	    <row id="rowDescuentoPromocion">
-	      <description value="Descuento (%)"/>
+	      <caption label="    Descuento (%)"/>
 	      <textbox id="DescuentoPromcion" value="0"
 		       onkeypress="return soloNumeros(event,this.value);"
 		       onchange="guardaPromocion()"/>
 	    </row>
 	    <row id="rowBonoPromocion" collapsed="true">
-	      <description value="Bono"/>
+	      <caption label="    Bono"/>
 	      <textbox id="BonoPromocion" value="0"
 		       onkeypress="return soloNumeros(event,this.value);"
 		       onchange="guardaPromocion()"/>
@@ -371,13 +368,13 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	    <spacer style="height:1em"/>
 	    <caption label="Estado:"/>
 	    <row id="rowEstadoPromocion">
-	      <description value="Estado"/>
+	      <caption label="    Estado"/>
 	      <menulist id="FiltroEstado" label="FiltrosEstado"
 			oncommand="guardaPromocion()">
 		<menupopup id="comboestado">
 		  <menuitem id="itmEstadoBorrador" label="Borrador"
 			    value="Borrador" selected="true"/>
-		  <menuitem id="itmEstadoEjecucion" label="Ejecucion" value="Ejecucion"/>
+		  <menuitem id="itmEstadoEjecucion" label="Ejecución" value="Ejecucion"/>
 		  <menuitem id="itmEstadoSuspendido" label="Suspendido"
 			    value="Suspendido" collapsed="true"/>
 		  <menuitem id="itmEstadoFinalizado" label="Finalizado"
@@ -401,16 +398,16 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
 
 <!-- Categoría Cliente -->
-<vbox id="hboxPromocionClientes" style="margin-top:-1em" collapsed="true">
-  <vbox flex="1" align="center" pack="center">
+<vbox id="hboxPromocionClientes" collapsed="true" class="box">
+  <vbox >
       <vbox pack="center" align="center">
 	<caption id="wtitlePromocionClientes" 
-		 style="padding:0.4em;font-size: 14px;font-weight: bold;"
+		 class="h1"
 		 label="<?php echo _("Categoría Clientes") ?>" />
       </vbox>
   </vbox>
-  <vbox id="busquedaCategoriaCliente">
-    <hbox align="start" pack="center" style="background-color: #d7d7d7;padding:3px;">
+  <vbox id="busquedaCategoriaCliente" class="box">
+    <hbox align="start" pack="center" >
       <vbox>
 	<description>Desde:</description>
 	<datepicker id="FechaBuscaCategoria" type="popup"
@@ -433,37 +430,40 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  <menupopup>
 	    <menuitem label="Todos" value="Todos" style="font-weight: bold" />
 	    <menuitem label="Borrador" value="Borrador"/>
-	    <menuitem label="Ejecucion" value="Ejecucion"/>
+	    <menuitem label="Ejecución" value="Ejecucion"/>
 	    <menuitem label="Finalizado" value="Finalizado"/>
 	  </menupopup>
 	</menulist>
       </vbox>
-      <vbox style="margin-top:1.2em">
+      <vbox style="margin-top:1em">
 	<menu>
-	  <toolbarbutton image="<?php echo $_BasePath; ?>img/gpos_busqueda_avanzada.png" />
+	  <toolbarbutton style="min-height: 2.7em;" 
+                         image="<?php echo $_BasePath; ?>img/gpos_busqueda_avanzada.png" />
 	  <menupopup >
-	    <menuitem type="checkbox" label="- Local"
+	    <menuitem type="checkbox" value="- Local" label="Local"
 		      oncommand = "BusquedaAvanzadaPromocionCliente(this);"/>
-	    <menuitem type="checkbox" label="- Fecha Registro"
+	    <menuitem type="checkbox" value="- Fecha Registro" label="Fecha Registro"
 		      oncommand = "BusquedaAvanzadaPromocionCliente(this);"/>
-	    <menuitem type="checkbox" label="- Descripcion"
+	    <menuitem type="checkbox" value="- Descripcion" label="Descripción"
 		      oncommand = "BusquedaAvanzadaPromocionCliente(this);"/>
-	    <menuitem type="checkbox" label="- Ventas Periodo"
+	    <menuitem type="checkbox" value="- Ventas Periodo" label="Ventas Periodo"
 		      oncommand = "BusquedaAvanzadaPromocionCliente(this);"/>
-	    <menuitem type="checkbox" label="- Motivo Promocion" checked="false"
+	    <menuitem type="checkbox" value="- Motivo Promocion" label="Motivo Promoción" 
+                      checked="false"
 		      oncommand = "BusquedaAvanzadaPromocionCliente(this);"/>
-	    <menuitem type="checkbox" label="- Usuario" checked="false"
+	    <menuitem type="checkbox" value="- Usuario" label="Usuario" checked="false"
 		      oncommand = "BusquedaAvanzadaPromocionCliente(this);"/>
 	  </menupopup>
 	</menu>
       </vbox>
-      <vbox style="margin-top:.9em">
-	<button id="btnbuscarCategoria" label=" Buscar " 
+      <vbox style="margin-top:1.1em">
+	<button id="btnbuscarCategoria" label=" Buscar " class="btn"
                 image="<?php echo $_BasePath; ?>img/gpos_buscar.png"
 		oncommand="BuscarPromocionCliente()"/>
       </vbox>
     </hbox>
   </vbox>
+  <spacer style="height:5px" class="box"/>
 </vbox>
 
 <listbox flex="1" id="listadoPromocionCliente" collapsed="true"
@@ -503,29 +503,28 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
     <listheader label=" # " style="font-style:italic;"/>
     <listheader label="Local" id="vlist-_Local" collapsed="true"/>
     <listheader label="Fecha Registro" id="vlist-_Fecha_Registro" collapsed="true"/>
-    <listheader label="Categoria Cliente"/>
-    <listheader label="Descripcion" id="vlist-_Descripcion" collapsed="true"/>
+    <listheader label="Categoría Cliente"/>
+    <listheader label="Descripción" id="vlist-_Descripcion" collapsed="true"/>
     <listheader label="Estado"/>
     <listheader label="Ventas Periodo" id="vlist-_Ventas_Periodo"/>
     <listheader label="Desde Monto Compra"/>
     <listheader label="Hasta Monto Compra" />
     <listheader label="Desde Cantidad Compra"/>
     <listheader label="Hasta Cantidad Compra"/>
-    <listheader label="Motivo Promocion" id="vlist-_Motivo_Promocion" collapsed="true"/>
+    <listheader label="Motivo Promoción" id="vlist-_Motivo_Promocion" collapsed="true"/>
     <listheader label="Usuario" id="vlist-_Usuario" collapsed="true"/>
     <listheader label=""/>
   </listhead>
 </listbox>
 
-<vbox id="boxFormPromocionCliente" collapsed="true" align="center"  pack="top">
+<vbox id="boxFormPromocionCliente" collapsed="true" align="center" pack="top" class="box">
   <vbox>
     <spacer style="height:6px"/>
     <vbox pack="center" align="center">
       <caption id="wtitleFormPromocionesCliente"
-	       style="padding:0.4em;font-size: 14px;font-weight: bold;"
+	       class="h1"
 	       label="<?php echo _("Nueva Categoría Cliente") ?>" />
     </vbox>
-    <spacer style="height:8px"/>
   </vbox>
   <hbox>
     <vbox>
@@ -533,13 +532,13 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <grid>
 	<rows>
 	  <row id="vboxCategoriaCliente">
-	    <description value="Categoría"/>
+	    <caption label="    Categoría"/>
 	    <textbox id="CategoriaCliente" value="" 
 		     onkeypress="return soloAlfaNumerico(event);"
 		     onchange="guardaPromocionCliente()"/>
 	  </row>
 	  <row id="vboxMotivoPromocion" collapsed="false">
-	    <description value="Historial Compra"/>
+	    <caption label="    Historial Compra"/>
 	    <menulist id="FiltroMotivoPromocion" label="FiltrosMotivoPromocion"
 		      oncommand="seleccionarMotitvoPromocion(this.value);
 				 guardaPromocionCliente()">
@@ -551,7 +550,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	    </menulist>
 	  </row>
 	  <row id="vboxHistorialVentaPeriodo" collapsed="false">
-	    <description value="Ventas Periodo"/>
+	    <caption label="    Ventas Periodo"/>
 	    <hbox>
 	      <menulist id="FiltroHistorialVentaPeriodo" label="Seleccione..." value='0'
 			editable="false"
@@ -566,7 +565,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  </row>
 	  <?php if(getSesionDato("esAlmacenCentral")){?>
 	  <row >
-	    <description value="Local"/>
+	    <caption label="    Local"/>
 	    <menulist id="DisponibilidadLocalCat"
 		      label="FiltrosDisponibilidadLocalCat"
 		      oncommand="guardaPromocionCliente()">
@@ -580,7 +579,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  <textbox id="DisponibilidadLocalCat" value="Actual" collapsed="true"/>
 	  <?php }?>
 	  <row id="rowDescripcionCategoria" collapsed="false">
-	    <description value="Descripción"/>
+	    <caption label="    Descripción"/>
 	    <textbox id="DescripcionCategoria" value=""
 		     multiline="true" rows="2"
 		     onkeypress="return soloAlfaNumerico(event);"
@@ -594,28 +593,28 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <caption label="Condición Categoría:"/>
       <grid>
 	<rows id="rowsMontoCompra">
-	  <description id="descMontoCompra" value="Monto Compra Histórica"/>
+	  <caption id="descMontoCompra" label="    Monto Compra Histórica"/>
 	  <row id="rowMontoCompraDesde">
-	    <description value="Desde"/>
+	    <caption label="    Desde"/>
 	    <textbox id="MontoCompraDesde" value="0"
 		     onkeypress="return soloNumerosEnteros(event,this.value);"
 		     onchange="guardaPromocionCliente()"/>
 	  </row>
 	  <row id="rowMontoCompraHasta">
-	    <description value="Hasta"/>
+	    <caption label="    Hasta"/>
 	    <textbox id="MontoCompraHasta" value="0"
 		     onkeypress="return soloNumerosEnteros(event,this.value);"
 		     onchange="guardaPromocionCliente()"/>
 	  </row>
-	  <description id="descCantidadCompra" value="Cantidad Compra Histórica" />
+	  <caption id="descCantidadCompra" label="    Cantidad Compra Histórica" />
 	  <row id="rowCantidadCompraDesde">
-	    <description value="Desde"/>
+	    <caption label="    Desde"/>
 	    <textbox id="CantidadCompraDesde" value="0"
 		     onkeypress="return soloNumerosEnteros(event,this.value);"
 		     onchange="guardaPromocionCliente()"/>
 	  </row>
 	  <row id="rowCantidadCompraHasta">
-	    <description value="Hasta"/>
+	    <caption label="    Hasta"/>
 	    <textbox id="CantidadCompraHasta" value="0"
 		     onkeypress="return soloNumerosEnteros(event,this.value);"
 		     onchange="guardaPromocionCliente()"/>
@@ -623,13 +622,13 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  <spacer style="height:1em"/>
 	  <caption label="Estado:"/>
 	  <row id="rowEstadoCategoriaCliente">
-	    <description value="Estado"/>
+	    <caption label="    Estado"/>
 	    <menulist id="FiltroEstadoCategoriaCliente" label="FiltrosEstadoCategoriaCliente"
 		      oncommand="guardaPromocionCliente()">
 	      <menupopup id="comboestadocategoriacliente">
 		<menuitem id="itmEstadoBorradorCat" label="Borrador"
 			  value="Borrador" selected="true"/>
-		<menuitem id="itmEstadoEjecucionCat" label="Ejecucion" value="Ejecucion"/>
+		<menuitem id="itmEstadoEjecucionCat" label="Ejecución" value="Ejecucion"/>
 		<menuitem id="itmEstadoFinalizadoCat" label="Finalizado"
 			  value="Finalizado" collapsed="true"/>
 		<menuitem id="itmEstadoEliminadoCat" label="Eliminado"
@@ -644,18 +643,15 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 </vbox>
 <!-- Categoría cliente -->
 
-
-
-<spacer style="height:1em"/>
-<vbox>
+<vbox class="box">
   <box flex="1"></box>
   <hbox flex="1">
     <button  flex="1" id="btnPromocion" style="font-weight: bold;font-size:11px;"
-	     class="media" image="<?php echo $_BasePath; ?>img/gpos_promo.png"  
+	     class="btn" image="<?php echo $_BasePath; ?>img/gpos_promo.png"  
              label=" Nueva Promoción"
 	     oncommand="mostrarFormPromocion('Nuevo')" <?php gulAdmite("Ventas") ?>  />
     <button  flex="1" id="btnCategoriaCliente" style="font-weight: bold;font-size:11px;"
-	     class="media" image="<?php echo $_BasePath; ?>img/gpos_catcliente.png"  
+	     class="btn" image="<?php echo $_BasePath; ?>img/gpos_catcliente.png"  
 	     label=" Categoría Cliente"
 	     oncommand="mostrarPromocionCliente('CategoriaCliente')" 
              <?php gulAdmite("Ventas") ?> />

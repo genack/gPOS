@@ -192,10 +192,10 @@ function selcKBoxSerie(){
 function quitareditarns(){
     var idex = xid('lista').selectedItem;
     if(!idex) return;
-    var xns  = idex.childNodes[1].attributes.getNamedItem('label').nodeValue;
+    var xns  = (idex.childNodes[1])? idex.childNodes[1].attributes.getNamedItem('label').nodeValue:'';
 
     xid("numerodeserie").value = xns;  
-    quitarns();
+    if( idex.childNodes[1] ) quitarns();
     xid("numerodeserie").focus();
 }
 function quitarns(){
@@ -212,7 +212,7 @@ function quitarns(){
     actualizarTotalNS();
 }
 
-function actualizar_carrito(id,unidades,modo,idpedidodet,fila,trasAlta){
+function actualizar_carrito(id,unidades,modo,idpedidodet,fila,trasAlta,esPopup=false){
 
     unidades = parseInt(unidades);
 
@@ -236,7 +236,7 @@ function actualizar_carrito(id,unidades,modo,idpedidodet,fila,trasAlta){
             alert("gPOS: \n\n"+ po_servidorocupadoseries);
 	var loadcart = (trasAlta==1)? false:true;	
 
-	terminar('Añadiendo N/S al carrito...',loadcart);
+	terminar('Añadiendo N/S al carrito...',loadcart,esPopup);
         break
 
     case "visualizarserieAgregaInventario" :
@@ -249,6 +249,18 @@ function actualizar_carrito(id,unidades,modo,idpedidodet,fila,trasAlta){
         var garantia = xid("fec_garantia").value;
 	//Termina
 	parent.setSeccionSeries(cadena,garantia);
+        break
+
+    case "visualizarserieAgregaInventarioAltaRapida" :
+        var resto=unidades-n;
+
+        if ( n<unidades )
+            return alert("gPOS: \n\n Falta Ingresar "+ resto + " Números de Serie." );
+	
+        var cadena   = cadenaNS();
+        var garantia = xid("fec_garantia").value;
+	//Termina
+	parent.setSeccionSeriesAltaRapida(cadena,garantia);
         break
 
     case "visualizarseriescart" :
@@ -266,7 +278,7 @@ function actualizar_carrito(id,unidades,modo,idpedidodet,fila,trasAlta){
             alert("gPOS: \n\n "+ po_servidorocupadoseries);	
 
 	parent.web.actualizarCantidadSeries(id,lista.itemCount,fila);
-	terminar('Añadiendo N/S al carrito...',false);
+	terminar('Añadiendo N/S al carrito...',false,false);
         break
 
 
@@ -308,7 +320,16 @@ function actualizar_carrito(id,unidades,modo,idpedidodet,fila,trasAlta){
     }
 }
 
-function terminar(aviso,loadcart){
+function terminarloadcart(){
+    //var plchck  = document.getElementById("pdListCheck").checked;
+    //aAltaRapida
+    parent.setWebBoxCollapsed(false);
+}
+
+function terminar(aviso,loadcart=false,esPopup=false){
+
+    if(esPopup) return terminarloadcart();
+
     var modo = (loadcart)? 'aAltaRapida':'hWebForm';
     var main = parent.getWebForm();
     main.setAttribute("src",'modulos/compras/progress.php?modo='+modo+'&aviso='+aviso);

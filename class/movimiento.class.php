@@ -7,6 +7,7 @@ function EntregarOperacionCaja($IdLocal,$cantidad,$concepto,$IdPartida,$operacio
   $IdLical         = ($IdLocal)? $IdLocal : CleanID(getSesionDato("IdTienda"));
   $modalidadpago   = "EFECTIVO";
   $IdModalidadPago = getIdFromMedio($modalidadpago);
+  $date = date('Y-m-d H:i:s');
 
   $mov = new movimiento;
   $mov->set("IdLocal", $IdLocal, FORCE);
@@ -22,6 +23,7 @@ function EntregarOperacionCaja($IdLocal,$cantidad,$concepto,$IdPartida,$operacio
   if($DocSubsid) $mov->set("DocSubsidiario",$DocSubsid,FORCE);
   if($CodDocSub) $mov->set("NDocSubsidiario",$CodDocSub,FORCE);
   if($IdTbjoSub) $mov->set("IdTbjoSubsidiario",$IdTbjoSub,FORCE);
+  $mov->set("FechaPago",$date,FORCE);
   
 
   if ($mov->Alta()) { 
@@ -33,44 +35,74 @@ function EntregarOperacionCaja($IdLocal,$cantidad,$concepto,$IdPartida,$operacio
 }
 
 	
-function EntregarCantidades($concepto, $IdLocal,$entregaEfectivo, $entregaBono, $entregaTarjeta,$IdComprobante,$TipoOperacion="Ingreso"){
+function EntregarCantidades($concepto, $IdLocal,$entregaEfectivo, $entregaBono, $entregaTarjeta,$IdComprobante,$TipoOperacion="Ingreso",$fechapago=false,$modalidadpago=1,$doccobro=false){
+
 	if($entregaEfectivo)
-		EntregarMetalico($IdLocal,$entregaEfectivo,$concepto,$IdComprobante,$TipoOperacion);
+	  EntregarMetalico($IdLocal,$entregaEfectivo,$concepto,$IdComprobante,$TipoOperacion,$fechapago,$modalidadpago,$doccobro);
 	if($entregaBono)
-		EntregarBono($IdLocal,$entregaBono,$concepto,$IdComprobante);
+	  EntregarBono($IdLocal,$entregaBono,$concepto,$IdComprobante,$fechapago);
 	if($entregaTarjeta)
-		EntregarTarjeta($IdLocal,$entregaTarjeta,$concepto,$IdComprobante);	
+	  EntregarTarjeta($IdLocal,$entregaTarjeta,$concepto,$IdComprobante,$doccobro,$fechapago);
+
 }	
 
-function EntregarMetalico($IdLocal,$entregado,$concepto,$IdComprobante=false,$TipoOperacion="SinEspecificar"){
+function EntregarMetalico($IdLocal,$entregado,$concepto,$IdComprobante=false,$TipoOperacion="SinEspecificar",$fechapago=false,$modalidadpago=1,$doccobro=false){
 	$mov = new Movimiento();
-	
+
 	$mov->SetComprobante($IdComprobante);
 	$mov->SetConcepto("Metalico: $concepto");
-	$mov->EntregaEnTienda($IdLocal,$entregado,"EFECTIVO");
+	$mov->EntregaEnTienda($IdLocal,$entregado,$modalidadpago);
+	$mov->set("FechaPago",$fechapago,FORCE,$doccobro);
 	
 	if ($TipoOperacion!="SinEspecificar")
 		$mov->SetTipoOperacion($TipoOperacion);
-	$mov->GuardaOperacion();			
+	$idopcaja = $mov->GuardaOperacion();
+
+	//if($modalidadpago != 1 || $modalidadpago != 9 )
+
+	switch($modalidadpago){
+	case '1':
+	case '9':
+	case '10':
+	  break;
+	default:
+	  if(!$fechapago){
+	    $oLocal = new local;
+	    $oLocal->Load($IdLocal);
+	    $idc = $oLocal->get("CuentaBancaria");
+
+	    $doccobro["id"]  = $idc;
+	    $doccobro["op"]  = '';
+	    $doccobro["doc"] = '';
+	    $doccobro["obs"] = '';
+	  }
+
+	  GuardarDocumentosCobros($idopcaja,$doccobro,$IdLocal);
+	}
 }
 
 
-function EntregarBono($IdLocal,$entregado,$concepto,$IdComprobante=false){
+function EntregarBono($IdLocal,$entregado,$concepto,$IdComprobante=false,$fechapago){
 	$mov = new Movimiento();
 	
 	$mov->SetComprobante($IdComprobante);
 	$mov->SetConcepto("Bono: $concepto");
-	$mov->EntregaEnTienda($IdLocal,$entregado,"BONO DE COMPRA");
-	$mov->GuardaOperacion();			
+	$mov->EntregaEnTienda($IdLocal,$entregado,10);
+	$mov->set("FechaPago",$fechapago,FORCE);
+	$idopcaja = $mov->GuardaOperacion();			
 }
 
-function EntregarTarjeta($IdLocal,$entregado,$concepto,$IdComprobante=false){
+function EntregarTarjeta($IdLocal,$entregado,$concepto,$IdComprobante=false,$doccobro=false,
+			 $fechapago){
 	$mov = new Movimiento();
 	
 	$mov->SetComprobante($IdComprobante);
 	$mov->SetConcepto("Tarjeta: $concepto");
-	$mov->EntregaEnTienda($IdLocal,$entregado,"TARJETA DE DEBITO");
-	$mov->GuardaOperacion();			
+	$mov->EntregaEnTienda($IdLocal,$entregado,5);
+	$mov->set("FechaPago",$fechapago,FORCE);
+	$idopcaja = $mov->GuardaOperacion();
+	
+	if($doccobro) GuardarDocumentosCobros($idopcaja,$doccobro,$IdLocal);
 }
 
 
@@ -127,9 +159,9 @@ class movimiento extends Cursor {
 			
 		//ModPago: efectivo, tarjeta, etc..
 
-		$IdModalidadPago = getIdFromMedio($mediodepago);
-		$this->set("IdModalidadPago",$IdModalidadPago,FORCE);
-		error(__FILE__ . __LINE__ ,"Info: medio es '$IdModalidadPago' ");
+		//$IdModalidadPago = getIdFromMedio($mediodepago);
+		$this->set("IdModalidadPago",$mediodepago,FORCE);
+		error(__FILE__ . __LINE__ ,"Info: medio es '$mediodepago' ");
 			
 		//NOTA: era valor absoluto.
 		$this->totalmovimiento += $entregado;				
@@ -138,18 +170,7 @@ class movimiento extends Cursor {
 	}
 	
 	function GuardaOperacion(){
-		/*  	 IdOperacionCaja   	int(11) 
-	 IdArqueoCaja  	int(11) 	 
-	 IdLocal  	smallint(6) 	 
-	 TipoOperacion  	enum('Ingreso', 'Gasto', 'Aportacion', 'Sustraccion') 	 
-	 FechaCaja  	date 	  	
-	 Concepto  	tinytext 	  	
-	 IdComprobante  	int(11) 	 
-	 IdAlbaran  	smallint(6) 	 
-	 Importe  	double 	 
-	 IdModalidadPago  	tinyint(4) 	 
-	 CuentaBancaria  	tinytext 	
-	 FechaInsercion  	datetime*/ 
+	        global $UltimaInsercion;
 	 	$IdComprobante 	 = $this->IdComprobante;
 	 	$IdLocal	 = $this->localOperacion;
 		$Concepto 	 = CleanRealMysql($this->Concepto);
@@ -161,19 +182,28 @@ class movimiento extends Cursor {
 	 	$IdArqueoCaja    = $this->GetArqueoActivo($IdLocal);
 		$TipoVenta       = getSesionDato("TipoVentaTPV");
 		$IdUsuario       = CleanID(getSesionDato("IdUsuario"));
+		$FechaPago       = ($this->get("FechaPago"))? "'".$this->get("FechaPago")."'":"NOW()";
+		
+		if($IdModalidadPago != 1){
+		  $fecha = ($this->get("FechaPago"))? $this->get("FechaPago"): date("Y-m-d");
+		  $date  = date_create($fecha);
+		  $fecha = date_format($date, 'Y-m-d');
+		  $xIdArqueoCaja = $this->getIdArqueoxFecha($fecha,$IdLocal);
+		  $IdArqueoCaja  = ($xIdArqueoCaja)? $xIdArqueoCaja : $IdArqueoCaja;
+		}
 
 	 	$values = "IdModalidadPago, Concepto, IdArqueoCaja, IdLocal,
                            TipoOperacion, FechaCaja, IdComprobante, Importe, 
-                           FechaInsercion, TipoVentaOperacion, IdUsuario";
+                           FechaInsercion, TipoVentaOperacion, IdUsuario, FechaPago";
 	 	$keys   = "'$IdModalidadPago','$Concepto','$IdArqueoCaja','$IdLocal',
                            '$TipoOperacion',CURDATE(),'$IdComprobante','$Importe', NOW(), 
-                           '$TipoVenta','$IdUsuario'";
+                           '$TipoVenta','$IdUsuario',$FechaPago ";
 	  
 	 
 	 
 	 	$sql = "INSERT INTO ges_dinero_movimientos ( $values ) VALUES ( $keys )";
 	 	$res = query($sql,"Creando un movimiento de dinero");
-		return $res;
+		return $UltimaInsercion;
 	}
 	
 	function GetArqueoActivo($IdLocal){
@@ -191,6 +221,22 @@ class movimiento extends Cursor {
 	  return intval($IdArqueo);		
 	}
 	
+	function getIdArqueoxFecha($fecha,$IdLocal){
+	  $TipoVenta = getSesionDato("TipoVentaTPV");
+	  $sql = 
+	    "SELECT IdArqueo ".
+	    "FROM   ges_arqueo_caja ".
+	    "WHERE  IdLocal   = $IdLocal ".
+	    "AND    Eliminado = 0 ".
+	    "AND    TipoVentaOperacion = '$TipoVenta' ".
+	    "AND    '$fecha' >= DATE(FechaApertura) ".
+	    "AND    '$fecha' <= DATE(FechaCierre) ".
+	    "ORDER BY IdArqueo DESC ".
+	    "LIMIT 1 ";
+	  $row = queryrow($sql,'Buscando arqueo de una fecha');
+	  $IdArqueo = $row["IdArqueo"];
+	  return intval($IdArqueo);			  
+	}
 	
 	function SetTipoOperacion($Tipo){
 		$this->TipoOperacion = $Tipo;
@@ -327,6 +373,11 @@ class movimiento extends Cursor {
 			return false;
 		}		
 		return true;
+	}
+
+	function getIdArqueMovimiento($Id){
+	  $this->Load($Id);
+	  return $this->get("IdArqueoCaja");
 	}
 }
 
@@ -465,7 +516,8 @@ function getTipoComprobante($IdComprobante,$IdLocal){
 }
 
 
-function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobante,$Items){
+function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobante,
+				$Items,$devolvermodo){
 
          $IdLocal         = getSesionDato("IdTiendaDependiente");
 	 $TipoVenta       = getSesionDato("TipoVentaTPV");
@@ -477,9 +529,18 @@ function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobant
 	 //++++++ COMPROBANTE ++++++++++++
 
 	 //Anula y Registra Devoluc Comprobante  
-	 if( !AnularNumeroComprobante($IdComprobante,$IdLocal) ) 
-	   registrarCodigoComprobanteOrigen($IdComprobante,$IdLocal,$Motivo,$TipoVenta);
-	 
+	 if( !AnularNumeroComprobante($IdComprobante,$IdLocal) )
+	   registrarCodigoComprobanteOrigen($IdComprobante,$IdLocal,$Motivo,$TipoVenta,
+					    $idDependiente);
+
+	 //Trae encabezado comprobante...
+	 $comprobante     = obtenerEncabezadoComprobanteVenta($IdComprobante);
+ 	 $IdCliente       = $comprobante["IdCliente"];
+	 $ImporteNeto     = $comprobante["ImporteNeto"];
+	 $ImporteImpuesto = $comprobante["ImporteImpuesto"];
+	 $TotalImporte    = $comprobante["TotalImporte"];
+	 $Impuesto        = $comprobante["Impuesto"];
+
 	 //++++++ CAJA ++++++++++++
 
 	 //registrar sustraccion por devolucion
@@ -488,25 +549,42 @@ function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobant
 	 $arqueo    = new movimiento;
 	 $IdArqueo  = $arqueo->GetArqueoActivo($IdLocal);
 	 $FechaCaja = $arqueo->getAperturaCaja($IdLocal,$TipoVenta);
-         if( $Monto > 0 ) EntregarOperacionCaja($IdLocal,$Monto,$concepto,$IdPartida,'Sustraccion',
-						$FechaCaja,$IdArqueo,$TipoVenta);
-  
-	 //++++++ PREVENTA ++++++++++++
+	 $MontoDevul= obtenerMontoDevolucion($IdComprobante,$IdLocal,1);
+	 $MontoBono = obtenerMontoDevolucion($IdComprobante,$IdLocal,10);
+	 $MontoCredito = obtenerMontoDevolucion($IdComprobante,$IdLocal,9);
+
+         if( $MontoDevul > 0 )
+	   switch($devolvermodo ){
+	   case "credito":    
+	     registrarMovimientoCreditoCliente($IdCliente,$MontoDevul,0,$IdLocal,
+					       $IdComprobante,$idDependiente,false);
+	     break;
+	   case "efectivo":
+	     EntregarOperacionCaja($IdLocal,$MontoDevul,$concepto,$IdPartida,'Sustraccion',
+				   $FechaCaja,$IdArqueo,$TipoVenta);
+	     break;
+	     
+	   }
+
+  	 //++++++ PREVENTA ++++++++++++
 
 	 $textDoc      = 'Preventa';
 	 $codDocumento = explode("-",NroComprobantePreVentaMax($IdLocal,$textDoc,$IdArqueo));
 	 $sreDocumento = ( $codDocumento[0] != $IdArqueo )? $IdArqueo:$codDocumento[0];
 	 $nroDocumento = ( $codDocumento[0] != $IdArqueo )? 1:$codDocumento[1];
 
-	 //trae comprobante...
-	 $sql= 
-	   " select IdCliente,ImporteNeto,ImporteImpuesto,".
-	   "        TotalImporte,Impuesto ".
-	   " from   ges_comprobantes ".
-	   " where  IdComprobante  = '".$IdComprobante."' ".
-	   " and    Eliminado      = 0 ";
-	 $res = query($sql);
-	 $row = Row($res);
+	 //Devuelve bono al cliente
+	 if($MontoBono > 0)
+	   registrarMovimientoBonoCliente($IdCliente,$MontoBono,0,$IdLocal,
+					  $IdComprobante,$idDependiente);
+
+	 //Devuelve credito al cliente
+	 if($MontoCredito > 0)
+	   registrarMovimientoCreditoCliente($IdCliente,$MontoCredito,0,$IdLocal,
+					     $IdComprobante,$idDependiente,false);
+
+	 //actualiza deuda cliente
+	 actualizarImportePendienteCliente($IdCliente);
 
 	 // crea preventa...
 	 Global $UltimaInsercion;
@@ -514,6 +592,8 @@ function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobant
 	 $Keys    = "IdLocal,";
 	 $Values  = "'".$IdLocal."',";
 	 $Keys   .= "IdUsuario,";
+	 $Values .= "'".$idDependiente."',";
+	 $Keys   .= "IdUsuarioRegistro,";
 	 $Values .= "'".$idDependiente."',";
 	 $Keys   .= "NPresupuesto,";
 	 $Values .= "'".$nroDocumento."',";
@@ -524,17 +604,17 @@ function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobant
 	 $Keys   .= "FechaPresupuesto,";
 	 $Values .= "NOW(),";
 	 $Keys   .= "ImporteNeto,";
-	 $Values .= "'".$row["ImporteNeto"]."',";
+	 $Values .= "'".$ImporteNeto."',";
 	 $Keys   .= "ImporteImpuesto,";
-	 $Values .= "'".$row["ImporteImpuesto"]."',";
+	 $Values .= "'".$ImporteImpuesto."',";
 	 $Keys   .= "Impuesto,";
-	 $Values .= "'".$row["Impuesto"]."',";
+	 $Values .= "'".$Impuesto."',";
 	 $Keys   .= "TotalImporte,";
-	 $Values .= "'".$row["TotalImporte"]."',";
+	 $Values .= "'".$TotalImporte."',";
 	 $Keys   .= "Status,";
 	 $Values .= "'Pendiente',";
 	 $Keys   .= "IdCliente,";
-	 $Values .= "'".$row["IdCliente"]."',";
+	 $Values .= "'".$IdCliente."',";
 	 $Keys   .= "ModoTPV,";
 	 $Values .= "'venta',";
 	 $Keys   .= "Serie";
@@ -546,7 +626,7 @@ function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobant
 	 $IdPresupuesto = $UltimaInsercion;  
 	 
 	 //Historial Venta...
-	 cargarVenta2HistorialVenta($row["IdCliente"],$row["TotalImporte"],false,false);
+	 cargarVenta2HistorialVenta($IdCliente,$TotalImporte,false,false);
 
 	 //++++++ DETALLE PREVENTA ++++++++++++
 
@@ -671,7 +751,7 @@ function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobant
 }
 
 function  RegistrarNumeroComprobante($nroDocumento,$IdComprobante,$TipoComprobante,
-				     $Serie,$tv=false,$Origen=false){
+				     $Serie,$tv=false,$Origen=false,$IdUsuario=false){
 
           $TipoVenta = ( $tv )?  $tv:getSesionDato("TipoVentaTPV");
 	  $IdLocal   = getSesionDato("IdTiendaDependiente");
@@ -680,11 +760,14 @@ function  RegistrarNumeroComprobante($nroDocumento,$IdComprobante,$TipoComproban
 	  $IdTipoComprobante = ObtenerIdTipoComprobante($IdLocal,
 							$TipoComprobante,
 							$Serie);
+	  $IdUsuario = ($IdUsuario)? $IdUsuario:getSesionDato("IdUsuario");
 
 	  $Keys    = " IdComprobante,"; 
 	  $Values  = "'$IdComprobante',"; 
 	  $Keys   .= " IdTipoComprobante,"; 
 	  $Values .= "'$IdTipoComprobante',";
+	  $Keys   .= " IdUsuario,"; 
+	  $Values .= "'$IdUsuario',";
 	  $Keys   .= " NumeroComprobante,"; 
 	  $Values .= "'$nroDocumento',"; 
 	  $Keys   .= " Status,";
@@ -695,9 +778,11 @@ function  RegistrarNumeroComprobante($nroDocumento,$IdComprobante,$TipoComproban
 	  $Values .= "'0'";
 	  $sql     = " insert into ges_comprobantesnum (".$Keys.") values (".$Values.")";
 	  query($sql);
+
+	  actualizarUsuarioComprobante($IdComprobante,$IdUsuario);
 }
 
-function ModificarNumeroComprobante($nroDocumento,$TipoComprobante,$IdComprobante,$accion,$Serie){
+function ModificarNumeroComprobante($nroDocumento,$TipoComprobante,$IdComprobante,$accion,$Serie,$IdUsuario){
 
   $IdLocal   = getSesionDato("IdTiendaDependiente");
   $IdTipoComprobante = ObtenerIdTipoComprobante($IdLocal,$TipoComprobante,$Serie);
@@ -721,10 +806,13 @@ function ModificarNumeroComprobante($nroDocumento,$TipoComprobante,$IdComprobant
 
   //Registra nuevo Nro
   if($n_nro)
-    RegistrarNumeroComprobante($nroDocumento,$IdComprobante,$TipoComprobante,$Serie,false,false);
+    RegistrarNumeroComprobante($nroDocumento,$IdComprobante,$TipoComprobante,$Serie,false,false,$IdUsuario);
+
+  $campoxdato = "Metalico: ".$TipoComprobante." Venta ".$Serie."-".$nroDocumento;
+  ModificarMovDocComprobante($IdComprobante,$campoxdato);
 }
 
-function FacturarNumeroComprobante($nroDocumento,$TipoComprobante,$IdComprobante,$accion,$Serie){
+function FacturarNumeroComprobante($nroDocumento,$TipoComprobante,$IdComprobante,$accion,$Serie,$IdUsuario){
 
          $IdLocal   = getSesionDato("IdTiendaDependiente");
 
@@ -732,8 +820,11 @@ function FacturarNumeroComprobante($nroDocumento,$TipoComprobante,$IdComprobante
 	   {
 	     //Liberamos el numero albaran comprobante & Registramos el nuevo numero comprobante
 	     if(!LiberarAlbaranComprobante($IdComprobante,$IdLocal))
-	       RegistrarNumeroComprobante($nroDocumento,$IdComprobante,'Factura',
-					  $Serie,false,false);
+	       {
+		 RegistrarNumeroComprobante($nroDocumento,$IdComprobante,'Factura',
+					    $Serie,false,false,$IdUsuario);
+		 ActualizarFechaEmisionComprobante($IdComprobante);
+	       }
 	 }
 	 
 	 if($accion=='Facturar' && $TipoComprobante=='Boleta')
@@ -742,20 +833,25 @@ function FacturarNumeroComprobante($nroDocumento,$TipoComprobante,$IdComprobante
 	     AnularNumeroComprobante($IdComprobante,$IdLocal);
 
 	     //Registramos el nuevo numero comprobante
-	     RegistrarNumeroComprobante($nroDocumento,$IdComprobante,'Factura',$Serie,false,false);
+	     RegistrarNumeroComprobante($nroDocumento,$IdComprobante,'Factura',$Serie,false,false,$IdUsuario);
+	     ActualizarFechaEmisionComprobante($IdComprobante);
 	   }
 	 
 	 if($accion=='Facturar' && $TipoComprobante=='Ticket')
 	   {
 	     //Liberamos el numero boleta comprobante
 	     AnularNumeroComprobante($IdComprobante,$IdLocal);
-
+	     
 	     //Registramos el nuevo numero comprobante
-	     RegistrarNumeroComprobante($nroDocumento,$IdComprobante,'Factura',$Serie,false,false);
+	     RegistrarNumeroComprobante($nroDocumento,$IdComprobante,'Factura',$Serie,false,false,$IdUsuario);
+	     ActualizarFechaEmisionComprobante($IdComprobante);
 	 }
+
+	 $campoxdato = "Metalico: Factura Venta ".$Serie."-".$nroDocumento;
+	 ModificarMovDocComprobante($IdComprobante,$campoxdato);
 }
 
-function FacturarLoteComprobante($nroDocumento,$ltAlbaran,$cliAlbaran,$Serie,$IdComprobante){
+function FacturarLoteComprobante($nroDocumento,$ltAlbaran,$cliAlbaran,$Serie,$IdComprobante,$IdUsuario){
   
   $IdLocal    = getSesionDato("IdTiendaDependiente");
   $altAlbaran = explode("-",$ltAlbaran);
@@ -764,6 +860,7 @@ function FacturarLoteComprobante($nroDocumento,$ltAlbaran,$cliAlbaran,$Serie,$Id
   $ImporteNeto  = 0;
   $IvaImporte   = 0;
   $TotalImporte = 0;
+  $ImportePendiente = 0;
   $Importes     = Array();
 
   foreach ($altAlbaran as $key=>$Id){
@@ -779,6 +876,7 @@ function FacturarLoteComprobante($nroDocumento,$ltAlbaran,$cliAlbaran,$Serie,$Id
     $ImporteNeto  += $Importes[0];
     $IvaImporte   += $Importes[1];
     $TotalImporte += $Importes[2];
+    $ImportePendiente += $Importes[3];
 
   }
   
@@ -788,9 +886,10 @@ function FacturarLoteComprobante($nroDocumento,$ltAlbaran,$cliAlbaran,$Serie,$Id
 					       $TotalImporte,
 					       $cliAlbaran,
 					       $Serie,
+					       $ImportePendiente,
 					       $nroDocumento,$listIdNum);
   //Registramos el nuevo numero Factura IdComprobante en ges_comprobantesnum
-  RegistrarNumeroComprobante($nroDocumento,$IdComprobante,'Factura',$Serie,false,false);
+  RegistrarNumeroComprobante($nroDocumento,$IdComprobante,'Factura',$Serie,false,false,$IdUsuario);
 
   //Registra nuevo IdComprobante   en ges_comprobantesdet 
   foreach ($altAlbaran as $key=>$Id){
@@ -817,7 +916,7 @@ function getImporteFromComprobante($Id){
 
   $imp = Array();//Lista importes
   $sql = 
-    "SELECT ImporteNeto,ImporteImpuesto,TotalImporte ".
+    "SELECT ImporteNeto,ImporteImpuesto,TotalImporte,ImportePendiente ".
     "FROM   ges_comprobantes ".
     "WHERE  IdComprobante = '".$Id."'"; 
   $res = query($sql);
@@ -826,12 +925,14 @@ function getImporteFromComprobante($Id){
     array_push($imp,
 	       $row["ImporteNeto"],
 	       $row["ImporteImpuesto"],
-	       $row["TotalImporte"]);//add importe
+	       $row["TotalImporte"],
+	       $row["ImportePendiente"]);//add importe
   }
   return $imp;
 }
 
-function RegistrarComprobanteFactura($ImporteNeto,$IvaImporte,$TotalImporte,$IdCliente,$Serie,$Num,$listIdNum){
+function RegistrarComprobanteFactura($ImporteNeto,$IvaImporte,$TotalImporte,$IdCliente,$Serie,
+				     $ImportePendiente,$Num,$listIdNum){
 
   global $UltimaInsercion; 
   $IdLocal       = getSesionDato("IdTiendaDependiente");
@@ -839,8 +940,7 @@ function RegistrarComprobanteFactura($ImporteNeto,$IvaImporte,$TotalImporte,$IdC
   $TipoVenta     = getSesionDato("TipoVentaTPV");
   $IGV           = getSesionDato("IGV");    
   $IdAlbaran     = implode(",",$listIdNum); 
-  $ImportePendiente = $TotalImporte;
-  $Status        = 1;
+  $Status        = ($ImportePendiente > 0.01)? 1:2;
   $Serie         = "CS".$Serie;  
   $Num           = getNumSerieTicket($Serie);
   $esquema =
@@ -860,7 +960,7 @@ function RegistrarComprobanteFactura($ImporteNeto,$IvaImporte,$TotalImporte,$IdC
   return $UltimaInsercion;
 }
 
-function BoletarNumeroComprobante($nroDocumento,$TipoComprobante,$IdComprobante,$accion,$Serie){
+function BoletarNumeroComprobante($nroDocumento,$TipoComprobante,$IdComprobante,$accion,$Serie,$IdUsuario){
 
          $IdLocal           = getSesionDato("IdTiendaDependiente");
 	 $IdTipoComprobante = ObtenerIdTipoComprobante($IdLocal,$TipoComprobante,$Serie);
@@ -874,7 +974,7 @@ function BoletarNumeroComprobante($nroDocumento,$TipoComprobante,$IdComprobante,
 	     RegistrarNumeroComprobante($nroDocumento,
 					$IdComprobante,
 					'Boleta',
-					$Serie,false,false);
+					$Serie,false,false,$IdUsuario);
 	 }
 	 
 	 if($accion=='Boletar' && $TipoComprobante=='Ticket'){
@@ -884,8 +984,11 @@ function BoletarNumeroComprobante($nroDocumento,$TipoComprobante,$IdComprobante,
 	   RegistrarNumeroComprobante($nroDocumento,
 				      $IdComprobante,
 				      'Boleta',
-				      $Serie,false,false);
+				      $Serie,false,false,$IdUsuario);
 	 }
+
+	 $campoxdato = "Metalico: Boleta Venta ".$Serie."-".$nroDocumento;
+	 ModificarMovDocComprobante($IdComprobante,$campoxdato);
 }
 
 function LiberarAlbaranComprobante($IdComprobante,$IdLocal){
@@ -936,6 +1039,16 @@ function EliminarNumeroComprobante($IdComprobante,$IdLocal){
 	 echo query($sql);
 }
 
+function ActualizarFechaEmisionComprobante($IdComprobante){
+
+         $IdComprobante = CleanID($IdComprobante);
+	 $sql = "UPDATE ges_comprobantes 
+                 SET    FechaComprobante  = Now()
+                 WHERE  IdComprobante     = '$IdComprobante'
+                 AND    Eliminado         = '0'";
+	 query($sql);
+}
+
 function ObtenerIdTipoComprobante($IdLocal,$textDoc,$Serie){
 
          $sql =
@@ -976,7 +1089,7 @@ function getNumSerieTicket($Serie){
          $sql = 
 	   " select NComprobante".
 	   " from   ges_comprobantes ".
-	   " where  SerieComprobante like '".$serie."'".
+	   " where  SerieComprobante like '".$Serie."'".
 	   " order  by NComprobante desc ".
 	   " limit  0 , 1";
 	 $res=query($sql);
@@ -1445,19 +1558,6 @@ function obtenerPartidaCaja($Partida,$TipoVenta){
     return $row["IdPartidaCaja"];
 }
 
-function crearPartidaCaja($IdLocal,$Partida,$Operacion,$TipoVenta){
-    $IdLocal   = CleanID($IdLocal);
-    $Partida   = CleanText($Partida);
-    $Operacion = CleanText($Operacion);
-    $TipoVenta = CleanText($TipoVenta);
-
-    $listkey   = "IdLocal, PartidaCaja, TipoOperacion, TipoCaja ";
-    $values    = "'$IdLocal', '$Partida', '$Operacion', '$TipoVenta' ";
-
-    $sql       = "INSERT ges_partidascaja ($listkey) VALUES ($values)";
-    $row       = queryrow($sql);
-}
-
 function ObtenerDocumentoServicio($IdTbjoSub){
   $sql = "SELECT CONCAT(DocSubsidiario,'~',NDocSubsidiario) as DocServicio ".
          "FROM ges_dinero_movimientos ".
@@ -1497,6 +1597,226 @@ function setSyncTPV($xkey){
     " WHERE  KeySync   = '".$keysync."' ".
     " AND    Eliminado = '0'";
   query($sql);
+}
+
+function ModificarMovDocComprobante($xid,$campoxdato){
+  $Id  = CleanID($xid);
+  $sql = "SELECT CONCAT(SerieComprobante,'-',NComprobante) as Codigo  
+          FROM ges_comprobantes 
+          WHERE IdComprobante = $Id ";
+  $row = queryrow($sql);
+  $cod = $row["Codigo"];
+  $campoxdato = "Concepto= '".$campoxdato." Cod ".$cod."'";
+
+  $Tb         = 'ges_dinero_movimientos';
+  $IdKey      = 'IdComprobante';
+  $KeysValue  = $campoxdato;
+  $sql   =
+    " update ".$Tb.
+    " set    ".$KeysValue." ".
+    " where  ".$IdKey." = ".$Id;	
+  query($sql); 
+  
+}
+
+function ModificarFechaDineroMovimiento($IdComprobante,$fecha){
+  $IdLocal  = getSesionDato("IdTienda");
+  $arqueo   = new movimiento;
+  $IdArqueo = $arqueo->GetArqueoActivo($IdLocal);
+
+  $sql = "SELECT  IdOperacionCaja  
+          FROM ges_dinero_movimientos 
+          WHERE IdComprobante = $IdComprobante
+          AND IdArqueoCaja = $IdArqueo ";
+
+  if(nroRows($sql) != 1) return;
+
+  $row = queryrow($sql);
+  $IdOperacionCaja = $row["IdOperacionCaja"];
+
+  ActualizarFechaDineroMovimiento($IdOperacionCaja,$fecha,$IdComprobante);
+}
+
+function ActualizarFechaDineroMovimiento($IdOperacionCaja,$fecha,$IdComprobante){
+  $sql = "UPDATE ges_dinero_movimientos ".
+         "SET FechaCaja = DATE('$fecha'), ".
+         "FechaPago = '$fecha' ".
+         "WHERE IdOperacionCaja = $IdOperacionCaja ".
+         "AND IdComprobante = $IdComprobante ";
+  query($sql);
+}
+
+function esCerradaCaja($IdArqueo){
+  $sql = "SELECT  esCerrada, FechaApertura  
+          FROM ges_arqueo_caja 
+          WHERE IdArqueo = $IdArqueo ";
+  
+  $row = queryrow($sql);  
+
+  return $row["esCerrada"]."~".$row["FechaApertura"];
+}
+
+function ValidarFechaAperturaCaja($Fecha){
+  $IdLocal  = getSesionDato("IdTienda");
+  $arqueo   = new movimiento;
+  $IdArqueo = $arqueo->GetArqueoActivo($IdLocal);
+  $xcaja    = explode("~",esCerradaCaja($IdArqueo));
+
+  $datecaja = new DateTime($xcaja[1]);
+  $datenew  = new DateTime($Fecha);
+
+  if($datenew < $datecaja)
+    return "~".$Fecha."~".$xcaja[1];
+  else
+    return "1";
+}
+
+function GuardarDocumentosCobros($idopcaja,$doccobro,$IdLocal){
+  $IdUsuario       = CleanID(getSesionDato("IdUsuario"));
+
+  $values = "IdLocal, IdUsuario, IdOperacionCaja, IdCuentaBancaria,
+             CodOperacion, NumDocumento, Observaciones";
+  $keys   = "'$IdLocal','$IdUsuario','$idopcaja','".$doccobro["id"]."',
+             '".$doccobro["op"]."','".$doccobro["doc"]."','".$doccobro["obs"]."'";
+    
+  $sql = "INSERT INTO ges_cobrosclientedoc ( $values ) VALUES ( $keys )";
+  $res = query($sql);
+}
+
+function ckCodigoAutorizacionTPV($xid,$xaccion,$xcod=false){
+
+  switch($xaccion) {
+  case "ck":    $xcodauto = getCodAutorizacion($xid); break;
+  case "ckcliente":    $xcodauto = getCodAutorizacionCliente($xid); break;
+  case "val":   $xcodauto = valCodAutorizacion($xid,$xcod); break;
+  case "valcliente":   $xcodauto = valCodAutorizacionCliente($xid,$xcod); break;
+  case "resetck":	$xcodauto = getNewCodAutorizacion($xid); break;
+  case "resetckcliente":    $xcodauto = getNewCodAutorizacionCliente($xid); break;
+  }
+  return "0~".$xcodauto;
+}
+
+function valCodAutorizacion($xid,$xcod){ 
+  $xcod = $xcod.'~0';
+  return ( getCodAutorizacion($xid) == $xcod ); 
+}
+
+function valCodAutorizacionCliente($xid,$xcod){ 
+  $xcod = $xcod.'~0';
+  return ( getCodAutorizacionCliente($xid) == $xcod ); 
+}
+
+function getCodAutorizacion($xid){
+    $sql = " select CodigoValidacion ".
+           " from   ges_comprobantes ".
+           " where  IdComprobante = '".$xid."'"; 
+    $row = queryrow($sql);     
+
+    if (!$row)
+      return false;
+
+    if ( $row["CodigoValidacion"] == '')
+      return getNewCodAutorizacion($xid);
+
+    return $row["CodigoValidacion"].'~0';
+}
+
+function getCodAutorizacionCliente($xid){
+    $sql = " select CodigoValidacion ".
+           " from   ges_clientes ".
+           " where  IdCliente = '".$xid."'"; 
+    $row = queryrow($sql);     
+
+    if (!$row)
+      return false;
+
+    if ( $row["CodigoValidacion"] == '')
+      return getNewCodAutorizacionCliente($xid);
+
+    return $row["CodigoValidacion"].'~0';
+}
+
+function setCodAutorizacionComprobante($xid,$xcodauto){
+  $sql      = " update ges_comprobantes ".
+              " set    CodigoValidacion = '$xcodauto'".
+              " where  IdComprobante    = ".$xid;
+  return query($sql);  
+}
+
+function setCodAutorizacionCliente($xid,$xcodauto){
+  $sql      = " update ges_clientes ".
+              " set    CodigoValidacion = '$xcodauto'".
+              " where  IdCliente    = ".$xid;
+  return query($sql);  
+}
+
+function setearCodAutorizacionComprobante(){
+  $IdLocal    = CleanID(getSesionDato("IdTienda"));
+  $TipoVenta  = getSesionDato("TipoVentaTPV");
+  $sql        = " update ges_comprobantes ".
+                " set    CodigoValidacion = ''".
+                " where  IdLocal    = ".$IdLocal.
+                " and    TipoVentaOperacion = '".$TipoVenta."'";
+  return query($sql);  
+}
+
+function getNewCodAutorizacion($xid){
+  
+  $xcodauto = strtoupper( generarclaveAlfaNumeria(4) );
+
+  if( setCodAutorizacionComprobante($xid,$xcodauto) ) 
+    return $xcodauto;
+
+}
+
+function getNewCodAutorizacionCliente($xid){
+  
+  $xcodauto = strtoupper( generarclaveAlfaNumeria(4) );
+
+  if( setCodAutorizacionCliente($xid,$xcodauto) ) 
+    return $xcodauto;
+
+}
+
+function actualizarUsuarioComprobante($IdComprobante,$IdUsuario){
+  $sql = "update ges_comprobantes SET IdUsuario = '$IdUsuario' 
+          WHERE IdComprobante = '$IdComprobante'";
+  query($sql);
+}
+
+function obtenerMontoDevolucion($IdComprobante,$IdLocal,$IdModalidad){
+  $sql = "SELECT SUM(Importe) as Importe ".
+         "FROM ges_dinero_movimientos ".
+         "WHERE IdComprobante = '$IdComprobante' ".
+         "AND IdLocal = '$IdLocal' ".
+         "AND IdModalidadPago = '$IdModalidad' ";
+
+  $row = queryrow($sql);
+  
+  if($row["Importe"] == '') return 0;
+  return ($row["Importe"] <= 0)? 0:$row["Importe"];
+}
+
+function obtenerEncabezadoComprobanteVenta($IdComprobante){
+	 $sql= 
+	   " select IdCliente,ImporteNeto,ImporteImpuesto,".
+	   "        TotalImporte,Impuesto ".
+	   " from   ges_comprobantes ".
+	   " where  IdComprobante  = '".$IdComprobante."' ".
+	   " and    Eliminado      = 0 ";
+	 $res = query($sql);
+	 $row = Row($res);
+	 return $row;
+}
+
+function verificarCodigoOperacion($codop,$idcuenta){
+  $sql = "SELECT CodOperacion FROM ges_cobrosclientedoc 
+          WHERE CodOperacion = '$codop' AND IdCuentaBancaria = '$idcuenta' LIMIT 1";
+
+  $row = queryrow($sql);
+  if(!$row || $row["CodOperacion"] == '000000')
+    return false;
+  return $row["CodOperacion"];
 }
 
 ?>

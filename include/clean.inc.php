@@ -348,9 +348,10 @@ function esTelefonoValido($tel){
 
 function FormatMoney($val) {
 	$val = CleanDinero($val);
+	$Moneda = getSesionDato("Moneda");
 	//return htmlentities(money_format('%.2n Soles', $val),ENT_QUOTES,'ISO-8859-15');
-	//return money_format('%.2n Soles', $val);
-	return number_format($val, 2, ',', ""). " Soles";
+	return money_format($Moneda[1]['S'].' %.2n ', $val);
+	//return number_format($val, 2, ',', ""). " Soles";
 }
 
 function FormatUnits($val) {
@@ -374,6 +375,16 @@ if(function_exists("iconv")) {
 	function utf8iso($text){
 		return $text;		
 	}			
+}
+
+function CleanTextExt($text,$to=" ")  {
+	$text = str_replace("'",$to,$text);
+	$text = str_replace("\\",$to,$text);
+	$text = str_replace(" ",$to,$text);
+	$text = str_replace(";",$to,$text);
+	$text = str_replace("\t",$to,$text);
+	
+	return $text;	
 }
 
 

@@ -147,7 +147,8 @@ function mostrarFormPromocion(xvalue){
     }
 
     id("wtitleFormPromociones").label=xtitulo;//setAttribute('label',xtitulo);
-    id("vboxFormPromocion").setAttribute('collapsed',false)
+    id("vboxFormPromocion").setAttribute('collapsed',false);
+    id("resumenPromociones").setAttribute("collapsed",true);
 }
 
 function mostrarEstadoPromocion(){
@@ -443,6 +444,7 @@ function BuscarPromocion(){
     synccomboCategoriaCliente();
 
     id("vboxFormPromocion").setAttribute('collapsed',true);
+    id("resumenPromociones").setAttribute("collapsed",false);
 }
 
 function VaciarBusquedaPromocion(){
@@ -766,7 +768,7 @@ function RevisarPromocionSeleccionada(){
 function mostrarBusquedaAvanzada(xthis){
 
     var xchecked = (xthis.getAttribute('checked'))? false:true;
-    var xlabel   = xthis.label.replace(" ","_");
+    var xlabel   = xthis.value.replace(" ","_");
 
     switch(xlabel){
     case "Tipo": 
@@ -874,6 +876,7 @@ function mostrarPromocionCliente(xvalue){
 	titulopcliente= true;
 	listcatcliente= true;
 	synccomboCategoriaCliente();
+	var esresumen = false;
 	break;
     case 'CategoriaCliente':
         BuscarPromocionCliente();
@@ -885,7 +888,7 @@ function mostrarPromocionCliente(xvalue){
 	vboxpromocion = true;
 	listpromocion = true;
 	seleccionarMotitvoPromocion('MontoCompra');
-
+	var esresumen = true;
 	break;
     }
 
@@ -901,6 +904,7 @@ function mostrarPromocionCliente(xvalue){
     id("btnCategoriaCliente").setAttribute("oncommand",btncatcliente);
     id("btnCategoriaCliente").setAttribute("label",lblcatcliente);
     id("hboxPromocionClientes").setAttribute('collapsed',titulopcliente);
+    id("resumenPromociones").setAttribute("collapsed",esresumen);
 }
 
 function mostrarFormPromocionCliente(xvalue){
@@ -943,7 +947,7 @@ function mostrarFormPromocionCliente(xvalue){
 
     id("wtitleFormPromocionesCliente").setAttribute('label',ztitulo);
     id("boxFormPromocionCliente").setAttribute('collapsed',false);
-
+    id("resumenPromociones").setAttribute("collapsed",true);
 }
 
 function seleccionarMotitvoPromocion(xvalue){
@@ -1461,7 +1465,7 @@ function RevisarPromocionClienteSeleccionada(){
 function BusquedaAvanzadaPromocionCliente(xthis){
 
     var xchecked = (xthis.getAttribute('checked'))? false:true;
-    var xlabel   = xthis.label.replace(/ /g,"_");
+    var xlabel   = xthis.value.replace(/ /g,"_");
 
     switch(xlabel){
     case "-_Local" : 
@@ -1600,12 +1604,12 @@ function guardaHistorialVentaPeriodo(){
     }
 
     if(HistorialPeriodo != 'Nuevo' && HistorialVenta != gHVPeriodo && HistorialVenta > 0)
-	if(!confirm('gPOS:\n        Categoria Cliente: '+
+	if(!confirm('gPOS:\n        Categoría Cliente: '+
 		    Categoria+'\n\n         -  Aplicar nuevo Periodo Venta -'+
 		    'Últimos '+HistorialVenta+' meses-, ¿estas seguro?')) return RevisarPromocionClienteSeleccionada();
 
     if(esEliminar == 1){
-	if(!confirm('gPOS:\n        Categoria Cliente: '+
+	if(!confirm('gPOS:\n        Categoría Cliente: '+
 		    Categoria+'\n\n         -  Eliminar Periodo Venta -'+
 		    'Últimos '+gHVPeriodo+' meses-, ¿estas seguro?')) return RevisarPromocionClienteSeleccionada();
 	HistorialVenta = gHVPeriodo;

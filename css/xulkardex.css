@@ -1,24 +1,26 @@
-.parrowkardex{ 
-               background-color:#BCBBBA;
-               padding-top:2.5px;   
-               }
-.imparrowkardex{ 
-                 background-color:transparent;
-                 padding-top:2.5px;   
-                 }
 .parselrowkardex,
 .imparselrowkardex,
+.ldparrowkardex,
+.parrowkardex,
+.imparrowkardex{ padding-top:8px;
+                 padding-bottom:4px; 
+                 border-bottom-color: #eee;
+                 border-bottom-style: solid;
+                 border-bottom-width: 1px;
+                 }
+
 .parrowkardex:hover,
-.imparrowkardex:hover{ 
-                       background-color:#2A2A2A;
-                       color:#E7E7E7;
-                       padding-top:2.5px;   
+.imparrowkardex:hover{ background-color:#D7EDF4;
+                       padding-top:8px;
+                       padding-bottom:4px;
                        }
 .parselrowkardex,
-.imparselrowkardex{
-                    color: #00AAF6;
-                    /**font-weight:bold;**/
-                    }
+.imparselrowkardex{ background-color:#EFE0DE;
+                    color: #00AAF6;}
+
+row.ldparrowkardex { padding-top:0px; padding-bottom:0px;}
+.ldparrowkardex:hover{ background-color:#D7EDF4; }
+
 .parselrowkardex:hover,
 .imparselrowkardex:hover{
                           color:#E7E7E7;
@@ -26,11 +28,17 @@
                           }
 #boxmovimientos{ 
                  overflow: auto;
-                 border:1px solid #8E8E8E;
-                 background-color:#AAAAAA;
-                 margin:0.1em 1em 1.5em
+                 border:0px solid #8E8E8E;
+                 background-color:#f9f9f9;
+                 /* margin:0.1em 1em 1.5em */
+                 }
+#boxvencimientos{ 
+                 overflow: auto;
+                 border:0px solid #8E8E8E;
+                 background-color:#f9f9f9;
+                 /*margin:0.1em 1em 0em 0.1em */
                  }
 #boxmovimientosbuscar{ 
-                       background-color: #d7d7d7;padding:3px;
+                       background-color: #f9f9f9;padding:3px;
                        padding-top:0.6em;
  }

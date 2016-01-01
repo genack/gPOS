@@ -3,29 +3,37 @@
 include("../../tool.php");
 
 SimpleAutentificacionAutomatica("visual-xulframe");
-header("Content-type: application/vnd.mozilla.xul+xml");
-
-//StartXul(_("Compras")); 
-
-echo '<?xml version="1.0" encoding="UTF-8"?>';
-echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';
-echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 
 define("TALLAJE_DEFECTO",5);
 $TallajeDefecto = "Varios";
 $op = new Producto();
 $op->Crea(); 
 
+// ---clonar ---
+$esClonar            = ( isset($_GET["clonidbase"]) );
+$cAccion             = ($esClonar)? 'clon':'alta';
+$idproducto          = ($esClonar)? CleanID($_GET["clonidbase"]):0;
+$DetProducto         = ($esClonar)? getDatosProductosExtra($idproducto,'clon'):Array();
+$IdEmpaque           = ($esClonar)? $DetProducto["IdContenedor"]:false;
+$UnidadMedida        = ($esClonar)? $DetProducto["Und"]:'Uni';
+$UnidxEmp            = ($esClonar)? $DetProducto["UndxEmp"]:2;
+$idcolor             = ($esClonar)? $DetProducto["IdColor"]:false;
+$idtalla             = ($esClonar)? $DetProducto["IdTalla"]:32;
+$laboratorio         = ($esClonar)? $DetProducto["Lab"]:"";
+$txtAltaRapida       = ($esClonar)? "Clonar Producto - ".$DetProducto["Nombre"]." ".$DetProducto["Marca"]." ".$DetProducto["Lab"]:"Alta Rápida";
+$txtAlias0           = ($esClonar)? $DetProducto["Alias0"]:"";
+$txtAlias1           = ($esClonar)? $DetProducto["Alias1"]:"";
+//---clonar
+
 $modo                = CleanText($_GET["modo"]);
-$Referencia          = $op->get("Referencia");
-//$Nombre              = $op->get("Nombre");
-$Marca 	             = _("Generico");
-$FamDefecto          = _("Varias");
+$Referencia          = ($esClonar)? $DetProducto["Referencia"]:$op->get("Referencia");
+$Marca 	             = ($esClonar)? $DetProducto["Marca"]:_("Generico");
 $primerCB            = $op->get("CodigoBarras");
-$IdFamiliaDefecto    = getFirstNotNull("ges_familias","IdFamilia");
-$IdSubFamiliaDefecto = getSubFamiliaAleatoria($IdFamiliaDefecto );
+$IdFamiliaDefecto    = ($esClonar)? $DetProducto["IdFamilia"]:getFirstNotNull("ges_familias","IdFamilia");
+$IdSubFamiliaDefecto = ($esClonar)? $DetProducto["IdSubFamilia"]:getSubFamiliaAleatoria($IdFamiliaDefecto );
 $FamDefecto          = getIdFamilia2Texto($IdFamiliaDefecto ) . " - " .getIdSubFamilia2Texto( $IdFamiliaDefecto,$IdSubFamiliaDefecto );
-$Nombre      = '';
+$Nombre      = ($esClonar)? $DetProducto["Nombre"]:'';
+
 $txtMoDet    = getModeloDetalle2txt();
 $esBTCA      = ( $txtMoDet[0] == "BTCA" );
 $txtModelo   = $txtMoDet[1];
@@ -34,44 +42,59 @@ $txtalias    = $txtMoDet[3];
 $txtref      = $txtMoDet[4];
 $btca        = ( $esBTCA )?'false':'true';
 
-$esInvent    = ( $modo=='altainventario')? true:false;
+$esInvent    = ( $modo=='altainventario');
 $btnAlta     = ($esInvent)? "AltaProductoInventario()":"AltaProducto()";
 $lbtnAlta    = ($esInvent)? " Registrar...":" Comprar...";
 $ibtnAlta    = ($esInvent)? "$_BasePath"."img/gpos_registrarinventarioalta.png":"$_BasePath"."img/gpos_compras.png";
 $btnVaciar   = ($esInvent)? "parent.volverStock()":"volverPresupuestos()";
 $lbtnVaciar  = ($esInvent)? " Volver Stock":" Volver Presupuestos";
+$tituloAlta  = ($esInvent)? "true":"false";
 $ibtnVaciar  = ($esInvent)? "$_BasePath"."img/gpos_volver.png":"$_BasePath"."img/gpos_volver.png";
 
 $DSTOGR      = getSesionDato("DescuentoTienda");
 $MUGR        = getSesionDato("MargenUtilidad");
 $COPImpuesto = getSesionDato("COPImpuesto");
 $MetodoRedondeo = getSesionDato("MetodoRedondeo");
+$detadoc      = getSesionDato("detadoc");
+$Moneda       = getSesionDato("Moneda");
 
+$incimpuesto  = ($esInvent)? "false":getSesionDato("incImpuestoDet");
+$impuesto     = ( $incimpuesto=="true" )? 0:getSesionDato("IGV");
+
+$tipomoneda   = $detadoc[5];
+$tipocambio   = ( $detadoc[6] != '')? $detadoc[6]:1;
+$tipocambio   = (!$esInvent && $tipomoneda == 2)? $tipocambio:1;
+$txtcosto     = (!$esInvent )? $Moneda[ $tipomoneda ]['S']:$Moneda[1]['S'];
+$txtprecio    = $Moneda[1]['S'];
+
+StartXul('Alta Rapida',$predata="",$css='');
+StartJs($js='modulos/altarapida/altarapida.js?v=3.1');
 ?>
-
-<window id="CompraVista" title="Alta Rápida" 
-	xmlns:html="http://www.w3.org/1999/xhtml"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
   <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/cadenas.js.php?a=4"/>
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js"/>
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/altarapida/altarapida.js?a=4"/>
+
 <!--  no-visuales -->
 <?php include("altarapidamenu.php"); ?>
 <!--  no-visuales -->
+      <hbox class="box">	
+	<html:div id='box-popup' class='box-popup-off'><html:span class='closepopup' onclick='closepopup()'></html:span>
+	<html:iframe id='windowpopup' name='windowpopup' src='about:blank' width='100%' style='border: 0' height='100%'  onload='if(this.src != "about:blank" ) loadFocusPopup()'></html:iframe> 
+	</html:div>
+      </hbox>	
 
-<spacer style="height:2px"/>
-<hbox pack="center">
-  <caption style="font-size: 14px;font-weight: bold;">
-    <?php echo _("Alta Rápida") ?>
+<hbox pack="center" class="box" collapsed="<?php echo $tituloAlta; ?>">
+  <caption class="h1">
+    <?php echo $txtAltaRapida ?>
   </caption>
 </hbox>
-<spacer style="height:1px"/>
 
-<hbox>
+<hbox pack="center" align="center" class="box">
+  <caption id="msjAltaRapida" style="margin-top:.6em;font-size: 12px;font-style: italic;font-weight: bold;" 
+	   label="" collapsed="true"/>
+</hbox>
 
+<hbox class="box" flex="1">
 <groupbox>
-<caption label="Características"/>
+<caption class="box" label="<?php echo $txtAltaRapida ?>" flex="1"/>
 <!-- alta de prod -->
 <grid> 
   <rows> 
@@ -84,7 +107,7 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
 
     <row>
       <caption class="media" label="Código Barras"/>
-      <textbox style="min-width: 7em" class="media" id="CB" value="<?php echo $primerCB ?>"
+      <textbox class="media" id="CB" value="<?php echo $primerCB ?>"
                onkeypress="return soloNumeros(event,this.value);"/>
     </row>
 
@@ -98,8 +121,7 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
      <row>
       <caption class="media" label="Prov. hab"/>
       <box>
-	<toolbarbutton id="lProvHab" style="width: 32px !important" 
-		       oncommand="CogeProvHab()" label="+"/>
+	<toolbarbutton class="btn" id="lProvHab" oncommand="CogeProvHab()" label="+"/>
 	<textbox class="media" id="ProvHab" readonly="true" flex="1"/>
       </box>
     </row>
@@ -107,9 +129,8 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
     <row  collapsed="<?php echo $btca;?>">
       <caption class="media" label="Lab. hab"/>
       <box>
-	<toolbarbutton id="lLabHab" style="width: 32px !important" 
-		       oncommand="CogeLabHab()" label="+"/>
-	<textbox class="media" id="LabHab" readonly="true" flex="1"
+	<toolbarbutton  class="btn" id="lLabHab" oncommand="CogeLabHab()" label="+"/>
+	<textbox class="media" id="LabHab" readonly="true" flex="1" value="<?php echo $laboratorio;?>"
                  onkeypress="return soloAlfaNumerico(event);"/>
       </box>
     </row>
@@ -117,10 +138,9 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
     <row>
       <caption class="media" label="Fam/Subfam"/>
       <box>
-	<toolbarbutton  id="lFamSub" style="width: 32px !important" 
-		       oncommand="CogeFamilia()" label="+"/>
+	<toolbarbutton   class="btn"   id="lFamSub"  oncommand="CogeFamilia()" label="+"/>
 	<textbox value="<?php echo $FamDefecto; ?>" flex="1" id="FamSub"
-                 onkeypress="return soloAlfaNumerico(event);"/>
+                 onkeypress="return soloAlfaNumerico(event);" readonly="true"/>
       </box>
     </row>
 
@@ -134,8 +154,7 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
     <row>
       <caption class="media" label="Marca"/>
       <box>
-	<toolbarbutton id="lMarca" style="width: 32px !important" 
-		       oncommand="CogerMarca()" label="+"/>
+	<toolbarbutton   class="btn" id="lMarca" oncommand="CogerMarca()" label="+"/>
 	<textbox class="media" id="Marca" value="<?php echo $Marca ?>"  flex="1" readonly="true"/>
       </box>
     </row>
@@ -143,8 +162,7 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
     <row>
       <caption class="media" label="<?php echo $txtDetalle; ?>"/>
       <box>
-	<toolbarbutton id="lTallaje" style="width: 32px !important" 
-		       oncommand="CogeTallaje()" label="+"/>
+	<toolbarbutton class="btn" id="lTallaje" oncommand="CogeTallaje()" label="+"/>
 	<textbox value="<?php echo $TallajeDefecto; ?>" readonly="true" 
 	class="media" id="Tallaje"  flex="1"/>
       </box>
@@ -178,7 +196,7 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
     </row>
 
     <row>
-<spacer style="height:5px"/>
+      <spacer style="height:5px"/>
     </row>
     
     <row>
@@ -219,41 +237,38 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
 <!-- alta de prod -->
 </groupbox>
 
-
 <!-- listado compra tickets -->
-    <vbox flex="1" class="listado">
-	<spacer style="height: 16px"/>
-	<caption label="<?php echo $txtModelo .' y '. $txtDetalle; ?>" class="media" 
-	style="border-bottom: 1px black solid"/>	    
-	<spacer style="height: 16px"/>
+    <vbox flex="1" class="listado box" >
+	<spacer style="height: 6px"/>
+	<caption label="<?php echo $txtModelo .' y '. $txtDetalle; ?>" class="media box" 
+	style="border-bottom: 1px solid  #bbb"/>	    
+	<spacer style="height: 4px"/>
 	 <hbox>	
 	  <grid>
 	    <rows> 
 	      <row>
 		<caption class="media" label="<?php echo $txtalias.' uno';?>"/>
 		<box>
-		  <toolbarbutton style="width: 32px !important" 
-				 oncommand="CogeAlias(0,'<?php echo $txtalias ?>')" label="+"/>
-		  <textbox class="media" id="IdAlias0" readonly="true" flex="1" value=""/>
+		  <toolbarbutton class="btn" oncommand="CogeAlias(0,'<?php echo $txtalias ?>')" label="+"/>
+		  <textbox class="media" id="IdAlias0" readonly="true" flex="1" value="<?php echo $txtAlias0;?>"/>
 		</box>
 	      </row>
 
 	      <row>
 		<caption class="media" label="<?php echo $txtalias.' dos';?>"/>
 		<box>
-		  <toolbarbutton style="width: 32px !important" 
-				 oncommand="CogeAlias(1,'<?php echo $txtalias ?>')" label="+"/>
-		  <textbox class="media" id="IdAlias1" readonly="true" flex="1" value=""/>
+		  <toolbarbutton class="btn" oncommand="CogeAlias(1,'<?php echo $txtalias ?>')" label="+"/>
+		  <textbox class="media" id="IdAlias1" readonly="true" flex="1" value="<?php echo $txtAlias1;?>"/>
 		</box>
 	      </row>
 
 	      <row>
 		<caption class="media" label="<?php echo $txtModelo; ?>"/>
 		<hbox>
-		  <toolbarbutton style="width: 32px !important" oncommand="CogeColor()" label="+"/>
+		  <toolbarbutton class="btn" oncommand="CogeColor()" label="+"/>
 		  <menulist flex="2" style="min-width: 4em" class="media" id="Colores" value="0">
 		    <menupopup class="media" id="elementosColores">
-		      <?php echo  genXulComboColores(false, "menuitem", $IdFamiliaDefecto,"def");?>
+		      <?php echo  genXulComboColores($idcolor, "menuitem", $IdFamiliaDefecto,"def");?>
 		    </menupopup>
 		  </menulist>
 		</hbox>
@@ -262,11 +277,27 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
 	      <row>
 		<caption class="media" label="<?php echo $txtDetalle; ?>"/>
 		<hbox>
-		  <toolbarbutton style="width: 32px !important" oncommand="CogeTalla()" label="+"/>
+		  <toolbarbutton class="btn"  oncommand="CogeTalla()" label="+"/>
 		  <menulist flex="2" class="media" id="Tallas" style="min-width: 7em">
 		    <menupopup class="media" id="elementosTallas">
-		      <?php echo  genXulComboTallas("32", "menuitem",TALLAJE_DEFECTO,"def",$IdFamiliaDefecto);?>  	
+		      <?php echo  genXulComboTallas($idtalla, "menuitem",TALLAJE_DEFECTO,"def",$IdFamiliaDefecto);?>  	
 		    </menupopup>
+		  </menulist>
+		</hbox>
+	      </row>
+
+
+ 	      <row id="rowContenedor" collapsed="true">
+		<caption class="media" label="Unid - Empaque"/>
+		<hbox>
+		  <toolbarbutton class="btn" oncommand="CogeContenedor()" label="+"/>
+		  <textbox id="UnidadesxContenedor" value="<?php echo $UnidxEmp ?>" onfocus="this.select()" 
+			   style="width: 5em" onchange="validaDato(this,'nCont')" 
+			   onkeypress="return soloNumerosEnteros(event,this.value)"/>		  
+   	           <menulist flex="2" style="min-width: 8em" class="media" id="Contenedores" value="1">
+    		   <menupopup class="media" id="elementosContenedores">
+                    <?php  echo  genXulComboContenedores($IdEmpaque,"menuitem","def"); ?>
+ 		   </menupopup>
 		  </menulist>
 		</hbox>
 	      </row>
@@ -277,40 +308,12 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
 	  <grid>
 	    <rows> 
 
-	      <row id="rowDatoFechaVencimiento" collapsed="true">
-		<caption class="media" label="Fecha Venc."/>
-                <datepicker id="vFechaVencimiento" type="popup"/>
-	      </row>
-	      <row id="rowDatoLote" collapsed="true">
-		<caption class="media" label="Lote de Prod."/>
-		<textbox id="vLote" value="" onfocus="this.select()"
-			 style="text-transform:uppercase;" 
-			 onkeyup="javascript:this.value=this.value.toUpperCase();" 
-                         onkeypress="return soloAlfaNumerico(event);"/> 
-	      </row>
-
- 	      <row id="rowContenedor" collapsed="true">
-		<caption class="media" label="Unid/Empaque"/>
-		<hbox>
-		  <toolbarbutton style="width: 32px !important" oncommand="CogeContenedor()" label="+"/>
-		  <textbox id="UnidadesxContenedor" value="2" onfocus="this.select()" 
-			   style="width: 5em"
-			   onchange="validaDato(this,'nCont')" 
-			   onkeypress="return soloNumerosEnteros(event,this.value)"/>/		  
-   	           <menulist flex="2" style="min-width: 8em" class="media" id="Contenedores" value="1">
-    		   <menupopup class="media" id="elementosContenedores">
-                    <?php  echo  genXulComboContenedores("1","menuitem","def"); ?>
- 		   </menupopup>
-		  </menulist>
-		</hbox>
-	      </row>
-
 	      <row id="rowDatoContenedor" collapsed="true">
 		<caption id="txtContenedor" class="media" label="Empaque - Unid"/>
 		<hbox flex="1">
 		<textbox class="media" id="Empaques" value="1" onfocus="this.select()" 
 			 style="width: 8.5em" 
-			 onkeypress="return soloNumerosEnteros(event,this.value)"/> -
+			 onkeypress="return soloNumerosEnteros(event,this.value)"/>
 		<textbox class="media" id="Unidades" value="0" onfocus="this.select()"
 			 style="width: 8em" 
 			 onchange="validaDato(this,'nUnidEmp')" 
@@ -323,22 +326,36 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
 			 onchange="validaDato(this,'nCant')" onfocus="this.select()"
 			 onkeypress="return soloNumerosEnteros(event,this.value)"/>
 	      </row>
-	      <row>
- 		<caption class="media" label="Costo Unitario"/>
-		<textbox style="text-align:right; width:6em;" class="media" id="Costo" 
-			 onfocus="this.select()" value="0" 
-			 onkeypress="return soloNumeros(event,this.value)"
-			 onchange="setCostoPreciosAltaRapida('costo',this)"/>
+	      <row id="rowDatoLote" collapsed="true">
+		<caption class="media" label="Lote de Prod."/>
+		<textbox id="vLote" value="" onfocus="this.select()"
+			 style="text-transform:uppercase;" 
+			 onkeyup="javascript:this.value=this.value.toUpperCase();" 
+                         onkeypress="return soloAlfaNumerico(event);"/> 
+	      </row>
+	      <row id="rowDatoFechaVencimiento" collapsed="true">
+		<caption class="media" label="Fecha Venc."/>
+                <datepicker id="vFechaVencimiento" type="popup"/>
 	      </row>
 
 	      <row>
-		<caption label="Costo Operativo" />
+ 		<caption class="media" label="Costo Unitario <?php echo $txtcosto?>"/>
+                <hbox flex="1">
+		  <textbox  flex="1" style="text-align:right; width:6em;" class="media" id="Costo" 
+			 onfocus="this.select()" value="0" 
+			 onkeypress="return soloNumeros(event,this.value)"
+			 onchange="setCostoPreciosAltaRapida('costo',this)"/>
+	          <button class="btn" id="xEmpaqueProductoAlta" oncommand="mostrarCostoTotalAlta()" collapsed="true"/>
+                </hbox>
+	      </row>
+
+	      <row>
+		<caption label="Costo Operativo <?php echo $txtprecio?>" />
 		<textbox style="text-align:right; width:6em;" id="xCostoOP" 
 			 onfocus="this.select()" 
 			 onkeypress="return soloNumeros(event,this.value)" value="0"
 			 onchange="setCostoPreciosAltaRapida('precio',this)" />
 	    </row>
-
 
 	    </rows>
 	   </grid>
@@ -346,28 +363,28 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
 	   <grid>
 	     <rows>
 	       <row>
-		 <caption label="PVP" />
+		 <caption label="PVP <?php echo $txtprecio?>" />
 		 <textbox id="xPVD" onfocus="this.select()" style="text-align:right; width:6em;"
 			  onkeypress="return soloNumeros(event,this.value)" value="0"
 			  onchange="setCostoPreciosAltaRapida('pvd',this)"/>
 	       </row>
 
 	       <row>
-		 <caption label="PVP/Dcto." />
+		 <caption label="PVP/Dcto. <?php echo $txtprecio?>" />
 		 <textbox id="xPVDD" onfocus="this.select()" style="text-align:right; width:6em;"
 			  onkeypress="return soloNumeros(event,this.value)" value="0"
 			  onchange="setCostoPreciosAltaRapida('pvdd',this)"/>
 	       </row>
 
 	       <row>
-		 <caption label="PVC" />
+		 <caption label="PVC <?php echo $txtprecio?>" />
 		 <textbox id="xPVC" onfocus="this.select()" style="text-align:right; width:6em;"
 			  onkeypress="return soloNumeros(event,this.value)" value="0"
 			  onchange="setCostoPreciosAltaRapida('pvc',this)"/>
 	       </row>
 
 	       <row>
-		 <caption label="PVC/Dcto." />
+		 <caption label="PVC/Dcto. <?php echo $txtprecio?>" />
 		 <textbox id="xPVCD" onfocus="this.select()" style="text-align:right; width:6em;"
 			  onkeypress="return soloNumeros(event,this.value)" value="0"
 			  onchange="setCostoPreciosAltaRapida('pvcd',this)"/>
@@ -378,72 +395,77 @@ $MetodoRedondeo = getSesionDato("MetodoRedondeo");
          </hbox>
 
 	<hbox>
-	  <button image="<?php echo $_BasePath; ?>img/gpos_nuevoproducto.png" class="media" flex="1" 
+	  <button image="<?php echo $_BasePath; ?>img/gpos_nuevoproducto.png" class="media btn" flex="1" 
 		  label="  Agregar Producto" oncommand="xNuevaTallaColor()" 
 		  style="font-size:11px;font-weight: bold;"/> 		
 	</hbox>		
-	<listbox id="listadoTacolor" rows="4" flex="1" contextmenu="accionesTicket" onkeypress="if (event.keyCode==13)  RevisarProductoSeleccionado()"  onclick="RevisarProductoSeleccionado()" >
-	  <listcols flex="1">
-	    <listcol  />
+	<tree id="listadoTacolor" flex="1" hidecolumnpicker="false" enableColumnDrag="true" contextmenu="accionesTicket" onkeypress="if (event.keyCode==13)  RevisarProductoSeleccionado()"  onclick="RevisarProductoSeleccionado()" >
+	  <treecols>
+	    <treecol  label="Código"  flex="1" />
 	    <splitter class="tree-splitter" />
-	    <listcol flex="1" />
+	    <treecol label="<?php echo $txtModelo; ?>" flex="1" />
 	    <splitter class="tree-splitter" />
-	    <listcol flex="1" />
+	    <treecol label="<?php echo $txtDetalle; ?>" flex="1" />
 	    <splitter class="tree-splitter" />
-	    <listcol flex="1" />
+	    <treecol label="<?php echo $txtalias;?>" hidden="true" flex="1" />
  	    <splitter class="tree-splitter" />
-	    <listcol flex="1" />
+	    <treecol label="Cantidad" flex="1" />
  	    <splitter class="tree-splitter" />
-	    <listcol flex="1" />
+	    <treecol label="Costo" flex="1" />
 	    <splitter class="tree-splitter" />
-	    <listcol flex="1" />
+	    <treecol label="Costo OP" flex="1"  hidden="true" />
 	    <splitter class="tree-splitter"  />
-	    <listcol flex="1" />
+	    <treecol label="PVP"  flex="1" />
 	    <splitter class="tree-splitter" />
-	    <listcol flex="1" />
+	    <treecol label="PVPD" flex="1" />
 	    <splitter class="tree-splitter" />
-	    <listcol flex="1" />
+	    <treecol label="PVC" flex="1"  hidden="true" />
 	    <splitter class="tree-splitter" />
-	    <listcol flex="1" />
+	    <treecol label="PVCD" flex="1" hidden="true" />
 	    <splitter class="tree-splitter" />
-	    <listcol flex="1" />
+	    <treecol label="Menudeo" flex="1" id="colMenudeo"  hidden="true" />
 	    <splitter  class="tree-splitter" />
-	    <listcol flex="1" />
-	    <listcol/>
-	  </listcols>
-	  <listhead>
-	    <listheader label="Código" />
-	    <listheader label="<?php echo $txtModelo; ?>" />
-	    <listheader label="<?php echo $txtDetalle; ?>"/>
-	    <listheader label="<?php echo $txtalias;?>" />
-	    <listheader label="Cantidad" />
-	    <listheader label="Costo" />
-	    <listheader label="Costo OP" />
-	    <listheader label="PVD" />
-	    <listheader label="PVDD" />
-	    <listheader label="PVC" />
-	    <listheader label="PVCD" />
-	    <listheader label="" id="colMenudeo"/>
-	    <listheader label="" id="colFV"/>
-	    <listheader label="" id="colLT"/>
-	    <listheader label=""/>
-	  </listhead>
-	  
-	</listbox>
-	<hbox>
-          <button image="<?php echo $ibtnAlta?>" class="media" flex="1" 
+	    <treecol label="FV" flex="1" id="colFV"  hidden="true"/>
+	    <splitter  class="tree-splitter" />
+	    <treecol label="LT" flex="1" id="colLT"  hidden="true"/>
+	  </treecols>
+	  <treechildren id="my_tree_children" >
+
+	  </treechildren>
+	</tree>
+
+	<hbox id="btnAccionAltaRapida" collapsed="false">
+          <button image="<?php echo $ibtnAlta?>" class="media btn" flex="1" 
                   oncommand="<?php echo $btnAlta?>" label="<?php echo $lbtnAlta?>" 
                   style="font-size:11px;font-weight: bold;"/>
-	  <button image="<?php echo $ibtnVaciar?>" class="media" flex="1" 
+	  <button image="<?php echo $ibtnVaciar?>" class="media btn" flex="1" 
 	          label="<?php echo $lbtnVaciar?>"
 		  oncommand="<?php echo $btnVaciar?>" 
 		  style="font-size:11px;font-weight: bold;"/>  
 	</hbox>
       </vbox>	
       <!-- listado compra tickets -->	
-
 <script>//<![CDATA[
-var enviar = new Array();
+  var enviar = new Array();
+  var cAccion = "<?php echo $cAccion; ?>";
+  var MITALLAJEDEFECTO = '<?php echo TALLAJE_DEFECTO ?>';//Si no se especifica tallaje, prepopula para un tallaje concreto x defecto
+  var cImpuesto    = <?php echo $impuesto; ?>;
+  var cIdLocal     = <?php echo getSesionDato("IdTienda"); ?>;
+  var cUtilidad    = <?php echo getSesionDato("MargenUtilidad"); ?>;
+  var cCambio      = <?php echo $tipocambio; ?>;
+
+
+  var cModo        = <?php echo "'".$modo."'"; ?>;
+  var esInventario = (cModo=='altainventario')? true:false;
+  var aProducto    = Array();
+  var MUGR         = <?php echo $MUGR;?>;
+  var DSTOGR       = <?php echo $DSTOGR;?>;
+  var COPImpuesto  = <?php echo $COPImpuesto;?>;
+  var cMetodoRedondeo = "<?php echo $MetodoRedondeo;?>";
+  var aSubFamilia  = Array();
+
+switch(cAccion){
+case 'alta':
 
   enviar["IdSubFamilia"] = <?php echo CleanID($IdSubFamiliaDefecto) ?>;
   enviar["IdFamilia"]    = <?php echo CleanID($IdFamiliaDefecto) ?>;
@@ -454,19 +476,36 @@ var enviar = new Array();
   enviar["IdProvHab"] = 1;
   enviar["IdAlias0"] = 0;
   enviar["IdAlias1"] = 0;
+  break;
+case 'clon':
+  <?php if($esClonar) {?>
+  var esSerie         = (<?php echo $DetProducto["Serie"] ?> == 1);
+  var esLote          = (<?php echo $DetProducto["Lote"] ?> == 1);
+  var esVence         = (<?php echo $DetProducto["Vence"] ?> == 1);
+  var esMenudeo       = (<?php echo $DetProducto["Menudeo"] ?> == 1);
 
-  var MITALLAJEDEFECTO = '<?php echo TALLAJE_DEFECTO ?>';//Si no se especifica tallaje, prepopula para un tallaje concreto x defecto
-  var cImpuesto    = <?php echo getSesionDato("IGV"); ?>;
-  var cIdLocal     = <?php echo getSesionDato("IdTienda"); ?>;
-  var cUtilidad    = <?php echo getSesionDato("MargenUtilidad"); ?>;
-  var cModo        = <?php echo "'".$modo."'"; ?>;
-  var esInventario = (cModo=='altainventario')? true:false;
-  var aProducto    = Array();
-  var MUGR         = <?php echo $MUGR;?>;
-  var DSTOGR       = <?php echo $DSTOGR;?>;
-  var COPImpuesto  = <?php echo $COPImpuesto;?>;
-  var cMetodoRedondeo = "<?php echo $MetodoRedondeo;?>";
-  var aSubFamilia  = Array();
+  enviar["IdSubFamilia"] = <?php echo $DetProducto["IdSubFamilia"] ?>;
+  enviar["IdFamilia"]    = <?php echo $DetProducto["IdFamilia"] ?>;
+  enviar["IdTallaje"]    = <?php echo $DetProducto["IdTallaje"] ?>;
+  enviar["UnidadMedida"] = "<?php echo $DetProducto['Und'] ?>";
+  enviar["IdLabHab"]     = <?php echo $DetProducto["IdLabHab"] ?>;
+  enviar["IdMarca"]      = <?php echo $DetProducto["IdMarca"] ?>;
+  enviar["IdProvHab"]    = <?php echo $DetProducto["IdProvHab"] ?>;
+  enviar["IdAlias0"]     = <?php echo $DetProducto["IdAlias0"] ?>;
+  enviar["IdAlias1"]     = <?php echo $DetProducto["IdAlias1"] ?>;
+
+  id("Marca").value = '<?php echo $DetProducto["Marca"] ?>';
+  id("UnidadMedida").setAttribute("label",'<?php echo $DetProducto["Und"] ?>');
+  id("Descripcion").setAttribute("value", '<?php echo $DetProducto["Nombre"] ?>');
+
+  if(esVence) verDatosExtra('fv',true);
+  if(esLote) verDatosExtra('lt',true);
+  if(esMenudeo) verDatosExtra('ct',true);
+  if(esSerie) verDatosExtra('ns',true);
+  changeEditHeadDatos('true');
+  <?php }?>
+  break;
+}
   setTimeout("CargarDataSubFamilias()", 200);
 //]]></script>
 

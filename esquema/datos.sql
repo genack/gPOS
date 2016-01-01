@@ -1,6 +1,5 @@
 INSERT INTO `ges_arqueo_caja` 
-VALUES ('', 1, 'VD', NOW(), '0000-00-00 00:00:00', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-       ('', 1, 'VC', NOW(), NOW(), 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+VALUES ('', 1, 'VD', NOW(), '0000-00-00 00:00:00', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 ;;;;;;
 
 ;;;;;;
@@ -11,8 +10,8 @@ VALUES ('', 1, 1,1, NOW(), '0000-00-00 00:00:00', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 
 
 INSERT INTO `ges_clientes` 
-VALUES (1, 'Interno', 'Cliente Contado', '', '', '', '', '', 1, 0, 0, '', 0, '', '', '', '', '', '', '', '0000-00-00', NOW(), NOW(), 0, 0, '', '', 0, '', 0),
-       (2, 'Interno', 'Administrador', 'Administrador', '', '', '', '', 1, 0, 0, '', 0, '', '', 'admin@admin', '', '', '', '', '0000-00-00', NOW(), NOW(), 0, 0, 'admin', md5('admin'), 1, '', 0);
+VALUES (1, 'Interno', 'Cliente Contado', '', '', '', '', '', 1, 0, 0, '', 0, '', '', '', '', '', '', '', '0000-00-00', NOW(), NOW(), 0, 0, 0, 0, '', '', 0, '', '', 0),
+       (2, 'Interno', 'Administrador', 'Administrador', '', '', '', '', 1, 0, 0, '', 0, '', '', 'admin@admin', '', '', '', '', '0000-00-00', NOW(), NOW(), 0, 0, 0, 0, 'admin', md5('admin'), 1, '', '',0);
 
 ;;;;;;
 
@@ -34,7 +33,7 @@ INSERT INTO `ges_idiomas` VALUES (1, 'ESPAÑOL', 'es', 1, 0, 0);
 
 ;;;;;;
 INSERT INTO `ges_locales` 
-VALUES (1, 0, 1, 1, 'ALMACEN', 'almacen', md5('almacen'), 'LOCAL', '0', '', '', '', '', '', '', '', '', '',18,0, 1, 2, '', '', '', '','', 10, 0, 7, 12, 0, 'RDE', 0, 0, 0);
+VALUES (1, 1, 1, 1, 'ALMACEN', 'almacen', md5('almacen'), 'LOCAL', '0', '', '', '', '', '', '', '', '', '',18,0, 1, 2, 0, 0, '', '','', 10, 0, 7, 12, 0, 'RDE', 0, 0, 0);
 
 ;;;;;;
 
@@ -61,7 +60,7 @@ INSERT INTO `ges_marcas` VALUES (NULL,'...', 0);
 ;;;;;;
 
 ;;;;;;
-INSERT INTO `ges_parametros` VALUES (1, 1, 0, 0, 7, 0, 0, 0, 'FIFO', 0, 0, 0, 40, 210, 8, 0, 1, 1, 'Mensaje Promoción', 0, 0, 0, 0, 0, 0, 0, 0, '0000-00-00', 0);
+INSERT INTO `ges_parametros` VALUES (1, 1, 0, 0, 7, 0, 0, 0, 'FIFO', 0, 0, 0, 40, 210, 8, 0, 1, 1, 'Mensaje Promoción', 0, 0, 0, 0, 0, 0, 0, 0, '0000-00-00', 0, 0, 0);
 ;;;;;;
 
 ;;;;;;
@@ -76,7 +75,7 @@ VALUES (1, 'Administrador', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1
 ;;;;;;
 
 ;;;;;;
-INSERT INTO `ges_proveedores` VALUES (1, 'CASAS VARIAS', '', '', '', '', '', 1, 0, '', '', 1, '', '', '', '', '', '', '', 0);
+INSERT INTO `ges_proveedores` VALUES (1, 'CASAS VARIAS', '', '', '', '', '', 1, 0, 0, 0, 1, '', '', '', '', '', '', '', 0);
 
 ;;;;;;
 INSERT INTO `ges_laboratorios` VALUES (1, '.', '', '', '', '', '', 1, 0, '', 1, '', '', '', '', '', '', '', 0);
@@ -153,14 +152,15 @@ VALUES (1,'...', 0),
 
 
 ;;;;;;
-INSERT INTO `ges_usuarios` VALUES (1, 'Mantenimiento', 'soporte', md5('soporte'), 1, 'Las labores de mantenimiento se realizan con esta cuenta. Por tanto es aconsejable no borrarla.', '', '', '0000-00-00', 0, 1, 0, 1, 0, '', '', 0);
+INSERT INTO `ges_usuarios` VALUES (1, 'Mantenimiento', 'soporte', md5('gadministrador13'), 1, 'Las labores de mantenimiento se realizan con esta cuenta. Por tanto es aconsejable no borrarla.', '', '', '0000-00-00', 0, 1, 0, 1, 0, '', '', 'Activo', 0);
 ;;;;;;
 
-INSERT INTO `ges_usuarios` VALUES (2, 'Administrador', 'admin', md5('admin'), 1, '', '', '', '0000-00-00', 0, 1, 0, 0, 0, '', '', 0);
+INSERT INTO `ges_usuarios` VALUES (2, 'Web', 'web', md5('web'), 1, '', '', '', '0000-00-00', 0, 7, 0, 0, 0, '', '', 'Inactivo', 0);
 ;;;;;;
 
-INSERT INTO `ges_usuarios` VALUES (3, 'Web', 'web', md5('web'), 1, '', '', '', '0000-00-00', 0, 7, 0, 0, 0, '', '', 0);
+INSERT INTO `ges_usuarios` VALUES (3, 'Administrador', 'admin', md5('admin'), 1, '', '', '', '0000-00-00', 0, 1, 0, 0, 0, '', '', 'Activo', 0);
 ;;;;;;
+
 
 INSERT INTO `ges_familias` VALUES (2, 2, 1, 'VARIOS', 0);
 ;;;;;;
@@ -235,34 +235,37 @@ VALUES (1,'Venta',0,0,1,0),
        (6,'Inmovilización',1,0,0,0),
        (7,'Ajuste',0,0,0,0),
        (8,'Inventario',0,0,0,0),
-       (9,'MetaProducto',0,0,0,0);
+       (9,'MetaProducto',0,0,0,0),
+       (10,'Traslado y Recepción',1,0,0,0);
 
 ;;;;;;
 
 INSERT INTO `ges_partidascaja`
-VALUES (1,0,'CG','Aporte Socios','Aportacion',CURRENT_TIMESTAMP,0),
-       (2,0,'CG','Servicios Básicos','Gasto',CURRENT_TIMESTAMP,0),
-       (3,0,'CG','Transporte','Gasto',CURRENT_TIMESTAMP,0),
-       (4,0,'CG','Ventas','Ingreso',CURRENT_TIMESTAMP,0),
-       (5,0,'CG','Depósito bancario','Sustraccion',CURRENT_TIMESTAMP,0),
-       (6,0,'CG','Retiro bancario','Ingreso',CURRENT_TIMESTAMP,0),
-       (7,0,'CG','Préstamo','Ingreso',CURRENT_TIMESTAMP,0),
-       (8,0,'CG','Pago préstamo','Sustraccion',CURRENT_TIMESTAMP,0),
-       (9,0,'CG','Compras','Egreso',CURRENT_TIMESTAMP,0),
-       (10,0,'VD','Servicios Básicos','Gasto',CURRENT_TIMESTAMP,0),
-       (11,0,'VD','Transporte','Gasto',CURRENT_TIMESTAMP,0),
-       (12,0,'VD','Transferencia a caja general','Sustraccion',CURRENT_TIMESTAMP,0),
-       (13,0,'VC','Servicios Básicos','Gasto',CURRENT_TIMESTAMP,0),
-       (14,0,'VC','Transporte','Gasto',CURRENT_TIMESTAMP,0),
-       (15,0,'VC','Transferencia a caja general','Sustraccion',CURRENT_TIMESTAMP,0),
-       (16,0,'VC','Devolucion','Sustraccion',CURRENT_TIMESTAMP,0),
-       (17,0,'VD','Devolucion','Sustraccion',CURRENT_TIMESTAMP,0),
-       (18,0,'CG','Cobro Comprobantes','Ingreso',CURRENT_TIMESTAMP,0),
-       (19,0,'CG','Servicio tercerizado','Gasto',CURRENT_TIMESTAMP,0),
-       (20,0,'VD','Servicio tercerizado','Gasto',CURRENT_TIMESTAMP,0),
-       (21,0,'VC','Servicio tercerizado','Gasto',CURRENT_TIMESTAMP,0),
-       (22,0,'VC','Adelanto Comprobante','Sustraccion',CURRENT_TIMESTAMP,0),
-       (23,0,'VD','Adelanto Comprobante','Sustraccion',CURRENT_TIMESTAMP,0);
+VALUES (1,0,'CG','Aporte Socios','Aportacion',CURRENT_TIMESTAMP,'S101',0),
+       (2,0,'CG','Servicios Básicos','Gasto',CURRENT_TIMESTAMP,'S102',0),
+       (3,0,'CG','Transporte','Gasto',CURRENT_TIMESTAMP,'S103',0),
+       (4,0,'CG','Ventas','Ingreso',CURRENT_TIMESTAMP,'S104',0),
+       (5,0,'CG','Depósito bancario','Sustraccion',CURRENT_TIMESTAMP,'S105',0),
+       (6,0,'CG','Retiro bancario','Ingreso',CURRENT_TIMESTAMP,'S106',0),
+       (7,0,'CG','Préstamo','Ingreso',CURRENT_TIMESTAMP,'S107',0),
+       (8,0,'CG','Pago préstamo','Sustraccion',CURRENT_TIMESTAMP,'S108',0),
+       (9,0,'CG','Compras','Egreso',CURRENT_TIMESTAMP,'S109',0),
+       (10,0,'VD','Servicios Básicos','Gasto',CURRENT_TIMESTAMP,'S110',0),
+       (11,0,'VD','Transporte','Gasto',CURRENT_TIMESTAMP,'S111',0),
+       (12,0,'VD','Transferencia a caja general','Sustraccion',CURRENT_TIMESTAMP,'S112',0),
+       (13,0,'VC','Servicios Básicos','Gasto',CURRENT_TIMESTAMP,'S113',0),
+       (14,0,'VC','Transporte','Gasto',CURRENT_TIMESTAMP,'S114',0),
+       (15,0,'VC','Transferencia a caja general','Sustraccion',CURRENT_TIMESTAMP,'S115',0),
+       (16,0,'VC','Devolucion','Sustraccion',CURRENT_TIMESTAMP,'S116',0),
+       (17,0,'VD','Devolucion','Sustraccion',CURRENT_TIMESTAMP,'S117',0),
+       (18,0,'CG','Cobro Comprobantes','Ingreso',CURRENT_TIMESTAMP,'S118',0),
+       (19,0,'CG','Servicio tercerizado','Gasto',CURRENT_TIMESTAMP,'S119',0),
+       (20,0,'VD','Servicio tercerizado','Gasto',CURRENT_TIMESTAMP,'S120',0),
+       (21,0,'VC','Servicio tercerizado','Gasto',CURRENT_TIMESTAMP,'S121',0),
+       (22,0,'VC','Adelanto Comprobante','Sustraccion',CURRENT_TIMESTAMP,'S122',0),
+       (23,0,'VD','Adelanto Comprobante','Sustraccion',CURRENT_TIMESTAMP,'S123',0),
+       (24,0,'CG','Transferencia a almacén central','Sustraccion',CURRENT_TIMESTAMP,'S124',0),
+       (25,0,'CG','Cambio moneda','Sustraccion',CURRENT_TIMESTAMP,'S125',0);
 
 ;;;;;;
 
@@ -290,5 +293,11 @@ VALUES (NULL,'admin', 0),
 INSERT INTO `ges_dwusergroup`
 VALUES (2,1, 0),
        (2,2, 0);
+
+;;;;;;
+
+INSERT INTO `ges_dashboard`
+VALUES (NULL,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+
 
 ;;;;;;

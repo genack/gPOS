@@ -167,7 +167,7 @@ class promocion extends Cursor {
 	foreach ($data as $key => $value) {
 	  if ($coma)
 	    $str .= ",";
-	  $value = mysql_escape_string($value);
+	  $value = mysql_real_escape_string($value);
 	  $str .= " $key = '".$value."'";
 	  $coma = true;
 	}
@@ -439,7 +439,7 @@ class promocion extends Cursor {
 	   "       IdPromocionCliente, ".
 	   "       IF(CategoriaCliente like '',' ',CategoriaCliente) AS CategoriaCliente, ".
 	   "       IF(Descripcion like '',' ',Descripcion) AS Descripcion, ".
-	   "       Estado, ".
+	   "       ges_promocionclientes.Estado, ".
 	   "       DesdeMontoCompra, ".
 	   "       HastaMontoCompra, ".
 	   "       DesdeNumeroCompra, ".
@@ -607,7 +607,7 @@ class promocion extends Cursor {
 	       updateVentas2HistorialVenta($idcliente,$importe,$periodo["id"],$xop);
 	     else
 	       creaCliente2HistorialVenta($idcliente,$importe,$periodo["id"],$xop);
-
+	     //actualizarBonoCliente($idcliente);
 	     updateVenta2Clientes($idcliente,$extra);
 	   }
        }

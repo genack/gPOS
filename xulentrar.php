@@ -26,7 +26,6 @@ function AddLog($text){
  
 AddLog("Empieza modo es '$modo'");
  
-
 switch($modo){
         case "tiendaDesconocida":
 	case "login-local":
@@ -60,7 +59,8 @@ switch($modo){
 	      RegistrarMUTienda($id);
 	      RegistrarValuacionPrecioTPV($id);
 	      RegistrarMoneda();
-	      RegistrarKeySyncTPV();	
+	      RegistrarKeySyncTPV();
+	      RegistrarLoginLog();
 	      session_write_close();
 	      header("Location: xulgpos.php");
 	      exit();	
@@ -109,72 +109,71 @@ StartXul("Login gPOS");
 
 
 ?>
-<box flex="1" style="background-image: url(img/gpos_bg_login.jpg); background-repeat:no-repeat; background-color:#2F6496;">
+<box class="box-login-gpos" flex="1" style="background-image: url(img/gpos_bg_login.jpg); background-repeat:no-repeat; background-color:transparent;">
   <spacer flex="1" />
-  <vbox  >
+  <vbox style="background-color: transparent;">
     <spacer flex="1"  />
     
     <spacer flex="1" />		
     
-    <vbox style="width: 425px; height: 180px; background-image: url(img/gpos_login_back.png); background-repeat:no-repeat; ">
+    <vbox style="width: 400px;height: 180px;background-image: url(img/gpos_login_back.png);background-repeat:no-repeat;background-position:center center;background-color: transparent;">
       <vbox >
-	
-	<description style="font-weight: bold;color: #fff;margin-left: 20px; margin-top: -7px;font-size:13px;">
-	  <html:br/>
+	<caption class="login">
 	  <?php echo $NombreEmpresa;?>
-	</description>
+	</caption>
       </vbox>
-      <spacer style="height:0.4em"/>
+
       <grid>
 	<columns>
-	  <column style="width: 120px"/>
-	  <column/>
-	  <column flex="1"/>
+	  <column />
+	  <column />
+	  <column />
 	</columns>
 	<rows>
-            <row id="xtextrow" class="<?php echo $xtextrow;?>">
-	    <hbox><spacer flex="1" style="width: 40px"/>
-	    </hbox>
-	    <textbox id='nombrelocal' type="normal" 
-	    placeholder="<?php if ($user) echo _("Tu usuario gPOS"); else echo _("Tu local gPOS");?> "
+	  <row id="xtextrow" class="<?php echo $xtextrow;?>">
+	   <vbox/>
+	   <vbox>
+	   <textbox id='nombrelocal' type="normal" 
+		     placeholder="<?php if ($user) echo _("Tu usuario gPOS"); else echo _("Tu local gPOS");?> "
 	    onkeypress="if (event.which == 13) <?php echo $keypressnombre;?>" onblur="<?php echo $keypressnombre;?>"/>
-	  </row>
-      <spacer style="height:0.1em"/>
-	  <row style="height:.1em">
-	    <hbox><spacer flex="1"/>
-	    </hbox>
-            <?php if($user){?>
+	  </vbox>
+	  <vbox/>
+	</row>
+	<spacer style="height:0.2em"/>
+	<row style="height:.1em" align="start">
+	  <vbox/>
+	  <vbox >
+	  <?php if($user){?>
 	    <textbox id='passlocal' onkeypress="if (event.which == 13) SaltaLogin('login-usuario')" 
 		     type='password' placeholder="Tu contraseña gPOS"/> 
             <?php } else { ?>
 	    <textbox id='passlocal' onkeypress="if (event.which == 13) SaltaLogin('login-local')" 
 		     type='password' placeholder="Tu contraseña gPOS" collapsed="true"/> 
             <?php } ?>
-	  </row>
-           <spacer style="height:0.4em"/>
-	  <row  align="start">
-	    <description>
-	      <?php
-		if ($user)
-		  echo '<image style="width: 118px; height: 80px;margin-top:-1.2em;" src="img/gpos_user.png" />';
-		else
-		  echo '<image style="width: 118px; height: 80px;margin-top:-1.2em;" src="img/gpos_store.png" />';
-	      ?>
-	    </description>
-
-	    <hbox flex='1' >					
-	      <?php
-		if ($user) {
-		  echo "<button  flex='1' style='color: #505050; font-size:14px; border:0px solid;
-border-radius:2px;'  label=\"". _("Inicia sesión") ."\" oncommand=\"SaltaLogin('login-usuario')\"/>";
-		} else {
-		echo "<button flex='1' style='color: #505050; font-size:14px; border:0px solid;
-border-radius:2px;'  label=\"". _("Accede") ."\" oncommand=\"ckLocalAccess()\" />";
-		}                          						
-	      ?>
-	    </hbox>
-	  </row>					
-	</rows>												
+	  </vbox>
+	  <vbox/>
+	</row>
+	<row  align="start">
+	  <vbox style="width: 120px;">
+	    <?php
+	       if ($user)
+		 echo '<image style="width: 118px; height: 80px;margin-top:-1.2em;" src="img/gpos_user.png" />';
+	       else
+		 echo '<image style="width: 118px; height: 80px;margin-top:-1.2em;" src="img/gpos_store.png" />';
+	    ?>
+	  </vbox>
+	  <vbox style="width: 180px;">
+	    <?php
+	       if ($user) {
+		 echo "<button class='btn-login' flex='1'  label=\"". _("Inicia sesión") ."\" oncommand=\"SaltaLogin('login-usuario')\"/>";
+	       } else {
+		 echo "<button class='btn-login' flex='1'   label=\"". _("Accede") ."\" oncommand=\"ckLocalAccess()\" />";
+	       }                          						
+	    ?>
+	  </vbox>
+	  <vbox flex="1" tyle="border:1px solid #000"/>
+	</row>					
+      </rows>												
       </grid>			
     </vbox>
     <hbox>
@@ -256,9 +255,9 @@ ventanamaestra.setAttribute("onload","FixFocus()");
 
 function FixFocus(){
         ckLocalAccess2Array();
-	document.getElementById("nombrelocal").focus();
+	setTimeout('runfocus()',400);
 }
-
+function runfocus(){  document.getElementById("nombrelocal").focus(); }
 ]]></script>
 <?php
 

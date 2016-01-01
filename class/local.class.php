@@ -176,7 +176,14 @@ class local extends Cursor {
 	return $this->Load($row["IdLocal"]);			
       }
       
-      
+      function getIdLocalCentral(){
+	$sql = "SELECT IdLocal FROM ges_locales WHERE AlmacenCentral = 1";
+	
+	$row = queryrow($sql);
+	
+	return $row["IdLocal"];
+      }
+
       // SET especializados    
       function setNombreComercial($nombre){    	
     	$this->set("NombreComercial",$nombre,FORCE);	
@@ -234,6 +241,8 @@ class local extends Cursor {
 	$Moneda          = getMoneda();
 	$esConPass       = ( $this->is("AdmitePassword")   )? "checked":"";
 	$mostrarpass     = ( $this->is("AdmitePassword"))? "style='visibility:visible'":"style='visibility:hidden'";
+	$txtCuentaEmp1    = ($this->get("CuentaBancaria") == 0)? "":getNroCuenta($this->get("CuentaBancaria"));
+	$txtCuentaEmp2    = ($this->get("CuentaBancaria2") == 0)? "":getNroCuenta($this->get("CuentaBancaria2"));
 
 	$cambios = array(
 			 "tMensajeMes" => _("Mensaje Ticket"),
@@ -284,8 +293,10 @@ class local extends Cursor {
 			 "vMovil" => $this->get("Movil"),
 			 "vTelefono" => $this->get("Telefono"),
 			 "vPaginaWeb" => $this->get("PaginaWeb"),
-			 "vCuentaBancaria" => $this->get("CuentaBancaria"),
-			 "vCuentaBancaria2" => $this->get("CuentaBancaria2"),
+			 "vIdCuentaBancaria" => $this->get("CuentaBancaria"),
+			 "vIdCuentaBancaria2" => $this->get("CuentaBancaria2"),
+			 "vCuentaBancaria" => $txtCuentaEmp1,
+			 "vCuentaBancaria2" => $txtCuentaEmp2,
 			 "Password" =>_("Contraseña"),			
 			 //"vPassword" => $this->get("Password"),
 			 "vPassword" => _("localess"),
@@ -357,9 +368,14 @@ class local extends Cursor {
 	// el añadido durante el proceso de instalación.		
 	
 	
-	if ($IdLocalCreado){			
-	  
-	  $sql = "SELECT * FROM ges_almacenes WHERE (IdLocal='$IdLocalUsable')";			
+	if ($IdLocalCreado){
+
+	  // crea registro dashboard para el nuevo local
+	  $sql = "INSERT INTO `ges_dashboard` (`IdDashBoard`,`IdLocal`) values('',$IdLocalCreado) ";
+	  query($sql);
+
+	  // precarga valores en almacen para el nuevo local
+	  $sql = "SELECT * FROM ges_almacenes WHERE (IdLocal='$IdLocalUsable')";
 	  $res = query($sql);			
 	  while( $row = Row($res) ){			
 	    $IdProducto = $row["IdProducto"];
@@ -402,9 +418,9 @@ class local extends Cursor {
 	$TipoVenta = getSesionDato("TipoVentaTPV");
 	$sql = 
 	  " INSERT INTO `ges_arqueo_caja` ".
-	  " (IdLocal,esCerrada,TipoVentaOperacion ) ".
+	  " (IdLocal,esCerrada,TipoVentaOperacion,FechaApertura ) ".
 	  " VALUES ".
-	  " ('$IdLocal',1,'$TipoVenta')";
+	  " ('$IdLocal',0,'$TipoVenta',NOW())";
 	query($sql,'Iniciando arqueos');	
       }
 
@@ -517,5 +533,41 @@ function verficarExistenciaLocal($ident,$idlocal){
   return $row["Identificacion"];
 }
 
+function obtenrLocalesActivos(){
+   $sql = "SELECT COUNT(IdLocal) as Locales FROM ges_locales
+           WHERE Eliminado = 0 ";
+  $row = queryrow($sql);
+  return $row["Locales"];
+}
 
+
+function obtenerLocalesPermitidos(){
+   $sql = "SELECT Locales FROM ges_parametros 
+           WHERE Eliminado = 0 ";
+  $row = queryrow($sql);
+  return $row["Locales"];
+}
+
+function obetnerDatosLocalSeleccionado($IdLocal){
+  $sql = "SELECT Descuento, MetodoRedondeo, COPImpuesto, MargenUtilidad, Impuesto ".
+         "FROM ges_locales ".
+         "WHERE IdLocal = $IdLocal ".
+         "AND Eliminado = 0 ";
+  $row = queryrow($sql);
+  $Lista = Array();
+  $Lista["Descuento"]      = $row["Descuento"];
+  $Lista["MetodoRedondeo"] = $row["MetodoRedondeo"];
+  $Lista["COPImpuesto"]    = $row["COPImpuesto"];
+  $Lista["MargenUtilidad"] = $row["MargenUtilidad"];
+  $Lista["Impuesto"]       = $row["Impuesto"];
+  return $Lista;
+}
+
+function getNroCuenta($idcuenta){
+  $sql = "SELECT NumeroCuenta, EntidadFinanciera ".
+         "FROM ges_cuentasbancarias ".
+         "WHERE IdCuentaBancaria= '$idcuenta' ";
+  $row = queryrow($sql);
+  return $row["NumeroCuenta"]." ".$row["EntidadFinanciera"];
+}
 ?>

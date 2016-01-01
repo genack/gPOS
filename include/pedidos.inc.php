@@ -57,6 +57,7 @@ class traslado {
 
 		$this->CrearAlbaran($Origen,$Destino,$Motivo);
 		$this->TrasladoBrutal($Motivo);
+		$this->RecepcionBrutal($Motivo,$Destino,$Origen);
 		return true;
 	}
 	
@@ -78,7 +79,7 @@ class traslado {
 		$this->_IdComprobante = registrarAlbaranOrigen($Destino,$Origen,$Motivo,
 							       $codigo,$this->_IdPedido);
 	}
-
+	
 	function TrasladoBrutal($Motivo) {		
 
 		$IdComprobante = $this->_IdComprobante;	
@@ -149,9 +150,59 @@ class traslado {
 		//Importes Compras & Ventas
 		registrarImportesTraslado($totalimporte,$IdComprobante,$IdPedido,$Motivo);
 	}
+
+	function RecepcionBrutal($Motivo,$Destino,$Origen) {	
+
+	  if( $Motivo != 10 ) return;//Motivo:10 Trasladar y Recibir
+
+	  $IdPedido     = $this->_IdPedido;//cIdPedido
+	  $IdPedidoDets = $this->_IdPedido;//cIdPedidoDets
+	  $IdLocal      = CleanID( $Destino );
+	  $Operacion    = 3;//3:Traslado interno
+
+	  //Valida
+	  if(verificarEstadoDocumento($IdPedido)) {
+	    echo gas("aviso",_("<center> <b>Recepción Albaran</b><br/> ¡Acción restringida! <br/>".
+			       " error al validar Albarán </center>")); 	    
+	    return;
+	  }
+	  
+	  if(validaIntegridadSeries($IdPedido)) {
+	    echo gas("aviso",_("<center> <b>Recepción de Albaran</b><br/> ¡Acción restringida! <br/>".
+			       " error al validar Números de Series de los productos </center>")); 
+	    return;
+	  }
+
+	  //Registra recepcion de Stock
+	  registrarPedidoKardexFifo($IdPedido,$IdPedidoDets,$IdLocal,$Operacion,false,false,false);
+	  actualizarStatusPedido($IdPedido,'2');
+	  actualizarEstadoDocumentoPedido($IdPedido);
+	  actualizarPreciosTrasladoDestino($IdPedido,$Destino,$Origen);
+	  //precios 
+	}
 }
 
-function registrarCodigoComprobanteOrigen($IdComprobante,$Origen,$Motivo,$TipoVenta){
+function actualizarPreciosTrasladoDestino($IdPedido,$Destino,$Origen){
+
+    $res       = obtenerDetallePedidos($IdPedido);
+    while( $row= Row($res) ) 
+      {
+	$idproducto = $row['IdProducto'];
+	$oripv  = obtenerAllPreciosVentaAlmacen($idproducto,$Origen);
+	$despv  = obtenerAllPreciosVentaAlmacen($idproducto,$Destino);
+
+	$pvd    = ( $despv["PrecioVenta"]   == 0 )? $oripv["PrecioVenta"]:$despv["PrecioVenta"];
+	$pvdd   = ( $despv["PVDDescontado"] == 0 )? $oripv["PVDDescontado"]:$despv["PVDDescontado"];
+	$pvcd   = ( $despv["PVCDescontado"] == 0 )? $oripv["PVCDescontado"]:$despv["PVCDescontado"];
+	$pvc    = ( $despv["PrecioVentaCorporativo"] == 0)? $oripv["PrecioVentaCorporativo"]: $despv["PrecioVentaCorporativo"];
+
+	actualizarPreciosVentaAlmacen($idproducto,$pvd,$pvdd,$pvc,$pvcd,$Destino);
+      }
+
+}
+
+function registrarCodigoComprobanteOrigen($IdComprobante,$Origen,$Motivo,$TipoVenta,
+					  $IdUsuario){
 
 	 $Tipo    = 'AlbaranInt';
          $Codigo  = NroComprobanteVentaMax($Origen,$Tipo,$Origen);
@@ -159,7 +210,8 @@ function registrarCodigoComprobanteOrigen($IdComprobante,$Origen,$Motivo,$TipoVe
 	 $Serie   = $aCodigo[0];
 	 $Nro     = $aCodigo[1];
 
-	 RegistrarNumeroComprobante($Nro,$IdComprobante,$Tipo,$Serie,$TipoVenta,$Origen);
+	 RegistrarNumeroComprobante($Nro,$IdComprobante,$Tipo,$Serie,$TipoVenta,$Origen,
+				    $IdUsuario);
 
 	 //Motivo
 	 $sql= 
@@ -247,7 +299,8 @@ function registrarAlbaranOrigen($Destino,$Origen,$Motivo,$NComprobante,$IdPedido
 		$IdComprobante = $UltimaInsercion;
 
 		//Codigo Ventas
-		registrarCodigoComprobanteOrigen($IdComprobante,$Origen,$Motivo,'VC');
+		registrarCodigoComprobanteOrigen($IdComprobante,$Origen,$Motivo,'VC',
+						 $IdUsuario);
 
 		return $IdComprobante;
 }
@@ -468,7 +521,7 @@ function ResetearCarritoCompras(){
         $detadoc[3]=false;
         $detadoc[4]=false;
         $detadoc[5]=1;
-        $detadoc[6]=false;
+        $detadoc[6]=1;
         $detadoc[7]=false;
         $detadoc[8]=false;
         $detadoc[9]=false;
@@ -477,6 +530,7 @@ function ResetearCarritoCompras(){
         $detadoc[12]=false;
         $detadoc[13]=0;
         $detadoc[14]=0;
+        $detadoc[15]='';
         setSesionDato("detadoc",$detadoc);
         setSesionDato("aCredito",false);
 	setSesionDato('incImpuestoDet',false);
@@ -1146,13 +1200,11 @@ function OrdenCompraPeriodo($local,$desde,$hasta,$nombre=false,$esSoloContado=fa
 
 	 while($row = Row($res)){
 	   $nombre = "Orden_" . $t++;
-	   $OCPago = 0;
+	   $OCPago = "0";
 
-	   if($row["Estado"] == 'Pedido'){
-	     $esOC = checkOrdenCompraPago($row["IdOrdenCompra"]);
-	     if($esOC > 0)
-	       $OCPago = 1;
-	   }
+	   if($row["Estado"] == 'Pedido' || $row["Estado"] == 'Recibido')
+	     $OCPago = checkOrdenCompraPago($row["IdOrdenCompra"]);
+
 	   $row["OrdenCompraPago"] = $OCPago;
 	   $OrdenCompra[$nombre] = $row;
 
@@ -1162,10 +1214,10 @@ function OrdenCompraPeriodo($local,$desde,$hasta,$nombre=false,$esSoloContado=fa
 }
 
 function CompraPeriodo($local,$desde,$hasta,$emision=false,$nombre=false,
-		       $esSoloContado=false,$esSoloCredito=false,
 		       $esSoloMoneda=false,$esSoloLocal=false,
 		       $esSoloCompra=false,$forzaid,
-		       $esSoloDocumento=false,$esRecibir,$esSoloPagos=false,$esPagos=false){
+		       $esSoloDocumento=false,$esRecibir,$esSoloPagos=false,$esPagos=false,
+		       $esFormaPago){
 
   $Moneda    = getSesionDato("Moneda");
 
@@ -1197,10 +1249,6 @@ function CompraPeriodo($local,$desde,$hasta,$emision=false,$nombre=false,
   $extraMoneda  = ($esSoloMoneda=='todo1')? "ges_pedidos.CambioMoneda":"1";
   $Simbolo      = ($esSoloMoneda=='todo1')? "CONCAT('".$Moneda[1]['S']."') as Simbolo,":"ges_moneda.Simbolo,";
 
-  //Credito&Contado
-  $extraContado = ($esSoloContado)?"":" AND ges_comprobantesprov.ModoPago = 'credito'";
-  $extraCredito = ($esSoloCredito)?"":" AND ges_comprobantesprov.ModoPago = 'contado'";
-
   //Local
   $extraLocal   = ($esSoloLocal)?" AND ges_pedidos.IdLocal = '$esSoloLocal' ":"";
 
@@ -1208,6 +1256,7 @@ function CompraPeriodo($local,$desde,$hasta,$emision=false,$nombre=false,
   $extraCompra  = ($esSoloCompra!='Todos')?" AND ges_comprobantesprov.EstadoDocumento = '$esSoloCompra' ":"";
 
   $extraEstPagos= ($esSoloPagos!='Todos')?" AND ges_comprobantesprov.EstadoPago = '$esSoloPagos' ":"";
+  $extraFormaPago = ($esFormaPago!='Todos')?" AND ges_comprobantesprov.ModoPago = '$esFormaPago' ":"";
 
   //TipoComprobantes
   $extraDoc     = ($esSoloDocumento!='Todos')?" AND ges_comprobantesprov.TipoComprobante = '$esSoloDocumento' ":"";
@@ -1270,8 +1319,7 @@ function CompraPeriodo($local,$desde,$hasta,$emision=false,$nombre=false,
           $extraDoc
           $extraSol 
           $extraDol 
-          $extraContado 
-          $extraCredito 
+          $extraFormaPago
           $extraLocal 
           $extraCompra".
           "ORDER BY ges_comprobantesprov.IdComprobanteProv DESC";  
@@ -1284,7 +1332,7 @@ function CompraPeriodo($local,$desde,$hasta,$emision=false,$nombre=false,
 	  $row["TipoDoc"]   = $row["Documento"];
 	  $row["Proveedor"] = obtenerProveedorDocumento($row); 
 	  $row["Documento"] = obtenerMotivoDocumento($row);
-	  $row["EstadoPago"] = ($row["ModoPago"] == "Credito")? checkFechaPago($row):$row["EstadoPago"];
+	  $row["EstadoPago"] = ($row["ModoPago"] == "Credito" && $row["EstadoDocumento"] != "Borrador")? checkFechaPago($row):$row["EstadoPago"];
 
 	  $nombre           = "Orden_" . $t++;
 	  $Compra[$nombre]  = $row; 	
@@ -1563,6 +1611,8 @@ function sFacturarCompra($xid,$xdato){
 	       $listcpValues .= ",'".$xdato."'";
 	       $listcpKeys   .= ",Codigo";
 	       $listcpValues .= ",'".$Codigo."'";
+	       $listcpKeys   .= ",CodigoAlbaran";
+	       $listcpValues .= ",'".getCodigosAlbaranes($xdato)."'";
 	       $listcpKeys   .= ",EstadoDocumento";
 	       $listcpValues .= ",'Pendiente'";
 
@@ -1582,6 +1632,21 @@ function sFacturarCompra($xid,$xdato){
 	       //Actualiza Importes
 	       ConsolidaDetalleCompra($IdPedido,$xdato);
 }
+
+function getCodigosAlbaranes($xdato){
+  
+  $xsql = "SELECT Codigo FROM ges_comprobantesprov WHERE IdPedido in ( $xdato ) ";
+  $xres = query($xsql);
+  $srt      = "";
+  $xcodigos = "";
+
+  while( $xrow = Row($xres) ){
+    $xcodigos .= $srt.$xrow["Codigo"];
+    $srt       = ",";
+  }
+  return $xcodigos;
+}
+
 
 function ConsolidaDetalleOrdenCompra($xid){
                $sql = 
@@ -1669,13 +1734,13 @@ function ConsolidaDetalleVenta($xid,$xdato=false){
 }
 
 function checkOrdenCompraPago($IdOrdenCompra){
-  $sql = "SELECT COUNT(IdOrdenCompra) as OrdenCompra ".
+  $sql = "SELECT group_concat(CONCAT(DATE_FORMAT(FechaOperacion,'%d/%m/%Y %H:%i'),'-',Importe)) as operacion, SUM(importe) as totalimporte ".
          "FROM   ges_pagosprovdoc ".
          "WHERE  IdOrdenCompra = '$IdOrdenCompra' ".
-         "AND    Eliminado = 0 ".
-         "LIMIT  0,1 ";
+         "AND    Eliminado = 0 ";
   $row = queryrow($sql);
-  return $row["OrdenCompra"];
+  if($row["operacion"] == '' || !$row) return "0";
+  return $row["operacion"]."~~".$row["totalimporte"];
 }
 
 function getLoteFromIdProductoVenta($IdPedidoDet, $IdProducto){
@@ -1877,6 +1942,17 @@ function obtenerCostoOperativoOrigen($IdProveedor,$IdProducto){
   $row = queryrow($sql);
 
   return $row["CostoOperativo"];
+}
+
+function obtenerCostoLocalCentral($IdProveedor,$IdProducto){
+  $sql = "SELECT CostoUnitario 
+          FROM ges_almacenes 
+          WHERE IdLocal = $IdProveedor 
+          AND IdProducto = $IdProducto ";
+
+  $row = queryrow($sql);
+
+  return $row["CostoUnitario"];
 }
 
 function verificarEstadoDocumento($IdPedido){

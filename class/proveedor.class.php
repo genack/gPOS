@@ -67,7 +67,8 @@ class proveedor extends Cursor {
 		FROM
 		ges_proveedores 		
 		WHERE
-		ges_proveedores.Eliminado = 0
+		ges_proveedores.Eliminado = 0 AND ges_proveedores.IdProveedor > 1
+                ORDER BY ges_proveedores.NombreComercial ASC
 		";
 		
 		$res = $this->queryPagina($sql, $min, 10);
@@ -131,7 +132,13 @@ class proveedor extends Cursor {
 	
 }
 
-
-
+function buscarNumeroFiscalProv($nfiscal,$idprov){
+  $xwhere = ($idprov)? " AND IdProveedor = '$idprov'":" AND NumeroFiscal = '$nfiscal'";
+  $sql = "SELECT NumeroFiscal FROM ges_proveedores ".
+         "WHERE Eliminado = 0".
+         "$xwhere";
+  $row = queryrow($sql);
+  return $row["NumeroFiscal"];
+}
 
 ?>

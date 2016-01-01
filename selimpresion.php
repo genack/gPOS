@@ -145,7 +145,7 @@ switch($modo){
 			$precio = CleanDinero($_GET["Precio"]);	
 		if (!$id) break;
 
-		actualizarPreciosVentaAlmacen($id,$precio,$idlocal);
+		actualizarAllPreciosVentaAlmacen($id,$precio,$idlocal);
 		
 		for($t=0;$t<$copias;$t++) {
 			//?echo "<div style='$estilosalto'>";

@@ -81,12 +81,14 @@ function RegistrarTiendaLogueada($id){
 }
 function RegistrarIGVTienda($id){
     $id = CleanID($id);
-    $sql = "SELECT Impuesto,Percepcion FROM ges_locales WHERE IdLocal = '$id'";
+    $sql = "SELECT Impuesto,Percepcion,CuentaBancaria,CuentaBancaria2 FROM ges_locales WHERE IdLocal = '$id'";
     $row = queryrow($sql,"Obteniendo IGV del local");
     if($row)
       {
-	setSesionDato("IGV", $row["Impuesto"]);	
-	setSesionDato("IPC", $row["Percepcion"]);	
+	setSesionDato("IGV", $row["Impuesto"]);
+	setSesionDato("IPC", $row["Percepcion"]);
+	setSesionDato("CuentaBancaria", $row["CuentaBancaria"]);
+	setSesionDato("CuentaBancaria2", $row["CuentaBancaria2"]);
       }
 }
 function RegistrarGarantiaComercial($id){
@@ -124,14 +126,17 @@ function RegistrarMUTienda($id){
 
 function RegistrarUsuarioLogueado($id){
 			
-	$sql = "SELECT Nombre,IdPerfil,AdministradorWeb FROM ges_usuarios WHERE IdUsuario='$id'";
+	$sql = "SELECT Nombre,IdPerfil,AdministradorWeb,IdLocal FROM ges_usuarios WHERE IdUsuario='$id'";
 	$row = queryrow($sql,"¿como se llama usuario?");
-	if($row)
-		$nombre = $row["Nombre"];
+	if($row){
+		$nombre     = $row["Nombre"];
+		$userlocal  = $row["IdLocal"];
+	}
 	
 	
 	setSesionDato("NombreUsuario",$nombre);
 	setSesionDato("IdUsuario",$id);
+	setSesionDato("UsuarioLocal",$userlocal);
 	
 	if ($row["AdministradorWeb"])
 		setSesionDato("UsuarioAdministradorWeb",1);
@@ -200,7 +205,11 @@ function identificacionUsuarioValidoMd5($identificador,$passmd5){
 	if (!$datosValidos)
 		return false;		
 	
-	$sql = "SELECT IdUsuario,Password, concat( IdLocal,'',if( GrupoLocales like '', '', concat(',',GrupoLocales) )) as locales FROM ges_usuarios WHERE Identificacion = '$identificador' AND Eliminado=0";
+	$sql = "SELECT IdUsuario,Password, concat( IdLocal,'',if( GrupoLocales like '', '', concat(',',GrupoLocales) )) as locales 
+                FROM ges_usuarios 
+                WHERE Identificacion = '$identificador' 
+                AND Estado = 'Activo' 
+                AND Eliminado=0";
 	$row = queryrow($sql);
 	if (!$row)
 		return false;
@@ -364,5 +373,52 @@ function registraLocalesPermitidos( $xlocales ){
     $xsrt              = '~';
   }
   setSesionDato("LocalAccess",$ckAccess);
+}
+
+function RegistrarLoginLog(){
+  $idlocal   = getSesionDato("IdTienda");
+  $idusuario = getSesionDato("IdUsuario");
+  $IP        = getRealIP();
+  global $UltimaInsercion;
+
+  $sql = "INSERT INTO ges_loginlog (IdLocal, IdUsuario, IpAcceso) VALUES($idlocal,$idusuario,'$IP') ";
+  query($sql);
+  setSesionDato("IdLoginLog",$UltimaInsercion);
+  $_SESSION["IdLoginLog"] = $UltimaInsercion;
+}
+
+function getRealIP(){
+  if (isset($_SERVER["HTTP_CLIENT_IP"]))
+    {
+        return $_SERVER["HTTP_CLIENT_IP"];
+    }
+    elseif (isset($_SERVER["HTTP_X_FORWARDED_FOR"]))
+    {
+        return $_SERVER["HTTP_X_FORWARDED_FOR"];
+    }
+    elseif (isset($_SERVER["HTTP_X_FORWARDED"]))
+    {
+        return $_SERVER["HTTP_X_FORWARDED"];
+    }
+    elseif (isset($_SERVER["HTTP_FORWARDED_FOR"]))
+    {
+        return $_SERVER["HTTP_FORWARDED_FOR"];
+    }
+    elseif (isset($_SERVER["HTTP_FORWARDED"]))
+    {
+        return $_SERVER["HTTP_FORWARDED"];
+    }
+    else
+    {
+        return $_SERVER["REMOTE_ADDR"];
+    }
+}
+
+function actualizarLoginLog(){
+  $idlog = getSesionDato("IdLoginLog");
+  if(!$idlog) return;
+  $sql = "UPDATE ges_loginlog SET FechaFin = NOW() ".
+         "WHERE IdLoginLog = $idlog ";
+  query($sql);
 }
 ?>

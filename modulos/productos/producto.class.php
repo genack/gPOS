@@ -71,9 +71,26 @@ function AltaDesdePostProducto($esMudo=false) {
 	AccionesTrasAlta();
       return $id;
     } else {
-    
     return false;
   } 
+}
+
+
+
+function getIdClonProducto() {
+  
+  $referencia 	= CleanReferencia($_POST["Referencia"]);
+  $color 	= CleanID($_POST["IdColor"]);
+  $talla      = CleanID($_POST["IdTalla"]);
+
+  $sql  = "SELECT IdProducto FROM ges_productos WHERE (IdTalla = '$talla') AND (IdColor = '$color') AND (Referencia = '$referencia') ";
+		
+  $row = queryrow($sql,"..comprobando integridad de modelo y detalle");
+  
+  if (!$row)	
+    return false;
+  else
+    return $row["IdProducto"];
 }
 
 		
@@ -130,8 +147,8 @@ function genListadoCruzado($IdProducto,$IdTallaje = false,$IdLang=false){
         $talla 		  = NormalizaTalla($row["Talla"]);		
         $nombre 	  = $row["NombreComercial"];
         $unidades   	  = CleanInt($row["TotalUnidades"]);
-        $ventamenudeo     = $row["VentaMenudeo"];
         $undsxcont        = $row["UnidadesPorContenedor"];
+        $ventamenudeo     = ( $undsxcont > 0 )? $row["VentaMenudeo"]:0;
         $contenedor       = $row["Contenedor"];
         $colores[$color]  = 1;
         $tallas[$talla]   = 1;
@@ -145,6 +162,7 @@ function genListadoCruzado($IdProducto,$IdTallaje = false,$IdLang=false){
 	  $data[$color][$talla][$nombre] = $unidades.$UnidadMedida;
         
         if($ventamenudeo=="1" && $unidades!=0){
+	  
 	  if($undsxcont>$unidades){
                 $puchos = "";
                 $enteros = $unidades;
@@ -152,6 +170,7 @@ function genListadoCruzado($IdProducto,$IdTallaje = false,$IdLang=false){
                 $enteros = intval($unidades/$undsxcont);
                 $puchos = $unidades % $undsxcont;
             }
+
             if($puchos==0)
                 $data[$color][$talla][$nombre] =  $enteros.$contenedor;
             else
@@ -191,7 +210,7 @@ function genListadoCruzado($IdProducto,$IdTallaje = false,$IdLang=false){
 
         $out .= "<tr><td class='nombre'>".$tReferencia."</td>";		
         foreach ($tallasTallaje as $k=>$v) {
-            $out .= "<td class='lhz' id='talla_$num' style='width: 16px!important;background-color: #ccc'>".($v)."</td>";
+            $out .= "<td class='lhz' id='talla_$num' style='width: 16px!important;'>".($v)."</td>";
             $num++;
         }
         $out .= "</tr>";
@@ -538,6 +557,7 @@ function CrearProducto($mudo,$referencia,$descripcion, $precioventa,
   $oProducto->setLang(getSesionDato("IdLenguajeDefecto"));	
   $oProducto->setPrecioVenta($precioventa);
   $oProducto->setPrecioOnline($precioonline);
+  $oProducto->set("IdProdBase", getIdProdbase($referencia),FORCE);//Productos Clonados
   $oProducto->set("Costo",$coste,FORCE);
   $oProducto->set("IdFamilia",$idfamilia,FORCE);
   $oProducto->set("IdSubFamilia",$idsubfamilia,FORCE);
@@ -780,6 +800,24 @@ function getIdColor2Texto($IdColor, $IdIdioma=false) {
 	return $row["Color"];	
 }
 
+function resetIdColor2Texto($IdColor, $IdIdioma=false) {
+	$IdColor = CleanID($IdColor);
+
+	if (!$IdIdioma)
+		$IdIdioma = getSesionDato("IdLenguajeDefecto");
+		
+	$keyname = "tCOLOR_" . $IdColor;		
+	//Cacheamos traduccion de talla en color	
+
+	$IdIdioma = CleanID($IdIdioma);		
+	$sql = "SELECT Color  FROM ges_modelos  WHERE Eliminado=0 AND IdIdioma = '$IdIdioma' AND IdColor = '$IdColor'";
+	$row = queryrow($sql);
+	if (!$row)		return false;
+	
+	$_SESSION[$keyname] = $row["Color"];		
+	return $_SESSION[$keyname];	
+}
+
 function getIdProductoAlias2Texto($IdProductoAlias, $IdIdioma=false) {
 	$IdProductoAlias = CleanID($IdProductoAlias);
 
@@ -798,43 +836,6 @@ function getIdProductoAlias2Texto($IdProductoAlias, $IdIdioma=false) {
 	
 	$_SESSION[$keyname] = $row["ProductoAlias"];		
 	return $row["ProductoAlias"];	
-}
-
-function setChangeColorbyIdColor($IdColor,$Color,$IdIdioma=false){
-  if (!$IdIdioma)
-    $IdIdioma = getSesionDato("IdLenguajeDefecto");
-  $IdIdioma = CleanID($IdIdioma);	
-  $sql = "UPDATE ges_modelos SET Color = '".$Color."'
-          WHERE  ges_modelos.IdColor   = '".$IdColor."' 
-          AND    ges_modelos.IdIdioma  = '".$IdIdioma."' 
-          AND    Eliminado = 0";
-  $res = query($sql);
-  if (!$res) {
-    $this->Error(__FILE__ . __LINE__, "E: no se pudo actualizar el  modelo en el producto");
-    return false;	
-  }		
-  //Cacheamos traduccion color
-  $_SESSION["tCOLOR_$IdColor"] = $Color;
-  return true;
-}
-
-function setChangeTallabyIdTalla($IdTalla,$Talla,$IdIdioma=false){
-  if (!$IdIdioma)
-    $IdIdioma = getSesionDato("IdLenguajeDefecto");
-  $IdIdioma = CleanID($IdIdioma);	
-  $sql = "UPDATE ges_detalles SET Talla = '".$Talla."'
-          WHERE  ges_detalles.IdTalla   = '".$IdTalla."' 
-          AND    ges_detalles.IdIdioma  = '".$IdIdioma."' 
-          AND    Eliminado = 0";
-  $res = query($sql);
-  if (!$res) {
-    $this->Error(__FILE__ . __LINE__, "E: no se pudo actualizar el  detalle en el producto");
-    return false;	
-  }		
-  //Cacheamos traduccion talla
-  $_SESSION["tTALLA_$IdTalla"] = $Talla;
-
-  return true;
 }
 
 function getLikeProductoAlias2Id($ProductoAlias, $IdIdioma=false) {
@@ -874,6 +875,22 @@ function getIdTalla2Texto($IdTalla, $IdIdioma=false) {
 	  return false;
 	$_SESSION["tTALLA_$IdTalla"] = $row["Talla"];
 	return $row["Talla"];	
+}
+
+function resetIdTalla2Texto($IdTalla, $IdIdioma=false) {
+	$IdColor = CleanID($IdTalla);
+	if (!$IdIdioma)
+		$IdIdioma = getSesionDato("IdLenguajeDefecto");
+	
+	//Cacheamos traduccion de talla en color	
+	$IdIdioma = CleanID($IdIdioma);				
+	$sql = "SELECT Talla FROM ges_detalles  WHERE Eliminado=0 AND (IdIdioma = '$IdIdioma') AND (IdTalla = '$IdTalla')";
+	$row = queryrow($sql);
+	if (!$row)
+	  return false;
+
+	$_SESSION["tTALLA_$IdTalla"] = $row["Talla"];
+	return $_SESSION["tTALLA_$IdTalla"];	
 }
 
 function getIdMarca2Texto($IdMarca) {
@@ -1052,16 +1069,17 @@ class producto extends Cursor {
     	if ($idalias)
     		$extra .= "AND (IdProductoAlias0 = '".$idalias."' OR IdProductoAlias1 ='".$idalias."')";
 	else{
-	    if ($nombre){
-	      $xnombre    = explode("|", $nombre);
 
-	      $extra     .= " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre[0]."%' ";
-	      $extra     .= ( isset( $xnombre[1] ) )? " AND ( ges_marcas.Marca  LIKE '%".$xnombre[1]."%' OR ges_modelos.Color  LIKE '%".$xnombre[1]."%' OR ges_detalles.Talla LIKE '%".$xnombre[1]."%' OR ges_productos.RefProvHab  LIKE '%".$xnombre[1]."%' ) ": "";
-	      $extrafrom .= ( isset( $xnombre[1] ) )? " INNER JOIN ges_marcas ON ges_marcas.IdMarca = ges_productos.IdMarca  INNER JOIN ges_modelos ON ges_modelos.IdColor = ges_productos.IdColor  INNER JOIN ges_detalles ON ges_detalles.IdTalla = ges_productos.IdTalla ":"";
-	    }
-
+	  $xnombre    = explode("|", $nombre);
+	  $extra     .= ( $xnombre[0] != '' )? " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre[0]."%' ":"";
+	  if( isset( $xnombre[1] ) )
+	    if ( $xnombre[1] != '' )
+	      {
+		$extra     .= " AND ( ges_marcas.Marca  LIKE '%".$xnombre[1]."%' OR ges_modelos.Color  LIKE '%".$xnombre[1]."%' OR ges_detalles.Talla LIKE '%".$xnombre[1]."%' OR ges_productos.RefProvHab  LIKE '%".$xnombre[1]."%' OR ges_laboratorios.NombreComercial LIKE '%".$xnombre[1]."%' OR ges_productos_alias.ProductoAlias LIKE '%".$xnombre[1]."%' ) ";
+		$extrafrom .=  " INNER JOIN ges_marcas ON ges_marcas.IdMarca = ges_productos.IdMarca  INNER JOIN ges_modelos ON ges_modelos.IdColor = ges_productos.IdColor  INNER JOIN ges_detalles ON ges_detalles.IdTalla = ges_productos.IdTalla INNER JOIN ges_laboratorios ON ges_laboratorios.IdLaboratorio = ges_productos.IdLabHab  INNER JOIN ges_productos_alias ON (ges_productos.IdProductoAlias0 = ges_productos_alias.IdProductoAlias OR ges_productos.IdProductoAlias1 = ges_productos_alias.IdProductoAlias) ";
+	      }
 	}    		
-
+	
     	if (!$obsoletos)
     		$extra .= "AND ges_productos.Obsoleto=0 ";
     		    		    
@@ -1077,6 +1095,7 @@ class producto extends Cursor {
 		ges_productos_idioma.IdIdioma = '$lang'
 		AND ges_productos.Eliminado = 0
 		$extra		".
+	        " GROUP BY ges_productos.CodigoBarras ".
 		"ORDER BY ".		
 		" ges_productos_idioma.Descripcion ASC, " .
 		" ges_productos.IdProdBase ASC ";
@@ -1126,13 +1145,15 @@ class producto extends Cursor {
 	  if ($idalias)
 	    $extra .= "AND (IdProductoAlias0 = '".$idalias."' OR IdProductoAlias1 ='".$idalias."')";
 	  else{
-	    if ($nombre){
-	      $xnombre    = explode("|", $nombre);
-
-	      $extra     .= " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre[0]."%' ";
-	      $extra     .= ( isset( $xnombre[1] ) )? " AND ( ges_marcas.Marca  LIKE '%".$xnombre[1]."%' OR ges_modelos.Color  LIKE '%".$xnombre[1]."%' OR ges_detalles.Talla LIKE '%".$xnombre[1]."%'  OR ges_productos.RefProvHab  LIKE '%".$xnombre[1]."%' ) ": "";
-	      $extrafrom .= ( isset( $xnombre[1] ) )? " INNER JOIN ges_marcas ON ges_marcas.IdMarca = ges_productos.IdMarca  INNER JOIN ges_modelos ON ges_modelos.IdColor = ges_productos.IdColor  INNER JOIN ges_detalles ON ges_detalles.IdTalla = ges_productos.IdTalla ":"";
-	    }
+	    //Nombre
+	    $xnombre    = explode("|", $nombre);
+	    $extra     .= ( $xnombre[0] != '' )? " AND ges_productos_idioma.Descripcion  LIKE '%".$xnombre[0]."%' ":"";
+	    if( isset( $xnombre[1] ) )
+	      if ( $xnombre[1] != '' )
+		{
+		  $extra     .= " AND ( ges_marcas.Marca  LIKE '%".$xnombre[1]."%' OR ges_modelos.Color  LIKE '%".$xnombre[1]."%' OR ges_detalles.Talla LIKE '%".$xnombre[1]."%' OR ges_productos.RefProvHab  LIKE '%".$xnombre[1]."%' OR ges_laboratorios.NombreComercial LIKE '%".$xnombre[1]."%' OR ges_productos_alias.ProductoAlias LIKE '%".$xnombre[1]."%' ) ";
+		  $extrafrom .=  " INNER JOIN ges_marcas ON ges_marcas.IdMarca = ges_productos.IdMarca  INNER JOIN ges_modelos ON ges_modelos.IdColor = ges_productos.IdColor  INNER JOIN ges_detalles ON ges_detalles.IdTalla = ges_productos.IdTalla INNER JOIN ges_laboratorios ON ges_laboratorios.IdLaboratorio = ges_productos.IdLabHab  INNER JOIN ges_productos_alias ON (ges_productos.IdProductoAlias0 = ges_productos_alias.IdProductoAlias OR ges_productos.IdProductoAlias1 = ges_productos_alias.IdProductoAlias) ";
+		}
 	  }    	
 	
 	  if($stockminimo){
@@ -1142,8 +1163,8 @@ class producto extends Cursor {
 	    $extrafrom .= " INNER JOIN ges_almacenes ON ges_almacenes.IdProducto = ges_productos.IdProducto ";
 	  }
 
-	  if (!$obsoletos)
-	    $extra .= "AND ges_productos.Obsoleto=0 ";
+	  if ($obsoletos)
+	    $extra .= "AND ges_productos.Obsoleto=1 ";
 
 	  $sql = "SELECT		
 		ges_productos.*,
@@ -1160,6 +1181,7 @@ class producto extends Cursor {
                 AND ges_productos.Servicio = 0 
                 AND ges_productos.MetaProducto = 0
 		$extra		".
+	    " GROUP BY ges_productos.CodigoBarras ".
 	    "ORDER BY ".		
 	    " ges_productos_idioma.Descripcion ASC, " .
 	    " ges_productos.IdProdBase ASC ";
@@ -1479,16 +1501,18 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
 	$incluidons  = ($this->get("Serie")==1)? "checked":"";
 	$incluidolt  = ($this->get("Lote")==1)? "checked":"";
 	$incluidofv  = ($this->get("FechaVencimiento")==1)? "checked":"";
-	$incluidomd  = ($this->get("VentaMenudeo")==1)? "checked":"";
+	$incluidomd  = ($this->get("VentaMenudeo") )? "checked":"";
+	$motivomd    = ($this->get("VentaMenudeo")==1)? "visible":"hidden";
+
         $existencias = ObtenerExistenciasTotalesAlmacen($this->getId());
-	$readonly    = ($existencias>0)? "disabled='true'":"";
+	$readonly    = ($existencias>0)? "1":"0";
 	$readonlyUM  = "";
         $numreg      = ObtenerNumeroProductosPorReferencia($this->getReferencia());
         $um          = "";
-        $ounidad     = ($numreg!=1)? "disabled":"";
-        $ometro      = ($numreg!=1)? "disabled":"";
-        $olitro      = ($numreg!=1)? "disabled":"";
-        $okilo       = ($numreg!=1)? "disabled":"";
+        $ounidad     = "";
+        $ometro      = "";
+        $olitro      = "";
+        $okilo       = "";
         switch ($this->get("UnidadMedida")) 
 	  {
 	  case 'und': $um = "Unidades"; $ounidad = "selected"; break;
@@ -1532,6 +1556,7 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
             "Imagen" =>  $this->get("Imagen"),
             "tMarca" => _("Marca"),
             "vMarca" => getIdMarca2Texto($this->get("IdMarca")),			
+	    "vIdTallaje" => $this->get("IdTallaje"),
             "vIdContenedor" =>  $this->get("IdContenedor"),
             "tContenedor" => _("Contenedor"),
             "vContenedor" => getIdContenedor2Texto($this->get("IdContenedor")),	
@@ -1580,6 +1605,7 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
             "vLaboratorioHab" => getNombreLaboratorio($this->get("IdLabHab")),
             "tVentaMenudeo"=> _("Venta al menudeo"),
             "cVentaMenudeo" => $incluidomd,
+	    "vMotivoMd" => $motivomd,
             "cNumeroSerie" => $incluidons,
             "cLote" => $incluidolt,
             "cFechaVencimiento" => $incluidofv,
@@ -1939,6 +1965,7 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
 		if (!$this->AutoIntegridad()){
 		  $this->regeneraCB();
 		}	
+		
 		if (!$this->AutoIntegridad()){
 			$this->Error(__FILE__ . __LINE__, "Info: no pudo crear producto, fallo de integridad: [" . $this->getFallo() . "]");
 			return false;
@@ -2392,7 +2419,7 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
 			$this->Error(__FILE__ . __LINE__, "E: no pudo modificar producto, datos idioma");
 			return false;	
 		}		
-        $this->ActualizarProveedoresSerieProductos($this->get("IdProdBase"),$this->get("IdProvHab"),$this->get("Serie"));
+		//$this->ActualizarProveedoresSerieProductos($this->get("IdProdBase"),$this->get("IdProvHab"),$this->get("Serie"));
 		return true;		
 	}		
 				
@@ -2585,6 +2612,38 @@ function getDatosProductosExtra($id,$extra=false){
 	   $arreglo["Servicio"] = ( $oPd->get("Servicio") > 0 )? 1:0;
 	   return $arreglo;
 	   break;
+
+	 case "clon" :
+	   $arreglo = array(); 
+	   $arreglo["IdSubFamilia"] = $oPd->get("IdSubFamilia");
+	   $arreglo["IdFamilia"]    = $oPd->get("IdFamilia");
+	   $arreglo["Referencia"]   = $oPd->get("Referencia");
+	   $arreglo["CodigoBarras"] = $oPd->get("CodigoBarras");
+	   $arreglo["IdTalla"]      = $oPd->get("IdTalla");
+	   $arreglo["IdTallaje"]    = $oPd->get("IdTallaje");
+	   $arreglo["IdMarca"]      = $oPd->get("IdMarca");
+	   $arreglo["IdColor"]      = $oPd->get("IdColor");
+	   $arreglo["IdLabHab"]     = $oPd->get("IdLabHab");
+	   $arreglo["IdProvHab"]    = $oPd->get("IdProvHab");
+	   $arreglo["Serie"]        = $oPd->get("Serie");
+	   $arreglo["Lote"]         = $oPd->get("Lote");
+	   $arreglo["Vence"]        = $oPd->get("FechaVencimiento");
+	   $arreglo["Menudeo"]      = $oPd->get("VentaMenudeo");
+	   $arreglo["UndxEmp"]      = $oPd->get("UnidadesPorContenedor");
+	   $arreglo["Und"]          = $oPd->get("UnidadMedida");
+	   $arreglo["IdContenedor"] = $oPd->get("IdContenedor");
+	   $arreglo["IdAlias0"]     = $oPd->get("IdProductoAlias0");
+	   $arreglo["IdAlias1"]     = $oPd->get("IdProductoAlias1");
+	   $arreglo["Alias0"]       = getIdProductoAlias2Texto($oPd->get("IdProductoAlias0"), $IdIdioma=false);
+	   $arreglo["Alias1"]       = getIdProductoAlias2Texto($oPd->get("IdProductoAlias1"), $IdIdioma=false);
+	   $arreglo["CondVenta"]    = $oPd->get("CondicionVenta");
+	   $arreglo["Nombre"]       = $oPd->get("Descripcion");
+	   $arreglo["Marca"]        = getIdMarca2Texto($oPd->get("IdMarca"));
+	   $arreglo["Lab"]          = getNombreLaboratorio($oPd->get("IdLabHab"));
+	   return $arreglo;
+
+	   break;
+
 	 }
 }
 
@@ -2620,4 +2679,16 @@ function getSerie2Producto($xid){
   $row = queryrow($sql);
   return ( $row["Serie"] == "1");  
 }
+
+function getIdProdbase($referencia){
+  //Productos Clonados
+  $ref = CleanRef( $referencia );
+  $sql = "SELECT IdProdBase FROM ges_productos WHERE Referencia='$ref'";	
+  $row = queryrow($sql);
+  if ($row) 
+    return $row["IdProdBase"];
+  else
+    return 0;
+}
+
 ?>

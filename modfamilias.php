@@ -338,14 +338,24 @@ function ListaProductosxSubFamilia($IdFamilia,$IdSubFamilia,$mud,$muc,$dsto,$tip
 	//echo "::".$IdFamilia."::".$IdSubFamilia."::";
         $COPImpuesto = getSesionDato("COPImpuesto");
 	$res = obtenerProductoxSubFamilia($IdFamilia,$IdSubFamilia);
-	$xout = "<table class='forma' width='750'>
-                 <tbody><tr><td><table></table></td></tr>
-                 <tr class='formaCabezaLista'>
+	$tprodusctos = mysql_num_rows($res);
+	$xout = "<table class='forma' width='90%'>
+                 <tbody>
+                 <tr class='formaCabeza'>
+                 <td colspan='12'>
+                 <div class='formaTitulo' id='t_comprov'> Resultado: 
+                 <span id='list_total'>".$tprodusctos."</span> 
+                 <input type='text' style='display:none' id='head_total'> productos 
+                 </div>
+                 <table style='display:none'></table>
+                 </td>
+                 </tr>
+                 <tr class='f lh' style='background-color:#eee'>
                  <td colspan=4>Productos</td>
                  <td colspan=4 >Precios Anteriores</td>
                  <td colspan=4 >Nuevos Precios</td>
                  </tr>
-                 <tr class='formaCabezaLista' style='font-size:1em;'>
+                 <tr class='f lh'>
                  <td ></td>
                  <td >Ref</td>
                  <td >CB</td>
@@ -386,10 +396,13 @@ function ListaProductosxSubFamilia($IdFamilia,$IdSubFamilia,$mud,$muc,$dsto,$tip
 	  $PVCD_Nuevo = ($muc != 0)? $PVCD_Nuevo:$row["PVCDescontado"];
 	  $PVCD_Nuevo = FormatPreciosTPV($PVCD_Nuevo);
 
-	  $xout .= "<tr class='t f'><td width='16' class='iconproducto'><img src='img/gpos_productos.png'></td>".
-	    "<td class='referencia'>".$row["Referencia"]."</td>".
-	    "<td class='codigobarras'>".$row["CodigoBarras"]."</td>".
-	    "<td class='nombre'>".$row["Producto"]."</td>".
+	  $xout .= 
+            "<tr class='t f'>
+             <td><img src='img/gpos_productos.png'>
+             </td>".
+	    "<td >".$row["Referencia"]."</td>".
+	    "<td >".$row["CodigoBarras"]."</td>".
+	    "<td >".$row["Producto"]."</td>".
 	    "<td >".$row["PrecioVenta"]."</td>".
 	    "<td >".$row["PVDDescontado"]."</td>".
 	    "<td >".$row["PrecioVentaCorporativo"]."</td>".

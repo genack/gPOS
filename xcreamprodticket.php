@@ -61,6 +61,7 @@ define("FAC_ANULADA",		4);
 $ImporteNeto 	= 0;//lo que paga el cliente, menos los impuestos
 $IvaImporte 	= 0;//cuando de lo que hay que pagar es debido a impuestos
 $TotalImporte 	= 0;//Lo que tiene que pagar el cliente
+$TotalCosto 	= 0;//Lo que tiene que pagar el cliente
 $carrito 	= array(); //acumularemos aqui las lineas de ticket ticket
 $icarrito 	= 0;
 $trabajos 	= array(); //acumularemos aqui los trabajos a enviar al subsidiario
@@ -159,9 +160,9 @@ function AgnadirTicket($codigo,$unidades,$precio,$descuento,$impuesto,
 		       $idsubsidiario,$nombre,$pedidodet,$status,$oferta,
 		       $costo,$idproducto) {
 
-	global $ImporteNeto, $IvaImporte, $TotalImporte;
+        global $ImporteNeto, $IvaImporte, $TotalImporte,$TotalCosto;
 	global $icarrito, $carrito;
-	
+	$TotalCosto   = $TotalCosto+$costo;
 	$costeneto    = $precio * $unidades;
 	$coste        = $costeneto - ($costeneto * ($descuento/100.0) );	
 	$iva          = $coste * ($impuesto);
@@ -210,6 +211,7 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal,$IdCliente,$modoTi
 			 $entregaEfectivo, $entregaBono, $entregaTarjeta, $cambio,
 			 $modoTPV,$IdMProducto,$Estado,$IdMetaProducto ){
     global $TotalImporte;
+    global $TotalCosto;
     global $ImporteNeto;
     global $IvaImporte;
     global $carrito, $UltimaInsercion;
@@ -263,8 +265,8 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal,$IdCliente,$modoTi
 	    //Compras...
 	    $IdPedido   = registrarAlbaranDestino($Destino,$Origen,$Motivo,$Codigo,
 						  'MetaProducto');
-	    $Costo      = $TotalImporte;
-	    $Precio     = abs(intval((abs($TotalImporte)+abs($TotalImporte*$IGV/100))*100)/100.0);
+	    $Costo      = $TotalCosto;
+	    $Precio     = abs(intval((abs($TotalCosto)+abs($TotalCosto*$IGV/100))*100)/100.0);
 	    $LoteVence  = 0;
 	    $Cantidad   = 1;
 
@@ -285,8 +287,13 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal,$IdCliente,$modoTi
 	    query($sql);
 
 	    //Importes Compras & Ventas
-	    registrarImportesTraslado($TotalImporte,$IdComprobante,$IdPedido,'9');
-	
+	    registrarImportesTraslado($Precio,$IdComprobante,$IdPedido,'9');
+
+	    //Recibir Pedidos
+	    $Operacion  = 1;//1:Compras 3:Traslado interno
+	    registrarPedidoKardexFifo($IdPedido,$IdPedido,$IdLocal,$Operacion,false,false,false);
+	    actualizarStatusPedido($IdPedido,'2');
+	    actualizarEstadoDocumentoPedido($IdPedido);
 	  }
       }
 
@@ -294,7 +301,7 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal,$IdCliente,$modoTi
 
     //Detalles...
     if($modoTicket !="endmproducto")  $IdMetaProducto = $UltimaInsercion;
-    if($modoTicket =="endmproducto" )	setDelDetMetaProducto($IdMetaProducto);
+    if($modoTicket =="endmproducto")  setDelDetMetaProducto($IdMetaProducto);
     
     foreach ($carrito as $fila) 
       {
@@ -332,10 +339,10 @@ function generaCBMP() {
     if (intval($maxbarras) > intval($sugerido))
       $minval = intval($maxbarras);
     else
-      $minval = intval($sugerido) + 30000001;
+      $minval = intval($sugerido) + 11;
     
   } else {
-    $minval = 30000001+ rand()*10000;	
+    $minval = 11+ rand()*2;	
   }
   
   $extra = 0;

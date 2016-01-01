@@ -1,15 +1,8 @@
 <?php
 SimpleAutentificacionAutomatica("visual-xulframe");
-header("Content-type: application/vnd.mozilla.xul+xml");
-echo '<?xml version="1.0" encoding="UTF-8"?>';
-echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';
-echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
+StartXul('Productos Series',$predata="",$css='');
 ?>
-
-<window id="NumSerie" title="<?php echo "gPOS // NS - ".$producto; ?>" 
-xmlns:html="http://www.w3.org/1999/xhtml"
-xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/compras/numerosdeserie.js" />
+<script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/compras/numerosdeserie.js?v=3.1" />
 <?php
  $unid       = ($validarSeries==1)? $cantidadNS:$unidades; 
  $unid       = ($Comprar)? 0:$unid; 
@@ -40,16 +33,16 @@ var cOpEntrada   = "<?php echo $opentrada;?>";
             label="Quitar"  oncommand="quitarns()"/>
 </popup>
 
-<vbox  align="center"  pack="center" collapsed="<?php echo $vtitulo; ?>">
+<vbox  align="center"  pack="center" collapsed="<?php echo $vtitulo; ?>" class="box">
   <spacer style="height:20px"/>
-  <caption label="<?php echo $tituloCart; ?>" style="font-size: 14px;font-weight: bold;"/>
+  <caption class="box" label="<?php echo $tituloCart; ?>" />
   <spacer style="height:10px"/>
-  <caption label="<?php echo $producto; ?>" style="font-size: 12px;font-weight: bold;"/>
+  <caption class="box" label="<?php echo $producto; ?>" />
+  <spacer style="height:10px"/>
 </vbox>
-<spacer style="height:10px"/>
 
-<vbox  align="center"  pack="center">
-  <spacer flex="1"></spacer>
+<vbox  align="center"  pack="top" class="box" flex="1">
+
   <groupbox>
     <hbox>
       <grid>
@@ -142,12 +135,12 @@ var cOpEntrada   = "<?php echo $opentrada;?>";
 
 	  <row  collapsed="<?php echo $eslTBoxtx;?>">
 	    <description value="NS Listados:"/>
-	    <caption id="totalNS" label="<?php echo $item; ?>"/>
+	    <caption  class="xtotal"  id="totalNS" label="<?php echo $item; ?>"/>
 	  </row>
 
 	  <row collapsed="<?php echo $escKBoxtx;?>">
 	    <description value="NS Seleccionados:"/>
-	    <caption id="totalSelNS" label="0"/>
+	    <caption class="xtotal" id="totalSelNS" label="0"/>
 	  </row>
 
 	  <row>
@@ -155,26 +148,25 @@ var cOpEntrada   = "<?php echo $opentrada;?>";
 
 	    <vbox flex="1" >
 
-	      <hbox flex="1" pack="center" style="width:19.5em;">
+	      <hbox flex="1" pack="center" >
 
 		<?php if($valor=="true"){ ?>
 
 		<button id="btncancelar"  
                         image="<?php echo $_BasePath; ?>img/gpos_volver.png" 
-                        flex="1" class="media" 
+                        flex="1" class="media btn" 
 			label="<?php echo $btnexittxt; ?>"  
-                        style="font-size: 11px;font-weight: bold;"
 			oncommand="<?php echo $btnexitcmd; ?>" />
 
 		<?php } else {?>
 
 		<button id="btnaceptar" image="<?php echo $_BasePath; ?>img/gpos_compras.png"
-                        label=" <?php echo $btnComprar;?>" 
+                        label=" <?php echo $btnComprar;?>" class="btn"
 			oncommand="actualizar_carrito(<?php echo $id.",'".$unidades."',
                                                       '".$modo."','".$idpedidodet."','".$fila."',
-                                                      '".$trasAlta."'";?>)"/>
+			                              '".$trasAlta."',".$esPopup;?>)"/>
 
-		<button id="btncancelar" 
+		<button id="btncancelar" class="btn"
                         image="<?php echo $_BasePath; ?>img/gpos_vaciarcompras.png" 
                         label =" Cancelar" 
 			oncommand="<?php echo $btnCancelar; ?>" />

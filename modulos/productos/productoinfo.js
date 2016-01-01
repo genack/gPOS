@@ -87,6 +87,8 @@ function BuscarAlmacen(){
     RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 		     filtrolocal,AddLineaAlmacen);
     //if(forzaid) buscarPorCodigo(filtrocodigo);
+    id("resumenAlmacen").setAttribute("collapsed",false);
+    id("formAjustesExistencias").setAttribute("collapsed",true);
 }
 
 function VaciarBusquedaAlmacen(){
@@ -106,7 +108,7 @@ function RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 	+ "&familia=" + escape(familia)
         + "&marca=" + escape(marca)
         + "&xinventario=" + escape(cInventario)
-        + "&xnombre=" + escape(nombre)
+        + "&xnombre=" + trim(nombre)
         + "&xcodigo=" + escape(codigo)
 	+ "&xstock=" + escape(stock)
         + "&xlocal=" + escape(filtrolocal);
@@ -350,8 +352,9 @@ function modificarArticuloSeleccionada(){
     cProducto      = id("producto_"+idex.value).getAttribute("label");
     cIdProducto    = id("idproducto_"+idex.value).getAttribute("value");
 
+    id("resumenAlmacen").setAttribute("collapsed",true);  
     id("formAjustesExistencias").setAttribute("collapsed",false);
-    id("xProducto").setAttribute("label",cProducto);  
+    id("xProducto").setAttribute("label",cProducto); 
 
     id("webkardex").setAttribute("src","about:blank");  
     cAjusteModo                    = 'igual';
@@ -359,7 +362,6 @@ function modificarArticuloSeleccionada(){
 
     obtenerProductoInformacion(cIdProducto);
 
-    //id("resumenAlmacen").setAttribute("collapsed",true);  
     //id("btnModificarStock").setAttribute("oncommand","validaModificarStock()");
 }
 

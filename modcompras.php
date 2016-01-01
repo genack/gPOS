@@ -4,7 +4,8 @@ include("tool.php");
 SimpleAutentificacionAutomatica("visual-iframe");
 
 global $tamPagina;
-$tamPagina  = 100;
+
+$tamPagina  = ( getSesionDato("GlobalGiroNegocio") == 'BTQE')? 200: 100;
 
 function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
 			 $seleccion,$idprod,$idbase,$nombre=false,$ref=false,
@@ -21,10 +22,10 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
     $txtMoDet     = getModeloDetalle2txt();
     $txtModelo    = $txtMoDet[1];
     $txtDetalle   = $txtMoDet[2];
-    
+
     $hayProductos = $oProducto->ListadoFlexibleCompras($idprov,$idmarca,$idcolor,$idtalla,false,
 						       $indice,$base,false,false,$tamPagina,$ref,$cb,
-						       $nombre,$obsoletos=false,$idalias,$idlab,
+						       $nombre,$obsoletos,$idalias,$idlab,
 						       $porproveedor,$stockminimo);
     $num   = 0;
     $jsOut = "";
@@ -84,239 +85,48 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
 
     $paginador = jsPaginador($indice,$tamPagina,$num);
     $jsOut .= $paginador;	
-    $jsOut .= "cListProductos();";	
+    $jsOut .= "cListCompras();";	
     $jsOut .= $paginador;
     $jsOut .= AutoOpen();
 
-    $detadoc      = getSesionDato("detadoc");
-    $documento    = getNombreDocumentoCompra($detadoc);
-    $tipodoc      = $detadoc[0];
-    $idprov       = (!$detadoc[1])?1:$detadoc[1];
-    $nombreprov   = (!$idprov)?'CASAS VARIAS':$detadoc[2];    
-    $fechapago    = $detadoc[8];
-    $idsubsid     = (!$detadoc[9])?'':$detadoc[9];
-    $nombresubsid = (!$detadoc[10])?'':$detadoc[10];
-    $nrodoc       = $detadoc[3];
-    $anrodoc      = explode("-", $nrodoc);
-    $sdoc         = $anrodoc[0];
-    $ndoc         = (isset($anrodoc[1]))? $anrodoc[1]:'';
-    $fdoc         = $detadoc[4];
-    $tipocambio   = $detadoc[6];
-    $fcambio      = $detadoc[7];
-    $tipomoneda   = $detadoc[5];
-    $tpfecha      = 'Fecha Emisión : ';
-    $checkigv     = (getSesionDato("incImpuestoDet")=='true')?'CHECKED':'';
-    $checkipc     = (getSesionDato("incPercepcion")=='true')?'CHECKED':'';
-    $checkcredt   = (getSesionDato("aCredito")=='true')?'CHECKED':'';
-    $admiteCompra = (!selAdmite('Compras') );
-    $tipodoc      = ( selAdmite('Compras') )? "O":$tipodoc;
-    $checkF       = '';
-    $checkO       = '';
-    $checkR       = '';
-    $checkG       = '';
-    $checkSD      = '';
+    $inputCB       = ( getSesionDato("FiltraCB")  != '')? 'value="'.getSesionDato("FiltraCB").'"' :'';
+    $inputReferencia = ( getSesionDato("FiltraReferencia")  != '')? 'value="'. getSesionDato("FiltraReferencia").'"' :'';
+    $inputNombre   = ( getSesionDato("FiltraNombre")  != '')? 'value="'.getSesionDato("FiltraNombre").'"' :'';
+    //chek
+    $ckPorProveedor = ( getSesionDato("FiltraPorProveedor") )? 'checked':'';
+    $ckObsoletos    = ( getSesionDato("FiltraObsoletos")    )? 'checked':'';
+    $ckStockMinimo  = ( getSesionDato("FiltraStockMinimo")  )? 'checked':'';
 
-    switch($tipodoc) {
-    case "F":
-      $habilita=
-	"apareceCapa('prov');".
-	"apareceCapa('ndoc');".
-	"apareceCapa('fdoc');".
-	"apareceCapa('acred');".
-	"apareceCapa('pgdoc');".
-	"cambiodoc('F');";
-      $checkF = 'selected';
-      
-      break;
-    case "O":
-      $habilita=
-	"apareceCapa('prov');".
-	"apareceCapa('acred');".
-	"desapareceCapa('ndoc');".
-	"apareceCapa('fdoc');".
-	"apareceCapa('pgdoc');".
-	"cambiodoc('O');".
-	"CambiaTextDoc(1);";
-
-      $checkigv = 'selected';
-      setSesionDato("incImpuestoDet",'true');
-      $checkO   = 'selected';
-      break;
-    case "R":
-      $habilita=
-	"apareceCapa('prov');".
-	"apareceCapa('ndoc');".
-	"apareceCapa('acred');".
-	"apareceCapa('pgdoc');".
-	"apareceCapa('fdoc');".
-	"cambiodoc('R'); ";
-      $checkR = 'selected';
-      break;
-    case "G":
-      $habilita=
-	"apareceCapa('prov');".
-	"apareceCapa('ndoc');".
-	"apareceCapa('fdoc');".
-	"apareceCapa('acred');".
-	"apareceCapa('pgdoc');".
-	"cambiodoc('G'); ";
-      $checkG = 'selected';
-      break;
-    case "SD":
-      $habilita = 
-	"apareceCapa('prov');".
-	"desapareceCapa('ndoc');".
-	"desapareceCapa('acred');".
-	"apareceCapa('fdoc');".
-	"apareceCapa('pgdoc');".
-	"cambiodoc('SD'); ";
-      $checkSD = 'selected';
-    }
-    $tnrodoc          = ( $nrodoc )?'Nro '.$nrodoc:'';
-    $titulo           = ( selAdmite('Compras') )? 'Pedido':$documento.' '.$tnrodoc; 
-    $tpfecha          = ( $detadoc[0]=='O' )?'Fecha Entrega : ':$tpfecha;
-    $checkTS          = ( $tipomoneda==1 )? 'CHECKED':''; 
-    $habilita_tmoneda = ( $tipomoneda==1 )? "desapareceCapa('cambiomoneda');":"";
-    $checkTD          = ( $tipomoneda==2 )? 'CHECKED':''; 
-    $habilita_tmoneda = ( $tipomoneda==2 )? "apareceCapa('cambiomoneda');":'';
-
-    echo 
-      "<script type='text/JavaScript' language='javascript' ".
-      "src='modulos/calendario/calendar.js'></script>".
-      "<script type='text/JavaScript' language='javascript' ".
-      "src='modulos/calendario/lang/calendar-sp.js'></script>".
-      "<script type='text/JavaScript' language='javascript' ".
-      "src='modulos/calendario/calendar-setup.js'></script>
-
-<center>
-<table border='0' class='listado'>
-  <tr class='formaCabeza'>
-    <td colspan='3' height='16'>
-      <div id='t_comprov' class='formaTitulo'>$titulo</div>
-    </td>
-  </tr>
-  <tr>
-  <td  class='lh' colspan='3' style='padding: 0em 1em 0.3em 0.6em'>
-
-    <div id=prov style='display: none;color:#000000;'> 
-      <b>Proveedor :</b>
-      <input type=hidden id=IdProvHab name=IdProvHab value='$idprov' > 
-      <input type=hidden id=modopagina name=modopagina value='Compras'>
-      <input class=btn onclick='auxAltaProv();' type='button' value='+'> 
-      <input class=btn onclick='auxProveedorHab();' type='button' value='...'> 
-      <input class=xbtlh name=TextoProvHab id=TextoProvHab value='$nombreprov' readonly/>
-    </div>
-
-    &nbsp;&nbsp;&nbsp;&nbsp; 
-      <b>Presupuesto :</b>
-	<select>
-                ";
-    if($admiteCompra){
-      echo "<option  onclick=".'"'."s_radioComprobante('F');".'"'."  $checkF >Factura</option>
-		<option  onclick=".'"'."s_radioComprobante('R');".'"'."  $checkR>Boleta</option>
-		<option  onclick=".'"'."s_radioComprobante('G');".'"'."  $checkG>Albarán</option>
-		<option  onclick=".'"'."s_radioComprobante('SD');".'"'."  $checkSD>Ticket</option>";
-    }
-        echo "
-	</select>
+    echo "<div id='headlistProductoCompras'>".gas("cabecera",_("Productos"))." 
+         <table border='0' class='listado-search'>
+          <tr class='formaCabeza'>
+           <td colspan='3' height='16'>
+             <div id='t_comprov' class='formaTitulo'>Buscar</div>
+           </td>
+          </tr>
+          <tr>
+           <td> CB <input class=xbtlh type='text' name=TextoProvHab id=c_CB placeholder='Código Barras' onkeypress='if (event.which == 13) { run_Compras_buscar() }' $inputCB />
+           </td>
+           <td> Ref. <input class=xbtlh type='text' name=TextoProvHab id=c_Referencia placeholder='código referencia'  onkeypress='if (event.which == 13) { run_Compras_buscar() }' $inputReferencia/>
+           </td>
+           <td> Nombre <input class=xbtlh type='text' name=TextoProvHab id=c_Nombre placeholder='nombre | marca ó modelo ó detalle...' onkeypress='if (event.which == 13) { run_Compras_buscar() }' $inputNombre/>
    </td>
   </tr>
-  <tr>   
-   <td colspan='3' style='' Align='center'>
-
-     <div id=ndoc style='display: none;color:#000000;'>
-       <b>Serie :</b> 
-     <input class=cbt id='SDoc' name='SDoc' value='$sdoc' class='cajaPequena' type='text'
-      size='4' maxlength='4' onkeypress='return soloAlfaNumericoSerieBase(event);' onblur='setndoc(this.value);' onkeyup='this.value=this.value.toUpperCase()'>
-       <b>Nro :</b> 
-     <input class=cbt id='NDoc' name='NDoc' value='$ndoc' class='cajaPequena' type='text' 
-      size='7' maxlength='7' onkeypress='return soloNumerosEnterosBase(event,this.value);' onblur='setndoc(this.value);'>
-     </div>
-
-
-
-     <div id=fdoc style='display: none;color:#000000;'>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <b><span id='fecha_op'>$tpfecha</span></b> 
-
-      <input class=cbt name='FechaDoc' type='text' id='FechaDoc' class='cajaPequena'
-       size='8' maxlength='10' value='$fdoc' readonly> 
-
-      <img  style='margin-top:-6px' src='img/gpos_calendario.png' name='Image1' id='Image11' 
-       border='0'  onMouseOver=".'"'."this.style.cursor='pointer'".'"'." >
-      <script>Calendar.setup( 
-      {inputField : 'FechaDoc',ifFormat   : '%d/%m/%Y', button : 'Image11', onUpdate : setfechadoc });
-      </script>
-
-    </div>
-
-    <div id=pgdoc style='display: none;color:#000000;'>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <b> Fecha Pago :</b>
-        <input class=cbt NAME='FechaPago' type='text' id='FechaPago' class='cajaPequena' 
-         size='8' maxlength='10' value='$fechapago' readonly> 
-         <img src='img/gpos_calendario.png' name='Image2' id='Image22' 
-         border='0'  onMouseOver=".'"'."this.style.cursor='pointer'".'"'." >
-        <script>Calendar.setup( 
-        {inputField : 'FechaPago',ifFormat : '%d/%m/%Y', button : 'Image22', 
-         onUpdate : setfechapagodoc });
-        </script>
-      </div>
-
-   </td>
-  </tr> 
   <tr>
-    <td  class='lh'  colspan='3' style='padding: 0em 1em 0.2em 1em' Align='center'>
-     
-      <input type=radio id ='tipoSoles' name='grupo2' value='0' 
-      onclick=".'"'."desapareceCapa('cambiomoneda'); cambiomoneda(1);".'"'." $checkTS >
-      ".$Moneda[1]['T']."
-      <input type=radio id='tipoDolar' name='grupo2' value='1' 
-      onclick=".'"'."apareceCapa('cambiomoneda'); cambiomoneda(2);".'"'." $checkTD >
-      ".$Moneda[2]['T']."
-
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
-        <div id=acred style='display: none;color:#000000; '>
-        <input type=checkbox  onclick=aCredito(this.checked); $checkcredt >
-        Crédito
-        <input type=checkbox  onclick=incluirPercepcion(this.checked); $checkipc >
-        Percepción
-        </div> 
-        <input type=checkbox  onclick=incluirIGV(this.checked); $checkigv >
-        Impuesto
-
-
-    </td>
-  </tr>
-  <tr>
-   <td colspan='3' Align='center'>
-     <div id=cambiomoneda style='display: none; color:#000000'> 
-
-      <b>Cambio : </b>  
-       <input class=cbt name='TipoCambio' class='InputPrecio'  value='$tipocambio' 
-        onblur='settipocambio(this.value);' onkeypress='return soloNumerosBase(event,this.value);' size='5'>  
-      <input class=cbt NAME='FechaCambio' type='text' id='FechaCambio' class='cajaPequena' 
-       value='$fcambio'  size='8' maxlength='10' value='' readonly> 
-
-      <img src='img/gpos_calendario.png' name='Image' id='Image'
-       border='0'  onMouseOver=".'"'."this.style.cursor='pointer'".'"'.">
-      <script>Calendar.setup( 
-      {inputField : 'FechaCambio',ifFormat   : '%d/%m/%Y', button     : 'Image',  
-       onUpdate : setfechacambio  });
-      </script>
-
-     </div>
-   </td>
-  </tr>
-</table>
-</center>
-
-<script>$habilita $habilita_tmoneda parent.Compras_cambiaBtnCarrito('Ver');</script>";	
-echo "<center>";
+   <td colspan='3'>
+             <div  class='checkbox checkbox-search' >
+              <input id='c_StockMinimo' type=checkbox  title='Buscar productos con Stock Minimo ' onclick='Compras_buscar()' $ckStockMinimo />
+              <label for='c_StockMinimo' >Stock Minimo</label>
+              <input id='c_PorProveedor' type=checkbox title='Buscar productos por proveedor ' onclick='Compras_buscar()' $ckPorProveedor />
+              <label for='c_PorProveedor' >Por Proveedor</label>
+              <input id='c_Obsoletos' type=checkbox    title='Buscar productos obsoletos ' onclick='Compras_buscar()' $ckObsoletos />
+              <label for='c_Obsoletos' >Obsoletos</label>
+           </div>
+  </td>
+ </tr>
+</table> </div>";
+    echo "<script> function loadfocus(){} document.getElementById('c_Nombre').focus();document.getElementById('c_Nombre').select()</script>";	
 echo jsBody($jsOut);
-echo "</center>";					
-
 }
 
 function old_ListarProductos($idprov,$idmarca,$idcolor,$idtalla,$seleccion,$idprod,$idbase) {
@@ -603,14 +413,11 @@ function explota($fecha) // local2bd
 
 PageStart();
 
-echo gas("cabecera",_("Presupuestos"));
-
-
 //Paginadores
 switch($modo){		
 
 		case "buscarproductos":
-			//QuitarFiltrosAvanzados();
+			QuitarFiltrosAvanzados();
 			setSesionDato("FiltraCB",false);	
 			setSesionDato("FiltraIdProducto",false);			
 			setSesionDato("FiltraReferencia",false);
@@ -791,7 +598,10 @@ switch($modo){
 		$detadoc  = getSesionDato("detadoc");
 		//Control Carrito
 		if(!validarOrdenDeCompra($IdLocal))
-		  { echo gas("aviso","Carrito Vacio.");break; }
+		  { echo gas("aviso","Carrito Vacio");
+		    echo "<br/><center><input class='btn item' type='button' value='Volver a Presupuestos' 
+                                    onclick='parent.Compras_verCarrito()'></center>";
+		    break; }
 		//Control Local destino
 		if ( !$IdLocal and $IdLocal=="nada" )
 		  { ReseleccionarLocal(); break; }
@@ -816,7 +626,7 @@ switch($modo){
 		$coddoc  = ($detadoc[0]=="SD")? $IdLocal.'-'.$IdOrden:$coddoc;
 		$xdocum  = $nomdoc." Nro. ".$coddoc;
 		$xlocal  = "Local ".$nomdes;
-		$xrecibir= ( $nomdoc == "Pedido" )? "style='display:none'":"";
+		$xrecibir= ( $detadoc[0]=="O" )? "style='display:none'":"";
 
 		echo _("<center>
                           <div class='forma' style='width: 200px'>
@@ -824,8 +634,8 @@ switch($modo){
                             <ul class='auxmenu'>
                              <li class='lh' style='font-weight: bold;padding:.5em;font-size:13px'>
                                  Se ha realizado su alta</li>
-                             <li class='lh' style='font-size:14px;'>".$xdocum."</li>
-                             <li class='lh' style='font-size:13px;'>".$xlocal."</li>
+                             <li class='fb' style='font-size:14px;'>".$xdocum."</li>
+                             <li class='fb' style='font-size:13px;'>".$xlocal."</li>
                              <li class='auxitem'>
                                 <input class='btn item' type='button' value='Ver ".$nomdoc."' 
                                        onclick='".$linkdoc."(".$IdOrden.")'>
@@ -838,8 +648,8 @@ switch($modo){
                              <hr width='100%'>
                              </li>
                              <li class='auxitem'>
-                             <input class='btn item' type='button' value='Volver al Listado' 
-                                    onclick='nuevaCompraBuscar()'>
+                             <input class='btn item' type='button' value='Volver a Presupuestos' 
+                                    onclick='parent.Compras_verCarrito()'>
                              </li>
                             </ul>
                             </div>
@@ -925,5 +735,18 @@ switch($modo){
 }
 
 PageEnd();
+
+function QuitarFiltrosAvanzados() {
+			setSesionDato("FiltraProv",false);
+			setSesionDato("FiltraMarca",false);
+			setSesionDato("FiltraColor",false);
+			setSesionDato("FiltraTalla",false);
+			setSesionDato("FiltraBase",false);
+			setSesionDato("FiltraFamilia",false);		
+			setSesionDato("FiltraReferencia",false);
+			setSesionDato("FiltraLocal",false);
+			setSesionDato("FiltraCB",false);
+			setSesionDato("FiltraNombre",false);	
+}
 
 ?>

@@ -743,7 +743,7 @@ Calendar.prototype.create = function (_par) {
 	var hh = function (text, cs, navtype) {
 		cell = Calendar.createElement("td", row);
 		cell.colSpan = cs;
-		cell.className = "button";
+		cell.className = "xbutton";
 		if (navtype != 0 && Math.abs(navtype) <= 2)
 			cell.className += " nav";
 		Calendar._add_evs(cell);

@@ -74,7 +74,7 @@ function PageStart( $titulo = "gPOS",$cache=false,$fondoblanco=false) {
 	
 	echo "<html><head><title>". htmlentities($titulo,ENT_QUOTES,'UTF-8') ."</title>";
 		
-	echo "<link rel='stylesheet' type='text/css' href='css/base.css'>";		
+	echo "<link rel='stylesheet' type='text/css' href='css/base.css?v=1'>";		
 		
 	echo "<link href='css/printcss.css' rel='stylesheet' type='text/css' media='print'>";			
 	echo "<link href='modulos/calendario/calendar-blue.css' rel='stylesheet' type='text/css'>";			
@@ -92,7 +92,10 @@ function PageStart( $titulo = "gPOS",$cache=false,$fondoblanco=false) {
 		$uglybody = "leftmargin='0' topmargin='0' marginwidth='0' marginheight='0'";//REPRUEBAS
 		$fondo = "style='background-color: white!important;background-image: none !important;margin: 0px;padding: 0px' ";
 	}
-		
+	echo "<div id='box-popup' class='box-popup-off'><span class='closepopup' onclick='closepopup()'></span>";	
+	echo " <iframe id='windowpopup' class='xframe' name='windowpopup' src='about:blank' width='100%' style='border: 0' height='95%'  onload='if(this.src != \"about:blank\" ) loadFocusPopup()'></iframe> ";
+	echo " <iframe id='windowloadcart' class='noxframe' name='windowloadcart' src='about:blank' width='100%' style='border: 0' height='95%' ></iframe> ";
+	echo "</div>";
 	echo "<body $uglybody $fondo>";
 }
 

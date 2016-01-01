@@ -10,7 +10,7 @@ switch($modo){
   /*
 	case "clientehab":
 			
-		echo "<groupbox flex='1'><caption label='" . _("Cliente") . "'/>";		
+		echo "<groupbox flex='1'><caption class='box' label='" . _("Cliente") . "'/>";		
 		echo "<textbox id='buscacliente'  onkeyup='BuscaCliente(); if (event.which == 13) agnadirDirecto();' />";
 		$familias = genArrayClientes();		
 		echo "<script>\n";
@@ -20,17 +20,17 @@ switch($modo){
 		}
 		echo "\n</script>";						
 				
-		echo "<listbox flex='1' id='Cliente' rows='5' onclick='opener.changeClientHab(this,clienthab[this.value]);window.close();return true;'>";
+		echo "<listbox flex='1' id='Cliente' rows='5' onclick='parent.changeClientHab(this,clienthab[this.value]);parent.closepopup();return true;'>";
 		echo  genXulComboClientes();				
 		echo "</listbox>";
-		echo "<button label='". _("Cerrar")."' oncommand='window.close()'/>";	
+		echo "<button label='". _("Cerrar")."' oncommand='parent.closepopup()'/>";	
 		echo "</groupbox>";
 		
 		break;				
   */
 	case "clientepost":
 			
-		echo "<groupbox flex='1'><caption label='" . _("Cliente") . "'/>";		
+		echo "<groupbox flex='1'><caption class='box' label='" . _("Cliente") . "'/>";		
 		echo "<textbox id='buscacliente'  onkeyup='BuscaCliente(); if (event.which == 13) agnadirDirecto();' />";
 		$familias = genArrayClientes();		
 		echo "<script>\n";
@@ -40,10 +40,10 @@ switch($modo){
 		}
 		echo "\n</script>";						
 				
-		echo "<listbox flex='1' id='Cliente' rows='5' onclick='opener.setClientPost(this,clienthab[this.value]);window.close();return true;'>";
+		echo "<listbox flex='1' id='Cliente' rows='5' onclick='parent.setClientPost(this,clienthab[this.value]);return true;'>";
 		echo  genXulComboClientes();				
 		echo "</listbox>";
-		echo "<button label='". _("Cerrar")."' oncommand='window.close()'/>";	
+		//echo "<button label='". _("Cerrar")."' oncommand='parent.closepopup()'/>";	
 		echo "</groupbox>";
 		
 		break;				
@@ -85,6 +85,11 @@ function agnadirDirecto(){
     }
     theList.onclick();
 }
+
+function loadfocus(){
+    document.getElementById('buscacliente').focus();
+}
+
 //]]></script>
 <?php
 EndXul();

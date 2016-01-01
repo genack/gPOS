@@ -1,0 +1,74 @@
+ /* fonts 
+--------------------------------------------*/
+
+@font-face {
+  font-family: 'Carrois Gothic';
+  font-style: normal;
+  font-weight: 100;
+  src: local('Carrois Gothic'), local('CarroisGothic-Regular'), url(../../css/font/CarroisGothic-Regular.woff) format('woff');}
+
+body { line-height: 1.6;
+       font-weight: 100;
+       font-family: 'Carrois Gothic', Arial, sans-serif;
+       padding-left: 1em;     
+       background-color: #f8f8f8;
+       color: #fff!important;
+       background-image:url('../../img/gpos_marcagua.png');
+       background-repeat: no-repeat; 
+       background-position: bottom left; height:96%!important;
+       }
+
+#gpos-dashboard-down td,
+#gpos-dashboard-up td{ font-style: italic!important;}
+div.finanzas{  background-color: #885082;}
+div.ventas_resumen{ background-color: #686868; }
+div.ventas{  background-color:  #529bb1;}
+div.almacen{  background-color: #d36d48;}
+div.compras{  background-color: #686868;}
+div.almacen_resumen{  background-color: #d36d48;}
+div.finanzas,
+div.ventas_resumen,
+div.ventas,
+div.almacen,
+div.almacen_resumen,
+div.compras{ min-width: 21em; min-height: 13em;}
+
+div.bloque-up {
+                border:0px solid red;
+                text-align: center;
+                padding-top: 3em;
+                line-height: 1.1;
+                font-family: 'Carrois Gothic', Arial, sans-serif;}
+
+div.bloque-btn {
+                border:0px solid red;
+                text-align: center;
+                padding-top: 2em;
+                line-height: 1.1;
+                font-family: 'Carrois Gothic', Arial, sans-serif;}
+
+div.bloque-down { border:0px solid blue; text-align: center;   padding-top: .6em; }
+div.xbox { border:0px solid #000; border-radius: .2em;
+           display:inline-flex;   padding: .6em 1em;
+           margin-left: .2em; margin-right:.2em;}
+
+.box td{ border:0px solid red; }
+
+
+.title_monto { padding: .4em;  font-weight: bold;}
+.txt_monto { padding: .4em; font-size: 1rem!important;}
+.unid_monto{ padding-right: .6em; padding-left: 1em; text-align: right!important;
+             font-style: italic; font-size: 1rem!important;}
+
+.btn {
+       background-color: #33c3f0 !important;
+       cursor: pointer;
+       height: 28px !important;
+       padding: 0.2em 1em !important;
+       text-transform: none !important;
+       color: #fff !important;
+       font-size: 0.9rem;
+       font-style: italic;
+       padding: 0.1em;
+       border:none;
+}

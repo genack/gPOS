@@ -73,6 +73,10 @@ class perfil extends Cursor {
 	  return $this->get("SAT");
 	}
 
+	function getStock(){
+	  return $this->get("Stocks");
+	}
+
 	//Formulario de modificaciones y altas
 	function formEntrada($action,$esModificar){
 				
@@ -202,7 +206,8 @@ function getPerfilPrecios( $id ){
 	       $oPerfil->getB2B()."~".
 	       $oPerfil->getServicios()."~".
 	       $oPerfil->getSuscripciones()."~".
-	       $oPerfil->getSAT();
+	       $oPerfil->getSAT()."~".
+	       $oPerfil->getStock();
 }
 
 ?>

@@ -33,13 +33,12 @@ function DetalleProductosAlmacen($codigo,$descripcion,$idmarca,$idfamilia,$IdLoc
     if($codigo != "")
       $condicion = $condicion." AND ( ges_productos.Referencia like '%$codigo%' OR ges_productos.CodigoBarras like '$codigo' )";
 
-    if($descripcion != ""){
-      $anombre   = explode("|", $descripcion);
-    
-      $condicion .= ($anombre[0] != '')? "  AND ges_productos_idioma.Descripcion like '%$anombre[0]%'":"";
-      $condicion .= (isset($anombre[1]))? " AND ( ges_marcas.Marca like '%$anombre[1]%' OR ges_modelos.Color like '%$anombre[1]%' OR ges_detalles.Talla like '%$anombre[1]%' OR ges_laboratorios.NombreComercial like '%$anombre[1]%') ":"";
+    $anombre    = explode("|", $descripcion);
+    $condicion .= ($anombre[0] != '')? " AND ges_productos_idioma.Descripcion like '%$anombre[0]%'":"";
 
-    }
+    if( isset( $anombre[1] ) )
+      $condicion .= ( $anombre[1] != '' )? " AND ( ges_marcas.Marca like '%$anombre[1]%' OR ges_modelos.Color like '%$anombre[1]%' OR ges_detalles.Talla like '%$anombre[1]%' OR ges_laboratorios.NombreComercial like '%$anombre[1]%') ":"";
+
     if($idfamilia != 0)
         $condicion = $condicion." AND ges_productos.IdFamilia = '$idfamilia' ";
 

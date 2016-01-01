@@ -129,7 +129,7 @@ function genComboLocales($selected=false){
 
 
 function genComboPerfiles($selected=false){
-	$sql = "SELECT  IdPerfil,NombrePerfil FROM ges_perfiles_usuario  WHERE Eliminado=0 ORDER BY NombrePerfil ASC";
+	$sql = "SELECT  IdPerfil,NombrePerfil FROM ges_perfiles_usuario  WHERE Eliminado=0 AND IdPerfil <> 7 ORDER BY NombrePerfil ASC";
 	$res = query($sql);
 	$out = "";
 	if (!$res)
@@ -336,7 +336,7 @@ function genXulComboColores($selected=false,$xul="listitem", $idfamilia=false, $
 		if ($key!=$selected)
 			$out .= "<$xul ".$ident." label='$value' value='$key' />\n";
 		else	
-			$out .= "<$xul ".$ident." label='$value' value='$key' selected='yes'/>\n";
+			$out .= "<$xul ".$ident." label='$value' value='$key' selected='true'/>\n";
 	}
 	return $out;		
 }
@@ -373,7 +373,7 @@ function genXulComboProductoAlias($selected=false,$xul="listitem", $idfamilia=1,
 		if ($key!=$selected)
 			$out .= "<$xul label='$value' value='$key' />\n";
 		else	
-			$out .= "<$xul label='$value' value='$key' selected='yes'/>\n";
+			$out .= "<$xul label='$value' value='$key' selected='true'/>\n";
 	}
 	return $out;		
 }
@@ -394,7 +394,7 @@ function genComboColores($selected=false){
 		if ($key!=$selected)
 			$out .= "<option value='$key'>$value</option>";
 		else	
-			$out .= "<option selected='yes' value='$key'>$value</option>";
+			$out .= "<option selected='true' value='$key'>$value</option>";
 	}
 	return $out;		
 }
@@ -503,7 +503,7 @@ function genArrayContenedores(){
 function genArrayTallas($IdTallaje=5,$idfamilia=1){
         $idfamilia_text= "";
 	$IdIdioma = getSesionDato("IdLenguajeDefecto");
-	$sql = "SELECT IdTalla,Talla  FROM ges_detalles WHERE Eliminado=0 AND IdFamilia='".$idfamilia."' AND IdTallaje='".$IdTallaje."' AND IdIdioma = '".$IdIdioma."' ORDER BY Talla + 0 ASC";
+	$sql = "SELECT IdTalla,Talla  FROM ges_detalles WHERE Eliminado=0 AND IdFamilia='".$idfamilia."' AND IdTallaje='".$IdTallaje."' AND IdIdioma = '".$IdIdioma."' ORDER BY Talla ASC";
 	$res = query($sql);
 	if (!$res)
 		return false;
@@ -706,7 +706,7 @@ function genXulComboProveedores($selected=false,$xul="listitem",$callback=false)
 	$res = query($sql);
 	if (!$res)
 		return "";
-			
+
 	$out  = "";
 	$call = "";				
 
@@ -720,8 +720,8 @@ function genXulComboProveedores($selected=false,$xul="listitem",$callback=false)
 
 	    if ($key!=$selected)
 	      $out .= "<$xul value='$key' label='$value' $call/>";
-	    else	
-	      $out .= "<$xul selected='yes' value='$key' label='$value' $call/>";
+	    else
+	      $out .= "<$xul value='$key' label='$value' selected='true' $call/>";
 	  }
 	
 	return $out;		
@@ -732,7 +732,7 @@ function genXulComboClientes($selected=false,$xul="listitem",$callback=false) {
 	$sql = 
 	  "select IdCliente,NombreComercial ".
 	  "from   ges_clientes  ".
-	  "where  Eliminado=0 ".
+	  "where  Eliminado=0 and IdCliente <> 2 ".
 	  "order  by NombreComercial ASC";
 
 	$res = query($sql);
@@ -753,7 +753,7 @@ function genXulComboClientes($selected=false,$xul="listitem",$callback=false) {
 	    if ($key!=$selected)
 	      $out .= "<$xul value='$key' label='$value' $call/>";
 	    else	
-	      $out .= "<$xul selected='yes' value='$key' label='$value' $call/>";
+	      $out .= "<$xul selected='true' value='$key' label='$value' $call/>";
 	  }
 	
 	return $out;		
@@ -785,7 +785,7 @@ function genXulComboLocales($selected=false,$xul="listitem",$callback=false) {
 	    if ($key!=$selected)
 	      $out .= "<$xul value='$key' label='$value' $call/>";
 	    else	
-	      $out .= "<$xul selected='yes' value='$key' label='$value' $call/>";
+	      $out .= "<$xul selected='true' value='$key' label='$value' $call/>";
 	  }
 	
 	return $out;		
@@ -805,7 +805,7 @@ function genXulComboLaboratorios($selected=false,$xul="listitem") {
 		if ($key!=$selected)
 			$out .= "<$xul value='$key' label='$value'/>";
 		else	
-			$out .= "<$xul selected='yes' value='$key' label='$value'/>";
+			$out .= "<$xul selected='true' value='$key' label='$value'/>";
 	}
 	return $out;		
 }
@@ -839,7 +839,7 @@ function genXulComboTallas($selected=false,$xul="listitem",$IdTallaje=5, $autoid
 		if ($key!=$selected)
 			$out .= "<$xul".$ident." label='$value' value='$key'/>\n";
 		else	
-			$out .= "<$xul".$ident." selected='yes' value='$key' label='$value'/>\n";
+			$out .= "<$xul".$ident." selected='true' value='$key' label='$value'/>\n";
 	}
 	return $out;		
 }
@@ -878,12 +878,13 @@ function genXulComboTipoServicios($selected=false,$xul="listitem"){
 			
 	while($row=Row($res)){
 		$key = $row["IdTipoServicio"];
-		$sat = ($row["SAT"])? ' - SAT':'';
 		$value = CleanXulLabel($row["TipoServicio"]);
+		$value = ($row["SAT"])? $value.' - SAT':$value;
+
 		if ($key!=$selected)
-			$out .= "<$xul value='$key' label='$value.$sat'/>";
+			$out .= "<$xul value='$key' label='$value'/>";
 		else	
-			$out .= "<$xul selected='yes' value='$key' label='$value.$sat'/>";
+			$out .= "<$xul selected='true' value='$key' label='$value'/>";
 	}
 	return $out;		
 }
@@ -909,7 +910,7 @@ function genXulComboTipoSuscripcion($selected=false,$xul="listitem",$xfunction=f
 		if ($key!=$selected)
 			$out .= "<$xul value='$key' label='$value' $xfunction/>";
 		else	
-			$out .= "<$xul selected='yes' value='$key' label='$value' $xfunction />";
+			$out .= "<$xul selected='true' value='$key' label='$value' $xfunction />";
 	}
 	return $out;		
 }
@@ -922,14 +923,15 @@ function genXulComboModalidadPago($selected=false,$xul="listitem"){
 		return false;
 		
 	$out = "";	
-			
+
 	while($row=Row($res)){
 		$key = $row["IdModalidadPago"];
 		$value = CleanXulLabel($row["ModalidadPago"]);
 		if ($key!=$selected)
 			$out .= "<$xul value='$key' label='$value'/>";
-		else	
-			$out .= "<$xul selected='yes' value='$key' label='$value'/>";
+		else{	
+			$out .= "<$xul value='$key' label='$value' selected='true'/>";
+		}
 	}
 	return $out;		
 }
@@ -975,7 +977,7 @@ function genXulComboContenedores($selected=false,$xul="listitem",$autoid=false){
 		if ($key!=$selected)
 			$out .= "<$xul ".$ident." value='$key' label='$value'/>";
 		else	
-			$out .= "<$xul ".$ident." selected='yes' value='$key' label='$value'/>";
+			$out .= "<$xul ".$ident." selected='true' value='$key' label='$value'/>";
 	}
 	return $out;		
 }
@@ -1066,7 +1068,7 @@ function genComboPaises($selected=false){
 function genXulComboUsuarios($selected=false,$xul="listitem",$idlocal=false){
 
 	$sql = "SELECT IdUsuario,Nombre FROM ges_usuarios  WHERE Eliminado = 0 
-                AND IdLocal IN ('0','$idlocal') ORDER BY Nombre ASC";
+                AND IdLocal IN ('0','$idlocal') AND IdUsuario > 2 ORDER BY Nombre ASC";
 	$res = query($sql);
 	if (!$res)
 		return false;
@@ -1105,7 +1107,7 @@ function genXulKardexOperaciones($selected=false,$xul="listitem"){
 		if ($key!=$selected)
 			$out .= "<$xul value='$key' label='$value'/>";
 		else	
-			$out .= "<$xul selected='yes' value='$key' label='$value'/>";
+			$out .= "<$xul selected='true' value='$key' label='$value'/>";
 	}
 	return $out;		
 }
@@ -1135,7 +1137,7 @@ function genXulKardexInventario($selected=false,$xul="listitem",$IdLocal){
 		if ($key!=$selected)
 			$out .= "<$xul id='$id' value='$key' label='$value'/>";
 		else	
-			$out .= "<$xul id='$id' selected='yes' value='$key' label='$value'/>";
+			$out .= "<$xul id='$id' selected='true' value='$key' label='$value'/>";
 	}
 	return $out;		
 }
@@ -1143,15 +1145,15 @@ function genXulKardexInventario($selected=false,$xul="listitem",$IdLocal){
 function genXulComboPagoDoc($selected=false,$xul="listitem",$idproveedor=false,$tipoprov){
         $Proveedor = ($idproveedor)?$idproveedor:'';
 	$sql = "SELECT CONCAT(IdPagoProvDoc,'~',ges_moneda.IdMoneda,'~',".
-               "Moneda,'~',CambioMoneda,'~',Importe,'~',TipoProveedor) AS PagoDocumento,".
+               "Moneda,'~',CambioMoneda,'~',Saldo,'~',TipoProveedor) AS PagoDocumento,".
                "CONCAT(Codigo,' ',(SELECT ModalidadPago FROM ges_modalidadespago ".
 	       "WHERE ges_modalidadespago.IdModalidadPago=ges_pagosprovdoc.IdModalidadPago),".
 	       "' ',DATE_FORMAT(FechaOperacion, '%d/%m/%y %H:%i'),'   ', ".
-               "Simbolo,Importe) AS ComboDocumento ".
+               "Simbolo,Saldo) AS ComboDocumento ".
 	       "FROM ges_pagosprovdoc  ".
 	       "INNER JOIN ges_moneda ON ges_pagosprovdoc.IdMoneda = ges_moneda.IdMoneda ".
 	       "WHERE ges_pagosprovdoc.Eliminado = 0 ".
-	       "AND Estado = 'Pendiente' ".
+	       "AND Saldo > 0 ".
 	       "AND IdProveedor = '$Proveedor' ".
 	       "AND TipoProveedor = '$tipoprov' ".
 	       "ORDER BY FechaRegistro DESC ";
@@ -1167,35 +1169,43 @@ function genXulComboPagoDoc($selected=false,$xul="listitem",$idproveedor=false,$
 		if ($key!=$selected)
 			$out .= "<$xul value='$key' label='$value'/>";
 		else	
-			$out .= "<$xul selected='yes' value='$key' label='$value'/>";
+			$out .= "<$xul selected='true' value='$key' label='$value'/>";
 	}
 	return $out;		
 }
 
 function genXulComboPartidaCaja($selected=false,$xul="listitem",$idlocal=false,
 				$op=false,$TipoCaja){
-        $op  = ($op)? " AND TipoOperacion = '$op' ":"";
-	$sql = " SELECT IdPartidaCaja,PartidaCaja ".
+        $xop = ($op)? " AND TipoOperacion = '$op' ":"";
+	$sql = " SELECT Codigo,PartidaCaja ".
                " FROM ges_partidascaja ".
                " WHERE Eliminado = 0 ".
                " AND IdLocal IN (0,'$idlocal') ".
-	  //" AND TipoOperacion='$op' ".
-	       " $op ".
+	       " $xop ".
                " AND TipoCaja = '$TipoCaja' ".
                " ORDER BY IdPartidaCaja ASC";
 	$res = query($sql);
 	if (!$res)
 		return false;
+
+	$t = 0;
+	if($op == 'Aportacion') $xitem = "partida_aportacion_def_";
+	if($op == 'Sustraccion') $xitem = "partida_sustraccion_def_";
+	if($op == 'Ingreso') $xitem = "partida_ingreso_def_";
+	if($op == 'Gasto') $xitem = "partida_gasto_def_";
+	$xiditem = $xitem.$t;
 		
-	$out = "";	
+	$out = "<$xul value='0' label='Elige...' style='font-weight: bold' id='$xiditem'/>";
 			
 	while($row=Row($res)){
-		$key = $row["IdPartidaCaja"];
+	        $t++;
+		$key = $row["Codigo"];
 		$value = CleanXulLabel($row["PartidaCaja"]);
+		$xid = $xitem.$t;
 		if ($key!=$selected)
-			$out .= "<$xul value='$key' label='$value'/>";
+		  $out .= "<$xul value='$key' label='$value' id='$xid'/>";
 		else	
-			$out .= "<$xul selected='yes' value='$key' label='$value'/>";
+		  $out .= "<$xul selected='true' value='$key' label='$value' id='$xid'/>";
 	}
 	return $out;		
 }
@@ -1400,6 +1410,125 @@ function genComboMetodoRedondeo($selected='RDE') {
 			$out .= "<option value='$value'>$opciones[$value]</option>";
 		else	
 			$out .= "<option selected value='$value'>$opciones[$value]</option>";
+	}
+	return $out;		
+}
+
+function genXulComboCuentaBancaria($selected=false,$xul="listitem",$idprov,$entfincra=""){
+	$sql = "SELECT IdCuentaBancaria, CONCAT('(',Simbolo,') ',NumeroCuenta) as Cuenta  FROM ges_cuentasbancarias INNER JOIN ges_moneda ON ges_cuentasbancarias.IdMoneda = ges_moneda.IdMoneda  WHERE ges_cuentasbancarias.Eliminado=0 AND IdProveedorProv = $idprov AND EntidadFinanciera like '%$entfincra%'";
+	$res = query($sql);
+	$out = "";
+	if (!$res)
+		return "";	
+	while($row=Row($res)){
+		$key = $row["IdCuentaBancaria"];
+		$value = CleanXulLabel($row["Cuenta"]);
+		if ($key!=$selected)
+			$out .= "<$xul value='$key' label='$value'/>\n";
+		else	
+			$out .= "<$xul value='$key' label='$value' selected='true'/>\n";
+	}
+	return $out;		
+}
+
+function genXulComboEntidadFinanciera($selected=false,$xul="listitem",$idprov){
+	$sql = "SELECT IdCuentaBancaria, EntidadFinanciera FROM ges_cuentasbancarias WHERE ges_cuentasbancarias.Eliminado=0 AND IdProveedorProv = $idprov GROUP BY EntidadFinanciera";
+	$res = query($sql);
+	$out = "";
+	if (!$res)
+		return "";	
+	while($row=Row($res)){
+		$key = $row["IdCuentaBancaria"];
+		$value = CleanXulLabel($row["EntidadFinanciera"]);
+		if ($key!=$selected)
+			$out .= "<$xul value='$key' label='$value'/>\n";
+		else	
+			$out .= "<$xul value='$key' label='$value' selected='true'/>\n";
+	}
+	return $out;		
+}
+
+function genArrayCuentaBancaria($idprov=0,$xval){
+        $todo = ($xval)? "":" AND ges_cuentasbancarias.IdProveedorProv = '$idprov' ";
+	$sql = "SELECT IdCuentaBancaria, CONCAT(Simbolo,'~',NumeroCuenta,'~',EntidadFinanciera,'~',ges_cuentasbancarias.IdMoneda,'~',IdProveedorProv,'~',Estado,'~',Observaciones) as Cuenta ".
+	       " FROM ges_cuentasbancarias ".
+	       " INNER JOIN ges_moneda ON ges_cuentasbancarias.IdMoneda = ges_moneda.IdMoneda ".
+	       " WHERE ges_cuentasbancarias.Eliminado=0 ".
+	       " $todo ".
+	       " ORDER BY EntidadFinanciera ASC ";
+	$res = query($sql);
+	if (!$res)
+		return false;
+		
+	$out = array();	
+			
+	while($row=Row($res)){
+		$key = $row["IdCuentaBancaria"];
+		$value = $row["Cuenta"];
+		$out[$key]=$value;
+	}
+	return $out;		
+}
+
+function genArrayPartidas($operacion,$tipocaja,$IdLocal){
+	$sql = "SELECT Codigo, PartidaCaja as Partida ".
+	       " FROM ges_partidascaja ".
+	       " WHERE ges_partidascaja.Eliminado = 0 ".
+	       " AND ges_partidascaja.IdLocal IN (0,$IdLocal) ".
+	       " AND ges_partidascaja.TipoCaja = '$tipocaja' ".
+	       " AND ges_partidascaja.TipoOperacion = '$operacion' ".
+	       " ORDER BY PartidaCaja ASC ";
+	$res = query($sql);
+	if (!$res)
+		return false;
+		
+	$out = array();	
+			
+	while($row=Row($res)){
+		$key       = $row["Codigo"];
+		$value     = $row["Partida"];
+		$out[$key] = $value;
+	}
+	return $out;		
+}
+
+function genComboModalidadPago($selected=false,$xul="listitem"){
+
+	$sql = "SELECT IdModalidadPago,ModalidadPago FROM ges_modalidadespago  WHERE Eliminado=0 ";
+	$res = query($sql);
+	if (!$res)
+		return false;
+		
+	$out = "";	
+
+	while($row=Row($res)){
+		$key = $row["IdModalidadPago"];
+		$value = CleanXulLabel($row["ModalidadPago"]);
+		if ($key!=$selected)
+			$out .= "<option value='$key'> $value</option>";
+		else{	
+			$out .= "<option value='$key' selected>$value</option>";
+		}
+	}
+	return $out;		
+}
+
+function genXulComboCuentaBancaria2($selected=false,$xul="listitem",$xidm){
+        $xmda = ($xidm)? " AND ges_moneda.IdMoneda = '$xidm' ":'';
+	$sql = "SELECT IdCuentaBancaria,CONCAT(Simbolo,' ',EntidadFinanciera,' ',NumeroCuenta) as Cuenta FROM ges_cuentasbancarias INNER JOIN ges_moneda ON ges_cuentasbancarias.IdMoneda = ges_moneda.IdMoneda  WHERE ges_cuentasbancarias.Eliminado=0 AND IdProveedorProv = 0 ".$xmda;
+	$res = query($sql);
+	if (!$res)
+		return false;
+		
+	$out = "";	
+
+	while($row=Row($res)){
+		$key = $row["IdCuentaBancaria"];
+		$value = CleanXulLabel($row["Cuenta"]);
+		if ($key!=$selected)
+			$out .= "<$xul value='$key' label='$value'/>\n";
+		else	
+			$out .= "<$xul value='$key' label='$value' selected='true'/>\n";
 	}
 	return $out;		
 }

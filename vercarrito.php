@@ -38,7 +38,7 @@ function ListaFormaDeUnidades() {
 	$descuentos    = getSesionDato("descuentos");
 	$quitar        = _("Quitar");
 
-	$ot->fijar("tTitulo",_("Carrito de compra"));
+	$ot->fijar("tTitulo",_("Productos"));
 	$ot->fijar("comboAlmacenes",getSesionDato("ComboAlmacenes"));
 	$ot->fijar("comboAlmacenes",genComboAlmacenes(getParametro("AlmacenCentral")));
 	
@@ -78,8 +78,10 @@ function ListaFormaDeUnidades() {
 	  $TotalDescuento = $TotalBruto - $BrutoNeto;
 
 	  $ImportePercepcion = ( $incPercepcion == "true" && $ImportePercepcion == 0 )? round(( ($TotalNeto*$ipc/100) )*100)/100:$ImportePercepcion; 
-	  $ImportePago    = $TotalNeto + $ImporteFlete + $ImportePercepcion;
-   
+	  //$ImporteFleteMoneda  = ($tipomoneda == 1)? $ImporteFlete * $tipocambio:$ImporteFlete;
+	  //$ImportePago         = $TotalNeto + $ImporteFlete + $ImportePercepcion;
+	  //$ImportePagoMoneda   = ($tipomoneda == 1)? $ImportePago * $tipocambio:$ImportePago;
+	  
 	  foreach ( $carrito as $key=>$value)
 	    {		
 	      $salta ++;
@@ -100,7 +102,8 @@ function ListaFormaDeUnidades() {
 		  $ot->fijarSerie("vNombre",getDatosProductosExtra($key,"nombre"));
 		  $ot->fijarSerie("tBorrar",$quitar);
 		  $ot->fijarSerie("vUnidades",$value);
-		  $ot->fijarSerie("vPrecio",dosdecimales($costescarrito[$key]));
+		  //$ot->fijarSerie("vPrecio",dosdecimales($costescarrito[$key]));
+		  $ot->fijarSerie("vPrecio",$costescarrito[$key]);
 		  $ot->fijarSerie("IdProducto",$oProducto->getId());
 		  $ot->fijarSerie("Serie",$oProducto->getSerie());
 		  $ot->fijarSerie("vDescuento",dosdecimales($vdescuento));
@@ -166,10 +169,19 @@ function ListaFormaDeUnidades() {
 	$titulo      = ($tipodoc=='G')?'Albar&aacute;n '.$tnrodoc:$titulo;
 	$titulo      = ($tipodoc=='SD')?'Ticket'.$tnrodoc:$titulo;
 	$tpfecha     = ($tipodoc=='O')?'Fecha Entrega : ':$tpfecha;
+	$albaranes   = ($tipodoc=='F')? $detadoc[15]:"";
+	$stalbaranes = ($tipodoc=='F')? "block":"none";
 	$idprov      = $detadoc[1];
 	$nomprov     = $detadoc[2];
 	$fecdoc      = $detadoc[4];
 	$tipomoneda  = $detadoc[5];
+
+	$checkF       = ($tipodoc == 'F')? 'selected':'';
+	$checkO       = ($tipodoc == 'O')? 'selected':'';
+	$checkR       = ($tipodoc == 'R')? 'selected':'';
+	$checkG       = ($tipodoc == 'G')? 'selected':'';
+	$checkSD      = ($tipodoc == 'SD')? 'selected':'';
+
 	$checkedTS   = ($tipomoneda == 1)?'CHECKED':'';
 	$checkedTD   = ($tipomoneda == 2)?'CHECKED':'';
 	$tipocambio  = $detadoc[6];
@@ -190,6 +202,11 @@ function ListaFormaDeUnidades() {
 	$colheadcart = ($incluyeigv)?'16':'17';
 	$checkcredt  = (getSesionDato("aCredito")=='true')?'CHECKED':'';
 
+	$ImporteFleteMoneda  = ($tipomoneda == 2)? $ImporteFlete / $tipocambio : $ImporteFlete;
+	$ImportePago         = $TotalNeto + $ImporteFleteMoneda + $ImportePercepcion;
+	$ImportePagoMonedaBase  = ($tipomoneda == 2)? $ImportePago * $tipocambio:$ImportePago;
+
+
 	$ot->fijar("vTDoc",$tipodoc);
 	$ot->fijar("vTxFecha",$tpfecha);
 	$ot->fijar("vCheckIGV",$checkigv);
@@ -200,6 +217,11 @@ function ListaFormaDeUnidades() {
 	$ot->fijar("vSimboloMoneda1",$Moneda[1]['S']);
 	$ot->fijar("vSimboloMoneda2",$Moneda[2]['S']);
 	$ot->fijar("vCheckCredt",$checkcredt);
+	$ot->fijar("vCheckO",$checkO);
+	$ot->fijar("vCheckF",$checkF);
+	$ot->fijar("vCheckR",$checkR);
+	$ot->fijar("vCheckG",$checkG);
+	$ot->fijar("vCheckSD",$checkSD);
 	$ot->fijar("vTipoDoc",$titulo);
 	$ot->fijar("vIdProvHab",$idprov);
 	$ot->fijar("vIdSubsiHab",$idsubsid);
@@ -213,6 +235,8 @@ function ListaFormaDeUnidades() {
 	$ot->fijar("vCheckedTS",$checkedTS);
 	$ot->fijar("vCheckedTD",$checkedTD);
 	$ot->fijar("vTipoCambio",$tipocambio);
+	$ot->fijar("vAlbaranes",$albaranes);
+	$ot->fijar("stAlbaranes",$stalbaranes);
 	$ot->fijar("vFechaCambio",$fechacambio);
 	$ot->fijar("vIGV",$igv);
 	$ot->fijar("vInputPV",$pv);
@@ -232,6 +256,7 @@ function ListaFormaDeUnidades() {
 	$ot->fijar("vImporteFlete",dosdecimales($ImporteFlete));
 	$ot->fijar("vImportePercepcion",dosdecimales($ImportePercepcion));
 	$ot->fijar("vImportePago",dosdecimales($ImportePago));
+	$ot->fijar("vImportePagoMonedaBase",dosdecimales($ImportePagoMonedaBase));
 	$jsOut .= jsPaginador($indice,$ot->getPagina(),$num);
 	
 	$ot->fijar("CLIST",$jsOut );

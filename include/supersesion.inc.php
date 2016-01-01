@@ -237,7 +237,7 @@ function getSesionDato($nombre){
 				$detadoc[3]=false;
 				$detadoc[4]=false;
 				$detadoc[5]=1;
-				$detadoc[6]=false;
+				$detadoc[6]=1;
 				$detadoc[7]=false;
 				$detadoc[8]=false;
 				$detadoc[9]=false;
@@ -246,6 +246,7 @@ function getSesionDato($nombre){
 				$detadoc[12]=false;
 				$detadoc[13]=0;
 				$detadoc[14]=0;
+				$detadoc[15]='';
 				$_SESSION[$nombre]=$detadoc;
 			}
 			return $_SESSION[$nombre];

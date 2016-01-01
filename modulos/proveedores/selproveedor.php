@@ -9,7 +9,7 @@ StartXul(_("Elige proveedor"));
 switch($modo){
 	case "proveedorhab":
 			
-		echo "<groupbox flex='1'><caption label='" . _("Proveedor") . "'/>";		
+		echo "<vbox class='box' flex='1'><groupbox flex='1'><caption class='box' label='" . _("Proveedor") . "'/>";		
 		echo "<textbox id='buscaproveedor'  onkeyup='BuscaProveedor(); if (event.which == 13) agnadirDirecto();' onkeypress='return soloAlfaNumerico(event);'/>";
 		$familias = genArrayProveedores();		
 		echo "<script>\n";
@@ -19,17 +19,17 @@ switch($modo){
 		}
 		echo "\n</script>";						
 				
-		echo "<listbox flex='1' id='Proveedor' rows='5' onclick='opener.changeProvHab(this,provhab[this.value]);window.close();return true;'>";
+		echo "<listbox flex='1' id='Proveedor' onclick='parent.changeProvHab(this,provhab[this.value]);parent.closepopup();return true;'>";
 		echo  genXulComboProveedores();				
 		echo "</listbox>";
-		echo "<button label='". _("Cerrar")."' oncommand='window.close()'/>";	
-		echo "</groupbox>";
+		//echo "<button label='". _("Cerrar")."' oncommand='parent.closepopup()'/>";	
+		echo "</groupbox></vbox>";
 		
 		break;				
 
 	case "proveedorpost":
 			
-		echo "<groupbox flex='1'><caption label='" . _("Proveedor") . "'/>";		
+		echo "<vbox class='box' flex='1'><groupbox flex='1'><caption label='" . _("Proveedor") . "'/>";		
 		echo "<textbox id='buscaproveedor'  onkeyup='BuscaProveedor(); if (event.which == 13) agnadirDirecto();' onkeypress='return soloAlfaNumerico(event);'/>";
 		$familias = genArrayProveedores();		
 		echo "<script>\n";
@@ -39,11 +39,11 @@ switch($modo){
 		}
 		echo "\n</script>";						
 				
-		echo "<listbox flex='1' id='Proveedor' rows='5' onclick='opener.setProvPost(this,provhab[this.value]);window.close();return true;'>";
+		echo "<listbox flex='1' id='Proveedor'  onclick='parent.setProvPost(this,provhab[this.value]);return true;'  onkeypress='if (event.which == 13) { parent.setProvPost(this,provhab[this.value]);return true; } '>";
 		echo  genXulComboProveedores();				
 		echo "</listbox>";
-		echo "<button label='". _("Cerrar")."' oncommand='window.close()'/>";	
-		echo "</groupbox>";
+		//echo "<button label='". _("Cerrar")."' oncommand='parent.closepopup()'/>";	
+		echo "</groupbox></vbox>";
 		
 		break;				
 	default:
@@ -101,6 +101,11 @@ function soloAlfaNumerico(e){
     if(letras.indexOf(tecla)==-1 && !tecla_especial){
         return false;
     }
+}
+
+
+function loadfocus(){
+    document.getElementById('buscaproveedor').focus();
 }
 
 //]]></script>

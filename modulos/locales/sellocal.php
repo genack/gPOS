@@ -20,10 +20,10 @@ switch($modo){
 		}
 		echo "\n</script>";						
 				
-		echo "<listbox flex='1' id='Local' rows='5' onclick='opener.changeProvHab(this,provhab[this.value]);window.close();return true;'>";
+		echo "<listbox flex='1' id='Local' rows='5' onclick='parent.changeProvHab(this,provhab[this.value]);parent.closepopup();return true;'>";
 		echo  genXulComboLocales();				
 		echo "</listbox>";
-		echo "<button label='". _("Cerrar")."' oncommand='window.close()'/>";	
+		echo "<button label='". _("Cerrar")."' oncommand='parent.closepopup()'/>";	
 		echo "</groupbox>";
 		
 		break;				
@@ -40,10 +40,10 @@ switch($modo){
 		}
 		echo "\n</script>";						
 				
-		echo "<listbox flex='1' id='Local' rows='5' onclick='opener.setLocalPost(this,loclhab[this.value]);window.close();return true;'>";
+		echo "<listbox flex='1' id='Local' rows='5' onclick='parent.setLocalPost(this,loclhab[this.value]);parent.closepopup();return true;'>";
 		echo  genXulComboLocales();				
 		echo "</listbox>";
-		echo "<button label='". _("Cerrar")."' oncommand='window.close()'/>";	
+		//echo "<button label='". _("Cerrar")."' oncommand='parent.closepopup()'/>";	
 		echo "</groupbox>";
 		
 		break;				
@@ -85,6 +85,10 @@ function agnadirDirecto(){
     }
     theList.onclick();
 }
+function loadfocus(){
+    document.getElementById('buscalocal').focus();
+}
+
 //]]></script>
 <?php
 EndXul();

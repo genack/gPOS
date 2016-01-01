@@ -67,7 +67,7 @@ class laboratorio extends Cursor {
 		FROM
 		ges_laboratorios 		
 		WHERE
-		ges_laboratorios.Eliminado = 0
+		ges_laboratorios.Eliminado = 0 AND ges_laboratorios.IdLaboratorio > 1
 		";
 		
 		$res = $this->queryPagina($sql, $min, 10);

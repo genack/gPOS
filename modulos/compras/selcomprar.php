@@ -46,6 +46,7 @@ switch ($modo) {
 	       $idpedidodet   = 0;
 	       $idlocal       = getSesionDato("IdTienda");
 	       $opentrada     = '';
+	       $esPopup       = ( isset($_GET["esPopup"]) ) ? CleanID($_GET["esPopup"]):0;
 	       $id            = CleanID($_GET["id"]);
 	       $unidades      = CleanInt($_GET["u"]);
 	       $trasAlta      = CleanID($_GET["trasAlta"]);
@@ -66,7 +67,7 @@ switch ($modo) {
 	       $selAgregar    = "true";
 	       $selBuscar     = "false";
 	       $btnComprar    = 'Comprar...';
-	       $btnCancelar   = "terminar('Limpiando datos S/N...')";
+	       $btnCancelar   = "terminar('Limpiando datos S/N...',0,".$esPopup.")";
 	       $Garantia      = date("Y-n-j",mktime(0, 0, 0, date("m"),
 						    date("d"), 
 						    date("Y")+1 ));
@@ -74,7 +75,7 @@ switch ($modo) {
 	       $esGarantia    = 'false';
 	       include("xulseries.php");
 	       break;
-
+	     case "visualizarserieAgregaInventarioAltaRapida" :
 	     case "visualizarserieAgregaInventario" :
 	       $validarSeries = false;
 	       $idpedidodet   = 0;
@@ -106,6 +107,7 @@ switch ($modo) {
 						    date("Y")+1 ));
 	       $escKBox       = false;
 	       $esGarantia    = 'false';
+	       $esPopup       = 0;
 	       include("xulseries.php");
 	       break;
 
@@ -139,16 +141,18 @@ switch ($modo) {
 	       $selBuscar     = "false";
 	       $escKBox       = false;
 	       $esGarantia    = 'false';
+	       $esPopup       = 0;
 	       //print_r( getSesionDato("xdtCarritoCompras") );
 	       include("xulseries.php");
 	       break;
 	     case "visualizarAgnadirProductoCompra" :
 	       $id            = CleanID($_GET["id"]);
-	       $manejalote    = (CleanID($_GET["manejalote"])==1 )? true:false;
-	       $manejafv      = (CleanID($_GET["manejafv"])==1 )?   true:false;
-	       $menudeo       = (CleanID($_GET["menudeo"])==1 )?    true:false;
+	       $manejalote    = ( CleanID($_GET["manejalote"])==1 );
+	       $manejafv      = ( CleanID($_GET["manejafv"])==1 );
+	       $menudeo       = ( CleanID($_GET["menudeo"])==1 );
 	       $manejaserie   = CleanID($_GET["manejaserie"]);
 	       $trasAlta      = CleanID($_GET["trasAlta"]);
+	       $esPopup       = ( isset($_GET["esPopup"]) ) ? CleanID($_GET["esPopup"]):0;
 	       $UContenedor   = CleanCadena($_GET["UContenedor"]);
 	       $UMedida       = CleanCadena($_GET["UMedida"]);
 	       $Contenedor    = CleanCadena($_GET["Contenedor"]);
@@ -179,6 +183,10 @@ switch ($modo) {
 	       $cantidad      = ($esidcart)? $cantidadcart: 0;
 	       $unidades      = ($esidcart)? $unidadescart: 0;
 	       $fila          = 0;
+	       $tipomoneda    = $detadoc[5];
+	       $Moneda        = getSesionDato("Moneda");
+	       $txtcosto      = $Moneda[ $tipomoneda ]['S'];
+
 	       //print_r( getSesionDato("xdtCarritoCompras") );
 	       include("xulcomprar.php");
 	       break;
@@ -186,9 +194,10 @@ switch ($modo) {
 	     case "visualizarModificarProductoCarrito" :
 
 	       $id            = CleanID($_GET["id"]);
-	       $manejalote    = (CleanID($_GET["manejalote"]) == 1 )? true:false;
-	       $manejafv      = (CleanID($_GET["manejafv"])   == 1 )? true:false;
-	       $menudeo       = (CleanID($_GET["menudeo"])    == 1 )? true:false;
+	       $manejalote    = (CleanID($_GET["manejalote"]) == 1 );
+	       $manejafv      = (CleanID($_GET["manejafv"])   == 1 );
+	       $menudeo       = (CleanID($_GET["menudeo"])    == 1 );
+	       $esPopup       = ( isset($_GET["esPopup"]) ) ? CleanID($_GET["esPopup"]):0;
 	       $manejaserie   = CleanID($_GET["manejaserie"]); 
 	       $dscto         = CleanDinero($_GET["dscto"]);
 	       $cantidad      = CleanFloat($_GET["Cntidad"]);
@@ -209,6 +218,11 @@ switch ($modo) {
 	       $lt            = ( $manejalote )?  obtenerLote($id):"";
 	       $UContenedor   = ( $UContenedor==0 )? 1:$UContenedor;
 	       $titulo        = "Modificando Carrito de Compra";
+
+	       $tipomoneda    = $detadoc[5];
+	       $Moneda        = getSesionDato("Moneda");
+	       $txtcosto      = $Moneda[ $tipomoneda ]['S'];
+
 	       //print_r( getSesionDato("xdtCarritoCompras") );
 	       include("xulcomprar.php");
 	       break;
@@ -250,6 +264,7 @@ switch ($modo) {
 	       $escKBox        = false;
 	       $esGarantia     = 'false';
 	       $escKBoxinit    = "";
+	       $esPopup        = 0;
 	       include("xulseries.php");
 	       break;
 
@@ -324,6 +339,7 @@ switch ($modo) {
 	       $opentrada     = '';
 	       $esGarantia    = 'true';
 	       $escKBoxinit   = "";
+	       $esPopup       = 0;
 	       include("xulseries.php");
 	       break;
 
@@ -352,6 +368,7 @@ switch ($modo) {
 	       $escKBox       = false;
 	       $esGarantia    = 'false';
 	       $escKBoxinit   = "";
+	       $esPopup       = 0;
 	       include("xulseries.php");
 	       break;
 
@@ -387,6 +404,7 @@ switch ($modo) {
 	       $prodbase      = false;
 	       $fila          = 0;
 	       $trasAlta      = 0;
+	       $esPopup       = 0;
 	       include("xulseries.php");
 	       break;
 
@@ -414,13 +432,14 @@ switch ($modo) {
 	       $validarSeries = 0;
 	       $Comprar       = false;
 	       $prodbase      = false;
-	       $idlocal       = $_SESSION["LocalMostrado"];
+	       $idlocal       =  (isset($_SESSION["LocalMostrado"]))? $_SESSION["LocalMostrado"]:0;
 	       $opentrada     = '';
 	       $fila          = 0;
 	       $trasAlta      = 0;
 	       $escKBoxinit   = '';
 	       $escKBox       = false;
 	       $esGarantia    = 'false';
+	       $esPopup       = 0;
 	       include("xulseries.php");
 	       break;
 
@@ -454,6 +473,7 @@ switch ($modo) {
 	       $escKBox       = true;
 	       $esGarantia    = 'false';
 	       $escKBoxinit   = "setTimeout('setcKBoxSerie()',100)";
+	       $esPopup       = 0;
 	       include("xulseries.php");
 	       break;
 

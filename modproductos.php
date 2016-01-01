@@ -5,7 +5,9 @@ include("tool.php");
 SimpleAutentificacionAutomatica("visual-iframe");
 
 global $tamPagina,$txtMoDet;
-$tamPagina = 100;
+
+$tamPagina  = ( getSesionDato("GlobalGiroNegocio") == 'BTQE')? 200:100;
+
 $txtMoDet  = getModeloDetalle2txt();
 
 function UploadFoto() {        
@@ -151,12 +153,7 @@ function ListarProductosExtra(){
 	$jsOut .= "cListProductos();";	
 	$jsOut .= $paginador;
 	$jsOut .= AutoOpen();
-	
-		
-	echo "<center>";
 	echo jsBody($jsOut);
-	echo "</center>";					
-	
 }
 
 function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,$base,$idfamilia) {
@@ -287,10 +284,9 @@ function ModificarProductoFoto($id,$nuevaFoto,$ref=false){
 }
 
 function ModificarProductoBar($id,$newcodigobarras,$refprovhab,$idcontenedor,
-			      $ventamenudeo,$unidxcont,
-			      $unidadmedida,$color,$talla,$nombre,
-			      $tieneserie,$tienelote,$fechav,$idalias0,$idalias1,
-			      $condventa){
+			      $ventamenudeo,$unidxcont,$unidadmedida,$idcolor,
+			      $idtalla,$nombre,$tieneserie,$tienelote,$fechav,
+			      $idalias0,$idalias1,$condventa){
 
 	$oProducto = new producto;
 	if (!$oProducto->Load($id)){
@@ -302,12 +298,14 @@ function ModificarProductoBar($id,$newcodigobarras,$refprovhab,$idcontenedor,
 	$oProducto->set("CodigoBarras",$newcodigobarras,FORCE);
 	$oProducto->set("RefProvHab",$refprovhab,FORCE);
 	$oProducto->set("IdContenedor",$idcontenedor,FORCE);
+	$oProducto->set("IdColor",$idcolor,FORCE);
+	$oProducto->set("IdTalla",$idtalla,FORCE);
 	$oProducto->set("VentaMenudeo",$ventamenudeo,FORCE);
         $oProducto->set("UnidadMedida",$unidadmedida,FORCE);
 	$oProducto->set("CondicionVenta",$condventa,FORCE);
 	$oProducto->set("UnidadesPorContenedor",$unidxcont,FORCE);
-	$oProducto->set("Serie",$tieneserie);
-	$oProducto->set("Lote",$tienelote);
+	$oProducto->set("Serie",$tieneserie,FORCE);
+	$oProducto->set("Lote",$tienelote,FORCE);
 	$oProducto->set("FechaVencimiento",$fechav);
 	$oProducto->set("IdProductoAlias0",$idalias0,FORCE);
 	$oProducto->set("IdProductoAlias1",$idalias1,FORCE);
@@ -320,8 +318,11 @@ function ModificarProductoBar($id,$newcodigobarras,$refprovhab,$idcontenedor,
 	}
 	
 	if ($oProducto->Modificacion() ){
-		echo gas("aviso",_("$newcodigobarras - $nombre $color $talla modificado"));	
-		return true;
+	  $talla = resetIdTalla2Texto( $idtalla );
+	  $color = resetIdColor2Texto( $idcolor );
+
+	  echo gas("aviso",_("$newcodigobarras - $nombre $color $talla modificado"));	
+	  return true;
 	} else {
 		echo gas("problema",_("No se puedo cambiar datos - $newcodigobarras"));
 		return false;	
@@ -474,17 +475,17 @@ function FormularioDeCambiodePrecio(){
 }
 
 
-function VaciarDatosProductosyAlmacen(){
+//function VaciarDatosProductosyAlmacen(){
   //query("DELETE FROM ges_almacenes");
   //query("DELETE FROM ges_productos");
   //query("DELETE FROM ges_productos_idioma");
-}
+//}
 
 
 function ClonarProducto($id,$idcolor,$idtalla,$referencia=false,$codigobarras,
 			$refprovhab,$coste,$precioventa,$ventamenudeo,$unidadesxcontenedor,
 			$unidadmedida,$idcontenedor,$referencia,$idalias0,$idalias1,
-			$condventa) {
+			$condventa,$tieneserie,$tienelote,$tienevence) {
 	global $action;
 			
 	$oProducto = new producto;
@@ -507,7 +508,9 @@ function ClonarProducto($id,$idcolor,$idtalla,$referencia=false,$codigobarras,
 	$oProducto->set("UnidadesPorContenedor",$unidadesxcontenedor,FORCE);
 	$oProducto->set("IdProductoAlias0",$idalias0,FORCE);
 	$oProducto->set("IdProductoAlias1",$idalias1,FORCE);
-	
+	$oProducto->set("Lote",$tienelote,FORCE);
+	$oProducto->set("FechaVencimiento",$tienevence,FORCE);
+	$oProducto->set("Serie",$tieneserie,FORCE);
 	//setSesionDato("ClonProd",var_export($oProducto,true));
 	
 	if ($oProducto->Clon()) {
@@ -730,6 +733,9 @@ switch($modo){
 		$coste         = CleanFloat($_POST["Coste"]);
 		$precioventa   = CleanFloat($_POST["PrecioVenta"]);
 		$idcontenedor  = CleanID($_POST["IdContenedor"]);
+		$tieneserie    = (isset($_POST["NumeroSerie"]))? CleanID($_POST["NumeroSerie"]=='on'):false;
+		$tienelote     = (isset($_POST["Lote"]))? CleanID($_POST["Lote"]=='on'):false;
+		$tienevence    = (isset($_POST["FechaVencimiento"]))? CleanID($_POST["FechaVencimiento"]== 'on'):false;
 		$ventamenudeo  = (isset($_POST["VentaMenudeo"]))?CleanID($_POST["VentaMenudeo"]=='on'):false;
 		$unidxcont     = CleanID($_POST["UnidadesPorContenedor"]);
 		$unidadmedida  = CleanText($_POST["UnidadMedida"]);
@@ -739,7 +745,8 @@ switch($modo){
 		if (ClonarProducto($id,$idcolor,$idtalla,false,$codigobarras,
 				   $refprovhab,$coste,$precioventa,$ventamenudeo,
 				   $unidxcont,$unidadmedida,$idcontenedor,
-				   $referencia,$idalias0,$idalias1,$condventa)){
+				   $referencia,$idalias0,$idalias1,$condventa,
+				   $tieneserie,$tienelote,$tienevence)){
 		  echo gas("aviso",_("Creado nuevo $txtModelo/$txtDetalle"));	
 		  //Separador();
 		  //$_SESSION["IdUltimoCambioProductos"] = $id;			
@@ -748,13 +755,13 @@ switch($modo){
 		break;	
 	case "clonar":
 		$id     = CleanID( $_GET["id"] );
-		$idBase = CleanID( $_GET["idBase"] );
-		//$idBase = (isset($_SESSION["IdUltimoCambioProductos"]))? CleanID( $_SESSION["IdUltimoCambioProductos"] ):0;
+		$idBase = (isset($_SESSION["IdUltimoCambioProductos"]))? CleanID( $_SESSION["IdUltimoCambioProductos"] ):0;
+		$idBase = (isset($_GET["idBase"]))? CleanID( $_GET["idBase"] ):$idBase;
 		$volver = (isset($_GET["volver"]))? Clean($_GET["volver"]):"";
 		MostrarProductoParaClonado($id,$idBase,false,$volver);
 		break;
 	case "vaciarbasededatos":
-		VaciarDatosProductosyAlmacen();	
+	        //VaciarDatosProductosyAlmacen();	
 		echo gas("nota","Tablas de productos y almacen vaciadas");
 		break;		
 	case "preciochange":
@@ -816,18 +823,11 @@ switch($modo){
 		$codigobarras   = CleanCB($_POST["CodigoBarras"]);
 		$refprovhab     = CleanCB($_POST["RefProvHab"]);
 		$idcontenedor 	= CleanID($_POST["IdContenedor"]);
-		$changecolor 	= CleanID($_POST["ChangeColor"]);	
 		$idcolor 	= CleanID($_POST["IdColor"]);
-		$color 	        = CleanText($_POST["Color"]);
-		$changetalla 	= CleanID($_POST["ChangeTalla"]);
 		$idtalla 	= CleanID($_POST["IdTalla"]);
-		$talla   	= CleanText($_POST["Talla"]);
 		$condventa   	= CleanText($_POST["CondicionVenta"]);
 		$nombre   	= (isset($_POST["Nombre"]))? CleanText($_POST["Nombre"]):'';
 		$IdIdioma       = 1;
-
-		if($changecolor && $color != "") setChangeColorbyIdColor($idcolor,$color,$IdIdioma);
-		if($changetalla && $talla != "") setChangeTallabyIdTalla($idtalla,$talla,$IdIdioma);
 
 		$ventamenudeo = (isset($_POST["VentaMenudeo"]))? CleanID($_POST["VentaMenudeo"]=='on'):false;
 		$tieneserie   = (isset($_POST["NumeroSerie"]))? CleanID($_POST["NumeroSerie"]=='on'):false;
@@ -843,10 +843,9 @@ switch($modo){
 		if ($nuevaFoto)	ModificarProductoFoto($id,$nuevaFoto);	
 
 		if ( ModificarProductoBar($id,$codigobarras,$refprovhab,$idcontenedor,
-					  $ventamenudeo,$unidxcont,
-					  $unidadmedida,$color,$talla,$nombre,
-					  $tieneserie,$tienelote,$fechav,$idalias0,$idalias1,
-					  $condventa) ) 
+					  $ventamenudeo,$unidxcont,$unidadmedida,$idcolor,
+					  $idtalla,$nombre,$tieneserie,$tienelote,$fechav,
+					  $idalias0,$idalias1,$condventa) ) 
 		  PaginaBasica();
 		else 
 		  MostrarProductoBarParaEdicion($id,$lang);

@@ -98,7 +98,7 @@ class productoinformacion extends Cursor {
 	foreach ($data as $key => $value) {
 	  if ($coma)
 	    $str .= ",";
-	  $value = mysql_escape_string($value);
+	  $value = mysql_real_escape_string($value);
 	  $str .= " $key = '".$value."'";
 	  $coma = true;
 	}

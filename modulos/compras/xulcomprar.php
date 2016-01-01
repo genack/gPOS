@@ -1,25 +1,18 @@
 <?php
 SimpleAutentificacionAutomatica("visual-xulframe");
-header("Content-type: application/vnd.mozilla.xul+xml");
-echo '<?xml version="1.0" encoding="UTF-8"?>';
-echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';
-echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
+StartXul('Compras Productos',$predata="",$css='');
+StartJs($js='modulos/compras/comprar.js?v=1');
 ?>
-<window id="CompraVista" title="<?php echo "gPOS // Compras - ".$producto?>" 
-    xmlns:html="http://www.w3.org/1999/xhtml"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/compras/comprar.js" />
-    <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js"/>
-<vbox  align="center"  pack="center">
-  <spacer style="height:30px"/>
-  <caption label="<?php echo $titulo;?>" style="font-size: 14px;font-weight: bold;"/>
-  <spacer style="height:20px"/>
-  <caption label="<?php echo $producto  ?>" style="font-size: 12px;font-weight: bold;"/>
-</vbox>
-<spacer style="height:10px"/>
-<hbox  align="center"  pack="center">
-  <spacer flex="1"></spacer>
 
+<vbox  align="center"  pack="center"  class="box">
+  <spacer style="height:10px"/>
+  <caption class="h1"><?php echo $titulo;?></caption>
+  <spacer style="height:10px"/>
+  <caption label="<?php echo $producto  ?>" />
+  <spacer style="height:5px"/>
+</vbox>
+<hbox  align="top"  pack="center"  class="box" flex="1">
+  <spacer flex="1"></spacer>
   <groupbox>
 
     <hbox>
@@ -53,7 +46,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  </row>
 
 	  <row>
-	    <caption label="Costo" />
+	    <caption label="Costo <?php echo $txtcosto?>" />
 	    <hbox flex="1">
 	      <textbox id = "costo" value="<?php echo $CostoUnitario; ?>" size="17" 
 	              onchange="actualizarCostoTotal(<?php echo $UContenedor;?>); 
@@ -61,7 +54,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 		      onkeypress="return soloNumeros(event,this.value)"/>
 
 	      <?php if($menudeo) echo '
-	      <button  label="x'.$Contenedor.'" 
+	      <button class="btn"  label="x'.$Contenedor.'" 
                        oncommand="mostrarCostoTotal('.$UContenedor.');"/>';
                     else echo '
 		    <label value="x Unidad"/>'; ?>
@@ -69,12 +62,12 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  </row>
 
 	  <row>
-	    <caption label="Costo Total" />
+	    <caption label="Costo Total <?php echo $txtcosto?>" />
 	    <textbox id = "costototal" value="0" size="12" readonly="true" />
 	  </row>
 
 	  <row>
-	    <caption label="Descuento" />
+	    <caption label="Descuento <?php echo $txtcosto?>" />
 	    <hbox>
 	      <textbox id="descuento" value="<?php echo $dscto;?>" size="17" 
 		       onchange="actualizarPorcentajeDescuento();
@@ -82,12 +75,12 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 		       onfocus="this.select()"
 		       onkeypress="return soloNumeros(event,this.value)" />
 
-	      <button  label="%" oncommand="mostrarPorcentajeDescuento();"/>
+	      <button class='btn'  label="%" oncommand="mostrarPorcentajeDescuento();"/>
 	    </hbox>
 	  </row>
 
 	  <row>
-	    <caption label="Importe" />
+	    <caption label="Importe <?php echo $txtcosto?>" />
 	    <textbox id = "importe"  value="0" size="12" readonly="true"/>
 	  </row>
 	  
@@ -114,10 +107,10 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 			id="pdListCheck" collapsed="<?php echo $pblistcheck;?>"
 			oncommand="setblockListado(this.checked);" checked="<?php echo $pblist;?>"/>
 	      <hbox flex="1" pack="center">
-		<button label='Comprar...' image='<?php echo $_BasePath; ?>img/gpos_compras.png' 
-			oncommand='aceptar(<?php echo $id.",".$manejaserie.",".$fila.",".$trasAlta?>)'/>
-		<button label="Cancelar" image="<?php echo $_BasePath; ?>img/gpos_vaciarcompras.png"
-			oncommand="terminar('Limpiando datos del Producto...');"/>
+		<button class='btn' label='Comprar...' image='<?php echo $_BasePath; ?>img/gpos_compras.png' 
+			oncommand='aceptar(<?php echo $id.",".$manejaserie.",".$fila.",".$trasAlta.",".$esPopup?>)'/>
+		<button class='btn' label="Cancelar" image="<?php echo $_BasePath; ?>img/gpos_vaciarcompras.png"
+			oncommand="terminar('Limpiando datos del Producto...',0,<?php echo $esPopup; ?>);"/>
 	      </hbox>
 	    </vbox>
 	  </row>

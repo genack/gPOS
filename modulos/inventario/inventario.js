@@ -13,6 +13,9 @@ var cIdComprobante        = 0;
 var cIdProducto           = 0;
 var cProducto             = '';
 var cCosto                = 0;
+var cLoteVence            = '/';
+var cVence                = '/';
+var cLote                 = '/';
 var cPrecio               = 0;
 var cPVD                  = 0;
 var cPVDD                 = 0;
@@ -40,6 +43,8 @@ var cUnidxCont            = 0;
 var cUnidad               = 'unid';
 var cMUSubFamilia         = '';
 var cCostoOP              = 0;
+var cCOPOrigen            = 0;
+var cCostoOrigen          = 0;
 //var cImpuesto           = 0;
 var ilinealistamovimiento = 0;
 var ilinealistaalmacen    = 0;
@@ -68,6 +73,8 @@ var sPVD  = 0;
 var yPVC  = 0;
 var yPVCD = 0;
 var sPVC  = 0;
+
+var costoxcontenedor = 0;
 
 function VerMovimiento(){
     VaciarBusquedaMovimiento();
@@ -164,7 +171,7 @@ function RawBuscarMovimiento(desde,hasta,nombre,codigo,filtrooperacion,marca,fam
         + "&xinventario=" + escape(cInventario)
         + "&xidinventario=" + escape(cIdInventario)
         + "&marca=" + escape(marca)
-        + "&xnombre=" + escape(nombre)
+        + "&xnombre=" + trim(nombre)
         + "&xcodigo=" + escape(codigo)
         + "&xope=" + escape(filtrooperacion)
         + "&xidope=" + escape(cIdInventario)
@@ -404,6 +411,8 @@ function BuscarAlmacen(){
 	volverStock();
 
     var filtrolocal = id("FiltroMovimientoLocal").value;
+    if(filtrolocal != cIdLocal) return  CambioLocalInventario();
+
     var marca       = id("idmarca").value;
     var familia     = id("idfamilia").value;
     var nombre      = id("NombreBusqueda").value;
@@ -436,7 +445,7 @@ function RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 	+ "&familia=" + escape(familia)
         + "&marca=" + escape(marca)
         + "&xinventario=" + escape(cInventario)
-        + "&xnombre=" + escape(nombre)
+        + "&xnombre=" + trim(nombre)
         + "&xcodigo=" + escape(codigo)
 	+ "&xstock=" + escape(stock)
         + "&xlocal=" + escape(filtrolocal);
@@ -447,7 +456,7 @@ function RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 
     var tex = "";
     var cr = "\n";
-    var item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,Unidades,Costo,PVD,PVDD,PVC,PVCD,Producto,Almacen,ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,Vence,MUSubFamilia,CostoOperativo;
+    var item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,Unidades,Costo,PVD,PVDD,PVC,PVCD,Producto,Almacen,ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,Vence,MUSubFamilia,CostoOperativo,COPOrigen,CostoOrigen;
     var node,t,i;
     var totalProductos = 0;
     var totalStock     = 0;
@@ -491,6 +500,8 @@ function RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 	    Vence           = node.childNodes[t++].firstChild.nodeValue;
 	    CostoOperativo  = node.childNodes[t+2].firstChild.nodeValue;
 	    MUSubFamilia    = node.childNodes[t+3].firstChild.nodeValue;
+	    COPOrigen       = node.childNodes[t+4].firstChild.nodeValue;
+	    CostoOrigen     = node.childNodes[t+5].firstChild.nodeValue;
 
 	    if ( Unidades >0   ) totalStock++; 
  	    if ( Unidades == 0 ) totalSinStock++; 
@@ -501,7 +512,8 @@ function RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 				       Unidades,Costo,PVD,PVDD,PVC,PVCD,Producto,Almacen,
 				       ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,
 				       Vence,totalStock,totalImporte,totalSinStock,
-				       totalProductos,MUSubFamilia,CostoOperativo);
+				       totalProductos,MUSubFamilia,CostoOperativo,COPOrigen,
+				       CostoOrigen);
         }
     }
 }
@@ -510,10 +522,10 @@ function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
 			 Cantidad,Costo,PVD,PVDD,PVC,PVCD,Producto,Almacen,
 			 ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,Vence,
 			 totalStock,totalImporte,totalSinStock,totalProductos,
-			 MUSubFamilia,CostoOperativo){
+			 MUSubFamilia,CostoOperativo,COPOrigen,CostoOrigen){
 
     var lista    = id("listadoAlmacen");
-    var xnumitem,xitem,xFechaMovimiento,xUnidades,xCosto,xPVD,xPVDD,xPVC,xPVCD,xProducto,xAlmacen,vCantidad,vExistencias,xResumenKardex,xSerie,xLote,xVence,xMenudeo,xUnidxCont,xCont,xMUSubFamilia,xCostoOperativo;
+    var xnumitem,xitem,xFechaMovimiento,xUnidades,xCosto,xPVD,xPVDD,xPVC,xPVCD,xProducto,xAlmacen,vCantidad,vExistencias,xResumenKardex,xSerie,xLote,xVence,xMenudeo,xUnidxCont,xCont,xMUSubFamilia,xCostoOperativo,xCOPOrigen,xCostoOrigen;
     var vResto,vMenudeo,vExistencias,vCantidad,xclass;
 
     //Cantidad
@@ -647,7 +659,15 @@ function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
     xCostoOperativo.setAttribute("collapsed","true");
     xCostoOperativo.setAttribute("id","costooperativo_"+IdAlmacen);
 
+    xCOPOrigen = document.createElement("listcell");
+    xCOPOrigen.setAttribute("value",formatDineroTotal(COPOrigen));
+    xCOPOrigen.setAttribute("collapsed","true");
+    xCOPOrigen.setAttribute("id","coporigen_"+IdAlmacen);
 
+    xCostoOrigen = document.createElement("listcell");
+    xCostoOrigen.setAttribute("value",formatDineroTotal(CostoOrigen));
+    xCostoOrigen.setAttribute("collapsed","true");
+    xCostoOrigen.setAttribute("id","costoorigen_"+IdAlmacen);
 
     xitem.appendChild( xnumitem );
     xitem.appendChild( xAlmacen );
@@ -673,6 +693,8 @@ function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
     xitem.appendChild( xIdArticulo );
     xitem.appendChild( xCostoOperativo );
     xitem.appendChild( xMUSubFamilia );
+    xitem.appendChild( xCOPOrigen );
+    xitem.appendChild( xCostoOrigen );
     lista.appendChild( xitem );	
 
     //totalStock,totalImporte,totalSinStock,
@@ -726,6 +748,7 @@ function RevisarMovimientoSeleccionada(){
     var xlocal    = id("mov_idlocal_"+idex.value).getAttribute("value");
     var listado   = id("listadoMovimiento");
     var resumen   = id("resumenMovimiento");
+    var resumenfooter   = id("resumenMovimientoFooter");
     var busqueda  = id("busquedaMovimiento");
     var boxkardex = id("boxkardex");
     var webkardex = id("webkardex");
@@ -742,12 +765,13 @@ function RevisarMovimientoSeleccionada(){
     webkardex.setAttribute("src",url);  
     listado.setAttribute("collapsed","true");  
     resumen.setAttribute("collapsed","true");  
+    resumenfooter.setAttribute("collapsed","true");  
     busqueda.setAttribute("collapsed","true");  
     boxkardex.setAttribute("collapsed","false");  
     id("ajust").setAttribute("collapsed",true);
     id("invent").setAttribute("collapsed",true);
     id("btnVolver").setAttribute("collapsed",true);
-    id("btnFinalizarInventario").setAttribute("collapsed",true);
+    //id("btnFinalizarInventario").setAttribute("collapsed",true);
     id("wtitleInventario").setAttribute("collapsed",false);
     id("wtitleInventario").setAttribute("label",cInventario+"s > Kardex");
 }
@@ -758,8 +782,9 @@ function salirKardexProducto(){
 
 
     id("wtitleInventario").setAttribute("collapsed",true);
-    id("ajust").setAttribute("collapsed",false);
-    id("invent").setAttribute("collapsed",false);
+    
+    id("ajust").setAttribute("collapsed", ( cInventario == 'Inventario' ) );
+    id("invent").setAttribute("collapsed", ( cInventario != 'Inventario' ) );
     id("btnVolver").setAttribute("collapsed",false);
     id("wtitleInventario").setAttribute("label"," Inventario ");
 
@@ -768,7 +793,7 @@ function salirKardexProducto(){
     var vinvent    = (xinvent)? id("inventario_Pendiente").value:'';
     var cinvent    = id("filtroInventarios").value;
     var xcontinuar = ( vinvent == cinvent )? false:true; 
-    id("btnFinalizarInventario").setAttribute("collapsed",xcontinuar);
+    //id("btnFinalizarInventario").setAttribute("collapsed",xcontinuar);
 }
 
 function nuevaOperacionAjuste(){
@@ -782,7 +807,7 @@ function nuevaOperacionAjuste(){
     cIdComprobante    = 0;
 
     id("btnVolver").setAttribute("label",' Volver Ajustes');
-    id("btnVolver").setAttribute("oncommand","mostrarOperacion('ajust')");
+    id("btnVolver").setAttribute("oncommand","mostrarOperacion('ajust',false)");
     id("btnVolver").setAttribute("image","../../img/gpos_volver.png");
     
     id("btnImprimirInventarioPDF").setAttribute("collapsed",true);
@@ -820,13 +845,12 @@ function nuevaOperacionInventario(xinv){
     id("btnImprimirInventarioCVS").setAttribute("collapsed",true);
 
     id("btnVolver").setAttribute("label",' Volver Inventarios');
-    id("btnVolver").setAttribute("oncommand","mostrarOperacion('invent')");
+    id("btnVolver").setAttribute("oncommand","mostrarOperacion('invent',false)");
     id("btnVolver").setAttribute("image","../../img/gpos_volver.png");
 
 }
 
 function continuarOperacionInventario(){
-
     //alert('continuar Inventario');
     var xinvent = (id("inventario_Pendiente"))? true:false;
     var vinvent = (xinvent)? id("inventario_Pendiente").value:'';
@@ -844,7 +868,7 @@ function continuarOperacionInventario(){
     cEstadoInventario = 'Pendiente';
 
     id("btnVolver").setAttribute("label",' Volver Inventarios');
-    id("btnVolver").setAttribute("oncommand","mostrarOperacion('invent')");
+    id("btnVolver").setAttribute("oncommand","mostrarOperacion('invent',false)");
     id("btnVolver").setAttribute("image","../../img/gpos_volver.png");
 
     xlistboxInventario('almacen');
@@ -858,7 +882,7 @@ function continuarOperacionInventario(){
     id("wtitleInventario").setAttribute("collapsed",false);
     id("wtitleInventario").setAttribute("label","Inventario "+linvent+" > Stock Almacén");
     id("listaPaginas").setAttribute('collapsed',true);
-    id("btnFinalizarInventario").setAttribute('collapsed',true);
+    //id("btnFinalizarInventario").setAttribute('collapsed',true);
 }
 
 function finalizaOperacionInventario(){
@@ -882,7 +906,7 @@ function finalizaOperacionInventario(){
 
     id("inventario_Pendiente").setAttribute("label",newinv[0]+"- Finalizado");
     id("inventario_Pendiente").setAttribute("id","inventario_Finalizado");
-    mostrarOperacion('invent');
+    mostrarOperacion('invent',false);
 }
 
 function xlistboxInventario(xlist){
@@ -932,18 +956,21 @@ function xlistboxInventario(xlist){
     id("btnbuscar").setAttribute("oncommand",xope);
     id("idfamilia").setAttribute("oncommand",xope);
     id("idmarca").setAttribute("oncommand",xope);
-    id("FiltroMovimientoLocal").setAttribute("oncommand",xope);
+    //id("FiltroMovimientoLocal").setAttribute("oncommand",xope);
     id("resumenAlmacen").setAttribute("collapsed",xresualma);
+    id("resumenAlmacenFooter").setAttribute("collapsed",xresualma);
     id("listadoAlmacen").setAttribute("collapsed",xlistalma);
     id("resumenMovimiento").setAttribute("collapsed",xresukardex);
+    id("resumenMovimientoFooter").setAttribute("collapsed",xresukardex);
     id("listadoMovimiento").setAttribute("collapsed",xlistkardex);
+
     id("NombreBusqueda").focus();
 }
 
-function mostrarOperacion(xval){
+function mostrarOperacion(xval,xinit){
 
     //BuscarInventarioPendiente
-    setInventarioPendiente();
+    if(xinit) setInventarioPendiente();
 
     var xcmbinv     = true;
     var xfecha      = true;
@@ -966,12 +993,11 @@ function mostrarOperacion(xval){
     var xbtnvolver  = true;
     var xtxtinvent  = '';
     var lbtnvolver  = ' Volver Inventarios';
-    var cbtnvolver  = "mostrarOperacion('invent')";
+    var cbtnvolver  = "mostrarOperacion('invent',false)";
     var mbtnvolver  = "../../img/gpos_volver.png";
     var txtInvent   = 'Inventarios';
     var xtitleInv   = true;
     var xtitleAjt   = true;
-    //nels
     var ltajust     = id("listadoMovimiento");
     var numltajust  = ltajust.itemCount;
 
@@ -999,6 +1025,35 @@ function mostrarOperacion(xval){
 	
 	break;
 
+    case 'Inventario':
+    case 'invent':
+	xtitleInv       = false;
+ 	xcmbinv         = false; 
+	xajuste         = true;
+	xmenualta       = false;
+	xfechainv       = false;
+	xope            = 6;
+	cInventario     = 'Inventario';
+	xlistkdxresumen = 'Listado de Ajustes Inventario';
+	cIdInventario   = acinvent[0];//cinvent
+	cIdPedido       = acinvent[1];//cinvent
+	cIdComprobante  = acinvent[2];//cinvent
+	cInventarioDate = ( acinvent[3] )? acinvent[3]:'';//fecha  inventario
+	xinventprint    = ( cIdInventario!=0 )? false:true;
+	txtInvent       = ( cIdInventario!=0 )? 'Inventario '+ltinvent.getAttribute('label'):txtInvent;
+	cTipoInventario = (numltinvent <= 2)? 'Inicial':'Periodico';
+	xcontinuar      = ( vinvent == cinvent )? false:true; 
+	xinventini      = ( numltinvent == 1 && cIdInventario == 0 )? false:true;
+	xinventario     = ( xinvent || !xinventini )? true:false;
+	xmenuopal       = ( xinvent )? false:true;
+	xtxtinvent      = ( !xinventini )? 'Inicial':'Periodico';
+	lbtnvolver      = ( vinvent == cinvent )? ' Continuar Inventario':' Nuevo Inventario '+xtxtinvent;
+	cbtnvolver      = ( vinvent == cinvent )? "continuarOperacionInventario()":"nuevaOperacionInventario('"+xtxtinvent+"')";
+	xbtnvolver      = ( vinvent == cinvent )? false:true;
+	xbtnvolver      = ( !xinventario       )? false:xbtnvolver;
+	xbtnvolver      = ( !xinventini        )? false:xbtnvolver;
+	mbtnvolver      = ( vinvent == cinvent )? "../../img/gpos_continuarinventario.png":"../../img/gpos_nuevoinventario.png";
+	break;
     }
 
     verKardexInventario();
@@ -1019,6 +1074,7 @@ function mostrarOperacion(xval){
     id("btnVolver").setAttribute("image",mbtnvolver);
     id("btnAltaRapida").setAttribute("collapsed",true);
     id("menuAltaRapida").setAttribute("collapsed",xmenualta);
+    id("menuClonaArticulo").setAttribute("collapsed",xmenualta);
     id("listKardexResumen").setAttribute("label",xlistkdxresumen);
     id("invent").setAttribute("label",txtInvent);
     id("filtroOperacion").setAttribute("value",xope);
@@ -1027,9 +1083,9 @@ function mostrarOperacion(xval){
     id("menuOperacionInventarioInicial").setAttribute("collapsed",xinventini);
     id("menuOperacionContinuar").setAttribute("collapsed",xcontinuar);
     id("menuOperacionFinalizar").setAttribute("collapsed",xcontinuar);
-    id("btnFinalizarInventario").setAttribute("collapsed",xcontinuar);
-    //id("btnImprimirInventarioPDF").setAttribute("collapsed",xinventprint);
-    //id("btnImprimirInventarioCVS").setAttribute("collapsed",xinventprint);
+    //id("btnFinalizarInventario").setAttribute("collapsed",xcontinuar);
+    id("btnImprimirInventarioPDF").setAttribute("collapsed",xinventprint);
+    id("btnImprimirInventarioCVS").setAttribute("collapsed",xinventprint);
     id("menuAlmacenFinalizarInventario").setAttribute("collapsed",xmenuopal);
     id("fechaHasta").setAttribute("collapsed",xfecha);
     id("fechaDesde").setAttribute("collapsed",xfecha);
@@ -1049,15 +1105,19 @@ function setInventarioPendiente(){
 function altarapidaArticulo(){
 
     var url = "../altarapida/xulaltarapida.php?modo=altainventario";
-    
     id("webkardex").setAttribute("src",url);  
+    setTimeout("viewaltarapidaArticulo()", 200);    
+}
+
+function viewaltarapidaArticulo(){
     id("formAjustesExistencias").setAttribute("collapsed",true);
+    id("busquedaMovimiento").setAttribute("collapsed",true);
     id("boxkardex").setAttribute("collapsed",false);  
     id("listadoAlmacen").setAttribute("collapsed",true);
     id("resumenAlmacen").setAttribute("collapsed",true);
+    id("resumenAlmacenFooter").setAttribute("collapsed",true);
     id("btnVolver").setAttribute("collapsed",true);
-    id("btnFinalizarInventario").setAttribute("collapsed",true);
-    //id("btnVolver").setAttribute("oncommand","volverStock()");
+    //id("btnFinalizarInventario").setAttribute("collapsed",true);
     id("btnAltaRapida").setAttribute("collapsed",true);
 }
 
@@ -1084,6 +1144,9 @@ function modificarArticuloSeleccionada(){
     cUnidades      = cExistencias%cUnidxCont;
     cEmpaques      = (cExistencias-cUnidades)/cUnidxCont;
 
+    cCOPOrigen     = id("coporigen_"+idex.value).getAttribute("value");
+    cCostoOrigen   = id("costoorigen_"+idex.value).getAttribute("value");
+
     cUnidad        = id("unidad_"+idex.value).getAttribute("value");
     cCosto         = id("costo_"+idex.value).getAttribute("label");
     cPVD           = id("pvd_"+idex.value).getAttribute("label");
@@ -1091,15 +1154,19 @@ function modificarArticuloSeleccionada(){
     cPVC           = id("pvc_"+idex.value).getAttribute("label");
     cPVCD          = id("pvcd_"+idex.value).getAttribute("label");
     cCostoOP       = id("costooperativo_"+idex.value).getAttribute("label");
+
+    cCosto         = (cCosto == 0 && cInventario == 'Inventario')? cCostoOrigen:cCosto;
+    cCostoOP       = (cCostoOP == 0 && cInventario == 'Inventario')? cCOPOrigen:cCostoOP;
+
     cPrecio        = parseFloat(cCosto*(parseFloat(cImpuesto)+100)/100).toFixed(2);
-    
     cMUSubFamilia  = id("musubfamilia_"+idex.value).getAttribute("value");
 
     id("formAjustesExistencias").setAttribute("collapsed",false);
     id("btnVolver").setAttribute("collapsed",true);
-    id("btnFinalizarInventario").setAttribute("collapsed",true);
+    //id("btnFinalizarInventario").setAttribute("collapsed",true);
     id("listadoAlmacen").setAttribute("collapsed",true);  
     id("resumenAlmacen").setAttribute("collapsed",true);  
+    id("resumenAlmacenFooter").setAttribute("collapsed",true);  
     id("btnModificarStock").setAttribute("oncommand","validaModificarStock()");
     id("btnModificarStock").setAttribute("label"," Modificar...");
     id("postAjusteBox").setAttribute("collapsed",true);
@@ -1108,7 +1175,10 @@ function modificarArticuloSeleccionada(){
     id("rowVencimiento").setAttribute("collapsed",true);
     id("rowAjusteSalida").setAttribute("collapsed",true);
     id("webkardex").setAttribute("src","about:blank");  
+    id("xEmpaques").removeAttribute("readonly");
+    id("xUnidades").removeAttribute("readonly");
     id("xExistenciasFisico").removeAttribute("readonly");
+    
     id("xExistenciasFisico").focus();
     id("xAjusteOperacionSalida").label  = "Elige motivo ajuste";
     id("xAjusteOperacionEntrada").label = "Elige motivo ajuste";
@@ -1133,7 +1203,13 @@ function modificarArticuloSeleccionada(){
     cAjusteExistencias             = 0;
     cSeries                        = false;
     cSeriesVence                   = false;
+
     id("btnAltaRapida").setAttribute("collapsed",true);
+
+    id("xEmpaqueProducto").setAttribute("collapsed",esMenudeo);
+    id("xEmpaqueProducto").setAttribute("label","x"+cContenedor);
+
+    if(cPVD == 0) setCostoPrecios('costo',false);
 }
 
 function validaDatoMenudeo(xthis){
@@ -1220,6 +1296,9 @@ function validaModificarStock(){
 	break;
     }
 
+    if(cTipoInventario == 'Inicial' && cAjusteModo == 'mas')
+	seleccionarModoAjuste();
+
     id("rowLote").setAttribute("collapsed",xLote);
     id("rowVencimiento").setAttribute("collapsed",xVence);
     id("btnModificarStock").setAttribute("oncommand",xcmdbtn);
@@ -1227,6 +1306,8 @@ function validaModificarStock(){
     id("rowAjusteEntrada").setAttribute("collapsed",xEntrada);
     id("rowAjusteSalida").setAttribute("collapsed",xSalida);
     id("xExistenciasFisico").setAttribute("readonly",true);
+    id("xUnidades").setAttribute("readonly",true);
+    id("xEmpaques").setAttribute("readonly",true);
     id("xCantidadAjuste").setAttribute("value", cAjusteExistencias+' '+cUnidad);
     id("postAjusteBox").setAttribute("collapsed",false);
 }
@@ -1260,7 +1341,7 @@ function igualStock(){
     if (!parseInt(aInventario[0]) )
     {
 	alert(po_servidorocupado);
-	return mostrarOperacion(cInventario);
+	return mostrarOperacion(cInventario,false);
     }
 
     if( cInventario=="Inventario" && cIdInventario == '0' )
@@ -1285,7 +1366,7 @@ function quitaStock(xget){
     var esOpeAjuste  = ( id("xAjusteOperacionSalida").value != "Elige motivo ajuste" )? true:false;
     var xOpeAjuste   = id("xAjusteOperacionSalida").value;
     var xObs         = id("xObservacion").value;
-    var aExistencias = parseFloat(cExistencias+cAjusteExistencias);
+    //var aExistencias = parseFloat(cExistencias+cAjusteExistencias);
     var esInventario = ( cInventario == 'Inventario' )? true:false;
  
     //Operacion Ajuste
@@ -1334,7 +1415,7 @@ function quitaStock(xget){
     {
 	alert(po_servidorocupado+' \n\n Ajuste -> Quita Stock > '+ cInventario +':::\n\n'+xres);
 	
-	return mostrarOperacion(cInventario);
+	return mostrarOperacion(cInventario,false);
     }
 
     if( cInventario=="Inventario" && cIdInventario == '0' )
@@ -1439,12 +1520,24 @@ function agregaStockAltaRapida(arProducto,xlist,xitem){
     //Inicia Inventario
     var t              = esAltaRapidaResto;
     var cb             = arProducto[t];
-    id("CodigoBusqueda").value = cb;
 
-    BuscarAlmacen();    
-    BuscarPorProductoStock( arProducto[cb+'_idproducto'] );
-    modificarArticuloSeleccionadaAltaRapida();
+    cIdArticulo    = arProducto[cb+'_idarticulo'];
+    cIdAlmacen     = arProducto[cb+'_idalmacen'];
+    cProducto      = arProducto[cb+'_producto'];
+    cIdProducto    = arProducto[cb+'_idproducto'];
+    cResumenKardex = arProducto[cb+'_resumenkardex'];
+    cExistencias   = arProducto[cb+'_existencias'];
 
+    cAjusteModo    = 'igual';
+    cAjusteExistencias = 0;
+    cSeries        = false;
+    cSeriesVence   = false;
+
+    //Mensaje
+    if( webkardex.document.getElementById("msjAltaRapida") )
+	webkardex.document.getElementById("msjAltaRapida").setAttribute("label",
+									"...cargando stock "+ 
+									cProducto+"." );	
     //Actualiza Valores Formulario
     cAjusteExistencias = arProducto[cb+'_cantidad'];
     cCosto             = arProducto[cb+'_costo'];
@@ -1455,26 +1548,95 @@ function agregaStockAltaRapida(arProducto,xlist,xitem){
     cPVCD              = arProducto[cb+'_pvcd'];
     cPrecio            = parseFloat(cCosto*(parseFloat(cImpuesto)+100)/100).toFixed(2);
 
-    esVence            = (arProducto[cb+'_fv'])? false:true;
-    esLote             = (arProducto[cb+'_lt'])? false:true;
+    esSerie            = ( arProducto[cb+'_serie'] == '1');
+    esVence            = ( arProducto[cb+'_fv']    == '1');
+    esLote             = ( arProducto[cb+'_lt']    == '1');
 
-    id("xAjusteOperacionEntrada").label  = "Inicio de operaciones";
-    id("xLote").value                    = (!esLote)?  arProducto[cb+'_lt']:'';
-    if(!esVence)
-	id("xVencimiento").value         =  arProducto[cb+'_fv'];
+    cLote              = ( esLote  )? arProducto[cb+'_lote']  : '';
+    cVence             = ( esVence )? arProducto[cb+'_vence'] : '';
+    cLoteVence         = cLote+"/"+cVence;
 
     //Siguiente Item
     t++;
     esAltaRapidaResto = t;
     
-    //Ejecuta Registro Inventario
-    id("CodigoBusqueda").value = '';
-    agregaStock(false);
+    registraStockAltaRapida(false);
+}
+
+function registraStockAltaRapida(xget){
+   
+    var esOpeAjuste  = false;
+    var xOpeAjuste   = "Inicio de operaciones";
+    var xObs         = "";
+    //var aExistencias = parseFloat(cExistencias+cAjusteExistencias);
+    var esInventario = ( cInventario == 'Inventario' )? true:false;
+
+    //Series
+    if( esSerie && !xget )
+	return getAgregaSeriesAltaRapida();
+
+    var xrequest = new XMLHttpRequest();
+    var url      = "../kardex/selkardex.php?modo=kdxEntradaExistencias"+
+	           "&xarticulo="+cIdArticulo+
+	           "&xproducto="+cIdProducto+
+	           "&xlocal="+cIdAlmacen+
+	           "&xinventario="+cInventario+
+	           "&xidinventario="+cIdInventario+
+	           "&xestinvent="+cEstadoInventario+
+	           "&xtipoinventario="+cTipoInventario+
+	           "&xpedido="+cIdPedido+
+	           "&xcomprobante="+cIdComprobante+
+	           "&xopeajuste="+xOpeAjuste+
+	           "&xcosto="+cCosto+
+	           "&xprecio="+cPrecio+
+	           "&xpvd="+cPVD+
+	           "&xpvdd="+cPVDD+
+	           "&xpvc="+cPVC+
+	           "&xpvcd="+cPVCD+
+	           "&esserie="+esSerie+
+	           "&lotevence="+cLoteVence+
+	           "&serievence="+cSeriesVence+
+                   "&xajuste="+cAjusteExistencias+
+	           "&xrkardex="+cResumenKardex+
+                   "&xcostoop="+cCostoOP;
+
+    xrequest.open("POST",url,false);
+    xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+    xrequest.send("numerosdeserie="+cSeries+"&xobservacion='"+xObs+"'");
+    xres           = xrequest.responseText;
+
+    aInventario    = xres.split("~");
+
+    if (!parseInt(aInventario[0]) )
+    {
+	alert(po_servidorocupado+' \n\n Ajuste -> Agrega Stock > '+xres);
+	return mostrarOperacion(cInventario,false);
+    }
+
+    if( cInventario=="Inventario" && cIdInventario == '0' )
+	actualizaComboInventarios(aInventario);
+
+
+    cIdInventario     = aInventario[1];
+    cIdPedido         = aInventario[2];
+    cIdComprobante    = aInventario[3];
+    cEstadoInventario = ( esInventario )? 'Pendiente':'none';
+
+    //Alta Rapida 
+    if(esAltaRapida)
+	return agregaStockAltaRapida( esAltaRapidaArr,esAltaRapidaTotal,esAltaRapidaResto );
+
+    //Carga cambios
+    volverStock();
+    BuscarAlmacen();
+    BuscarPorArticuloStock(cIdArticulo);
+    actualizaComboAjusteOperacion('Entrada',xOpeAjuste);
+    //Actualizar combo Inventarios??
 
 }
 
 function agregaStock(xget){
-
+   
     var xrow         = id("listadoAlmacen").selectedItem;
     var xLote        = (!esLote)? id("xLote").value:'';
     var xVence       = (!esVence)? id("xVencimiento").value:'';
@@ -1482,7 +1644,7 @@ function agregaStock(xget){
     var esOpeAjuste  = ( id("xAjusteOperacionEntrada").label != "Elige motivo ajuste" )? true:false;
     var xOpeAjuste   = id("xAjusteOperacionEntrada").label;
     var xObs         = id("xObservacion").value;
-    var aExistencias = parseFloat(cExistencias+cAjusteExistencias);
+    //var aExistencias = parseFloat(cExistencias+cAjusteExistencias);
     var esInventario = ( cInventario == 'Inventario' )? true:false;
     //Lote
     if( !esLote && !xLote ) 
@@ -1540,7 +1702,7 @@ function agregaStock(xget){
     if (!parseInt(aInventario[0]) )
     {
 	alert(po_servidorocupado+' \n\n Ajuste -> Agrega Stock > '+xres);
-	return mostrarOperacion(cInventario);
+	return mostrarOperacion(cInventario,false);
     }
 
     if( cInventario=="Inventario" && cIdInventario == '0' )
@@ -1616,6 +1778,18 @@ function actualizaComboAjusteOperacion(xop,xval){
     ltpopup.appendChild( xitem );		
 }
 
+function getAgregaSeriesAltaRapida(){
+
+    var url  = "../compras/selcomprar.php?id="+cIdProducto+
+               "&modo=visualizarserieAgregaInventarioAltaRapida"+
+               "&trasAlta=1"+
+               "&u="+cAjusteExistencias;
+
+    id("webkardex").setAttribute("src",url);  
+    id("formAjustesExistencias").setAttribute("collapsed",true);
+    id("boxkardex").setAttribute("collapsed",false);  
+}
+
 function getAgregaSeries(){
 
     var url  = "../compras/selcomprar.php?id="+cIdProducto+
@@ -1626,7 +1800,18 @@ function getAgregaSeries(){
     id("webkardex").setAttribute("src",url);  
     id("formAjustesExistencias").setAttribute("collapsed",true);
     id("boxkardex").setAttribute("collapsed",false);  
+}
 
+
+function setSeccionSeriesAltaRapida(xseries,xvence){
+
+    if(!esSerie) return ;
+    if(!(xseries!='')) return volverStock();
+
+    cSeries      = xseries;
+    cSeriesVence = xvence;
+
+    registraStockAltaRapida(true);
 }
 
 function setSeccionSeries(xseries,xvence){
@@ -1647,19 +1832,20 @@ function volverStock(){
     var cinvent    = id("filtroInventarios").value;
     var xcontinuar = (  cInventario != 'Ajuste' && vinvent == cinvent )? false:true; 
     var xbtnvolver = (	cInventario != 'Ajuste')? " Volver Inventarios":" Volver Ajustes";
-    var cbtnvolver = (	cInventario != 'Ajuste')? "mostrarOperacion('invent')":"mostrarOperacion('ajust')";
+    var cbtnvolver = (	cInventario != 'Ajuste')? "mostrarOperacion('invent',false)":"mostrarOperacion('ajust',false)";
  
     id("formAjustesExistencias").setAttribute("collapsed",true);
     id("btnVolver").setAttribute("collapsed",false);
-    id("btnFinalizarInventario").setAttribute("collapsed",xcontinuar);
     id("listadoAlmacen").setAttribute("collapsed",false);  
     id("resumenAlmacen").setAttribute("collapsed",false);
+    id("resumenAlmacenFooter").setAttribute("collapsed",false);
+    id("busquedaMovimiento").setAttribute("collapsed",false);
     id("boxkardex").setAttribute("collapsed",true);  
     id("webkardex").setAttribute("src","about:blank");  
     id("btnVolver").setAttribute("label",xbtnvolver);
     id("btnVolver").setAttribute("oncommand",cbtnvolver);
     id("NombreBusqueda").focus();
-    id("btnFinalizarInventario").setAttribute('collapsed',true);
+    //id("btnFinalizarInventario").setAttribute('collapsed',true);
     if(cInventario == 'Inventario')
 	id("btnAltaRapida").setAttribute("collapsed",false);
 }
@@ -1669,6 +1855,7 @@ function verKardexInventario(){
     id("webkardex").setAttribute("src","about:blank");  
     id("listadoMovimiento").setAttribute("collapsed","false");  
     id("resumenMovimiento").setAttribute("collapsed","false");  
+    id("resumenMovimientoFooter").setAttribute("collapsed","false");
     id("busquedaMovimiento").setAttribute("collapsed","false");  
     id("boxkardex").setAttribute("collapsed","true");  
 }
@@ -1680,7 +1867,8 @@ function totalAjusteExistencias(xval){
 	 id("xExistenciasFisico").value = 0;
 	 cAjusteExistencias             = cExistencias;
 
-	 id("xAjuste").setAttribute("value",(-1)*cAjusteExistencias+' '+cUnidad);
+	 //id("xAjuste").setAttribute("value",(-1)*cAjusteExistencias+' '+cUnidad);
+	 id("xAjuste").value= (-1)*cAjusteExistencias+' '+cUnidad;
 	 return;
      }
 
@@ -1716,6 +1904,8 @@ function setCostoPrecios(xval,xdato){
 
     var xCosto  = parseFloat(id("xValorCompra").value);  //cCosto
     var xPrecio = parseFloat(id("xCostoOP").value);     //cCostoOP
+    xCosto      = (!xCosto)? 0:xCosto;
+    xPrecio     = (!xPrecio)? 0:xPrecio;
     cCosto      = xCosto;
     cCostoOP    = xPrecio;
     cPrecio     = parseFloat(xCosto*(parseFloat(cImpuesto)+100)/100).round(2);
@@ -1732,9 +1922,9 @@ function setCostoPrecios(xval,xdato){
     switch (xval) {
 
     case 'costo':
-	id("xValorCompra").value = formatDineroTotal(xCosto);
+	id("xValorCompra").value = xCosto.toFixed(3);
     case 'precio':
-	id("xCostoOP").value = formatDineroTotal(xPrecio);
+	id("xCostoOP").value = xPrecio.toFixed(3);
 
 	yPVD     = xCosto + MUD + COP;
 	IMP      = (yPVD*cImpuesto/100).round(2);
@@ -1825,7 +2015,7 @@ function exportarInventario(xval){
             + "&xinventario=" + escape(cInventario)
             + "&xidinventario=" + escape(cIdInventario)
             + "&marca=" + escape(marca)
-            + "&xnombre=" + escape(nombre)
+            + "&xnombre=" + trim(nombre)
             + "&xcodigo=" + escape(codigo)
             + "&xope=" + escape(filtrooperacion)
             + "&xidope=" + escape(cIdInventario)
@@ -1952,4 +2142,52 @@ function obtenerNumFilas(xcadena){
     
     cTotalFilas     = (!isNaN(xrequest.responseText))? xrequest.responseText:0;
     cCadenaBusqueda = xcadena;
+}
+
+function clonarArticulo(){
+    var idex       = id("listadoAlmacen").selectedItem;
+    
+    if(!idex) return;
+
+    cIdProducto    = id("idproducto_"+idex.value).getAttribute("value");
+    altarapidaclonArticulo();
+}
+
+function altarapidaclonArticulo(){
+
+    var url = "../altarapida/xulaltarapida.php?modo=altainventario"+
+	"&clonidbase="+cIdProducto;
+    
+    id("webkardex").setAttribute("src",url);  
+    setTimeout("viewaltarapidaArticulo()", 200);    
+}
+
+function mostrarCostoTotalInvent(){
+
+    var p = prompt("gPOS:\n\n Costo Total", costoxcontenedor);
+    if(!p) return;
+
+    if(isNaN(p)||p==""||p.lastIndexOf(' ')>-1||parseFloat(p)<0)
+    {
+	alert("gPOS: \n\n Ingrese correctamente el valor del campo");
+	return mostrarCostoTotalInvent();
+    }
+
+    costoxcontenedor = p;
+    var costo = document.getElementById("xValorCompra");
+    var nuevocosto = p/cUnidxCont;
+    costo.value = nuevocosto.toFixed(3);
+    setCostoPrecios('costo',nuevocosto.toFixed(3));
+}
+
+function seleccionarModoAjuste(){
+    id("xAjusteOperacionEntrada").value = "Inicio de operaciones";
+    id("xAjusteOperacionEntrada").label = "Inicio de operaciones";
+}
+
+function CambioLocalInventario(){
+    var local = id("FiltroMovimientoLocal").value;
+    if(cIdLocal == local) return;
+    var url = "modinventario.php?modo=verInventario&local="+local;
+    document.location=url;
 }

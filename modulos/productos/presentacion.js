@@ -53,6 +53,7 @@ function BuscarPresentacion(){
             theList.selectItem(elemento);
         }
     }
+    document.getElementById('btnNuevoColor').setAttribute("collapsed", (theList.itemCount > 1) ); 
 }
 
 function agnadirDirecto(){
@@ -60,5 +61,72 @@ function agnadirDirecto(){
     if(theList.selectedIndex == -1){
         return;
     }
-    theList.onclick();
+    theList.ondblclick();
+}
+
+function UsarNuevo() {
+    var color, url;
+    var idfamilia  = cIdFamiliaColor;			
+    var nuevocolor = document.getElementById('buscapresentacion');
+    if (nuevocolor){
+        color = nuevocolor.value;
+        //color = trim(color);
+        color = trim(color);
+    }
+    if (!color || color == '') return;
+    url = 'selmodelo.php';
+    url = url +'?modo=nuevocolor';
+    url = url + '&color=' + color;
+    url = url + '&idfamilia=' + idfamilia;
+    document.location.href = url;			
+}
+
+function ModificarColor() {
+    var idfamilia  = cIdFamiliaColor;			
+    var xcolor = document.getElementById('Color').selectedItem;
+    if( ! xcolor ) return;
+    var idcolor     = xcolor.value;
+    var txtcolor    = xcolor.label;
+    var newtxtcolor = '';
+    if( newtxtcolor = prompt('gPOS:\n'+
+			     ' Modifique  '+ctxtModelo+' :',
+			     txtcolor) ) {
+
+	if ( txtcolor == newtxtcolor || newtxtcolor == '' ) return;
+
+	var url = 'selmodelo.php?';
+	url = url + 'modo=modificacolor';
+	url = url + '&idfamilia=' + idfamilia;
+	url = url + '&xid=' + idcolor;
+	url = url + '&txt=' + newtxtcolor;
+	document.location.href = url;
+    }
+}
+
+function EliminarColor() {
+    var idfamilia  = cIdFamiliaColor;			
+    var xcolor = document.getElementById('Color').selectedItem;
+    if( ! xcolor ) return;
+    var idcolor     = xcolor.value;
+    var txtcolor    = xcolor.label;
+   if( confirm('gPOS:\n'+
+		'       Desea eliminar '+ctxtModelo+':\n\n'+
+		'                - '+txtcolor+' -') ) {
+	var url = 'selmodelo.php?';
+	url = url + 'modo=eliminacolor';
+	url = url + '&idfamilia=' + idfamilia;
+	url = url + '&xid=' + idcolor;
+	url = url + '&txt=' + txtcolor;
+	document.location.href = url;
+    }
+}
+
+function loadfocus(){
+	document.getElementById('buscapresentacion').focus();
+}
+
+function seleccionarModelo(xmodelo){
+    if(!xmodelo) return;
+    document.getElementById('buscapresentacion').value = xmodelo;
+    document.getElementById('buscapresentacion').focus();
 }

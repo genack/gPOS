@@ -19,16 +19,16 @@ switch($modo){
 		}
 		echo "\n</script>";						
 				
-		echo "<listbox flex='1' id='Proveedor' rows='5' onclick='opener.changeSubsidHab(this,subsidhav[this.value]);window.close();return true;'>";
+		echo "<listbox flex='1' id='Proveedor' rows='5' onclick='parent.changeSubsidHab(this,subsidhav[this.value]);parent.closepopup();return true;'>";
 		echo  genXulComboSubsidiarios();				
 		echo "</listbox>";
-		echo "<button label='". _("Cerrar")."' oncommand='window.close()'/>";	
+		//echo "<button label='". _("Cerrar")."' oncommand='parent.closepopup()'/>";	
 		echo "</groupbox>";
 		
 		break;				
 	case "subsidiariopost":
 			
-		echo "<groupbox flex='1'><caption label='" . _("FLETADOR:") . "'/>";		
+		echo "<vbox class='box' flex='1'><groupbox flex='1'><caption label='" . _("FLETADOR:") . "' class='box'/>";		
                 echo "<textbox id='buscaproveedor'  onkeyup='BuscaSubsidiario(); if (event.which == 13) agnadirDirecto();' />";
 		$subsidiarios = genArraySubsidiarios();		
 		echo "<script>\n";
@@ -38,11 +38,11 @@ switch($modo){
 		}
 		echo "\n</script>";						
 				
-		echo "<listbox flex='1' id='Proveedor' rows='5' onclick='opener.setSubsidPost(this,subsidhav[this.value]);window.close();return true;'>";
+		echo "<listbox flex='1' id='Proveedor' rows='5' ondblclick='parent.setSubsidPost(this,subsidhav[this.value]);parent.closepopup();return true;'>";
 		echo  genXulComboSubsidiarios();				
 		echo "</listbox>";
-		echo "<button label='". _("Cerrar")."' oncommand='window.close()'/>";	
-		echo "</groupbox>";
+		//echo "<button label='". _("Cerrar")."' oncommand='parent.closepopup()'/>";	
+		echo "</groupbox></vbox>";
 		
 		break;				
 	default:
@@ -83,6 +83,11 @@ function agnadirDirecto(){
     }
     theList.onclick();
 }
+
+function loadfocus(){
+    document.getElementById('buscaproveedor').focus();
+}
+
 //]]></script>
 <?php
 EndXul();

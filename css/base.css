@@ -1,3 +1,600 @@
+/* fonts 
+--------------------------------------------*/
+@font-face {
+  font-family: 'Signika Negative';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Signika Negative'), local('SignikaNegative-Regular'), url(font/signikanegative.woff) format('woff');
+}
+ 
+@font-face {
+  font-family: 'Signika Light';
+  font-style: normal;
+  font-weight: 100;
+  src: local('Signika Light'), local('Signika-Light'), url(font/SignikaNegative-Light.woff) format('woff');
+}
+
+
+/* Table of contents
+––––––––––––––––––––––––––––––––––––––––––––––––––
+- Grid
+- Base Styles
+- Typography
+- Links
+- Buttons
+- Forms
+- Lists
+- Code
+- Tables
+- Spacing
+- Utilities
+- Clearing
+- Media Queries
+*/
+
+
+/* Grid
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.container {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box; }
+.column,
+.columns {
+  width: 100%;
+  float: left;
+  box-sizing: border-box; }
+
+/* For devices larger than 400px */
+@media (min-width: 400px) {
+  .container {
+    width: 85%;
+    padding: 0; }
+}
+
+/* For devices larger than 550px */
+@media (min-width: 550px) {
+  .container {
+    width: 80%; }
+  .column,
+  .columns {
+    margin-left: 4%; }
+  .column:first-child,
+  .columns:first-child {
+    margin-left: 0; }
+
+  .one.column,
+  .one.columns                    { width: 4.66666666667%; }
+  .two.columns                    { width: 13.3333333333%; }
+  .three.columns                  { width: 22%;            }
+  .four.columns                   { width: 30.6666666667%; }
+  .five.columns                   { width: 39.3333333333%; }
+  .six.columns                    { width: 48%;            }
+  .seven.columns                  { width: 56.6666666667%; }
+  .eight.columns                  { width: 65.3333333333%; }
+  .nine.columns                   { width: 74.0%;          }
+  .ten.columns                    { width: 82.6666666667%; }
+  .eleven.columns                 { width: 91.3333333333%; }
+  .twelve.columns                 { width: 100%; margin-left: 0; }
+
+  .one-third.column               { width: 30.6666666667%; }
+  .two-thirds.column              { width: 65.3333333333%; }
+
+  .one-half.column                { width: 48%; }
+
+  /* Offsets */
+  .offset-by-one.column,
+  .offset-by-one.columns          { margin-left: 8.66666666667%; }
+  .offset-by-two.column,
+  .offset-by-two.columns          { margin-left: 17.3333333333%; }
+  .offset-by-three.column,
+  .offset-by-three.columns        { margin-left: 26%;            }
+  .offset-by-four.column,
+  .offset-by-four.columns         { margin-left: 34.6666666667%; }
+  .offset-by-five.column,
+  .offset-by-five.columns         { margin-left: 43.3333333333%; }
+  .offset-by-six.column,
+  .offset-by-six.columns          { margin-left: 52%;            }
+  .offset-by-seven.column,
+  .offset-by-seven.columns        { margin-left: 60.6666666667%; }
+  .offset-by-eight.column,
+  .offset-by-eight.columns        { margin-left: 69.3333333333%; }
+  .offset-by-nine.column,
+  .offset-by-nine.columns         { margin-left: 78.0%;          }
+  .offset-by-ten.column,
+  .offset-by-ten.columns          { margin-left: 86.6666666667%; }
+  .offset-by-eleven.column,
+  .offset-by-eleven.columns       { margin-left: 95.3333333333%; }
+
+  .offset-by-one-third.column,
+  .offset-by-one-third.columns    { margin-left: 34.6666666667%; }
+  .offset-by-two-thirds.column,
+  .offset-by-two-thirds.columns   { margin-left: 69.3333333333%; }
+
+  .offset-by-one-half.column,
+  .offset-by-one-half.columns     { margin-left: 52%; }
+
+}
+
+/* Base Styles
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+/* NOTE
+html is set to 62.5% so that all the REM measurements throughout Skeleton
+are based on 10px sizing. So basically 1.5rem = 15px :) */
+html {
+  font-size: 62.5%; }
+body {
+  font-size: 1.3em;
+  line-height: 1.6;
+  font-weight: 400;
+  font-family: 'Signika Light', Arial, sans-serif;
+  padding-left: 1em;     
+  background-color: #fbfbfb;
+  font-style: italic;
+  color: #444!important; }
+
+
+/* Typography
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 1.3rem;
+  margin-left: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 300;
+  color: #BF5959!important;
+ }
+h1 { font-size: 2rem; line-height: 1.2;  letter-spacing: -.1rem;}
+h2 { font-size: 3.6rem; line-height: 1.25; letter-spacing: -.1rem; }
+h3 { font-size: 3.0rem; line-height: 1.3;  letter-spacing: -.1rem; }
+h4 { font-size: 2.4rem; line-height: 1.35; letter-spacing: -.08rem; }
+h5 { font-size: 1.8rem; line-height: 1.5;  letter-spacing: -.05rem; }
+h6 { font-size: 1.5rem; line-height: 1.6;  letter-spacing: 0; }
+
+/* Larger than phablet */
+@media (min-width: 550px) {
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.9rem; }
+  h3 { font-size: 1.8rem; }
+  h4 { font-size: 1.7rem; }
+  h5 { font-size: 1.6rem; }
+  h6 { font-size: 1.4rem; }
+}
+
+p { margin-top: 0; }
+
+
+/* Links
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+a { color: #1EAEDB; }
+a:hover { color: #0FA0CE; }
+
+
+/* Buttons
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+input[type="image"] {
+  display: inline-block;
+  height: auto;/* 18px; */
+  width: auto;/* 27px; */
+  padding: 2.5px 2px;
+  color: #555;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 22px;
+  letter-spacing: .1rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border-radius: 2px;
+  border: 1px solid  #bbb; 
+  cursor: pointer;
+  box-sizing: border-box; }
+
+.button,
+button,
+input[type="submit"],
+input[type="reset"],
+input[type="button"]{
+  display: inline-block;
+  height: 25px;
+  padding: 0 5px;
+  color: #555;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 22px;
+  letter-spacing: .1rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border-radius: 2px;
+  border: 1px solid  #33c3f0;
+  cursor: pointer;
+  box-sizing: border-box; }
+
+input.btn{ 
+  background-color: #33c3f0;
+  color:#fff;
+  font-weight: 400; 
+  border: 1px solid #33c3f0;
+ }
+
+
+.button:hover,
+button:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover,
+input[type="button"]:hover,
+.button:focus,
+button:focus,
+input[type="submit"]:focus,
+input[type="reset"]:focus,
+input[type="button"]:focus {
+  color: #333;
+  border-color: #888;
+  outline: 0; }
+.button.button-primary,
+button.button-primary,
+input[type="submit"].button-primary,
+input[type="reset"].button-primary,
+input[type="button"].button-primary {
+  color: #FFF;
+  background-color: #33C3F0;
+  border-color: #33C3F0; }
+.button.button-primary:hover,
+button.button-primary:hover,
+input[type="submit"].button-primary:hover,
+input[type="reset"].button-primary:hover,
+input[type="button"].button-primary:hover,
+.button.button-primary:focus,
+button.button-primary:focus,
+input[type="submit"].button-primary:focus,
+input[type="reset"].button-primary:focus,
+input[type="button"].button-primary:focus {
+  color: #FFF;
+  background-color: #1EAEDB;
+  border-color: #1EAEDB; }
+
+
+button::-moz-focus-inner,
+input[type="reset"]::-moz-focus-inner,
+input[type="select"]::-moz-focus-inner,
+input[type="button"]::-moz-focus-inner,
+input[type="submit"]::-moz-focus-inner,
+input[type="file"] > input[type="button"]::-moz-focus-inner {
+    border: none;
+}
+
+/* Forms
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+select,
+input[type="text"]{ 
+                    font-size: 1.3rem;
+                    font-weight: 400;
+}
+
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="text"],
+input[type="tel"],
+input[type="url"],
+input[type="password"],
+textarea,
+select {
+  height: 28px;
+  padding: 2px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
+  background-color: #fbfbfb;/*transparent; #fff; */
+  border: 1px solid #33c3f0;
+  border-radius: 2px;
+  box-shadow: none;
+  box-sizing: border-box;
+  color:#666; }
+/* Removes awkward default styles on some inputs for iOS */
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="text"],
+input[type="tel"],
+input[type="url"],
+input[type="password"],
+textarea {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none; }
+textarea {
+  min-height: 65px;
+  padding-top: 6px;
+  padding-bottom: 6px; }
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="text"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+  border: 1px solid #BF5959;/* #33C3F0; */
+  outline: 0;
+  color: #000;}
+
+input[type="image"]:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover,
+input[type="button"]:hover,
+input[type="email"]:hover,
+input[type="number"]:hover,
+input[type="search"]:hover,
+input[type="text"]:hover,
+input[type="tel"]:hover,
+input[type="url"]:hover,
+input[type="password"]:hover,
+textarea:hover,
+select:hover {
+  border: 1px solid #BF5959;
+  outline: 0;
+  color: #000;}
+
+input.btn:hover{ color:#BF5959!important;}
+
+label,
+legend {
+  display: block;
+  margin-bottom: .5rem;  }
+label { font-weight: 300; }
+legend { font-weight: 600; }
+fieldset {
+  padding: 0;
+  border-width: 0; }
+input[type="checkbox"],
+input[type="radio"] {
+  display: inline; }
+label > .label-body {
+  display: inline-block;
+  margin-left: .5rem;
+  font-weight: normal; }
+
+
+
+/* Lists
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+ul {
+  list-style: circle inside; }
+ol {
+  list-style: decimal inside; }
+ol, ul {
+  padding-left: 0;
+  margin-top: 0; }
+ul ul,
+ul ol,
+ol ol,
+ol ul {
+  margin: 1.5rem 0 1.5rem 3rem;
+  font-size: 90%; }
+li {
+display: block!important;
+  margin-bottom: 1rem; }
+
+
+/* Code
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+code {
+  padding: .2rem .5rem;
+  margin: 0 .2rem;
+  font-size: 90%;
+  white-space: nowrap;
+  background: #F1F1F1;
+  border: 1px solid #E1E1E1;
+  border-radius: 2px; }
+pre > code {
+  display: block;
+  padding: 1rem 1.5rem;
+  white-space: pre; }
+
+
+select {
+     display: inline-block;
+     -moz-appearance:none;
+     padding-right:2.5em;
+}
+
+span.selectbox {position:relative}
+span.selectbox:after {
+    content:'<>';
+    font:14px "Consolas", monospace;
+    color:#666;
+    -webkit-transform:rotate(90deg);
+    -moz-transform:rotate(90deg);
+    -ms-transform:rotate(90deg);
+    transform:rotate(90deg);
+    right: 6px;
+    top: -4px;
+    padding:0 0 2px;
+    border-bottom:1px solid #ddd;
+    position:absolute;
+    pointer-events:none;
+
+}
+span.selectbox:before {
+    content:'';
+    position:absolute;
+    pointer-events:none;
+    display:block;
+}
+
+/* Tables
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+div#headlistProductoCompras{ 
+                             position:fixed;
+                             background-color:#f6f6f6;
+                             width:100%;
+			     height: 10.6em;
+                             margin:-1.7em;
+                             padding-top: 0;
+                             padding-left: 1.5em;
+
+ }
+
+table#listProductoCompras{ 
+padding-top: 9.5em;
+
+ }
+.formacarrito,
+.forma, 
+.listado {
+                   background-color: transparent;
+                   /* border-radius: 8px; */
+                   margin: 1em;
+                   padding: 4px;
+}
+
+.listado-search {
+                   background-color: transparent;
+                   margin: 0em;
+                   padding: 0 0 0 1.5em;
+}
+
+.top{ 
+     vertical-align: top!important;
+ }
+th,
+td {
+     padding: .5px 4px;
+     text-align: left;
+     /* border-bottom: 1px solid #E1E1E1; */
+     vertical-align: center!important;
+     line-height:1.4!important;
+     /*font-size: .9em;*/}
+tr.f > td { }
+
+/* tr{ 
+    border: 3px solid #E1E1E1; 
+ }
+ */
+td.precio input{ text-align:right; }
+
+/* Filas de listados */
+tr.fb { background-color:transparent;     border: 3px solid #000; }
+
+tr.fh { 
+        background-color:transparent;
+}
+tr.fh:hover > td input,
+tr.fb:hover > td input,
+tr.fh:hover,
+tr.fb:hover{ 
+             /* background-color:#E9E9E9; */
+     color:#BF5959;
+     border:1px solid #BF5959;                
+ }
+tr.fh td,
+tr.fb td {
+     border-bottom: 1px solid #E1E1E1;
+     }
+
+th:first-child,
+td:first-child {
+  padding-left: 0; }
+th:last-child,
+td:last-child {
+  padding-right: 0; }
+
+
+/* Spacing
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+button,
+.button {
+  margin-bottom: 1rem; }
+input,
+textarea,
+select,
+fieldset {
+  margin-bottom: 0.5rem; }
+pre,
+blockquote,
+dl,
+figure,
+table,
+p,
+ul,
+ol,
+form {
+  margin-bottom: 2.5rem; }
+
+
+/* Utilities
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.u-full-width {
+  width: 100%;
+  box-sizing: border-box; }
+.u-max-full-width {
+  max-width: 100%;
+  box-sizing: border-box; }
+.u-pull-right {
+  float: right; }
+.u-pull-left {
+  float: left; }
+
+
+/* Misc
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+hr {
+  margin-top: 3rem;
+  margin-bottom: 3.5rem;
+  border-width: 0;
+  border-top: 1px solid #E1E1E1; }
+
+
+/* Clearing
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+/* Self Clearing Goodness */
+.container:after,
+.row:after,
+.u-cf {
+  content: "";
+  display: table;
+  clear: both; }
+
+
+/* Media Queries
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*
+Note: The best way to structure the use of media queries is to create the queries
+near the relevant code. For example, if you wanted to change the styles for buttons
+on small devices, paste the mobile query code up in the buttons section and style it
+there.
+*/
+
+
+/* Larger than mobile */
+@media (min-width: 400px) {}
+
+/* Larger than phablet (also point when grid becomes active) */
+@media (min-width: 550px) {}
+
+/* Larger than tablet */
+@media (min-width: 750px) {}
+
+/* Larger than desktop */
+@media (min-width: 1000px) {}
+
+/* Larger than Desktop HD */
+@media (min-width: 1200px) {}
+
+
+
+
+/* Base
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
 
 input.iPrecio { width: 6em;}
 input.iPrecioView { width: 5em;  border: 0px solid lightgray;  background-color: #fff;}
@@ -8,7 +605,8 @@ input.iReferencia { width: 8em;  }
 input.iNombre, input.iPueblos { width: 12em; }
 input.iDescripcion, input.iDireccion, input.iComentarios { width: 12em; }
 input.iCodigoPostal , input.iCP{ width: 6em; }
-input.iPaginaWeb, input.iEmail { width: 12em; }
+input.iPaginaWeb { width: 20em; }
+input.iEmail { width: 24em; }
 input.iTelefono { width: 12em; }
 input.iNFiscal { width: 12em; }
 input.iCC { width: 20em; text-transform: uppercase}
@@ -16,10 +614,10 @@ input.iMensajeMes { width: 20em; }
 input.iMensajePromo { width: 20em; }
 input.iDNI { width: 12em; text-transform: uppercase }
 
-#tituloview { background:#7F7F7F; color:white; text-align:center;font-weight: bold; }
+#tituloview { /* background:#7F7F7F; color:white; text-align:center;font-weight: bold; */ }
 
 /* Caja extra que aparece en listados */
-.subcaja {
+/* .subcaja {
  float:right;border: 1px solid lightgray;
 }
 .fullscreen {
@@ -37,7 +635,7 @@ font-size : 80%;
 .item {
  width: 100%
 }
-
+ */
 /* iframes mensajeros */
 
 .mensajero {
@@ -55,24 +653,6 @@ font-size : 80%;
  border: 1px solid #009bf9 !important;
 }
 
-/* cabecera, titulos de seccion */
-
-#cabecera {
- position: relative;
- width: 200px; 
- margin-left:auto;
- margin-right:auto;            
- height: 24px;
- font-size: 90%;
- text-align:center;
-}
-
-
-/* Filas de listados */
-.f { 
- font-size: 14px;
-}
-
 
 /* Tras alta, elige que accion continuar */
 .acciones {
@@ -81,149 +661,85 @@ font-size : 80%;
 
 
 /* td de estos datos van marcados */
-.precio, .unidades, .boton, .nombre, .nilhead, .talla, .color, .local, .familia, .referencia{
- border-bottom: 1px solid #eee;
- min-width: 50px;
- text-align: left;
- padding-left:0.4em;
- vertical-align: center;
-}
-.iconstock,
-.iconproducto{ 
-text-align: left;
-width: 1%;
- }
-.referencia{ 
- width: 1%;
- }
-.nombre{ 
- width: 40%;
- }
-.familia {
- width: 30%;
- color: #666;
-}
+.seleccion,
+.iconproducto,
+.iconos,
+.codigobarras,
+.precio, 
+.unidades,
+.boton,
+.nombre,
+.nilhead, 
+.talla,
+.color,
+.local,
+.familia,
+.referencia{ border-bottom: 1px solid #eee; 
+             text-align: left;
+             vertical-align: center; }
 
-.botonplus {
- width: 1%;
- color: #666;
-}
-
+td.codigobarras{  vertical-align: center;  text-align: center;}
 
 /* Datos centrados */
-.talla, .color{
- text-align: center;
-}
-.iconos { 
- text-align: right;
- }
+.talla, .color{ text-align: left; padding: .5em 1.5em;}
+.iconos { text-align: center; }
 /* Precios de algo*/
-.precio, .unidades {
- text-align: right;
- margin-right: 4px;
- margin-left: 4px; 
-}
+.precio, .unidades { text-align: right; margin-right: 4px; margin-left: 4px; }
 
 /* areas de "modificar" "eliminar" y otros botones */
-.boton {
- margin-right: 4px;
- margin-left: 4px; 
- text-align: center; 
-}
-.botonprod {
- margin-right: 4px;
- margin-left: 4px; 
- text-align: right; 
-}
+.boton { text-align: center; }
+.botonprod { margin-right: 4px; margin-left: 4px;  text-align: right; }
 
 
 /* para cuando no queremos artefactos como bottom lines de td */
-.clear, clear {
- border: none !important;
- border-bottom: 0px !important;
-}
+.clear, clear { border: none !important; border-bottom: 0px !important;}
 
 /* Pie de pagina */
-.piedepagina {
-position: absolute; right: 10px; bottom: 10px;
-}
+.piedepagina {position: absolute; right: 10px; bottom: 10px;}
 
 
 /* titulo de Cabecera de seccion */
-.cabecera {
- position: relative;
- z-index: 1;
-}
+.cabecera { position: relative; z-index: 1;}
 
 
 /* Tabla del navegador */
-.navtable 
-{
- width: 150px;
-}
+.navtable { width: 150px;}
 
 /*Etiqueta aviso*/
-.warning
-{
- border-radius: 64px;
- font-size: 16px;
-/* background-color: #ffc;*/
-  background-color: #cfc;
-/* deberia ser este, pero el amarillo queda mucho mejor*/
-}
+.warning{ border-radius: 64px; font-size: 16px;  background-color: #cfc;
+/* deberia ser este, pero el amarillo queda mucho mejor*/}
 
 
 /* Panel de aviso*/
-.aviso
-{
- background-color: #f0f0f0;
- width: 300px;
- heigh: 80px; 
+.aviso{ background-color: #f0f0f0;
+        width: 300px;
+        heigh: 80px; 
+        margin-right: 8px;
+        margin-left: 8px;
+        padding: 2px;
+        border-radius: 16px;
+        float: center;}
 
- margin-right: 8px;
- margin-left: 8px;
- padding: 2px;
- font-size: 85%;
-
- border-radius: 16px;
- float: center;
-}
 /* cabeceras de listado */ 
-.lh {
-   /*border: thin solid #9f9f9f;*/
- min-width: 80px; /* no soportado por ie excepto con hacks */
- color: black !important;
- text-weight: bold;
- text-align: center;
- background-color: #DFDFDF;
- color: #eee;
- padding-bottom:0.3em;     
- /* text-transform: uppercase;*/
-}
+.lhstock  { border-bottom: 1px solid #E1E1E1; }
+.lh  { border-bottom: 1px solid #E1E1E1; background-color: #d7edf4;}
+.lh2 { min-width: 20px;}
+.lh3 { min-width: 120px;}
 
+.lh,.lh2,.lh3{  font-weight: 500; text-align: left; font-size: 1.3rem; color: #666!important;}
 
+td.iconstock,
+td.nombre,
+td.familia,td.referencia,
+td.iconproducto{background-color: #f5f5f5;}
+.lhz,.lh2,.lh3,.lhb{  background-color: #eee;}
 
-.lh2 {
-   /*border: thin solid #9f9f9f;*/
- min-width: 20px; /* no soportado por ie excepto con hacks */
- color: black !important;
- text-weight: bold;
- text-align: center;
- background-color: lightgray; 
- color: #eee;
- /* text-transform: uppercase;*/
-}
-.lh3 {
-   /*border: thin solid #9f9f9f;*/
- min-width: 120px; /* no soportado por ie excepto con hacks */
- color: black !important;
- text-weight: bold;
- text-align: center;
- background-color: lightgray; 
- color: #eee;
- /* text-transform: uppercase;*/
-}
-
+td.botonplus { width: 1%; color: #666;}
+td.iconstock,td.iconproducto{ text-align: left; width: 1%; }
+td.referencia{  width: 1%; }
+td.nombre{  width: 40%; }
+td.seleccion{  width: 8%; }
+td.familia { width: 30%; color: #666;}
 
 /* HR lines de separacion */
 .separador {
@@ -262,7 +778,6 @@ position: absolute; right: 10px; bottom: 10px;
 /*background-color: gray; */
 color: black;
 text-align: right;
-font-size: 14px;
 }
 
 .centermenu {
@@ -270,7 +785,6 @@ background-color: gray;
 color: #eee;
 text-align: center;
 height: 22px;
-font-size: 13px;
 }
 
 /* forma dentro de otra forma */
@@ -283,75 +797,15 @@ font-size: 13px;
 }
 
 /* formulario (forma)*/
-.forma, .listado {
- background-color: transparent;
-  /*background-color: #eee;  */
-  border: 2px;
- border-radius: 8px;
- margin: 4px;
- padding: 4px;
- border: 1px solid #ece8de;/* green */
-}
-
-#boxCarritoTraspasoCant {
- background-color: transparent;
-  /*background-color: #eee;  */
- border: 2px;
- border-radius: 8px;
- margin: 0px;
- padding: 0px;
- width: 20em;font-size:80%;
- border: 1px solid #ece8de;/* green */
-}
-
-.formacarrito {
- background-color: transparent;
-  /*background-color: #eee;  */
-  border: 2px;
- border-radius: 8px;
- margin: 4px;
- padding: 4px;
- border: 1px solid #ece8de;/* green */
- width: 80%;
-}
-
-.formaCabeza {
- background-color: #009bf9 !important;
-/*#ece8de #0A6184 background-color: green !important;*/
-/* border-collapse: collapse;*/
-/* background-color: #ffc !important;*/ 
-/* border-bottom: 4px solid green;*/
-/* background-color #ffa*/
- 
-}
-
-div.formaTituloCarrito {
- background-color: #009BF9;
- width: 300px;
- heigh: 80px; 
- text-align: center;
- font-family: verdana;
- color: white;
- font-size: 14px;
- font-weight: bold;
- font: small-caps;
-}
-
-.formaTitulo {
- text-align: center;
- font-family: verdana;
- color: white;
- font-size: 14px;
- font-weight: bold;
- font: small-caps;
-}
+.formacarrito { width: 95%;}
+div#t_comprov{ font-size: 1.5rem; font-weight: 300; }
+.formaCabeza { font-size: 1.5rem; font-weight: 300; }
+.formaTitulo { color:#27B3DD; border-bottom:1px solid #33c3f0; margin-bottom:.3em}
 
 tr.formaCabezaLista td{
     background-color: #009bf9 !important;
     text-align: center;
-    font-family: monospace;
     color: white;
-    font-size: 12px;
     font-weight: bold;
 }
  
@@ -373,13 +827,7 @@ tr.formaCabezaLista td{
 
 /* Zona de un formulario de etiquetas */
 .t {
- background-color: #eee;
- /* background-color: #ddd;*/
-
- text-align: right !important; 
- padding: .4em; 
- padding-left: .5em; 
- padding-right: .5em; 
+     background-color: #f9f9f9;
 }
 
 /*??*/
@@ -396,114 +844,15 @@ tr.formaCabezaLista td{
 }
 
 /* Inputs en general*/
-input {
-        font-size: 95%;
- /*importante: mismo tamño de fuentes que tablas*/
-}
-
-textarea , input {
-                   background-color: transparent;
-                   border:0px;
-                   color:#000;
-                   border-bottom:1px dotted #000;
-                   padding: 0.3em;
-}
-
-/* Selecciones en formularios */
-textarea:focus, input:focus, select:focus {
-  background-color: #b9e1ff; /* color opcional #ffc amarillo*/
-}
-
-input[type=image]{ 
-  box-shadow: 0px 1px 3px #666;
-  border-radius:3px;
-}
-
-input[type=image]:focus{ 
-  box-shadow: 0px 1px 2px #999;
-}
-input[type=image]:focus{ 
-  background-color: #a0a0a0; /* color opcional #ffc amarillo*/
-  outline:0px;              
-  box-shadow: 0px 1px 2px #999;
- }
-input{ 
-  outline:0px;           
-}   
 /* cabeceras de listado */ 
 /* tablas de formulario */
 .l {
    /*border: thin solid #9f9f9f;*/
-   background-color: #eee;
- min-width: 80px; /* no soportado por ie excepto con hacks */
+     background-color: #eee;
+     min-width: 80px; /* no soportado por ie excepto con hacks */
 }
-
-
-/*???*/
-.td:focus {
- background-color: white;
-}
-
-/* butonizados redondeados */
-.tb,input.btn, input.sbtn {
- /* border-radius: 8px; */
- /* font-size: 12px; */
-}
-
-input.btn {
-/*     box-shadow: 0px 2px 5px #dcdcdc;
-    border-top-left-radius:6px;
-    border-top-right-radius:2px;
-    border-bottom-right-radius:6px;
-    border-bottom-left-radius:2px;
- */
-}
-input[type=button]:hover,
-input.btn:hover{ 
-                 box-shadow: 0px 2px 3px #888888;
-                 }
-input[type=button]:active,
-input.btn:active{ 
-                  box-shadow: 0px 0px 0px #888888;
-                  }
-/* Botones tienen el mismo estilo que los linkbutonizados 
-input.btn, input.sbtn,select.btn {
- background-color: #ece8de;
- border-top: thin solid white;
- border-left: thin solid white;
- border-right: thin solid gray;
- border-bottom: thin solid gray;
- color: blue;
-
-}
-*/
-
-/* Enlaces butonizados */
-input[type=button],
-.tb ,input.btn, input.sbtn,select.btn {
-  background-color: #C0C0C0;
-  padding: .2em;      
-  box-shadow: 0px 1px 2px #444;
-  border: 0px solid #DFDFDF;
-  color: #000; 
-  margin-left: .2em;
-  margin-right: .2em;
-  border-radius:0px;
-}
-
-/* Hover de Enlaces butonizados y Botones reales */
-input[type=button]:hover,
-.tb:hover, input.btn:hover, input.sbtn:hover {
-  box-shadow: 0px 1px 2px #888;
-}
-
-
 
 /* color de todos los butonizados */
-
-a:visited, a:link, .tb,input.btn, input.sbtn {
- /* color: #555; */
-}
 
 /* Enlaces normales */
 a:visited , a:link{
@@ -521,65 +870,17 @@ a:active {
 }
 
 
-/* Textbox, un area que simula un input box readonly con un span */
-.textbox {
- /* border:  thin solid gray; */
- border: 0px dotted gray;
- padding-left: 3px;
- padding-right: 2px;
- /*
- width: 200px !important;
- border-top: thin solid black;
- border-left: thin solid black;
- border-right: thin solid gray;
- */
- border-bottom: 1px dotted gray;
-}
 
 /* Hover de Etiqueta textbox */
-.textbox:hover {
- background-color: #b9e1ff;
-}
 
 /**/
 .maximo {
 	color: white;
 	background-color: black;
-	font-size: 18px;
 	font: bold;
 	padding: 10px;
 }
 
-/* Titulos de Pagina */
-h1 {
-     /*	color: #0A6184;*/
-     color: #666;
-     /* border-left: 4px solid #0A6184;*/
-     
-     /*	background-color: #0A6184;*/
-     font-size: 18px;
-     font: small-caps;
-     padding-left: 4px;
-}
-
-/* Titulos de seccion */
-h2 {
-	font-size: 18px;
-	font-weight: bold;
-	color: gray;
-	padding-left: 8px;
-	/*background-color: white;		*/
-}
-
-/* Subtitulos de seccion*/
-h3
-{
-	font-size: 16px;
-	font-weight: bold;
-	color: gray;
-/*	background-color: white;*/
-	padding-left: 16px;
-}
 
 /*??*/
 .fact
@@ -590,14 +891,6 @@ h3
 
 
 /*Estilo por defecto de pagina*/
-body {
-/* background-image: url(mac1.gif);*/
-/* background-image: url(img/bg2.png);
- background-repeat: repeat-x;*/
- margin: 0px;
- color: #666;
- /*-moz-user-focus: ignore;*/
-}
 
 /*??*/
 .menu
@@ -607,58 +900,7 @@ body {
 	background-color: white;
 }
 
-/* tablas en general */
-td, th    {
- vertical-align: top;
- font-size: 80%;
-}
-td {
- color: #666;
-}
-
-td.precio, td.unidades, td.nilhead, td.talla, td.color, td.referencia,td.codigobarras,  td.local, td.iconos, td.boton {
- padding-top:0.6em;
- font-size: 75%;
-text-align:center;
-}
- 
-td.botonicons{ 
- padding-top:0.6em;
- font-size: 75%;
-text-align:right;
- }
-td.nombre, td.familia{
- padding-top:0.6em;
- font-size: 75%;
- text-align: left;
-}
-
-td.precio input{ 
-                 font-size : 110%;
-                 text-align:right;
-                 font-weight: bold;
-                 width: 8em;
-                 color: #222;
- }
-input.cbt,
-input.cbtlh,
-input.xbt,
-input.xbtlh{ 
-               border:0;
-               border-bottom: 1px;
-               border-style:dotted;
-               color:#000;
-            }
-
-input.cbtlh,
-input.xbtlh{ 
-               background-color:#DFDFDF;
-           }
-input.cbt,
-input.xbt{ 
-               background-color:#FBFBFB;
-           }
-
+input.itemcart{ width:4em;margin-top:1.5em;text-align:center;border:0px; color:#666;}
 input.xbtlh,
 input.xbt{ 
            text-align:left;
@@ -668,22 +910,6 @@ input.cbt{
            text-align:center;
            }
 
-select{
-        color : #000;
-	background-color: #EFEFEF;
-	background-position: 280px center;
-        background-repeat: no-repeat;
-   	padding: .2em;
-        margin-top: .2em;
-   	font-size: 100%;
-   	border-radius: 3px;
-        -moz-transition: all 0.4s;
-        transition: all 0.4s;
-        border:0;
-        }
-select:hover{
-	background-color: #ddd;
-}
 div.productoimagen{ 
                     position: fixed; 
                     border: 2px;
@@ -698,6 +924,149 @@ div.productoimagen{
                     background-size: 95%;
                     background-repeat: no-repeat; 
                     background-position: center center;
-                    box-shadow: 0px 1px 5px #eee;
+                    box-shadow: 0 2px 9px #9f9b9b;
                     cursor:pointer;
                     }
+iframe#windowloadcart,
+iframe#windowpopup{ 
+                    background-color:#f8f8f8;
+                    padding-top: 1.4em;
+                    border: 1px solid #BEBEBE;/*#C91918;*/
+                    border-radius: 6px;
+               }
+
+iframe.noxframe {  display:none; }
+iframe.xframe   {  display:block; }
+
+
+div#box-popup{ 
+                    border: 1px solid #33c3f0;/*#C91918;*/
+                    border-radius: 6px;
+                    /* margin: 4px -120px 4px; */
+                    padding: 0px;
+                    padding-top: 0px;
+                    background-color: #FBFBFB;
+                    background-image:url('../img/gpos_marcagua.png');
+                    background-size: 25%;
+                    background-repeat: no-repeat; 
+                    background-position: center center;
+                    box-shadow: 0 2px 9px #9f9b9b;
+                    /* cursor:pointer; */
+                    z-index: 200;
+ }
+span.closepopup{ 
+                 position: absolute; 
+                 border: 0px solid #D9D9D9;
+                 width:10px;
+                 height:10px;
+                 min-height: 6px;
+                 top: 4px; 
+                 right: 4px;
+                 cursor:pointer;
+                 background-image:url('../img/gpos_eliminarproducto.png');
+                 background-repeat: no-repeat; 
+                 background-position: center center;
+ }
+
+div.box-popup-off{ 
+                    position: fixed; 
+                    height: 0em;
+                    width: 0em;
+                    display:none;
+ }
+
+div.box-popup-on{ 
+                 position: fixed;
+                 left: 50%;                 
+                 display: block;
+ }
+
+.ver_clasico { top: 30%;  transform: translate(-50%, -25%); width:210; height:230; }
+.ven_normal { top: 25%;  transform: translate(-50%, -25%); width:300px; height:220px;}
+.ven_alta { top: 4%;  transform: translate(-50%, 0%); width:400px; height:520px;}
+.ven_addprodcart { top: 4%;  transform: translate(-50%, 0%); width:90%; height:500px;}
+.ven_seleccion { top: 25%; transform: translate(-50%, -25%);  width:400px; height:520px;}
+.ven_codigobarras { top: 4%;  transform: translate(-50%, 0%); width:400px; height:520px;}
+.ven_carrito { top: 25%; transform: translate(-50%, -50%);  width:600px; height:320px;}
+.ven_printallcb { top: 25%; transform: translate(-50%, -25%);  width:610px; height:650px;}
+.ven_contenedor,
+.ven_talla,
+.ven_color,
+.ven_marca { top: 30%; transform: translate(-50%, -25%);  width:250px; height:315px;}
+.ven_cuenta { top: 50%; transform: translate(-50%, -25%);  width:300px; height:300px;}
+.ven_avanzada { top: 25%; transform: translate(-50%, -25%);  width:600px; height:80px;}
+.ven_familiaplus { top: 30%; transform: translate(-50%, -25%);  width:450px; height:350px;}
+.ven_lab { top: 10%; transform: translate(-50%, -0%);  width:350px; height: 350px;}
+.ven_prov { top: 30%; transform: translate(-50%, -25%);  width:350px; height: 350px;}
+.ven_servicio { top: 30%; transform: translate(-50%, -25%);  width:300px; height: 320px;}
+div#box-popup.ven_alta { background-color: #fff;}
+
+
+
+
+/* check round input 
+-------------------------------------*/
+label {
+	display: inline-block;
+	cursor: pointer;
+	position: relative;
+	padding-left: 25px;
+	padding-top: 5px;
+	margin-bottom: 8px;
+	margin-right: 15px;
+}
+input[type=radio],
+input[type=checkbox] {
+	display: none;
+}
+label:before {
+	content: "";
+	display: inline-block;
+
+	width: 16px;
+	height: 16px;
+
+	margin-right: 10px;
+	position: absolute;
+	left: 0;
+	bottom: 1px;
+	background-color: #eee;
+	box-shadow: inset 0px 1px 1px 0px rgba(0, 0, 0, .2), 0px 1px 0px 0px rgba(255, 255, 255, .8);
+}
+.checkboxstock label,
+.checkboxcore label,
+.checkbox label, 
+.radio    label{ font-size: 94%; }
+.checkboxstock label { 
+                  margin-bottom: 5px;
+                  margin-right: 0;
+                  padding-left: 15px;
+                  padding-top: 15px;}
+
+.checkboxcore label { padding-bottom: 10px;
+                      padding-left: 8px;
+                      padding-right: 8px;
+                      padding-top: 15px;
+                      }
+
+.radio    label:before { border-radius: 8px;}
+.checkboxcore label:before,
+.checkboxstock label:before,
+.checkbox label:before {  border-radius: 3px; }
+.checkbox-search{ font-size: 1.2rem!important; float:right; color:#666;}
+input[type=radio]:checked + label:before {
+    content: "\2022";
+    color: #33c3f0;
+    font-size: 36px;
+    text-align: left;
+    line-height: 16px;
+}
+
+input[type=checkbox]:checked + label:before {
+	content: "\2713";
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, .2);
+	font-size: 19px;
+	color: #33c3f0;
+	text-align: center;
+        line-height: 15px;
+}

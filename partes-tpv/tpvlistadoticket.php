@@ -1,22 +1,21 @@
 
   <spacer style="height: 8px"/>
-  <splitter collapse="none" resizebefore="farthest" resizeafter="farthest"/>
+  <splitter collapse="none"  resizeafter="farthest" resizebefore="farthest" orient="vertical">&#8226; &#8226; &#8226;</splitter>
   <vbox flex="3" >
     <hbox align="center" >
-      <!-- caption label="Ticket:" style="text-decoration: underline"/ -->
-      <menu id="onlistTicket" style="color: #000; " collapsed="false" label="TICKET ACTUAL" >
+      <menu id="onlistTicket" class="menuhead" collapsed="false" label="TICKET ACTUAL" >
 	<menupopup id="combolistTicket">
 	  <menuitem id="t_actual" type="checkbox" label="TICKET ACTUAL"   checked="true"  
 		    oncommand="selTipoPresupuesto(0)" />
 	  <menuseparator />
 	  <menuitem id="t_preventa" type="checkbox" label="TICKET PREVENTA"  
 		    oncommand="selTipoPresupuesto(1)" />
-	  <menuitem id="t_proforma" type="checkbox" label="TICKET PROFORMA" 
+	  <menuitem id="t_proforma" type="checkbox" label="TICKET PEDIDO" 
 		    oncommand="selTipoPresupuesto(2)" />
 	  <menuitem id="t_proformaonline" type="checkbox" label="TICKET ONLINE"  
 		    oncommand="selTipoPresupuesto(3)" />
 	  <menuseparator />
-	  <menuitem id="t_mproducto" type="checkbox" label="TICKET MPRODUCTO"  
+	  <menuitem id="t_mproducto" type="checkbox" label="TICKET MIXPRODUCTO"  
 		    oncommand="selTipoPresupuesto(4)" />
 	</menupopup>
       </menu>
@@ -46,9 +45,9 @@
       </menupopup>
       </menulist>
 
-      <menulist label="Elije MProducto...." flex="1" id="SelBaseMProducto" collapsed="true"  class="listado">
+      <menulist label="Elije MixProducto...." flex="1" id="SelBaseMProducto" collapsed="true"  class="listado">
       <menupopup id="itemsBaseMProducto"  class="listado">
-	<menuitem id="0" style="width:20em" label="Elije MProducto...." oncommand="cargarIdMProducto(0)"/>      
+	<menuitem id="0" style="width:20em" label="Elije MixProducto...." oncommand="cargarIdMProducto(0)"/>      
       </menupopup>
       </menulist>
 
@@ -56,10 +55,10 @@
 
       <spacer flex="1"/>
       <radiogroup orient="horizontal" id="rgModosTicket" oncommand="NuevoModo()"  class="listado">
-	<radio id="rVenta" label="Venta" selected="true" value="venta"/>
-	<radio id="rCesion" label="Cesión" value="cesion"/>
-	<radio id="rPedido" label="Cotización" selected="true" value="pedidos"/>
-	<radio id="rMProducto" label="MProducto" value="mproducto" />
+	<radio id="rVenta" label="Contado" selected="true" value="venta"/>
+	<radio id="rCesion" label="Crédito" value="cesion"/>
+	<radio id="rPedido" label="Pedido" selected="true" value="pedidos"/>
+	<radio id="rMProducto" label="MixProductos" value="mproducto"/>
 	<radio id="rInterno" label="Servicios" value="interno" collapsed="true"/>
       </radiogroup>    	
     </hbox>

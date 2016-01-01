@@ -160,12 +160,13 @@ function buscarMovimientosExistencias(){
           var item = document.createElement('label');
           item.setAttribute('value',lineas);
           item.setAttribute('style','text-align:center;font-weight:bold;');
-
+          item.setAttribute('class','xtext');
           var textbox1 = document.createElement('label');
           textbox1.setAttribute('value',formatDineroTotal(arreglo[i]));
           textbox1.setAttribute('readonly','true');
           textbox1.setAttribute('style','text-align:right');
           textbox1.setAttribute('id','costo_'+String(i+1));
+          textbox1.setAttribute('class','xtext');
           costosunitarios.push(arreglo[i]);
 
           var textbox2 = document.createElement('label');
@@ -174,6 +175,7 @@ function buscarMovimientosExistencias(){
 				"actualizarcantidades("+String(i+1)+");");
           textbox2.setAttribute('id','existencias_'+String(i+1));
           textbox2.setAttribute('style','text-align:right');
+          textbox2.setAttribute('class','xtext');
 
           total_existencia = total_existencia + parseInt(arreglo[i+1]);
           total_costo      = total_costo +arreglo[i]*arreglo[i+1];
@@ -184,27 +186,32 @@ function buscarMovimientosExistencias(){
           textbox3.setAttribute('readonly','true');
           textbox3.setAttribute('id','costo_parcial'+String(i+1));
           textbox3.setAttribute('style','text-align:right');
+          textbox3.setAttribute('class','xtext');
 
           var textbox4 = document.createElement('button');
 	  var vSerie   = (cSerie)? false:true;
           textbox4.setAttribute('label','NS');
           textbox4.setAttribute('oncommand','verNSResumenKardex('+arreglo[i+1]+','+arreglo[i+2]+')');
           textbox4.setAttribute('collapsed',vSerie);
+          textbox4.setAttribute('class','btn');
 
           var textbox5 = document.createElement('description');
 	  var vLote    = (cLote)? false:true;
           textbox5.setAttribute('value',arreglo[i+3]);
           textbox5.setAttribute('collapsed',vLote);
+          textbox5.setAttribute('class','xtext');
 
           var textbox6 = document.createElement('description');
 	  var vFv      = (cFv)? false:true;
           textbox6.setAttribute('value',arreglo[i+4]);
 	  textbox6.setAttribute('collapsed',vFv);
+          textbox6.setAttribute('class','xtext');
 
 	  var boton = document.createElement('caption');
 	  boton.setAttribute('label', '');
 	  
           var row = document.createElement('row');
+          row.setAttribute('class','parrowkardex');
           row.appendChild(item);
           row.appendChild(textbox2);
           row.appendChild(textbox1);
@@ -223,11 +230,11 @@ function buscarMovimientosExistencias(){
 
     xid('total_existencias').setAttribute('label',existencias+' '+cUnidad+' '+cDetalle);
     xid('cart_existencias').setAttribute('value',total_existencia);
-    xid('kdxExistencias').setAttribute('label',existencias+' '+cUnidad+' '+cDetalle);
+    xid('kdxExistencias').setAttribute('value',existencias+' '+cUnidad+' '+cDetalle);
     xid('total_costo').setAttribute('label',cMoneda[1]['S']+" "+total_costo.toFixed(2));
-    xid('kdxCostoTotalPromedio').setAttribute('label',cMoneda[1]['S']+" "+total_costo.toFixed(2));
+    xid('kdxCostoTotalPromedio').setAttribute('value',cMoneda[1]['S']+" "+total_costo.toFixed(2));
     xid('costo_unitario').setAttribute('label',cMoneda[1]['S']+" "+costo_unitario.toFixed(2));
-    xid('kdxCostoPromedio').setAttribute('label',cMoneda[1]['S']+" "+costo_unitario.toFixed(2));
+    xid('kdxCostoPromedio').setAttribute('value',cMoneda[1]['S']+" "+costo_unitario.toFixed(2));
 
     cExistencias   = existencias+' '+cUnidad+' '+cDetalle;
     cCostopromedio = costo_unitario.toFixed(2);
@@ -265,20 +272,23 @@ function buscarMovimientosExistenciasCarrito(){
 	  
           var item = document.createElement('label');
           item.setAttribute('value',lineas);
+          item.setAttribute('class','xtext');
           item.setAttribute('style','text-align:center;font-weight:bold;');
 	  
           var costo = document.createElement('label');
           costo.setAttribute('value',formatDineroTotal(arreglo[i]));
           costo.setAttribute('readonly','true');
+          costo.setAttribute('class','xtext');
           costosunitarios.push(arreglo[i]);
           costo.setAttribute('id','costo_'+arreglo[i+2]);
           costo.setAttribute('style','text-align:right');
 
           var xExistencias = document.createElement('label');
           xExistencias.setAttribute('value',arreglo[i+1]);
+
           xExistencias.setAttribute('id','existencias_'+arreglo[i+2]);
           xExistencias.setAttribute('style','text-align:right');
-
+          xExistencias.setAttribute('class','xtext');
           total_existencia = total_existencia + parseInt(arreglo[i+1]);
           total_costo      = total_costo +arreglo[i]*arreglo[i+1];
           costolinea       = arreglo[i]*arreglo[i+1];
@@ -286,25 +296,29 @@ function buscarMovimientosExistenciasCarrito(){
           var costoparcial = document.createElement('label');
           costoparcial.setAttribute('value',formatDinero(costolinea.toFixed(2)));
           costoparcial.setAttribute('readonly','true');
+          costoparcial.setAttribute('class','xtext');
           costoparcial.setAttribute('id','costoparcial_'+arreglo[i+2]);
           costoparcial.setAttribute('style','text-align:right');
 
           var xSerie = document.createElement('button');
 	  var vSerie = (cSerie)? false:true;
           xSerie.setAttribute('label','NS');
+          xSerie.setAttribute('class','btn');
           xSerie.setAttribute('oncommand','seriesKardexCarrito('+arreglo[i+1]+','+arreglo[i+2]+')');
           xSerie.setAttribute('collapsed',vSerie);
 
           var xLote = document.createElement('label');
 	  var vLote = (cLote)? false:true;
           xLote.setAttribute('value',arreglo[i+3]);
+          xLote.setAttribute('class','xtext');
           xLote.setAttribute('collapsed',vLote);
           xLote.setAttribute('id','lote_'+arreglo[i+2]);
 
           var xVence = document.createElement('label');
 	  var vFv    = (cFv)? false:true;
           xVence.setAttribute('value',arreglo[i+4]);
-	  xVence.setAttribute('collapsed',vFv);
+	  xVence.setAttribute('collapsed',vFv)
+          xVence.setAttribute('class','xtext');;
           xVence.setAttribute('id','vence_'+arreglo[i+2]);
 	  var esLoteFv = (cFv || cLote)? '"'+arreglo[i+3]+'/'+arreglo[i+4]+'"':false;
 
@@ -313,6 +327,7 @@ function buscarMovimientosExistenciasCarrito(){
           xCarrito.setAttribute('onblur','loadPedidoCarritoAlmacen('+arreglo[i+2]+',this.value,'+
                                                                     esLoteFv+')');
           xCarrito.setAttribute('style','text-align:right');
+          xCarrito.setAttribute('size','5');
           if(cSerie) xCarrito.setAttribute('readonly',true);
 	  xCarrito.setAttribute('onfocus','this.select()');
 	  xCarrito.setAttribute('onkeypress','return soloNumerosEnteros(event,this.value)');
@@ -324,6 +339,7 @@ function buscarMovimientosExistenciasCarrito(){
           var row = document.createElement('row');
           row.setAttribute('value',arreglo[i+2]);
 	  row.setAttribute('onfocus','click()');
+          row.setAttribute('class','ldparrowkardex');
           row.appendChild(item);
           row.appendChild(xExistencias);
           row.appendChild(costo);
@@ -345,13 +361,13 @@ function buscarMovimientosExistenciasCarrito(){
     var unidempaque    = (cMenudeo)? (total_existencia-unidresto)/cUnidxemp:0;
     var unidmenudeo    = (cMenudeo)? unidempaque+' '+cEmpaque+' '+unidresto:0;
     var existencias    = (cMenudeo)? unidmenudeo:total_existencia; 
-
+    
     xid('total_existencias').setAttribute('label',existencias+' '+cUnidad+' '+cDetalle);
     xid('cart_existencias').setAttribute('value',total_existencia);
     xid('total_costo').setAttribute('label',cMoneda[1]['S']+" "+total_costo.toFixed(2));
     xid('costo_unitario').setAttribute('label',cMoneda[1]['S']+" "+costo_unitario.toFixed(2));
     xid('cart_costopromedio').setAttribute('value',costo_unitario);
-    xid('CostoCarrito').setAttribute('value',cMoneda[1]['S']+" "+costo_unitario);
+    //xid('CostoCarrito').setAttribute('value',cMoneda[1]['S']+" "+costo_unitario);
 }
  
 function cancelar(){ location.href='../../modalmacenes.php?Id='+xid("idalmacen").value; }
@@ -442,11 +458,12 @@ function setDecKardex(xdeck){
 	break;
     }
 
-    xid("boxmovimientoshead").setAttribute("collapsed",mval);
+    //xid("boxmovimientoshead").setAttribute("collapsed",mval);
     xid("boxmovimientosresumen").setAttribute("collapsed",mval);
     xid("boxmovimientosbuscar").setAttribute("collapsed",mval);
     xid("boxmovimientos").setAttribute("collapsed",mval);
-    xid("boxexistenciashead").setAttribute("collapsed",eval);
+    xid("boxmovimientoscore").setAttribute("collapsed",mval);
+    //xid("boxexistenciashead").setAttribute("collapsed",eval);
     xid("boxexistencias").setAttribute("collapsed",eval);
     xid("boxdetalleskardex").setAttribute("collapsed",true);
     xid("btnvolveralmacen").setAttribute("collapsed",false);
@@ -515,7 +532,10 @@ function loadPedidoCarritoAlmacen(xPedidoDet,xdato,esLoteFv){
     {
 	xsumcarrito  += parseFloat( aCantidad['cAlmacen_'+aPedidoDet[i]] );
     }
+    var costo_unitario = parseFloat( xid('cart_costopromedio').value ); 
+
     xid('CantidadCarrito').value           = xsumcarrito;
+    xid('CostoCarrito').value              = cMoneda[1]['S']+" "+ Math.round( ( costo_unitario*xsumcarrito) * 100)/100;
 }
 
 function loadSeriesCarritoAlmacen(xPedidoDet,nSeries,xSeries){

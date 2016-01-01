@@ -7,13 +7,9 @@ include_once("class/filaticket.class.php");
 include_once("class/arreglos.class.php");
 
 /*+++++++++++ VALIDA CAJA +++++++++++++++*/
-  if( cajaescerrado() == 1 )
-  {
-    echo "noCAJA"; return;
-  } 
+  if( cajaescerrado() == 1 )  { echo "noCAJA"; return; } 
 
 /*+++++++++++ VALIDA TICKET ++++++++++++++++*/
-
 $modoTicket = CleanText($_GET["moticket"]);
 $local      = getSesionDato("IdTienda");
 $numlines   = CleanInt($_POST["numlines"]);
@@ -111,6 +107,12 @@ $entregaEfectivo = ($cambio>0)? $entregaEfectivo - $cambio : $entregaEfectivo;
 $entregaBono 	= CleanFloat($_POST["entrega_bono"]);
 $entregaTarjeta = CleanFloat($_POST["entrega_tarjeta"]);
 
+# Modalidad pago
+$modalidadpago 	= CleanID($_POST["modopago_id"]);
+
+# Dinero entregado como nota de credito
+$entregaCredito = ( $modalidadpago == 9)? $entregado:0;
+
 /* VERIFICACIONES */
 
 # Verificamos si la peticion ha sido duplicada
@@ -142,6 +144,7 @@ $nroDocumento   = CleanInt($_GET["nroDocumento"]);
 $sreDocumento   = ( isset( $_GET["sreDocumento"] ) )? CleanInt($_GET["sreDocumento"]):0;
 $sreDocumento   = ( $sreDocumento == 0 )? $local : $sreDocumento;
 $idDocumento    = CleanInt($_GET["idDocumento"]);
+$Reservar       = CleanInt($_GET["Reservar"]);
 
 //Si el ticket es menor de lo que deberia
 // ..asumimos ha habido algun error y abortamos.
@@ -199,10 +202,13 @@ for($t=0;$t<$numlines;$t++)
 
 $idComprobante = EjecutarTicket( $idDependiente, $entregado, $local, $numticket,
 				 $serie,$idClienteSeleccionado,$modoTicket,$entregaEfectivo,
-				 $entregaBono,$entregaTarjeta,$cambio,$nroDocumento,
+				 $entregaBono,$entregaCredito,$entregaTarjeta,$cambio,$nroDocumento,
 				 $idDocumento,$documentoventa,$idPresupuesto,
 				 $mensaje,$vigencia,$nsmprod,$sreDocumento,
-				 $idPromocion,$bonoPromocion);
+				 $idPromocion,$bonoPromocion,$Reservar,$modalidadpago);
+
+/*REGISTRO DOCUMENTOS COBROS*/
+
 
 /* SALIMOS DEL PROCESO */
 //echo 1;
@@ -264,10 +270,10 @@ function AgrupaJob( &$arreglo ){
  */
 function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num, 
 			 $Serie,$IdCliente,$modoTicket ,$entregaEfectivo, 
-			 $entregaBono, $entregaTarjeta, $cambio,$nroDocumento,
+			 $entregaBono,$entregaCredito,$entregaTarjeta, $cambio,$nroDocumento,
 			 $idDocumento,$documentoventa,$idPresupuesto,
 			 $mensaje,$vigencia,$nsmprod,$sreDocumento,
-			 $idPromocion,$bonoPromocion){
+			 $idPromocion,$bonoPromocion,$Reservar,$modalidadpago){
     global $TotalImporte;
     global $ImporteNeto;
     global $IvaImporte;
@@ -278,7 +284,8 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
       {
       case "cesion":
       case "venta":
-	$ImportePendiente = abs( intval( ( abs($TotalImporte) - abs($entregado) ) * 100 ) / 100.0 );
+	//$ImportePendiente = abs( intval( ( abs($TotalImporte) - abs($entregado) ) * 100 ) / 100.0 );
+	$ImportePendiente = ($cambio < 0)? abs($cambio):0;
         $esVenta          = true;
 	$esPedido         = false;
       break;
@@ -319,22 +326,37 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
 	"IdLocal, IdUsuario, SerieComprobante,".
 	"NComprobante,TipoVentaOperacion,FechaComprobante,".
 	"ImporteNeto, ImporteImpuesto, Impuesto, TotalImporte,".
-	"ImportePendiente, Status,IdCliente,IdPromocion,IdPresupuesto,Cobranza";
+	"ImportePendiente, Status,IdCliente,IdPromocion,IdPresupuesto,Cobranza,Reservado";
 
       $datos = 
 	"'$IdLocal','$idDependiente','$Serie',".
 	"'$Num','$TipoVenta',NOW(),".
 	"'$ImporteNeto','$IvaImporte','$IGV','$TotalImporte',".
-	"'$ImportePendiente','$Status','$IdCliente','$idPromocion','$idPresupuesto','$cobranza'";
+	"'$ImportePendiente','$Status','$IdCliente','$idPromocion','$idPresupuesto','$cobranza','$Reservar'";
 
       $sql = "INSERT INTO ges_comprobantes (".$esquema.") VALUES (".$datos.")";
       $res = query($sql,"Creando Ticket ($modoTicket)");
       $idComprobante = $UltimaInsercion;
+      
+      //Deudas
+      if( $ImportePendiente > 0 )
+	cargarImportePendienteCliente($IdCliente,$ImportePendiente);
 
-      //Bono && Historial Venta...
-      $xbono = ( $entregaBono > 0 )? ' Bono = 0 ':false;
-      $xbono = ( $bonoPromocion > 0 )? " Bono = '$bonoPromocion' ": $xbono;
-      cargarVenta2HistorialVenta($IdCliente,$TotalImporte,true,$xbono);
+      //Registra Bono Utilizado
+      if($entregaBono > 0)
+	registrarMovimientoBonoCliente($IdCliente,"-".$entregaBono,1,$IdLocal,
+				       $idComprobante,$idDependiente);
+      //Registra Nota Credito Entregado
+      if($entregaCredito > 0)
+	registrarMovimientoCreditoCliente($IdCliente,"-".$entregaCredito,1,$IdLocal,
+					  $idComprobante,$idDependiente,false);
+      //Registra Bono Entregado
+      if($bonoPromocion > 0)
+	registrarMovimientoBonoCliente($IdCliente,$bonoPromocion,0,$IdLocal,
+				       $idComprobante,$idDependiente);
+
+      //Registra Historial Venta...
+      cargarVenta2HistorialVenta($IdCliente,$TotalImporte,true,false);
 
       //AdelantosEnPresupuesto
       if(  $modoTicket=="cesion" && $idPresupuesto != '0')
@@ -350,13 +372,15 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
 	"IdLocal, IdUsuario, NPresupuesto,TipoPresupuesto,".
 	"TipoVentaOperacion,FechaPresupuesto,ImporteNeto,".
 	"ImporteImpuesto, Impuesto, TotalImporte, Status,IdCliente,".
-	"Observaciones,CBMetaProducto,VigenciaPresupuesto,Serie,IdOperacionCaja,ImporteAdelanto";
+	"Observaciones,CBMetaProducto,VigenciaPresupuesto,Serie,IdOperacionCaja,".
+	"ImporteAdelanto,IdUsuarioRegistro";
 
       $datos = 
 	"'$IdLocal','$idDependiente','$nroDocumento','$textDoc',".
 	"'$TipoVenta',NOW(),'$ImporteNeto',".
 	"'$IvaImporte','$IGV','$TotalImporte','Pendiente','$IdCliente',".
-	"'$mensaje','$nsmprod','$vigencia','$sreDocumento','$IdOperacionCaja','$ImporteAdelanto'";
+	"'$mensaje','$nsmprod','$vigencia','$sreDocumento','$IdOperacionCaja',".
+	"'$ImporteAdelanto','$idDependiente'";
 	
       $sql = "INSERT INTO ges_presupuestos (".$esquema.") VALUES (".$datos.")";
       $res = query($sql,"Creando Ticket ($modoTicket)");
@@ -375,13 +399,13 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
 
     //NumeroComprobante...
     if($esVenta)
-      if(RegistrarNumeroComprobante($nroDocumento,$idComprobante,$textDoc,$sreDocumento,false,false))
+      if(RegistrarNumeroComprobante($nroDocumento,$idComprobante,$textDoc,$sreDocumento,false,false,$idDependiente))
 	return;
 
     //Dinero...
     if($esVenta)
       EntregarCantidades($textCaja,$IdLocal,$entregaEfectivo,$entregaBono,$entregaTarjeta,
-			 $idComprobante,$TipoOperacion);
+			 $idComprobante,$TipoOperacion,false,$modalidadpago,false);
 
     //Procesar Lineas...
     foreach ($carrito as $fila) 
@@ -420,20 +444,26 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
     if($idPresupuesto != '0'){ 
 
       //Presupuestos
-      setIdCPPresupuesto($idPresupuesto,$idComprobante,$modoTicket);
+      setIdCPPresupuesto($idPresupuesto,$idComprobante,$modoTicket,$idDependiente);
 
+      //OrdenServicio
+      $idOrdenServicio = ckeckPreventa2OrdenServicio($idPresupuesto);
+
+      if( $idOrdenServicio !='0') 
+	setStatusOrdenServicio($idOrdenServicio,$idDependiente);
+      
     }
     return $idComprobante;//IdComprobante
 }
 
-function setIdCPPresupuesto($idPresupuesto,$idComprobante,$modoTicket){
+function setIdCPPresupuesto($idPresupuesto,$idComprobante,$modoTicket,$idDependiente){
 
   $sStatus = ($modoTicket=="pedidos")? ", Status ='Modificado'": '';
 
   $sql     = 
     " UPDATE ges_presupuestos ".
     " SET    IdCP            = '".$idComprobante."'".$sStatus.",".
-    "        FechaAtencion = NOW() ".
+    "        FechaAtencion = NOW(), IdUsuario = '".$idDependiente."' ".
     " WHERE  IdPresupuesto   = '".$idPresupuesto."'";
 
   query($sql);	

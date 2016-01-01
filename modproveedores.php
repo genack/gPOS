@@ -33,6 +33,9 @@ function ListarProveedores() {
 	} else {
 		$ot->fijar("tTitulo", _("Lista de proveedor"));
 		$ot->fijar("action", $action);
+		$ot->fijar("tBorrar", _("Eliminar"));
+		$ot->fijar("tEditar", _("Modificar"));
+		$ot->fijar("tProveedor", _("Proveedor"));
 		$ot->resetSeries(array ("IdProveedor", "Referencia", "Nombre", "tBorrar", "tEditar", "tSeleccion", "marca"
 			,"vNombreComercial"));
 		$num = 0;
@@ -41,8 +44,6 @@ function ListarProveedores() {
 			$id = $oProveedor->getId();
 			$ot->fijarSerie("IdProveedor", $id);
 			$ot->fijarSerie("IdSubsidiario", $id);
-			$ot->fijarSerie("tBorrar", _("Eliminar"));
-			$ot->fijarSerie("tEditar", _("Modificar"));
 			$ot->fijarSerie("tNombreComercial",_("Nombre comercial"));
 			$ot->fijarSerie("vNombreComercial",$oProveedor->get("NombreComercial"));
 			if ($marcado and in_array($id, $marcado)) {
@@ -77,16 +78,19 @@ function MostrarProveedorParaEdicion($id, $lang) {
 		error(__FILE__.__LINE__, "Info: template no encontrado");
 		return false;
 	}
+
+	$txtCuentaEmp1    = ($oProveedor->get("CuentaBancaria") == 0)? "":getNroCuenta($oProveedor->get("CuentaBancaria"));
+	$txtCuentaEmp2    = ($oProveedor->get("CuentaBancaria2") == 0)? "":getNroCuenta($oProveedor->get("CuentaBancaria2"));
+
 	$ot->fijar("action", $action);
 	$ot->fijar("vIdProveedor", $id);
 	
 	$ot->fijar("tModPagoHabitual", _("Modo pago hab."));
 	$ot->fijar("vIdModPagoHabitual", $oProveedor->get("IdModPagoHabitual"));	
-	$ot->fijar("comboModPagoHabitual", genComboModPagoHabitual( $oProveedor->get("IdModPagoHabitual")));
+	$ot->fijar("comboModPagoHabitual", genComboModalidadPago( $oProveedor->get("IdModPagoHabitual")));
 	
 	$ot->campo(_("Pagina web"), "PaginaWeb", $oProveedor);
 	$ot->fijar("comboIdPais" ,genComboPaises($oProveedor->get("IdPais")));
-			
 	$ot->fijar("tIdPais", _("País"));			
 	$ot->fijar("tTitulo", _("Modificando proveedor"));
 	$ot->campo(_("Nombre comercial"), "NombreComercial", $oProveedor);
@@ -99,11 +103,14 @@ function MostrarProveedorParaEdicion($id, $lang) {
 	$ot->campo(_("Contacto"), "Contacto", $oProveedor);
 	$ot->campo(_("Cargo"), "Cargo", $oProveedor);
 	$ot->campo(_("Email"), "Email", $oProveedor);
-	$ot->campo(_("CTA Moneda Principal"), "CuentaBancaria", $oProveedor);
-	$ot->campo(_("CTA Moneda Secundaria"), "CuentaBancaria2", $oProveedor);
-	$ot->campo(_("Número fiscal"), "NumeroFiscal", $oProveedor);
+	$ot->fijar("CuentaBancaria", _("CTA Moneda Principal"));
+	$ot->fijar("CuentaBancaria2", _("CTA Moneda Secundaria"));
+	$ot->fijar("vCuentaBancaria", $txtCuentaEmp1);
+	$ot->fijar("vCuentaBancaria2", $txtCuentaEmp2);
+	$ot->fijar("vIdCuentaBancaria", $oProveedor->get("CuentaBancaria"));
+	$ot->fijar("vIdCuentaBancaria2", $oProveedor->get("CuentaBancaria2"));
+	$ot->campo(_("Número fiscal (RUC)"), "NumeroFiscal", $oProveedor);
 	$ot->campo(_("Comentarios"), "Comentarios", $oProveedor);	
-	
 
 	echo $ot->Output();
 }
@@ -127,6 +134,9 @@ function FormularioAlta($esPopup=false) {
 
 	$oProveedor->Crea();
 
+	if($esPopup)
+	  echo "<script> function loadfocus(){ }</script>";
+	
 	if(!$esPopup)
 	    echo gas("cabecera", _("Gestion de Proveedores"));
 	$ot = getTemplate("FormAltaProveedor");
@@ -139,7 +149,7 @@ function FormularioAlta($esPopup=false) {
 	
 	$ot->fijar("tModPagoHabitual", _("Modo pago hab."));
 	$ot->fijar("vIdModPagoHabitual", $oProveedor->get("IdModPagoHabitual"));	
-	$ot->fijar("comboModPagoHabitual", genComboModPagoHabitual( $oProveedor->get("IdModPagoHabitual")));
+	$ot->fijar("comboModPagoHabitual", genComboModalidadPago( $oProveedor->get("IdModPagoHabitual")));
 	
 	$ot->campo(_("Pagina web"), "PaginaWeb", $oProveedor);
 	
@@ -157,12 +167,12 @@ function FormularioAlta($esPopup=false) {
 	$ot->campo(_("Cargo"), "Cargo", $oProveedor);
 	$ot->campo(_("Email"), "Email", $oProveedor);
 	$ot->campo(_("Cuenta bancaria"), "CuentaBancaria", $oProveedor);
-	$ot->campo(_("Número fiscal"), "NumeroFiscal", $oProveedor);
+	$ot->campo(_("Número fiscal (RUC)"), "NumeroFiscal", $oProveedor);
 	$ot->campo(_("Comentarios"), "Comentarios", $oProveedor);
 	
 	if ($esPopup) {
 		$ot->fijar("vesPopup", 1);
-		$ot->fijar("onClose", "window.close()");
+		$ot->fijar("onClose", "parent.closepopup()");
 	} else {
 		$ot->fijar("vesPopup", 0);
 		$ot->fijar("onClose", "location.href='modproveedores.php'");	
@@ -228,6 +238,9 @@ function CrearProveedor($comercial, $legal, $direccion, $poblacion,
 	 $cp, $email, $telefono1, $telefono2, $contacto, $cargo, $cuentabancaria, $numero,
 	 	 $comentario,$IdModPagoHabitual,$paginaweb,$idpais) {
 
+        $comercial = str_replace('&','&#038;',$comercial);
+        $legal     = str_replace('&','&#038;',$legal);
+
 	$oProveedor = new proveedor;
 	$oProveedor->Crea();
 
@@ -268,6 +281,10 @@ function ModificarProveedor($id,$comercial, $legal, $direccion, $poblacion, $cp,
 			    $telefono1, $telefono2, $contacto, $cargo, $cuentabancaria, 
 			    $numero, $comentario, $IdModPagoHabitual,$paginaweb,$idpais,
 			    $cuentabancaria2 ){
+
+        $comercial = str_replace('&','&#038;',$comercial);
+        $legal     = str_replace('&','&#038;',$legal);
+
 	$oProveedor = new proveedor;
 	if (!$oProveedor->Load($id)){
 		error(__FILE__ . __LINE__ ,"W: no pudo mostrareditar '$id'");
@@ -321,21 +338,21 @@ switch ($modo) {
 	       $id        = CleanID($_POST["IdProveedor"]);
 	       $comercial = CleanText($_POST["NombreComercial"]);
 	       $legal     = CleanText($_POST["NombreLegal"]);
-	       $direccion = CleanText($_POST["Direccion"]);
+	       $direccion = CleanCadena($_POST["Direccion"]);
 	       $poblacion = CleanText($_POST["Localidad"]);
 	       $cp        = CleanCP($_POST["CP"]);
 	       $email     = CleanEmail($_POST["Email"]);
-	       $telefono1 = CleanTelefono($_POST["Telefono1"]);
-	       $telefono2 = CleanTelefono($_POST["Telefono2"]);
+	       $telefono1 = CleanText($_POST["Telefono1"]);
+	       $telefono2 = CleanText($_POST["Telefono2"]);
 	       $contacto  = CleanText($_POST["Contacto"]);
 	       $cargo     = CleanText($_POST["Cargo"]);
-	       $cuentabancaria = CleanCC($_POST["CuentaBancaria"]);
+	       $cuentabancaria = CleanID($_POST["IdCuentaBancaria"]);
 	       $numero     = CleanText($_POST["NumeroFiscal"]);
 	       $comentario = CleanText($_POST["Comentarios"]);
 	       $IdModPagoHabitual = CleanID($_POST["IdModPagoHabitual"]);
 	       $paginaweb = CleanUrl($_POST["PaginaWeb"]);
 	       $idpais    = CleanID($_POST["IdPais"]);
-	       $cuentabancaria2 = CleanCC($_POST["CuentaBancaria2"]);
+	       $cuentabancaria2 = CleanID($_POST["IdCuentaBancaria2"]);
 
 		ModificarProveedor($id,$comercial, $legal, $direccion, $poblacion, $cp, 
 				   $email, $telefono1, $telefono2, $contacto, $cargo, 
@@ -351,12 +368,12 @@ switch ($modo) {
 	case "newproveedor" :
 	        $comercial = CleanText($_POST["NombreComercial"]);
 		$legal     = CleanText($_POST["NombreLegal"]);
-		$direccion = CleanText($_POST["Direccion"]);
+		$direccion = CleanCadena($_POST["Direccion"]);
 		$poblacion = CleanText($_POST["Localidad"]);
 		$cp        = CleanCP($_POST["CP"]);
 		$email     = CleanEmail($_POST["Email"]);
-		$telefono1 = CleanTelefono($_POST["Telefono1"]);
-		$telefono2 = CleanTelefono($_POST["Telefono2"]);
+		$telefono1 = CleanText($_POST["Telefono1"]);
+		$telefono2 = CleanText($_POST["Telefono2"]);
 		$contacto  = CleanText($_POST["Contacto"]);
 		$cargo     = CleanText($_POST["Cargo"]);
 		$cuentabancaria = CleanCC($_POST["CuentaBancaria"]);
@@ -369,7 +386,7 @@ switch ($modo) {
 				
 		if (CrearProveedor($comercial, $legal, $direccion, $poblacion, $cp, $email, $telefono1, $telefono2, $contacto, $cargo, $cuentabancaria, $numero, $comentario,$IdModPagoHabitual,$paginaweb,$idpais )) {
 			if ($espopup){
-				echo "<script>window.close()</script>";
+				echo "<script>parent.closepopup()</script>";
 				exit();				
 			}
 			//Separador();

@@ -30,17 +30,23 @@ function genListadoCruzadoAsArray($IdProducto,$IdTallaje = false,$IdLang=false){
 	
 	if(!$IdLang)	$IdLang = getSesionDato("IdLenguajeDefecto");
 	
-	$sql = "SELECT Referencia, IdTallaje FROM ges_productos WHERE IdProducto='$IdProducto' AND Eliminado='0'";
+	$GiroEmpresa = getSesionDato("GlobalGiroNegocio");
+	
+	$sql = "SELECT CodigoBarras,Referencia, IdTallaje FROM ges_productos WHERE IdProducto='$IdProducto' AND Eliminado='0'";
 	$row = queryrow($sql);
 	if (!$row)	return false;
 	
-	$tReferencia  = CleanRealMysql($row["Referencia"]);
-	
+	$tReferencia   = CleanRealMysql($row["Referencia"]);
+	$tCodigoBarras = CleanRealMysql($row["CodigoBarras"]);
+	$filtro        = ($GiroEmpresa != 'BTQE')? " ges_productos.CodigoBarras='$tCodigoBarras' AND ":" ";
+	$Moneda       = getSesionDato("Moneda");
+
 	if(!$IdTallaje)	$IdTallaje = $row["IdTallaje"];
 	if(!$IdTallaje) $IdTallaje = 2;//gracefull degradation
 	
 	$sql = "SELECT  ges_locales.NombreComercial,ges_modelos.Color,
-		ges_detalles.Talla, ges_detalles.SizeOrden, SUM(ges_almacenes.Unidades) as TotalUnidades
+		ges_detalles.Talla, ges_detalles.SizeOrden, SUM(ges_almacenes.Unidades) as 
+                TotalUnidades, ges_productos.UnidadMedida, ges_almacenes.PrecioVenta  
                 FROM ges_almacenes INNER
 		JOIN ges_locales ON ges_almacenes.IdLocal = ges_locales.IdLocal INNER
 		JOIN ges_productos ON ges_almacenes.IdProducto =
@@ -48,8 +54,9 @@ function genListadoCruzadoAsArray($IdProducto,$IdTallaje = false,$IdLang=false){
 		ges_productos.IdColor = ges_modelos.IdColor INNER JOIN ges_detalles ON
 		ges_productos.IdTalla = ges_detalles.IdTalla
 		WHERE
-		ges_productos.Referencia = '$tReferencia'
-		AND	ges_modelos.IdIdioma = 1
+                $filtro
+                ges_productos.Referencia = '$tReferencia'
+		AND ges_modelos.IdIdioma = 1
 		AND ges_locales.Eliminado = 0 
                 AND ges_almacenes.Unidades > 0 
 		GROUP BY ges_almacenes.IdLocal, ges_productos.IdColor, ges_productos.IdTalla
@@ -68,7 +75,7 @@ function genListadoCruzadoAsArray($IdProducto,$IdTallaje = false,$IdLang=false){
 		$color 		= $row["Color"];
 		$talla 		= NormalizaTalla($row["Talla"]);		
 		$nombre 	= $row["NombreComercial"];
-		$unidades 	= CleanInt($row["TotalUnidades"]);
+		$unidades 	= CleanInt($row["TotalUnidades"]).' '.$row["UnidadMedida"].' - '.$Moneda[1]['S'].$row["PrecioVenta"];
 		$colores[$color] = 1;
 		$tallas[$talla] = 1;
 		$locales[$nombre] = 1;

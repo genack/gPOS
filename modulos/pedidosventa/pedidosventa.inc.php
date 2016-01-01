@@ -1,6 +1,6 @@
 <?php
 function PedidosVentaPeriodo($desde,$hasta,$cliente,$presupuesto,$tipoventa,
-			     $estado,$local,$codigo){
+			     $estado,$local,$codigo,$usuario,$producto){
 
   $desde        = CleanRealMysql($desde);
   $hasta        = CleanRealMysql($hasta);
@@ -21,9 +21,13 @@ function PedidosVentaPeriodo($desde,$hasta,$cliente,$presupuesto,$tipoventa,
   $extraLocal   = ($local)?" AND ges_presupuestos.IdLocal = '$local' ":"";
 
   $extraCodigo  = ($codigo != '')? $xcod:$extraFecha;
+  $extrausuario = ($usuario != 'todos')? " AND ges_presupuestos.IdUsuarioRegistro = '$usuario' ":"";
+  $buscarprod   = ($producto)? " INNER JOIN ges_presupuestosdet ON ges_presupuestos.IdPresupuesto = ges_presupuestosdet.IdPresupuesto INNER JOIN ges_productos ON ges_presupuestosdet.IdProducto = ges_productos.IdProducto INNER JOIN ges_productos_idioma ON ges_productos.IdProdBase = ges_productos_idioma.IdProdBase ":"";
+  $extraproducto= ($producto)? " AND ges_productos_idioma.Descripcion like '%$producto%'":"";
+  $extragroup   = ($producto)? " GROUP BY ges_presupuestos.IdPresupuesto ":"";
 
   $sql=
-    " SELECT ges_presupuestos.IdCliente, IdPresupuesto as Id, Npresupuesto as Codigo,".
+    " SELECT ges_presupuestos.IdCliente, ges_presupuestos.IdPresupuesto as Id, Npresupuesto as Codigo,".
     "        ges_clientes.NombreComercial as Cliente, TipoPresupuesto, TipoVentaOperacion, ".
     "        ModoTPV as ModoVenta, TotalImporte, Status as Estado, ".
     "        DATE_FORMAT(ges_presupuestos.FechaPresupuesto, '%e %b %y %H:%i') as Fecha, ".
@@ -35,16 +39,20 @@ function PedidosVentaPeriodo($desde,$hasta,$cliente,$presupuesto,$tipoventa,
     "        IF ( ges_presupuestos.Observaciones like '', ' ',ges_presupuestos.Observaciones) as Observaciones, ".
     "        (SELECT sum( Descuento ) FROM ges_presupuestosdet 
              WHERE ges_presupuestosdet.IdPresupuesto = ges_presupuestos.IdPresupuesto ) As Descuento, ".
-    "        ges_locales.NombreComercial as Local, ges_usuarios.Nombre as Usuario, Serie, ".
+    "        ges_locales.NombreComercial as Local, ges_usuarios.Identificacion as UsuarioRegistro, ges_presupuestos.Serie, ".
     "        DATEDIFF(CURDATE(),FechaPresupuesto) as Expira, ".
-    "        ges_locales.IdLocal, ges_presupuestos.IdUsuario ".
+    "        ges_locales.IdLocal, ges_presupuestos.IdUsuario, ".
+    "        ges_presupuestos.ImporteAdelanto, ".
+    "        ges_presupuestos.IdUsuarioRegistro, ".
+    "        (SELECT Identificacion FROM ges_usuarios WHERE ges_usuarios.IdUsuario = ges_presupuestos.Idusuario ) as Usuario ".
     " FROM   ges_presupuestos ".
     " INNER  JOIN ges_clientes ON ".
     "        ges_presupuestos.IdCliente          = ges_clientes.IdCliente ".
     " INNER  JOIN ges_locales  ON ".
     "        ges_presupuestos.IdLocal            = ges_locales.IdLocal ".
     " INNER  JOIN ges_usuarios ON ".
-    "        ges_presupuestos.IdUsuario          = ges_usuarios.IdUsuario ".
+    "        ges_presupuestos.IdUsuarioRegistro  = ges_usuarios.IdUsuario ".
+    $buscarprod.
     " WHERE  ges_presupuestos.Eliminado          = '0' ".
     $extraCodigo.
     $extraCliente.
@@ -52,6 +60,9 @@ function PedidosVentaPeriodo($desde,$hasta,$cliente,$presupuesto,$tipoventa,
     $extraTipoVta.
     $extraEstado.
     $extraLocal.
+    $extrausuario.
+    $extraproducto.
+    $extragroup.
     " ORDER  BY ges_presupuestos.NPresupuesto DESC";
 
   $res = query($sql);
@@ -60,6 +71,8 @@ function PedidosVentaPeriodo($desde,$hasta,$cliente,$presupuesto,$tipoventa,
   $t = 0;
   while($row = Row($res)){
     $nombre = "PedidoVenta_" . $t++;
+    $row["Descuento"] = ($row["Descuento"])? $row["Descuento"]:0;
+ 
     $PedidoVenta[$nombre] = $row; 
 
     $id       = $row["Id"];
@@ -146,16 +159,37 @@ function DestallePedidosVentaPeriodo($IdPresupuesto,$local){
 
 function ModificaPedidosVenta($xid,$campoxdato,$xdet=false,$xhead=false){
 
+        $xid = CleanID($xid);
+        updateUsuarioPresupuesto($xid,$xdet,$xhead);
+
         $Tb         = ($xhead)?'ges_presupuestosdet':'ges_presupuestos';
 	$IdKey      = ($xdet)?'IdPresupuestoDet':'IdPresupuesto';
-	$Id         = CleanID($xid);
 	$KeysValue  = $campoxdato;
 	$sql   =
 	  " update ".$Tb.
 	  " set    ".$KeysValue." ".
-	  " where  ".$IdKey." = ".$Id;
+	  " where  ".$IdKey." = ".$xid;
 	return query($sql); 
 }
+
+
+function updateUsuarioPresupuesto($xid,$xdet,$xhead){
+  //IdPresupuestoDet
+
+  if( $xdet)
+    $sql = " update ges_presupuestos ".
+           " set    IdUsuario     = '".getSesionDato("IdUsuario")."' ".
+           " where  IdPresupuesto = ( select IdPresupuesto ".
+           "                            from   ges_presupuestosdet ".
+           "                            where  IdPresupuestoDet = $xid ) ";
+  else  //IdPresupuesto
+    $sql = " update ges_presupuestos ".
+           " set    IdUsuario     = '".getSesionDato("IdUsuario")."' ".
+           " where  IdPresupuesto = $xid ";
+  query($sql); 
+}
+
+
 
 function obtenerMaxNPresupuesto(){
   
@@ -201,6 +235,7 @@ function obtenerListaPresupuestosTPV($tipopresupuesto){
 	 $res = query($sql);
 	 $arr = array();
 	 while( $row = Row($res) ){
+	   $row['Cliente'] = str_replace("&#038;","&",$row['Cliente']);
 	   array_push($arr,$row['Id'].",".
 		      $row['Codigo'].", -  ".
 		      $row['Codigo']."  -  ".
@@ -309,7 +344,7 @@ function obtenerDetalleMProductoTPV($IdProducto,$IdMetaProducto,$IdCliente){
 								    $row['IdProducto'],
 								    'MetaProducto'):0;
 	   //kardex Costo...
-	   $row['Costo'] = ( $row['CostoUnitario'] != $row['Costo'] )? $row['CostoUnitario']:$row['Costo'];
+	   //$row['Costo'] = ( $row['CostoUnitario'] != $row['Costo'] )? $row['CostoUnitario']:$row['Costo'];
 	   
 	   array_push($arr,$row['IdProducto'].","
 		      .$row['CodigoBarras'].","
@@ -454,9 +489,10 @@ function obtenerDetPresupuestoTPV($TipoPresupuesto,$IdPresupuesto,$IdCliente){
 
 function obtenerListaBaseMProductos(){
 
-         $sql=
+        $sql=
 	   " SELECT IdProducto as Id,CodigoBarras as Codigo, ".
-	   "        CONCAT(Descripcion,'   ',Marca,'   ',Color,'   ',Talla) as MProducto".
+	   "        CONCAT(Descripcion,'   ',Marca,'   ',Color,'   ',Talla) as MProducto,".
+           "        ges_productos.IdFamilia,ges_productos.IdSubFamilia".
 	   " FROM   ges_productos ".
 	   " INNER  JOIN ges_productos_idioma ON ".
 	   "        ges_productos_idioma.IdProdBase = ges_productos.IdProdBase".
@@ -476,7 +512,10 @@ function obtenerListaBaseMProductos(){
 	   array_push($arr,
 		      $row['Id'].",".
 		      $row['Codigo']."  -  ".
-		      $row['MProducto']);
+		      $row['MProducto'].",".
+		      ObtenerMUSubFamilia($row['Id'],
+					  $row['IdFamilia'],
+					  $row['IdSubFamilia']) );
 	 }
 
 	 return implode($arr,";");
@@ -497,6 +536,9 @@ function setStatusPresupuestoTPV($IdPresupuesto,$Opcion){
 	     " AND Serie  <> 0".
 	     " AND IdLocal = '".$IdLocal."'";
 	   $xset = "Status = 'Vencido', FechaAtencion = NOW() "; 
+
+	   //Codigos Autorizacion
+	   setearCodAutorizacionComprobante();
 	   break;
 	 case 'AsociarPreventa':
 	   $mov     = new movimiento;
@@ -609,6 +651,5 @@ function ConsolidaDetallePedidosVenta($xid){
 	       return ModificaPedidosVenta($xid,
 					    'TotalImporte = '.$row["Total"],false,false);
 }
-
 
 ?>

@@ -1,7 +1,7 @@
 <hbox id="editandoServicio"  align="center" pack="center">
 <spacer flex="1"/>
 <groupbox>
-  <caption class="grande" label="Servicio"/>
+  <caption class="grande red" label="Servicio"/>
   
   <hbox>
     <grid> 
@@ -38,8 +38,8 @@
 	<row>
 	  <box/>
 	  <hbox flex="1">
-	    <button class="media" flex="1" label="Cancelar" oncommand="CancelarServicio()"/>
-	    <button class="media"  flex="1" label="Entrar" oncommand="agnadirLineaSubsidiario()"/>
+	    <button class="media btn" flex="1" label="Cancelar" oncommand="CancelarServicio()"/>
+	    <button class="media btn"  flex="1" label="Entrar" oncommand="agnadirLineaSubsidiario()"/>
 	  </hbox>
 	</row>
       </rows>

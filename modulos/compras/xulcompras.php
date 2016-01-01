@@ -3,7 +3,7 @@ include("../../tool.php");
 SimpleAutentificacionAutomatica("visual-xulframe");
 StartXul(_("Compras"));
 ?>
-<hbox flex='1'>
+<hbox flex='1' class="box">
   <hbox flex='1'>
     <html:iframe  id="subweb" class="frameNormal" src="" flex="1"/>
   </hbox>
@@ -162,7 +162,8 @@ function buscar()
   extra = extra +  "&Nombre=" + document.getElementById("Nombre").value;   
   extra = extra +  "&verCompletas=" + tc;
   
-  url = "modcompras.php?modo=buscarproductos" + extra; 
+  /*url = "modcompras.php?modo=buscarproductos" + extra; */
+  url = "vercarrito.php?modo=check" + extra; 
   subweb.setAttribute("src", url);
 }
 

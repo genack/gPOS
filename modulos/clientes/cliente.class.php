@@ -25,7 +25,8 @@ function ClienteFactory($res) {
 
 function CrearCliente($comercial, $legal, $direccion, $poblacion, $cp, $email, $telefono1, 
 		      $telefono2, $contacto, $cargo, $cuentabancaria, $numero, $comentario,
-		      $tipocliente,$idpais,$paginaweb,$IdLocal=false,$FechaNacimiento) {
+		      $tipocliente, $IdModPagoHabitual, $idpais,$paginaweb,$IdLocal=false,
+		      $FechaNacimiento) {
 
         $comercial = str_replace('&','&#038;',$comercial);
         $legal     = str_replace('&','&#038;',$legal);
@@ -55,6 +56,7 @@ function CrearCliente($comercial, $legal, $direccion, $poblacion, $cp, $email, $
 	$oCliente->set("FechaChange", "NOW()", FORCE);
 	$oCliente->set("IdLocal", $IdLocal, FORCE);
 	$oCliente->set("FechaNacimiento", $FechaNacimiento, FORCE);
+	$oCliente->set("IdModPagoHabitual", $IdModPagoHabitual, FORCE);
 	
 	if ($oCliente->Alta()) {
 		//if(isVerbose())		
@@ -89,7 +91,10 @@ class cliente extends Cursor {
     function esEmpresa() {    
     	return $this->get("TipoCliente")=="Empresa";	    	
     }
-    
+
+    function esParticular() {    
+    	return $this->get("TipoCliente")=="Particular";	    	
+    }
     
     // GET especializados
     function getNombre(){
@@ -208,9 +213,9 @@ class cliente extends Cursor {
 		return false;				 		
 	}
 
-	function Listado($lang,$min=0){
-			
-    	if (!$lang)
+	function Listado($lang,$min=0,$nombre=false){
+	  $extra = ($nombre)? " AND ges_clientes.NombreComercial like '%$nombre%' OR (NombreLegal like '%$nombre%' OR NumeroFiscal like '%$nombre%') ":"";
+	  if (!$lang)
     		$lang = getSesionDato("IdLenguajeDefecto");
     
 		$sql = "SELECT		
@@ -218,7 +223,10 @@ class cliente extends Cursor {
 		FROM
 		ges_clientes 		
 		WHERE
-		ges_clientes.Eliminado = 0
+		ges_clientes.Eliminado = 0 
+                AND ges_clientes.IdCliente > 2
+                $extra
+                ORDER BY ges_clientes.NombreComercial ASC
 		";
 		
 		$res = $this->queryPagina($sql, $min, 10);
@@ -275,15 +283,8 @@ function getClientesTPV($time=false){
 	  $extraChange  = ($time)? " AND UNIX_TIMESTAMP(FechaChange) > UNIX_TIMESTAMP() - ".$time:"";
           $sql = 
 	    " select IdCliente,TipoCliente,Telefono1,Direccion,Email, ".
-	    "        NombreLegal as legal,NombreComercial as comercial,Bono,".
-	    "        NumeroFiscal as NFiscal,Comentarios,FechaNacimiento,".
-	    "        ( select sum(ges_comprobantes.ImportePendiente) ".
-	    "          from   ges_comprobantes ".
-	    "          where  ges_comprobantes.ImportePendiente > 0 ".
-	    "          and    ges_comprobantes.Status IN(1,3) ".
-	    "          and    ges_comprobantes.Destinatario = 'Cliente' ".
-	    "          and    ges_comprobantes.IdCliente = ges_clientes.IdCliente ".
-	    "          group  by ges_comprobantes.IdCliente ) as Debe ".
+	    "        NombreLegal as legal,NombreComercial as comercial,Bono,Credito,".
+	    "        NumeroFiscal as NFiscal,Comentarios,FechaNacimiento,Debe ".
 	    " from   ges_clientes ".
 	    " where  TipoCliente <> 'Interno' ".
 	    " $extraChange ".
@@ -295,6 +296,7 @@ function getClientesTPV($time=false){
 	     {
 	       $promo  = cargarPromocionCliente( $row["IdCliente"] );	
 	       $bono   = ( $row["Bono"] )? $row["Bono"]:0;
+	       $credito   = ( $row["Credito"] )? $row["Credito"]:0;
 	       $promo  = ( $promo )? $promo:0;
 	       $debe   = ( $row["Debe"] * 1.0 );
 	       $comercial = str_replace('&#038;','&',$row["comercial"]);
@@ -303,7 +305,8 @@ function getClientesTPV($time=false){
                               $row["IdCliente"].",". 
                               $debe.","."'".
                               $row["NFiscal"]."'".",".
-		              $bono.",'".
+		              $bono.",".
+		              $credito.",'".
 		              $promo."','".
 		              $row["TipoCliente"]."',".
 		              qq($row["Telefono1"]).",".
@@ -325,7 +328,7 @@ function setIdClienteDocumento($iduser,$id){
 }
 
 function updateVenta2Clientes($idcliente,$extra=false){
-  
+
          $extra = ($extra)? ",".CleanText($extra):"";
 	 $sql   = 
 	   " update ges_clientes ".
@@ -348,4 +351,154 @@ function updateBonoPromocion2Clientes( $xid ){
 	   {
 	     updateVenta2Clientes($xrow["IdCliente"]," Bono = 0 ");
 	   }
+}
+
+function actualizarImportePendienteCliente($IdCliente){
+  $totalDebe =  getImportePendienteCliente( $IdCliente );
+  updateVenta2Clientes( $IdCliente, " Debe = ".$totalDebe );
+}
+
+function cargarImportePendienteCliente($IdCliente,$ImportePendiente){
+	$totalDebe =  getImportePendienteCliente( $IdCliente ) + $ImportePendiente;
+	updateVenta2Clientes( $IdCliente, " Debe = ".$totalDebe );
+}
+
+function getImportePendienteCliente( $IdCliente ){
+
+  $sql = " select sum(ges_comprobantes.ImportePendiente) as Debe
+	              from   ges_comprobantes 
+	              inner  join ges_comprobantesnum  
+	              on     ges_comprobantes.IdComprobante = ges_comprobantesnum.IdComprobante      
+	              inner  join ges_comprobantestipo 
+	              on     ges_comprobantesnum.IdTipoComprobante = ges_comprobantestipo.IdTipoComprobante 
+	              where  ges_comprobantes.ImportePendiente > 0 
+	              and    ges_comprobantes.Status IN(1,3) 
+	              and    ges_comprobantes.Destinatario = 'Cliente' 
+	              and    ges_comprobantes.IdCliente = ".$IdCliente." 
+	              and    ges_comprobantestipo.TipoComprobante in ('Ticket','Factura','Boleta','Albaran') 
+	              and    ges_comprobantesnum.Status in ('Emitido','Facturado')
+	              group  by ges_comprobantes.IdCliente ";
+
+  $row = queryrow($sql);
+  
+  if ($row["Debe"] == '') return 0;
+  
+  return ( $row["Debe"] >= 0 )? $row["Debe"] : 0;
+}
+
+function getImporteBonoCliente($IdCliente){
+  $sql = "SELECT SUM(Importe) as TotalBono FROM ges_clientesbono ".
+         "WHERE IdCliente = $IdCliente ";
+
+  $row = queryrow($sql);
+
+  if ( $row["TotalBono"] == "" ) return 0;
+  else
+    return ( $row["TotalBono"] >= 0 )? $row["TotalBono"] : 0;
+}
+
+
+function getImporteCreditoCliente($IdCliente){
+  $sql = "SELECT SUM(Importe) as TotalCredito FROM ges_clientescredito ".
+         "WHERE IdCliente = $IdCliente ";
+
+  $row = queryrow($sql);
+
+  if ( $row["TotalCredito"] == "" ) return 0;
+  else
+    return ( $row["TotalCredito"] >= 0 )? $row["TotalCredito"] : 0;
+}
+
+function registrarMovimientoBonoCliente($IdCliente,$Bono,$Tipo,$IdLocal,$IdComprobante,
+					$IdUsuario){
+  $IdLocal   = (!$IdLocal)? CleanID(getSesionDato("IdTienda")):$IdLocal;
+  $IdUsuario = (!$IdUsuario)? CleanID(getSesionDato("IdUsuario")):$IdUsuario;
+  $xcampo    = "";
+  $xvalues   = "";
+
+  $xcampo .= 'IdLocal, ';
+  $xvalues.= "'".$IdLocal."'".', ';
+  $xcampo .= 'IdUsuario, ';
+  $xvalues.= "'".$IdUsuario."'".', ';
+  $xcampo .= 'IdCliente, ';
+  $xvalues.= "'".$IdCliente."'".', ';
+  $xcampo .= 'IdComprobante, ';
+  $xvalues.= "'".$IdComprobante."'".', ';
+  $xcampo .= 'Importe, ';
+  $xvalues.= "'".$Bono."'".', ';
+  $xcampo .= 'Tipo ';
+  $xvalues.= "'".$Tipo."'".' ';
+
+  $sql = "INSERT INTO ges_clientesbono (".$xcampo.") VALUES (".$xvalues.")";
+  query($sql);
+
+  // actuaiza bono del cliente
+  actualizarBonoCliente($IdCliente);
+}
+
+
+function registrarMovimientoCreditoCliente($IdCliente,$Credito,$Tipo,$IdLocal,$IdComprobante,
+					   $IdUsuario,$xconcepto){
+  
+  $IdLocal   = (!$IdLocal)? CleanID(getSesionDato("IdTienda")):$IdLocal;
+  $IdUsuario = (!$IdUsuario)? CleanID(getSesionDato("IdUsuario")):$IdUsuario;
+  $xcampo    = "";
+  $xvalues   = "";
+
+  $xcampo .= 'IdLocal, ';
+  $xvalues.= "'".$IdLocal."'".', ';
+  $xcampo .= 'IdUsuario, ';
+  $xvalues.= "'".$IdUsuario."'".', ';
+  $xcampo .= 'IdCliente, ';
+  $xvalues.= "'".$IdCliente."'".', ';
+  $xcampo .= 'IdComprobante, ';
+  $xvalues.= "'".$IdComprobante."'".', ';
+  $xcampo .= 'Importe, ';
+  $xvalues.= "'".$Credito."'".', ';
+  $xcampo .= 'Concepto, ';
+  $xvalues.= "'".$xconcepto."'".', ';
+  $xcampo .= 'Tipo ';
+  $xvalues.= "'".$Tipo."'".' ';
+
+  $sql = "INSERT INTO ges_clientescredito (".$xcampo.") VALUES (".$xvalues.")";
+  query($sql);
+
+  // actuaiza credito del cliente
+  actualizarCreditoCliente($IdCliente);
+}
+
+function actualizarBonoCliente($IdCliente){
+  $totalBono =  getImporteBonoCliente( $IdCliente );
+  updateVenta2Clientes( $IdCliente, " Bono = ".$totalBono );
+}
+
+function actualizarCreditoCliente($IdCliente){
+  $totalCredito =  getImporteCreditoCliente( $IdCliente );
+  updateVenta2Clientes( $IdCliente, " Credito = ".$totalCredito );
+}
+
+function obtenerClientexComprobante($IdComprobante){
+  $sql = "SELECT IF(ges_clientes.TipoCliente IN ('Empresa','Gobierno'),ges_clientes.NombreLegal,ges_clientes.NombreComercial) as Cliente ".
+         "FROM ges_clientes ".
+         "INNER JOIN ges_comprobantes ON ges_clientes.IdCliente = ges_comprobantes.IdCliente ".
+         "WHERE ges_comprobantes.IdComprobante = '$IdComprobante' ";
+  $row = queryrow($sql);
+  return $row["Cliente"];
+}
+
+function buscarNumeroFiscal($nfiscal,$idclient){
+  $xwhere = ($idclient)? " AND IdCliente = '$idclient'":" AND NumeroFiscal = '$nfiscal'";
+  $sql = "SELECT NumeroFiscal FROM ges_clientes ".
+         "WHERE Eliminado = 0".
+         "$xwhere";
+  $row = queryrow($sql);
+  return $row["NumeroFiscal"];
+}
+
+function obtenerNombreCliente($IdCliente){
+  $sql = "SELECT IF(ges_clientes.TipoCliente IN ('Empresa','Gobierno'),ges_clientes.NombreLegal,ges_clientes.NombreComercial) as Cliente ".
+         "FROM ges_clientes ".
+         "WHERE ges_clientes.IdCliente = '$IdCliente' ";
+  $row = queryrow($sql);
+  return $row["Cliente"];
 }

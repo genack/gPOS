@@ -96,7 +96,7 @@ $nombre    = str_replace('&#038;','&',$nombre);
 //Imprime Comrpobante
 //$pdf=new PDF();
 $pdf = new PDF ( 'P' , 'mm' , array ( 210 , 297 ));
-
+$pdf->AddFont('Lucida','','lucida.php');
 $pdf->Open();
 $pdf->AddPage();
 
@@ -110,7 +110,7 @@ $pdf->Ln(11);
     $pdf->SetTextColor(0);
     $pdf->SetDrawColor(0,0,0);
     $pdf->SetLineWidth(.2);
-    $pdf->SetFont('Arial','B',10);	
+    $pdf->SetFont('Lucida','',8);	
 
 //colum 2
     $pdf->SetX( 130);
@@ -154,7 +154,6 @@ $pdf->Ln(11);
 
     $pdf->Ln(22);
 
-    $pdf->SetFont('Arial','B',10);	
     $pdf->SetX(22); 
     //########## NOMBRE   
     $pdf->Cell(130,4,$nombre);
@@ -189,16 +188,14 @@ $pdf->SetFillColor(255,255,255);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(255,255,255);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Arial','B',8);
 	
 $pdf->Ln(8);
-			
-			
+
 $pdf->SetFillColor(255,255,255);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(255,255,255);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Arial','',8);
+$pdf->SetFont('Lucida','',8);
 $IdComprobante=$lafila["IdComprobante"];
  	$sql = 
 	  " SELECT ges_comprobantesdet.IdProducto, ".
@@ -241,22 +238,14 @@ $IdComprobante=$lafila["IdComprobante"];
         $res=query($sql);
         while ( $row = Row($res) ) { 
 
-	  $pdf->Cell(1);
 	  $codarticulo=$row["IdProducto"];
 
-	  // IMPRIME LINE
-	  $cantidad=$row["Cantidad"];
 	  // CANTIDAD
-	  $pdf->Cell(20,4,$cantidad,'LR',0,'C');	
-	  $pdf->SetFont('Arial','',9);
+	  $cantidad=$row["Cantidad"];
+
 	  // UNID MEDIDA
           $cantunidmed=$row["UnidadMedida"];
 
-	  // IMPRIME LINE
-	  //$pdf->Cell(20,4, $cantunidmed ,'LR',0,'C');	
-
-	  $pdf->SetFont('Arial','',9);
-	  // CADENA TEXT DESCRIPCION 
 
 	  // TEXT DESCRIPCION
           $codigobarras = $row["CodigoBarras"];
@@ -322,6 +311,9 @@ $IdComprobante=$lafila["IdComprobante"];
 	  $importe=number_format($importe,2);
 
 	  // IMPRIME LINE
+	  $pdf->Cell(1);
+	  $pdf->SetFont('Lucida','',8);
+	  $pdf->Cell(20,4,$cantidad,'LR',0,'C');	
 	  $pdf->Cell(140,4,$acotado[0],'LR',0,'L');
           $pdf->Cell(15,4, $cantunidmed ,'LR',0,'C');	
 	  //$pdf->Cell(15,4,'','LR',0,'R');
@@ -346,7 +338,7 @@ $IdComprobante=$lafila["IdComprobante"];
 	  //TEXT META PRODUCTO
 	  foreach ($acotmp  as $key=>$linemp){
 	    if( $key < 20 ){
-	      $pdf->SetFont('Arial','',7.5);
+	      $pdf->SetFont('Lucida','',8);
 	      $pdf->Cell(1);
 	      $pdf->Cell(20,4,"",'LR',0,'C');
 	      //$pdf->Cell(20,4,"",'LR',0,'C');	
@@ -356,7 +348,7 @@ $IdComprobante=$lafila["IdComprobante"];
 	      $pdf->Ln(4);
 	      $contador++;
 	      $acotadoext = 0;
-	      $pdf->SetFont('Arial','',8);
+	      $pdf->SetFont('Lucida','',8);
 	    }
 	  }
 
@@ -378,7 +370,7 @@ $IdComprobante=$lafila["IdComprobante"];
 	}
 
 //################### MENSAJE FOOTER 
-          $pdf->SetFont('Arial','',8);
+          $pdf->SetFont('Lucida','',8);
 	  $pdf->Cell(1);
           $pdf->Cell(20,4,"",'LR',0,'C');
           //$pdf->Cell(15,4,"",'LR',0,'C');
@@ -411,7 +403,7 @@ $IdComprobante=$lafila["IdComprobante"];
 	  $pdf->Ln(6);	
 
 //#######################  final de la Albaran
-    $pdf->SetFont('Arial','B',10);	
+    $pdf->SetFont('Lucida','',9);	
     $pdf->SetX(20);
     //Total letras : $totaletras 
     $pdf->Cell(300,4,'');
@@ -425,7 +417,6 @@ $pdf->SetFillColor(255,255,255);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(255,255,255);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Arial','B',8);
 
 $pdf->Ln(4);
 
@@ -433,7 +424,7 @@ $pdf->SetFillColor(255,255,255);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(255,255,255);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Arial','',10);
+$pdf->SetFont('Lucida','',9);
 	
 $pdf->Cell(1);
 

@@ -70,7 +70,8 @@ $mes = getMesFromId($mes);
 $nroSerie = $lafila["Serie"];
 
 //PDF ESTRUCTURA
-$pdf=new PDF();
+$pdf = new PDF ( 'P' , 'mm' , array ( 210 , 297 ));
+$pdf->AddFont('Lucida','','lucida.php');
 $pdf->Open();
 $pdf->AddPage();
 
@@ -145,7 +146,7 @@ $pdf->SetFillColor(210,210,210);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(210,210,210);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Courier','B',8);
+$pdf->SetFont('Lucida','',8);
 	
 
 $pdf->Cell(10,4,"Cant.",1,0,'C',1);	
@@ -160,13 +161,9 @@ $pdf->SetFillColor(0,0,0);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(210,210,210);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Courier','',8);
+$pdf->SetFont('Lucida','',8);
 
-//$pdf->Cell(1);
-//$pdf->Cell(20,4,"",'LR',0,'C');
-//$pdf->Cell(125,4,"",'LR',0,'C');	
-//$pdf->Cell(20,4,"",'LR',0,'C');
-//$pdf->Cell(25,4,"",'LR',0,'C');
+
 $pdf->Ln(4);	
 $pdf->SetX(17); 
 $pdf->Cell(1);
@@ -214,8 +211,6 @@ $sql =
 
         $res = query($sql);
         while ( $row = Row($res) ) { 
-	  $pdf->SetX(17); 
-	  $pdf->Cell(1);
 	  $codarticulo = $row["IdProducto"];
 
 	  // IMPRIME LINE
@@ -224,9 +219,6 @@ $sql =
           $cantidadunid = $row["UnidadMedida"];
 
 	  //IMPRIME CANTIDAD
-	  $pdf->SetFont('Courier','B',8);
-	  $pdf->Cell(10,4,$cantidad,'LR',0,'C');	
-	  $pdf->SetFont('Courier','',9);
 	  //CADENA TEXT DESCRIPCION 
 
 	  //### TEXT DESCRIPCION
@@ -313,14 +305,19 @@ $sql =
 	  //$importe=$importe+$importe*$igv/100;
  	  $importe=round($importe * 100) / 100; 
 	  $importe=number_format($importe,2);
+	  $dcto = $cantidad*$precio - $importe;
+	  $dcto = round($dcto * 100) / 100; 
+	  $dcto = number_format($dcto,2);
+	  $dcto = ($dcto < 0.001)? "":$dcto;
 
 	  // IMPRIME LINE
+	  $pdf->SetX(17); 
+	  $pdf->Cell(1);
+	  $pdf->SetFont('Lucida','',8);
+	  $pdf->Cell(10,4,$cantidad,'LR',0,'C');	
 	  $pdf->Cell(110,4,utf8_decode($acotado[0]),'LR',0,'L');
-	  $pdf->SetFont('Courier','',9);
 	  $pdf->Cell(20,4,$precio,'LR',0,'R');
-	  $pdf->SetFont('Courier','',9);
 	  $pdf->Cell(15,4,$dcto,'LR',0,'R');
-	  $pdf->SetFont('Courier','B',9);
 	  $pdf->Cell(25,4,$importe,'LR',0,'R');
 	  $pdf->Ln(4);	
 
@@ -402,7 +399,7 @@ $mensaje =
   " ** ".$fecha." ".$hora.
   " **".$IdLocal."-".$nroSerie."-".$nroProforma."**";
 $pdf->SetX(27);	
-$pdf->SetFont('Courier','B',9);
+
 $pdf->Cell(300,4,$mensaje);
 
 
@@ -411,7 +408,7 @@ $pdf->SetFillColor(255,255,255);
 $pdf->SetTextColor(0);
 $pdf->SetDrawColor(200,200,200);
 $pdf->SetLineWidth(.2);
-$pdf->SetFont('Courier','B',9);
+$pdf->SetFont('Lucida','',8);
 $pdf->SetX(157);		
 $pdf->Cell(1);
 $pdf->Cell(15,4,"Total",1,0,'R',1);
@@ -419,7 +416,7 @@ $pdf->Cell(25,4,$totalneto,1,0,'R',1);
 $pdf->Ln(8);
 
 //IMPORTE LETRAS
-$pdf->SetFont('Courier','B',10);	
+$pdf->SetFont('Lucida','',9);	
 $pdf->SetX(17);	
 $pdf->Cell(300,4,"SON:".utf8_decode($totaletras));
 
@@ -449,9 +446,9 @@ if($lafila["Observaciones"]!==''){
 $garantiacomercial = getSesionDato("GarantiaComercial");
 $pdf->Ln(6);
 $pdf->SetX(17); 
-$pdf->SetFont('Courier','UB',11);	
+$pdf->SetFont('Lucida','U',10);	
 $pdf->Cell(48,4,utf8_decode('Condiciones Generales'));
-$pdf->SetFont('Courier','',11);	
+$pdf->SetFont('Lucida','',10);	
 $pdf->Cell(1,4,'.');
 $pdf->Ln(6);
 //IGV

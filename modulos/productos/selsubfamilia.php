@@ -33,9 +33,9 @@ switch($modo){
 StartXul(_("Elige familia"));
 
 ?>
-
-<groupbox flex='1'> 
-	<caption label='<?php echo _("Familia"); ?>'/>
+<hbox class="box" flex="1">
+<groupbox flex='1' class="box"> 
+	<caption class='box' label='<?php echo _("Familia"); ?>'/>
 <script>//<![CDATA[
 
 		function id(valor){
@@ -63,7 +63,7 @@ function BuscarFamilia(){
         if(cadena.indexOf(ns) != -1){
             theList.ensureIndexIsVisible(i);
             theList.selectedIndex=i;
-            theList.onclick();
+            //theList.onclick();
             return;
         }
     }
@@ -196,8 +196,8 @@ function UsarNuevoFam() {
 			
 			//alert("Envia sub:"+subfamilia+",fam:"+famvalue+",sub["+sub[subfamilia]+",fam["+fam[famvalue]);
 					
-			opener.changeFamYSub(subfamilia,famvalue,sub[subfamilia],fam[famvalue]);
-			window.close();
+			parent.changeFamYSub(subfamilia,famvalue,sub[subfamilia],fam[famvalue]);
+			parent.closepopup()
 			return true;
 		}
 
@@ -219,14 +219,18 @@ function soloAlfaNumerico(e){
     }
 }
 
+function loadfocus(){
+    document.getElementById('buscafamilia').focus();
+}
+
 //]]></script>
-<hbox>
+<hbox class="box">
     <textbox flex='1' id='buscafamilia' onkeyup='BuscarFamilia()' 
              onkeypress="return soloAlfaNumerico(event)"/>
     <textbox flex='1' id='buscasubfamilia' onkeyup='BuscarSubFamilia()' 
              onkeypress="return soloAlfaNumerico(event)"/>
 </hbox>
-<hbox flex='1'>
+<hbox flex='1' class="box">
 	<listbox id='Familia'   onclick='RecalculaSubfamilia(this.value)' flex='1'>
 		<?php  echo genXulComboFamilias();	?>
 	</listbox>
@@ -234,24 +238,25 @@ function soloAlfaNumerico(e){
 	</listbox>
 </hbox>		
 </groupbox>
-
-<hbox>
-<caption label="Seleccion:"/><spacer style="width: 8px"/><caption id="familiatxt" label=" "/><caption label="-"/><caption id="subfamiliatxt"  label=" "/>
+</hbox>
+<hbox class="box">
+<caption class='box' label="Seleccion:"/><spacer style="width: 8px"/><caption id="familiatxt" label=" "/><caption label="-"/><caption id="subfamiliatxt"  label=" "/>
 <?php 
 
 
 ?>
 </hbox>
 
-<hbox>
+<hbox class="box">
 <groupbox flex='1'>
-	<caption label='<?php echo _("Crear nueva") ?>'/>		
+	<caption class='box' label='<?php echo _("Crear:") ?>'/>		
 	<textbox id='nueva'  style="text-transform:uppercase;" 
                  onkeypress="return soloAlfaNumerico(event)"/>
 	<hbox flex="1">
-	<button flex='1' label='<?php echo _("Familia") ?>' onkeypress='if (event.which == 13) UsarNuevoFam()' oncommand='UsarNuevoFam()'/>
-	<button flex='1' label='<?php echo _("Subfamilia") ?>' onkeypress='if (event.which == 13) UsarNuevoSub()' oncommand='UsarNuevoSub()'/>
+	<button class='btn' flex='1' label='<?php echo _("Nueva Familia") ?>'  oncommand='UsarNuevoFam()'/>
+	<button class='btn' flex='1' label='<?php echo _("Nueva Subfamilia") ?>' oncommand='UsarNuevoSub()'/>
 	</hbox>
+	<spacer style="height: 8px"/>
 </groupbox>
 </hbox>
 

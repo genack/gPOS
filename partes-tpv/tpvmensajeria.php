@@ -2,7 +2,7 @@
 
 <listbox flex="1" id="buzon-mensajes">
 	<listitem  id="guardianMensajes"  value="3" onclick="ToggleMensajes()">
-	<button id="btnEscribirMensajes" image="img/gpos_tpvnuevomensaje.png" label=" Escribir mensaje" oncommand="ToggleMensajes()"  /> 
+	<button class="btn" id="btnEscribirMensajes" image="img/gpos_tpvnuevomensaje.png" label=" Escribir mensaje" oncommand="ToggleMensajes()"  /> 
 	</listitem>	
 </listbox>
 	
@@ -13,7 +13,7 @@
 	</hbox>
 
 	<textbox multiline="true" readonly="true" value="texto aqui" flex="1" id="textoVisual" />
-	<button label="Ok" oncommand="mensajesModoRecepcion()" style="text-align:center; font-size:1.2em;" image="img/gpos_aceptar.png"/>	
+	<button class="btn" label="Ok" oncommand="mensajesModoRecepcion()" style="text-align:center; font-size:1.2em;" image="img/gpos_aceptar.png"/>	
 </groupbox>	
 
 <groupbox>
@@ -76,13 +76,13 @@
                  onkeypress="return soloAlfaNumericoTPV(event)" value="- "/>
           </vbox>
           <vbox id="vboxserieMProducto" collapsed="true">
-             <description>Serie MProducto: </description>
+             <description>Serie MixProducto: </description>
 	    <textbox id="serieMProducto" onfocus="select()" value="" onchange="validaMProductoTicket()" collapsed="false" onkeypress="return soloAlfaNumericoTPV(event)" style="width:12.5em;"/>
           </vbox>
         </vbox>
 	<hbox>
-		<button id="EnviarMensajePrivado" image="img/gpos_aceptar.png" label="<?php echo _(" Enviar") ?>" oncommand="EnviarMensajePrivado()"/>
-		<button id="CancelarMensajePrivado" image="img/gpos_cancelar.png" label="<?php echo _(" Cancelar") ?>" oncommand="ToggleMensajes()"/>
+		<button class="btn" id="EnviarMensajePrivado" image="img/gpos_aceptar.png" label="<?php echo _(" Enviar") ?>" oncommand="EnviarMensajePrivado()"/>
+		<button class="btn" id="CancelarMensajePrivado" image="img/gpos_cancelar.png" label="<?php echo _(" Cancelar") ?>" oncommand="ToggleMensajes()"/>
 	</hbox>
 	</vbox>
 </groupbox>	

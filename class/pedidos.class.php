@@ -91,6 +91,7 @@ class pedido extends Cursor {
 		$FTCambio       = $detadoc[7];
 		$Obs            = $detadoc[12];
 		$IdOrdenCompra  = $detadoc[11];
+		$albaranes      = ( $detadoc[0]=="F" )? $detadoc[15]:"";
 		$ModoPago       = (getSesionDato("aCredito")=='true')?"Credito":"Contado";
 	        $InclImpuesto   = (getSesionDato("incImpuestoDet"))?1:0;
 		$incIGV         = getSesionDato("incImpuestoDet");
@@ -187,6 +188,8 @@ class pedido extends Cursor {
 		    $listacpValues  .= ",'".$Comprobante."'";
 		    $listacpKeys    .= ",Codigo";
 		    $listacpValues  .= ",'".$codigodoc."'";
+		    $listacpKeys    .= ",CodigoAlbaran";
+		    $listacpValues  .= ",'".$albaranes."'";
 		    $listacpKeys    .= ",FechaRegistro";
 		    $listacpValues  .= ", NOW()";		
 		    $listacpKeys    .= ",FechaFacturacion";

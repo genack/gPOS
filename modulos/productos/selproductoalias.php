@@ -4,7 +4,7 @@ include("../../tool.php");
 $txtMoDet    = getModeloDetalle2txt();
 $txtalias    = $txtMoDet[3];
 $idfamilia   = CleanID($_GET['idfamilia']);
-$id          = CleanText($_GET['id']);
+$idalias     = CleanText($_GET['id']);
 
 SimpleAutentificacionAutomatica("visual-xulframe");
 
@@ -13,40 +13,62 @@ StartXul(_("Elije ".$txtalias));
 
 switch($modo){
 
-case "nuevoproductoalias":
-  $productoalias = CleanRealMysql(CleanText($_GET["productoalias"]));
-  $sql = "SELECT IdProductoAlias
-          FROM   ges_productos_alias
-          WHERE  IdFamilia     ='".$idfamilia."'
-          AND    ProductoAlias ='".$productoalias."'";
-  $row = queryrow($sql);
-  if ($row == ''){
-    $sql = "SELECT Max(IdProductoAlias) as MaxAlias 
-            FROM   ges_productos_alias";
-    $row = queryrow($sql);
-    if ($row){
-      $IdIdioma = getSesionDato("IdLenguajeDefecto");
-      $max = intval($row["MaxAlias"])+1; 	
-      $productoalias = CleanRealMysql(CleanText($_GET["productoalias"]));
-      $sql = "INSERT INTO ges_productos_alias 
-            (IdProductoAlias, IdIdioma, ProductoAlias, IdFamilia) 
-            VALUES ( '".$max."', '".$IdIdioma."', '".$productoalias."', '".$idfamilia."' )";
-      query($sql,"Creando nuevo Alias");
+case "modificaalias":
+  if( $modo == "modificaalias")
+    {
+      $productoalias = '';
+      $alias         = CleanText($_GET["txt"]);
+      $idalias       = CleanID($_GET["xid"]);
+      $sql = "UPDATE ges_productos_alias SET ProductoAlias='$alias' WHERE IdProductoAlias='$idalias'";
+      query($sql);	
     }
-  } 
-  else {
-    $mesg="Existe el registro - ".$productoalias." ".$idfamilia." - ";
+
+case "eliminaalias":
+  if( $modo == "eliminaalias")
+    {
+      $productoalias = '';
+      $alias         = CleanText($_GET["txt"]);
+      $idalias       = CleanID($_GET["xid"]);
+      $sql = "UPDATE ges_productos_alias SET Eliminado=1 WHERE IdProductoAlias='$idalias'";
+      query($sql);	
+    }
+
+case "nuevoproductoalias":
+  if( $modo == "nuevoproductoalias"){
+    $productoalias = CleanRealMysql(CleanText($_GET["productoalias"]));
+    $sql = "select IdProductoAlias
+            from   ges_productos_alias
+            where  IdFamilia     ='".$idfamilia."'
+            and    ProductoAlias ='".$productoalias."'";
+    $row = queryrow($sql);
+    if (!$row){
+	$productoalias = CleanRealMysql(CleanText($_GET["productoalias"]));
+	$IdIdioma      = getSesionDato("IdLenguajeDefecto");
+	global $UltimaInsercion;
+
+	$sql           = "insert into ges_productos_alias 
+                          (IdIdioma, ProductoAlias, IdFamilia) 
+                          values ('".$IdIdioma."','".$productoalias."','".$idfamilia."')";
+	query($sql,"Creando nuevo Alias");
+	$max      = $UltimaInsercion;
+	$sql = "UPDATE  ges_productos_alias SET IdProductoAlias=$max WHERE Id=".$max;
+	query($sql);	       
+    } 
+    else {
+      // devolvemos a la vida una marca existente
+      $sql = "UPDATE  ges_productos_alias SET Eliminado=0 WHERE IdProductoAlias=".$row['IdProductoAlias'];
+      query($sql);
+    }
   }
-  
 case "alias": 
 
-    echo "<groupbox> <caption label='Buscar $txtalias:'/>";
+    echo "<vbox class='box' flex='1'><groupbox> <caption class='box' label='Buscar $txtalias:'/>";
     echo "<vbox>";
     echo "<textbox  flex='1'   id='buscaalias' style='text-transform:uppercase;' onkeyup='javascript:BuscarAlias();   if (event.which == 13) agnadirDirecto();' onkeypress='return soloAlfaNumerico(event)'/>";
-    echo "<button label='"._("Nuevo ")."' oncommand='UsarNuevo()'/>";
+    echo "<button class='btn' id='btnNuevoAlias' label='"._("Nuevo ")."' oncommand='UsarNuevo()' collapsed='true'/>";
     echo "</vbox>";
     echo "</groupbox>";
-    echo "<groupbox> <caption label=' ".$txtalias.":'/>";
+    echo "<groupbox> <caption class='box' label=' ".$txtalias.":'/>";
 
     $familias = genArrayProductoAlias($idfamilia);
     $combo = "";
@@ -57,72 +79,29 @@ case "alias":
         //$combo = "<option 			
     }
 
-    if(isset($mesg)) {
-	echo " alert('".$mesg."');";
-    }
-
     if(isset($max)) {
-	echo "opener.changeNewProductoAlias('".$max."','".$productoalias."','".$id."');window.close();";
+	echo "parent.changeNewProductoAlias('".$max."','".$productoalias."','".$idalias."');parent.closepopup();";
     }
-
-    echo "
-        function UsarNuevo() {
-
-            var productoalias, url;
-            var idfamilia =".$idfamilia.";			
-            var id        =".$id.";			
-            var txtalias  ='".$txtalias."';
-            var nuevoproductoalias = document.getElementById('buscaalias');			
-            if (nuevoproductoalias){
-                productoalias = nuevoproductoalias.value;
-                productoalias = trim(productoalias);
-                productoalias = limpiarcadena(productoalias);
-            }
-            if (!productoalias || productoalias == '')
-                return;
-
-            url = 'selproductoalias.php';
-            url = url +'?';
-            url = url + 'modo';
-            url = url + '=nuevoproductoalias';
-            url = url + '&amp;'+'productoalias=' + productoalias;
-            url = url + '&amp;'+'txtalias=' + txtalias;
-            url = url + '&amp;'+'idfamilia=' + idfamilia;
-            url = url + '&amp;'+'id=' + id;
-            document.location.href = url;			
-        } 
-
-        function soloAlfaNumerico(e){ 
-                        key = e.keyCode || e.which;
-                        tecla = String.fromCharCode(key).toLowerCase();
-                        letras = ' abcdefghijklmnopqrstuvwxyz0123456789-%';
-                        especiales = [8, 13, 9, 35, 36, 37, 39];
-                        tecla_especial = false
-                        for(var i in especiales){
-                           if(key == especiales[i]){
-                              tecla_especial = true;
-                              break;
-                           }
-                        }
-    
-                        if(letras.indexOf(tecla)==-1) { 
-                           if(!tecla_especial){
-                              return false;
-                           }
-                        }
-                }
-";
-
+    echo " var cIdFamiliaColor = ".$idfamilia.";\n";
+    echo " var cId             = '".$idalias."';";
+    echo " var ctxtAlias       = '".$txtalias."';";
 
 echo "\n</script>\n";						
 
-echo "<script  type='application/x-javascript' src='alias.js' />";
+echo "<script  type='application/x-javascript' src='alias.js?v=3.1' />";
 
-echo "<listbox rows='5' flex='1' id='ProductoAlias'  onclick='opener.changeProductoAlias(this,fam[this.value],".$id.");window.close();return true;'>\n";		
+echo "<listbox flex='1' id='ProductoAlias'  ondblclick='parent.changeProductoAlias(this,fam[this.value],".$idalias.");parent.closepopup();return true;' onkeypress='if (event.which == 13) {parent.changeProductoAlias(this,fam[this.value],".$idalias.");parent.closepopup();return true;}' contextmenu='accionesListaAlias' >\n";		
 echo  genXulComboProductoAlias($selected=false,$xul="listitem", $idfamilia,false);				
 echo "</listbox>";		
-echo "<button label='". _("Cerrar")."' oncommand='window.close()'/>";	
-echo "</groupbox>";
+echo "<popupset>
+       <popup id='accionesListaAlias'> 
+        <menuitem  label='Modificar' oncommand='ModificarAlias()'/>
+        <menuitem  label='Eliminar'  oncommand='EliminarAlias()'/>
+       </popup>
+      </popupset>";
+
+//echo "<button label='". _("Cerrar")."' oncommand='parent.closepopup()'/>";	
+echo "</groupbox></vbox>";
 
 break;		
 

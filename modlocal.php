@@ -175,8 +175,6 @@ function FormularioAlta() {
 	echo $oLocal->formEntrada($action,false);	
 }
 
-
-
 function CrearLocal($nombre,$nombrelegal,$direccion,$poblacion,$codigopostal,
 		    $telefono,$fax,$movil,$email,$paginaweb,$cuentabancaria,
 		    $pass,$identificacion,$idpais,$idioma,$margen,$tipomargen,
@@ -254,12 +252,12 @@ switch($modo){
 	case "newsave":
 	        $nombre         = CleanText($_POST["NombreComercial"]);
 		$nombrelegal    = CleanText($_POST["NombreLegal"]);
-		$direccion      = CleanText($_POST["DireccionFactura"]);
+		$direccion      = CleanCadena($_POST["DireccionFactura"]);
 		$poblacion      = CleanText($_POST["Poblacion"]);
 		$codigopostal   = CleanCP($_POST["CodigoPostal"]);
-		$telefono       = CleanTelefono($_POST["Telefono"]);
-		$fax            = CleanTelefono($_POST["Fax"]);
-		$movil          = CleanTelefono($_POST["Movil"]);
+		$telefono       = CleanText($_POST["Telefono"]);
+		$fax            = CleanText($_POST["Fax"]);
+		$movil          = CleanText($_POST["Movil"]);
 		$email          = CleanEmail($_POST["Email"]);
 		$paginaweb      = CleanUrl($_POST["PaginaWeb"]);
 		$cuentabancaria = CleanCC($_POST["CuentaBancaria"]);		
@@ -279,6 +277,14 @@ switch($modo){
 		if($esPass)
 		  if(strlen($pass) < 8) return FormularioAlta();
 
+		$localpermitidos = obtenerLocalesPermitidos();
+		$xlocales        = obtenrLocalesActivos();
+		
+		if($xlocales >= $localpermitidos && $localpermitidos != 0){
+		  echo gas("aviso","A excedido cantidad de locales permitidos");	
+		  return PaginaBasica();
+		}
+		
 		CrearLocal($nombre,$nombrelegal,$direccion,$poblacion,$codigopostal,
 			   $telefono,$fax,$movil,$email,$paginaweb,$cuentabancaria,
 			   $pass,$identificacion,$idpais,$ididioma,$margen,$tipomargen,
@@ -293,16 +299,16 @@ switch($modo){
 		$id 				= CleanID($_POST["id"]);
 		$nombre 			= CleanText($_POST["NombreComercial"]);
 		$nombrelegal 		        = CleanText($_POST["NombreLegal"]);
-		$direccion 			= CleanText($_POST["DireccionFactura"]);
+		$direccion 			= CleanCadena($_POST["DireccionFactura"]);
 		$nfiscal                        = CleanText($_POST["NFiscal"]);
 		$poblacion 			= CleanText($_POST["Poblacion"]);
 		$codigopostal 		        = CleanCP($_POST["CodigoPostal"]);
-		$telefono 			= CleanTelefono($_POST["Telefono"]);
-		$fax 				= CleanTelefono($_POST["Fax"]);
-		$movil 				= CleanTelefono($_POST["Movil"]);
+		$telefono 			= CleanText($_POST["Telefono"]);
+		$fax 				= CleanText($_POST["Fax"]);
+		$movil 				= CleanText($_POST["Movil"]);
 		$email 				= CleanEmail($_POST["Email"]);
 		$paginaweb 			= CleanUrl($_POST["PaginaWeb"]);
-		$cuentabancaria 	        = CleanText($_POST["CuentaBancaria"]);
+		$cuentabancaria 	        = CleanText($_POST["IdCuentaBancaria"]);
 		$pass 				= CleanTo($_POST["Password"]," ");
 		$identificacion 	        = CleanText($_POST["Identificacion"]);
 		$esCentral 			= (isset($_POST["esCentral"]))? ($_POST["esCentral"] =='on'):false;
@@ -328,7 +334,7 @@ switch($modo){
 		$metodoredondeo			= CleanText($_POST["MetodoRedondeo"]);
 		$esCOPImpuesto 			= (isset($_POST["esCOPImpuesto"]))? ($_POST["esCOPImpuesto"] =='on'):false;
 		$esCOPImpuesto                  = ($esCOPImpuesto)? 1:0;
-		$cuentabancaria2                = (isset($_POST["CuentaBancaria"]))? CleanText($_POST["CuentaBancaria2"]):"";
+		$cuentabancaria2                = (isset($_POST["IdCuentaBancaria2"]))? CleanText($_POST["IdCuentaBancaria2"]):0;
 		$esPass 	                = (isset($_POST["ConContrasenia"]))? ($_POST["ConContrasenia"] =='on'):false;
 		$esPass                         = ($esPass)? 1:0;
 		$existe = verficarExistenciaLocal($identificacion,$id);

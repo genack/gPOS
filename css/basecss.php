@@ -12,7 +12,8 @@ input.iReferencia { width: 8 em;  }
 input.iNombre, input.iPueblos { width: 12em; }
 input.iDescripcion, input.iDireccion, input.iComentarios { width: 12em; }
 input.iCodigoPostal , input.iCP{ width: 6em; }
-input.iPaginaWeb, input.iEmail { width: 12em; }
+input.iPaginaWeb { width: 20em; }
+input.iEmail { width: 24em; }
 input.iTelefono { width: 12em; }
 input.iCC { width: 20em; text-transform: uppercase}
 input.iMensajeMes { width: 20em;}

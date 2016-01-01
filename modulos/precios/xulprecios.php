@@ -1,34 +1,28 @@
 <?php
 SimpleAutentificacionAutomatica("visual-xulframe");
-header("Content-type: application/vnd.mozilla.xul+xml");
-echo '<?xml version="1.0" encoding="UTF-8"?>';
-echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';
-echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
+StartXul('Precios',$predata="",$css='');
+StartJs($js='modulos/precios/preciostpv.js?v=3.1');
 ?>
-<window id="CompraVista" title="gPOS// Precios TPV" 
-    xmlns:html="http://www.w3.org/1999/xhtml"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/precios/preciostpv.js" />
-    <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js" />
-    <script>//<![CDATA[
-    var cImpuestoGral = <?php echo getSesionDato("IGV"); ?>;
-    var cMargenUtilidad = <?php echo $MargenUtilidad; ?>;
-    var cDescuentoGral  = <?php echo $DescuentoGral ?>;
-    var cMetodoRedondeo = "<?php echo $MetodoRedondeo ?>";
-    var cImpuestoIncluido = <?php echo $COPImpuesto ?>;
 
-    //]]></script>
-    <?php $Moneda = getSesionDato("Moneda"); getMonedaJS($Moneda); ?>
+  <script>//<![CDATA[
+  var cImpuestoGral = <?php echo getSesionDato("IGV"); ?>;
+  var cMargenUtilidad = <?php echo $MargenUtilidad; ?>;
+  var cDescuentoGral  = <?php echo $DescuentoGral ?>;
+  var cMetodoRedondeo = "<?php echo $MetodoRedondeo ?>";
+  var cImpuestoIncluido = <?php echo $COPImpuesto ?>;
 
-  <spacer style="height:6px"/>
-  <hbox pack="center">
-    <caption style="font-size: 14px;font-weight: bold;">
-      <?php echo _("Precios") ?>
-    </caption>
-  </hbox>
-  <spacer style="height:6px"/>
+  //]]></script>
+  <?php $Moneda = getSesionDato("Moneda"); getMonedaJS($Moneda); ?>
 
-  <hbox  style="background-color: #d7d7d7;padding:3px;"  pack="center">
+
+<hbox class="box" pack="center">
+  <caption class="h1">
+    <?php echo _("Precios") ?>
+  </caption>
+</hbox>
+
+
+  <hbox  class="box"  pack="center">
     <?php if(getSesionDato("esAlmacenCentral")){?>
     <menulist id="listLocales" label="Locales" >
       <menupopup id="combolocales">
@@ -37,20 +31,14 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
     </menulist>
     <?php } ?>
     
-    <toolbarseparator />
-    <textbox id="codigo" size="12" onfocus="onFocusTextboxBusqueda(this.id)"  
-             onchange="iniPaginar()" 
-	     onblur="if(this.value == '') this.value='CB/Ref.';"  
+    <textbox id="codigo" size="12" onchange="iniPaginar()" placeholder="CB/Ref." 
 	     onkeypress="return soloAlfaNumericoCodigo(event); 
              if (event.which == 13) { soloCodigoBuscar(event,this.value); 
 	     filtrarProductos(); } else { return soloCodigoBuscar(event,this.value); }" />
     
-    <textbox id="descripcion" size="38" onfocus="onFocusTextboxBusqueda(this.id)" 
-             onchange="iniPaginar()" 
-	     onblur="if(this.value == '') this.value='Descripcion del Producto';" 
-	     onkeypress="return soloAlfaNumerico(event); 
+    <textbox id="descripcion" size="38" onchange="iniPaginar()" placeholder=" producto | marca ó modelo ó detalle..."  onkeypress="return soloAlfaNumerico(event); 
              if (event.which == 13) { soloDescripcionBuscar(event,this.value); 
-	     filtrarProductos(); } else { return soloDescripcionBuscar(event,this.value); } " />
+	     filtrarProductos(); } else { return soloDescripcionBuscar(event,this.value); } " tooltiptext=" Para listar todos los productos [ todos ] " />
 
     <menulist id="listfamilia" label="FAMILIA">
       <menupopup id="combofamilia">
@@ -63,17 +51,15 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       </menupopup>
     </menulist>
     
-    <button id="btnbuscar" label="Buscar" 
+    <button id="btnbuscar" label="Buscar" class="btn"
             image="<?php echo $_BasePath; ?>img/gpos_buscar.png" 
             oncommand='filtrarProductos()' />
     
-    <toolbarseparator />
     <menu id="listaPaginas" style="color: #000" collapsed="true" label="Pag. 1 - 10">
       <menupopup id="comboPaginas">
 	<menuitem type="checkbox" label="1 - 10" oncommand="Paginar(0,'1-10')" checked="true"  />
       </menupopup>
     </menu>
-    <toolbarseparator />
     <menu label="Bloques"   style="color: #000">
       <menupopup>
 	<menuitem type="checkbox" label="Ventas Personales" checked="true" oncommand = "ocultar('ventaDirecta');"/>
@@ -82,9 +68,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
                   oncommand = "ocultar('detalleProductos');"/>
       </menupopup>
     </menu>
-    <toolbarseparator />
     <checkbox  id="buscar-servidor" label="Stock" checked="true" name="buscar-en-internet"/>
-    <toolbarseparator />
     <!-- spacer flex="1"/ -->
     <textbox id="numLista"  value="0" style="visibility:hidden; width:0px"/>
       <textbox id="idfamilia" value="0" style="visibility:hidden; width:0px"/>
@@ -93,18 +77,18 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <textbox id="iniciopagina" value="0" style="visibility:hidden; width:0px"/>
       <textbox id="idlistarPV" value="0" style="visibility:hidden; width:0px"/>
     </hbox>
-    <hbox flex="1" style="overflow: auto" > 
+    <hbox flex="1" style="overflow: auto" class="box"> 
       <hbox id="xboxprecios" pack="center" >
 	<hbox> 
 	  <groupbox >
-	    <caption label="Productos" />
+	    <caption class="box" label="Productos" />
 	    <grid >
 	      <columns>
 		<column/>
 		<column flex="1"/>
 	      </columns>
 	      <rows id="productos">
-		<row>
+		<row  class="box">
 		  <caption label="#" style="font-style:italic;"/>
 		  <caption label="Producto"/>
 		</row>
@@ -114,7 +98,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	</hbox>
 	<hbox> 
 	  <groupbox id="detalleProductos" hidden="false" >
-	    <caption label="Almacén" />
+	    <caption class="box" label="Almacén" />
 	    <grid >
 	      <columns>
 		<column/>
@@ -122,7 +106,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 		<column/>
 	      </columns>
 	      <rows id="detalle_productos">
-		<row>
+		<row  class="box">
 		  <caption label ="Stock"/>
 		  <caption label ="Stock Min"/>
 		  <!--label value="."/-->
@@ -133,14 +117,14 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	</hbox>
 	<hbox> 
 	  <groupbox >
-	    <caption label="Kardex" />
+	    <caption  class="box" label="Kardex" />
 	    <grid >
 	      <columns>
 		<column/>
 		<column/>
 	      </columns>
 	      <rows id="costo_productos">
-		<row>
+		<row  class="box">
 		  <caption label="Costo"/>
 		  <caption label="COP"/>
 		</row>
@@ -150,7 +134,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	</hbox>
 	<hbox> 
 	  <groupbox id="ventaDirecta" >
-	    <caption label="Venta Personal"/>
+	    <caption class="box" label="Venta Personal"/>
 	    <grid >
 	      <columns>
 		<column/>
@@ -160,7 +144,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 		<column/>
 	      </columns>
 	      <rows id="detalle_directo">
-		<row>
+		<row class="box">
 		  <caption label="MUP"/>
 		  <caption label="IGV"/>
 		  <caption label="PVP"/>
@@ -173,7 +157,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	</hbox>
 	<hbox> 
 	  <groupbox id="ventaCorporativa" hidden="true" >
-	    <caption label="Venta Corporativa"/>
+	    <caption class="box" label="Venta Corporativa"/>
 	    <grid >
 	      <columns>
 		<column/>
@@ -183,7 +167,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 		<column/>
 	      </columns>
 	      <rows id="detalle_corporativo">
-		<row>
+		<row class="box">
 		  <caption label="MUC"/>
 		  <caption label="IGV"/>
 		  <caption label="PVC"/>
@@ -196,40 +180,43 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	</hbox>
       </hbox>
     </hbox>
-    <hbox>
-      <toolbarseparator />
-      <caption id="textoproductos" label="" />
-      <toolbarseparator />
-      <caption id="totalCPP" label="" />
-      <toolbarseparator />
-      <caption id="totalMU" label="" />
-      <toolbarseparator />
-      <caption id="totalIGV" label="" />
-      <toolbarseparator />
-      <caption id="totalPVP" label="" />
-      <toolbarseparator />
-      <spacer flex="1"/>
-      <toolbarseparator />
 
-      <button image="<?php echo $_BasePath; ?>img/gpos_listaclientes.png" 
-              id="listarPV_MD" label="  Listar Nuevos Precios" 
+    <hbox class="box" style="padding-top:1em">
+      <vbox class="box" flex="1">
+	<caption class="box" label="<?php echo _("Resumen Precios") ?>" />
+	<hbox  class="resumen" pack="center" align="left">
+	  <description value="Productos:"/>	  
+	  <caption id="textoproductos" label="" />
+	  <description value="Costo Promedio:"/>	  
+	  <caption id="totalCPP" label="" />
+	  <description value="Margen utilidad:"/>	  
+	  <caption id="totalMU" label="" />
+	  <description value="Impuesto:"/>	  
+	  <caption id="totalIGV" label="" />
+	  <description value="Precio Venta:"/>	  
+	  <caption id="totalPVP" label="" />
+	  <spacer flex="1"/>
+	</hbox>
+      </vbox>
+
+
+      <button class="btn" image="<?php echo $_BasePath; ?>img/gpos_listaclientes.png" 
+              id="listarPV_MD" label="  Listar Nuevos Precios " 
 	      oncommand="listarPVMD()"/>
-      <button id="actualizarLPV" image="<?php echo $_BasePath; ?>img/gpos_almacen.png" 
-              type="menu" label="  Aplicar" collapsed="true" <?php gulAdmite("Ventas") ?> >
+      <button class="popup" id="actualizarLPV" image="<?php echo $_BasePath; ?>img/gpos_almacen.png" 
+              type="menu" label="  Aplicar " collapsed="true" <?php gulAdmite("Ventas") ?> >
 	<menupopup>
 	  <menuitem label="Local Actual" oncommand="actualizarNuevosPV()"></menuitem>
 	  <?php if(getSesionDato("esAlmacenCentral")){?>
-	  <menuitem label="Todos los Locales" oncommand="actualizarAllNuevosPV()"></menuitem>
+	  <menuitem label="Todos los Locales " oncommand="actualizarAllNuevosPV()"></menuitem>
 	  <?php } ?>
 	</menupopup>
       </button>
 
-      <button  image="<?php echo $_BasePath; ?>img/gpos_cancelar.png" id="eliminarLPV" 
-               label=" Descartar " oncommand="eliminarNuevosPV()" collapsed="true" 
+      <button  class="btn" image="<?php echo $_BasePath; ?>img/gpos_cancelar.png" id="eliminarLPV" 
+               label=" Descartar " oncommand="eliminarNuevosPV()" collapsed="true"
                <?php gulAdmite("Ventas") ?>/>   
-      <toolbarseparator />
-      <button  label="Limpiar Busqueda"  oncommand="limpiarListadoProductos()"/>   
-      <toolbarseparator />
+      <button  class="btn" label="Limpiar Búsqueda"  oncommand="limpiarListadoProductos()"/>   
     </hbox>
     <script>
      <?php
@@ -246,13 +233,10 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
        if(getSesionDato("esAlmacenCentral"))
 	 echo "iniComboLocalesPrecios('".$locales."');";
 
-     if ($codigo == '')
-       $codigo = 'CB/Ref.';
-     if ($descripcion == '')
-       $descripcion = 'Descripcion del Producto';
      echo "iniBusqueda('".$codigo."','".$descripcion."','".$idfamilia."','".$idmarca."');";
 
      ?>
+
     </script>
     <?php
     EndXul();

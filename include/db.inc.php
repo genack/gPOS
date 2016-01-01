@@ -231,7 +231,7 @@ function CreaUpdate ($soloEstos, $data,$nombreTabla, $nombreID,$idvalue ) {
 				if ($coma)
 					$str .= ",";
 
-				$value = mysql_escape_string($value);
+				$value = mysql_real_escape_string($value);
 
 				$str .= " $key = '$value'";
 				$coma = true;
@@ -250,7 +250,7 @@ function CreaUpdateSimple ($data,$nombreTabla, $nombreID,$idvalue ) {
 				if ($coma)
 					$str .= ",";
 
-				$value = mysql_escape_string($value);
+				$value = mysql_real_escape_string($value);
 
 				$str .= " $key = '$value'";
 				$coma = true;

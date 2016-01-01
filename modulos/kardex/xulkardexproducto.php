@@ -1,15 +1,7 @@
 <?php
-header("Content-type: application/vnd.mozilla.xul+xml");
-    echo '<?xml version="1.0" encoding="UTF-8"?>';
-    echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';
-    echo '<?xml-stylesheet href="'.$_BasePath.'css/xulkardex.css" type="text/css"?>';
-    echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
+StartXul('Movimientos Kardex',$predata="",$css='css/xulkardex.css');
+StartJs($js='modulos/kardex/kardexproducto.js?v=1');
 ?>
-<window id="NumSerie" title="kardex" 
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/kardex/kardexproducto.js"/>
-<script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js"/>
 
 <script>//<![CDATA[
 var modo       = "<?php echo $modo;?>";
@@ -39,25 +31,21 @@ cSerie         = (cSerie=='1')?   true:false;
 
 <popup  id="oe-date-picker-popup" position="after_start" oncommand="RecibeCalendario( this )" value=""/>	
 <!-- Movimientos Encabezado -->
-<vbox align="center" pack="center" collapsed="<?php echo $headkardex;?>">
-  <caption style="font-size: 15px;font-weight: bold; padding-top:2em;" 
-	   label="<?php echo _($theadkardex)?>"  
-           collapsed="<?php echo $tkardex;?>"/>
+<vbox class="box" align="center" pack="center" collapsed="<?php echo $headkardex;?>">
+  <caption class="h1" collapsed="<?php echo $tkardex;?>"><?php echo _($theadkardex)?></caption>
 </vbox>
 
 <!-- Movimientos Encabezado Producto -->
-<vbox align="center"  pack="center" id="boxmovimientoshead" collapsed="<?php echo $mval?>">
-  <spacer style="height:0.8em"/>
-  <caption style="font-size: 11px;font-weight: bold;" label="<?php echo _($producto)?>"/>
+<vbox align="center"  class="box"  pack="center" id="boxmovimientoshead" collapsed="<?php echo $mval?>">
+  <caption class="xproducto" label="<?php echo _($producto)?>"/>  
 </vbox>
 
 <!-- Existencias Encabezado -->
-<vbox  id="boxexistenciashead" align="center" pack="center" collapsed="<?php echo $eval?>">
-  <spacer style="height:0.8em"/>
-  <caption style="font-size: 11px;font-weight: bold;" label="<?php echo _($producto)?>"/>
+<vbox  id="boxexistenciashead"  class="box" align="center" pack="center" collapsed="<?php echo $eval?>">
+  <caption class="xproducto" label="<?php echo _($producto)?>"/>
 </vbox>
 
-<vbox align="center" pack="center" collapsed="<?php echo $rheadkardex;?>">
+<vbox align="center" pack="center" collapsed="<?php echo $rheadkardex;?>"  class="box">
   <groupbox>
     <radiogroup flex="1" orient="horizontal" >
       <radio label="Movimientos" style="font-size: 11px;font-weight: bold;" 
@@ -69,7 +57,7 @@ cSerie         = (cSerie=='1')?   true:false;
 </vbox>
 
 <!-- Movimientos Buscar -->
-<hbox id="boxmovimientosbuscar" pack="center" collapsed="<?php echo $mval?>">
+<hbox id="boxmovimientosbuscar"  class="box" pack="center" collapsed="<?php echo $mval?>">
   <vbox>
     <description value="Desde:"/>
     <datepicker id="FechaDesde" type="popup" value="<?php echo $desde?>" 
@@ -99,12 +87,12 @@ cSerie         = (cSerie=='1')?   true:false;
       </menupopup>
     </menulist>
   </vbox>
-  <vbox style="margin-top:.9em">
-    <button image="<?php echo $_BasePath; ?>img/gpos_buscar.png" label=" Buscar" 
+  <vbox style="margin-top:1.3em">
+    <button class="btn" image="<?php echo $_BasePath; ?>img/gpos_buscar.png" label=" Buscar" 
             oncommand="buscarMovimientos();"/>
   </vbox>
-  <vbox style="margin-top:.9em">
-    <button image="<?php echo $_BasePath; ?>img/gpos_pdf_ico.png" label="" 
+  <vbox style="margin-top:1.3em">
+    <button class="btn" image="<?php echo $_BasePath; ?>img/gpos_pdf_ico.png" label="" 
             oncommand="imprimir();"/>
   </vbox>
   <textbox id="IdProducto" value="<?php echo $id; ?>" collapsed="true"/>
@@ -112,26 +100,12 @@ cSerie         = (cSerie=='1')?   true:false;
 </hbox>
 
 <!-- Movimientos Resumen -->
-<vbox id="boxmovimientosresumen" collapsed="<?php echo $mval?>"> 
-  <hbox flex="1"  style="padding-top:1em;padding-bottom:-1px;">
-    <caption style="font-size:10px; font-weight: bold;" label="<?php echo _("Movimientos") ?>" />
-    <hbox  flex="1" pack="center">
-
-      <description value="Existencias:"/>
-      <caption id="kdxExistencias" label="" />
-
-      <description value="Costo Promedio:"/>
-      <caption id="kdxCostoPromedio" label="" />
-
-      <description value="Costo Promedio Total:"/>
-      <caption id="kdxCostoTotalPromedio" label=""/>
-
-    </hbox>
-  </hbox>
+<vbox id="boxmovimientosresumen"  class="box" collapsed="<?php echo $mval?>"> 
+  <caption class="box" label="<?php echo _("Movimientos") ?>" />
 </vbox>
 
 <!-- Movimientos -->
-<vbox id="boxmovimientos" flex="1" collapsed="<?php echo $mval?>"> 
+<vbox id="boxmovimientos"  class="box" flex="1" collapsed="<?php echo $mval?>"> 
   <grid>
     <columns>
       <column flex="0"/>
@@ -148,23 +122,40 @@ cSerie         = (cSerie=='1')?   true:false;
       <column flex="8"/>
     </columns>
     <rows>
-      <row style="background-color:#292929;padding-top:0.2em;color:#c9c9c9; ">
-	<description value=" # " style="font-style:italic;"/>
-	<description value="Fecha Movimiento"/>
-	<description value="Operación"/>
-	<description value="Documento"/>
-	<description value="Detalle"/>
-	<description value="Movimiento"/>
-	<description value="Cantidad"/>
-	<description value="Costo Unitario"/>
-	<description value="Importe"/>
-	<description value="Saldo"/>
-	<description value="Usuario"/>
+      <row class="movimientos">
+	<label value=" # " />
+	<label value="Fecha Movimiento"/>
+	<label value="Operación"/>
+	<label value="Documento"/>
+	<label value="Detalle"/>
+	<label value="Movimiento"/>
+	<label value="Cantidad"/>
+	<label value="Costo Unitario"/>
+	<label value="Importe"/>
+	<label value="Saldo"/>
+	<label value="Usuario"/>
       </row>
       <rows id="contenedor">
       </rows>
     </rows>
   </grid>
+
+</vbox>
+
+<vbox id="boxmovimientoscore" class="box"  flex="1" pack="top" aling="left" collapsed="<?php echo $mval?>">
+  <hbox align="left" >
+    <caption class="box" label="<?php echo _("Resumen") ?>" />
+  </hbox>
+  <hbox class="resumen" style="border-top:1px solid #eee;">
+    <label value="Existencias:"/>
+    <description id="kdxExistencias" value="" />
+    
+    <label value="Costo Promedio:"/>
+    <description id="kdxCostoPromedio" value="" />
+    
+    <label value="Costo Promedio Total:"/>
+    <description id="kdxCostoTotalPromedio" value=""/>
+  </hbox>
 </vbox>
 
 
@@ -175,13 +166,10 @@ cSerie         = (cSerie=='1')?   true:false;
 
 
 <!-- Existencias -->
-<vbox id="boxexistencias" flex="1" style="overflow: auto;"  align="center" collapsed="<?php echo $eval?>">  
-  <spacer style="height:0.6em"/>
-  <hbox>
-    <caption style="font-size:10px; font-weight: bold;" label="<?php echo _("Existencias") ?>" />
-  </hbox>
+<vbox id="boxexistencias"  class="box" flex="1" style="overflow: auto;"  align="center" collapsed="<?php echo $eval?>">  
 
   <groupbox  flex="1"  style="min-width:65em;overflow:auto;" >
+    <caption class="box" label="<?php echo _("Existencias") ?>" />
     <grid>
       <columns>
 	<column />
@@ -195,88 +183,87 @@ cSerie         = (cSerie=='1')?   true:false;
 	<column flex="1"/>
       </columns>
       <rows id="contenedorexistencias">
-	<row style="background-color:#292929;padding-top:0.2em;color:#c9c9c9;">
-	  <description value =" # " style="font-style:italic;"/>
-	  <description value ="Cantidad"/>
-	  <description value ="Costo Unitario"/>
-	  <description value ="Costo Total"/>
-	  <description value ="Número Series" collapsed="<?php echo $esserie?>"/>
-	  <description value ="Lote" collapsed="<?php echo $eslote?>"/>
-	  <description value ="Vencimiento" collapsed="<?php echo $esfv?>"/>
-	  <description value ="Cantidad Elegida" collapsed="<?php echo $esCarrito?>"/>
+	<row class="movimientos">
+	  <label value =" # "/>
+	  <label value ="Cantidad"/>
+	  <label value ="Costo Unitario"/>
+	  <label value ="Costo Total"/>
+	  <label value ="Número Series" collapsed="<?php echo $esserie?>"/>
+	  <label value ="Lote" collapsed="<?php echo $eslote?>"/>
+	  <label value ="Vencimiento" collapsed="<?php echo $esfv?>"/>
+	  <label value ="Cantidad Elegida" collapsed="<?php echo $esCarrito?>"/>
 	</row>
       </rows>
     </grid>
   </groupbox>
  
   <groupbox collapsed="<?php echo $esCarrito?>">
-    <grid>
-      <columns>
-	<column />
-	<column flex="1"/>
-	<column flex="1"/>
-	<column flex="1"/>
-	<column flex="1"/>
-      </columns>
-      <rows id="contenedorcarrito">
-	<row>
-	  <caption label="Total Cantidad Elegida:"/>
-	  <description id="CantidadCarrito" value="0"/>
-	  <textbox id="CantidadAjuste" value="<?php echo $xajuste?>" collapsed="true" />
-	  <caption label="Costo:"/>
-	  <description id="CostoCarrito" value="0"/>
-	</row>
-      </rows>
-    </grid>
+  <hbox id="boxmovimientoscore" class="resumen box" flex="1" pack="center" collapsed="<?php echo $mval?>">
+
+    <label value="Existencias:"/>
+    <description id="kdxExistencias" value="" />
+    
+    <label value="Costo Promedio:"/>
+    <description id="kdxCostoPromedio" value="" />
+    
+    <label value="Costo Promedio Total:"/>
+    <description id="kdxCostoTotalPromedio" value=""/>
+    </hbox>
+
+
+    <vbox id="contenedorcarrito"  flex="1" pack="top" align="left" >
+      <hbox align="left" >
+	<caption class="box" label="<?php echo _("Total") ?>" />
+      </hbox>
+      <hbox class="resumen" style="border-top:1px solid #eee;">
+	<!-- description value="Existencias:"/>
+	<caption id="total_existencias" value="" / -->
+
+	<description value="Cantidad Elegida:"/>
+	<label id="CantidadCarrito" value="0"/>
+	<textbox id="CantidadAjuste" value="<?php echo $xajuste?>" collapsed="true" />
+	<description  value="Costo:"/>
+	<label id="CostoCarrito" value="0"/>
+
+      </hbox>
+    </vbox>
 
   <vbox flex="1" align="center" pack="top" >
     <spacer style="height:0.9em"/>
     <hbox>
-      <button id="btnguardar" image="<?php echo $_BasePath; ?>img/gpos_compras.png"
+      <button class="btn" id="btnguardar" image="<?php echo $_BasePath; ?>img/gpos_compras.png"
               label=" Aceptar" oncommand="<?php echo $btnAceptar;?>"/>
-      <button id="btncancelar" image="<?php echo $_BasePath; ?>img/gpos_vaciarcompras.png" 
+      <button class="btn" id="btncancelar" image="<?php echo $_BasePath; ?>img/gpos_vaciarcompras.png" 
               label=" Cancelar" oncommand="<?php echo $btnCancelar; ?>" />
     </hbox>
   </vbox>
 
   </groupbox>
-  <spacer style="height:3em"/>
-  <hbox>
-    <caption style="font-size:10px; font-weight: bold;" label="<?php echo _("Resumen") ?>" />
+  <spacer style="height:1em"/>
+
+<vbox id="contenedorexistencias"  flex="1" pack="top" align="left" >
+  <hbox align="left" >
+    <caption class="box" label="<?php echo _("Resumen") ?>" />
   </hbox>
-
-  <groupbox>
-    <grid>
-      <columns>
-	<column />
-	<column flex="1"/>
-	<column flex="1"/>
-	<column flex="1"/>
-	<column flex="1"/>
-      </columns>
-      <rows id="contenedorexistencias">
-	<row>
-	  <description value="Existencias:"/>
-	  <caption id="total_existencias" label=""></caption>
-	  <description value="Costo Promedio:"/>
-	  <caption id="costo_unitario" label=""></caption>
-	  <description value="Costo Total:"/>
-	  <caption id="total_costo" label=""></caption>
-	  <textbox id="cart_existencias" value="" collapsed="true" />
-	  <textbox id="cart_costopromedio" value="" collapsed="true" />
-	</row>
-      </rows>
-    </grid>
-  </groupbox>
-
-
-  <vbox flex="1">
-  </vbox>
+  <hbox class="resumen" style="border-top:1px solid #eee;">
+    <description value="Existencias:"/>
+    <caption id="total_existencias" value="" />
+    
+    <description value="Costo Promedio:"/>
+    <caption id="costo_unitario" value="" />
+    
+    <description value="Costo Promedio Total:"/>
+    <caption id="total_costo" value=""/>
+    <textbox id="cart_existencias" value="" collapsed="true" />
+    <textbox id="cart_costopromedio" value="" collapsed="true" />
+  </hbox>
 </vbox>
 
-<vbox collapsed="<?php echo $btnrtn;?>">
+</vbox>
+
+<vbox collapsed="<?php echo $btnrtn;?>"  class="box">
   <box flex="1"></box>
-  <button style="font-weight: bold;font-size:13px;" id="btnvolveralmacen" class="media" 
+  <button style="font-weight: bold;font-size:13px;" id="btnvolveralmacen" class="media btn" 
 	  image="<?php echo $_BasePath; ?>img/gpos_volver.png"  
           label="<?php echo $btnrtxt;?>" 
 	  oncommand="<?php echo $btnrtnacc; ?>" collapsed="false"/>

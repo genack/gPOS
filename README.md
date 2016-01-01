@@ -1,7 +1,7 @@
 gPOS - Gestión Puntos de Venta
 ==============================
 
-gPOS es un fork de [9gestion Moda](http://sourceforge.net/projects/es9gestion/), basado en tecnologia XUL, javascript, PHP5.4 y MySQL.
+gPOS es un fork de [9gestion Moda](http://sourceforge.net/projects/es9gestion/), basado en tecnologia XUL, javascript, PHP5.5 y MySQL o Mariadb.
 
 gPOS se distribuye con licencia LGPL v2.1
 
@@ -14,13 +14,20 @@ Instalación
 
     chmod 740 gpos/ -Rf
 
-2. En su navegador firefox ingrese a `http://tudominio/gpos/`.
+2. Mozilla a restringido la validación de los complementos no firmados desde Firefox v43. Nos vemos forzados a:
 
-3. Luego el navegador firefox valida el `tudominio` remoto(*), permita ejecutar el instalador del xulremoto. Esto es solo la primera vez que ingresas al Software.
+  * Escribe about:config dentro de la barra de direcciones de Firefox
+  * En el campo de búsqueda escribe xpinstall.signatures.required
+  * Has doble clic sobre la preferencia, o clic derecho y escoge Modificar, para cambiarla a false.
+
+3. En su navegador Firefox dentro de la barra de direcciones escribe `http://tudominio/gpos/`.
+
+  * Luego el navegador Firefox valida el `tudominio` remoto(*), permita ejecutar el instalador del xulremoto. Esto es solo la      primera vez que ingresas al Software.
+  * Despues la preferencia xpinstall.signatures.required tenemos que cambiarla a true.
 
 4. Borre la carpeta install por seguridad.
 
-5. Modifique las contraseñas por defecto del usuario `Usuario : admin, Contraseña : admin`, de mantenimiento `Usuario:soporte, Contraseña: soporte`.
+5. Modifique las contraseñas por defecto del usuario `Usuario : admin, Contraseña : admin`, de mantenimiento `Usuario:soporte, Contraseña: gadministrador13`.
 
 (*) El instalador xulremoto no funciona con XAMPP y SO Windows. Use el plugin [Remote XUL Manager](https://addons.mozilla.org/es/firefox/addon/remote-xul-manager/) para registrar `tudominio` remoto.
 

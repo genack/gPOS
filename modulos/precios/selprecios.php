@@ -21,11 +21,11 @@ switch ($modo) {
     $idmarca     = (isset($_GET["idmarca"]))? CleanID($_GET["idmarca"]):0;
     
     $idfamilia   = (isset($_GET["idfamilia"]))? CleanID($_GET["idfamilia"]):0; 
-    if (!isset($codigo) || $codigo == 'CB/Ref.' || $codigo == '') $codigo = '';
-    if (!isset($descripcion) || $descripcion == '') $descripcion = 'Descripcion del Producto';
+    if (!isset($codigo) ) $codigo = '';
+    if (!isset($descripcion) ) $descripcion = '';
     if ( $descripcion == 'todos' || $descripcion == 'all' ) $descripcion = '';
-    if ( $idmarca != 0 ||  $idfamilia != 0 || $codigo !='' )
-      if ( $descripcion == 'Descripcion del Producto') $descripcion = '';
+    /* if ( $idmarca != 0 ||  $idfamilia != 0 || $codigo !='' ) */
+    /*   if ( $descripcion == 'Descripcion del Producto') $descripcion = ''; */
     if (!isset($idmarca))   $idmarca   = 0;
     if (!isset($idfamilia)) $idfamilia = 0; 
     

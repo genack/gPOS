@@ -7,7 +7,7 @@ window.onload = function() {
     document.getElementById("cantidad").focus();
 }
 
-function aceptar(id,manejaserie,fila,trasAlta){
+function aceptar(id,manejaserie,fila,trasAlta,esPopup){
 
 
     var plchck  = document.getElementById("pdListCheck").checked;
@@ -76,11 +76,11 @@ function aceptar(id,manejaserie,fila,trasAlta){
     if (!resultado )
     {
         alert(po_servidorocupado);	
-	return terminar('Limpiando formulario...',false);
+	return terminar('Limpiando formulario...',false,esPopup);
     }
 
     if(manejaserie==1)
-	return getNumeroSeriesCompras(id,cantidadtotal,trasAlta);//Termina en N/S
+	return getNumeroSeriesCompras(id,cantidadtotal,trasAlta,esPopup);//Termina en N/S
 
     if(fila) 
 	parent.web.actualizarCantidadCarrito(id,
@@ -89,7 +89,7 @@ function aceptar(id,manejaserie,fila,trasAlta){
 					     descuento.value,
 					     fila);//set datos Carrito Compra
     var loadcart = (trasAlta==1)? false:true;	
-    terminar('Añadiendo Producto al carrito...',loadcart);//Termina		
+    terminar('Añadiendo Producto al carrito...',loadcart,esPopup);//Termina		
 }
 
 function setblockListado(check){
@@ -103,19 +103,35 @@ function setblockListado(check){
     document.getElementById("pdListCheck").setAttribute("checked",check);
 }
 
-function getNumeroSeriesCompras(id,cantidadtotal,trasAlta){
+function getNumeroSeriesCompras(id,cantidadtotal,trasAlta,esPopup){
 
-    var main    = parent.getWebForm();
+    //var main = parent.getWebForm();
+    var main = (esPopup)? parent.document.getElementById("windowloadcart"):parent.getWebForm();
     var url  = "modulos/compras/selcomprar.php?id="+id+
                "&modo=visualizarseriebuy"+
                "&trasAlta="+trasAlta+
+               "&esPopup="+esPopup+
                "&u="+cantidadtotal;
 
     main.setAttribute("src",url);  
-    parent.xwebCollapsed(true);
+
+    if( esPopup ) parent.setWebBoxCollapsed(true);
+    else          parent.xwebCollapsed(true);
+
 }
 
-function terminar(aviso,loadcart){
+
+function terminarloadcart(loadcart){
+    //var plchck  = document.getElementById("pdListCheck").checked;
+    //aAltaRapida
+    parent.setWebBoxCollapsed(false);
+    if( loadcart ) parent.closepopup();
+}
+
+function terminar(aviso,loadcart,esPopup){
+
+    if(esPopup) return terminarloadcart(loadcart);
+
     var modo = (loadcart)? 'aAltaRapida':'hWebForm';
     var main = parent.getWebForm();
     main.setAttribute("src",'modulos/compras/progress.php?modo='+modo+'&aviso='+aviso);
@@ -136,6 +152,7 @@ function actualizarImporte(){
 }    
 function mostrarCostoTotal(unidadesxcontenedor){
     var p = prompt("gPOS:\n\n Costo Total", costoxcontenedor);
+    if(!p) return;
 
     if(isNaN(p)||p==""||p.lastIndexOf(' ')>-1||parseFloat(p)<0)
     {
@@ -147,7 +164,8 @@ function mostrarCostoTotal(unidadesxcontenedor){
     var costo = document.getElementById("costo");
     if(cantidadtotal>0){
 	var nuevocosto = p/unidadesxcontenedor;
-        costo.value = nuevocosto.toFixed(2); 
+        //costo.value = nuevocosto.toFixed(5); 
+	costo.value = Math.round( nuevocosto*100000 )/100000;
         costototal = (p/unidadesxcontenedor)*cantidadtotal;
     }
     actualizarImporte();

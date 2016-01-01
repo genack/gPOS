@@ -3,16 +3,10 @@
 require("../../tool.php");
 SimpleAutentificacionAutomatica("visual-xulframe");
 
-header("Content-Type: application/vnd.mozilla.xul+xml");
-header("Content-languaje: es");
-	
-
 $esTPV    = ($_GET["area"]=="tpv");
 $TipoCaja = ($esTPV)? getSesionDato("TipoVentaTPV"):"CG";
 $IdLocal  = getSesionDato("IdTienda");
 $esBTCA   = ( getSesionDato("GlobalGiroNegocio") == "BTCA" )? true:false;
-	
-echo $CabeceraXUL;
 
 $area = CleanRealMysql($_GET["area"]);
 
@@ -83,9 +77,9 @@ if ($res) {
 
 		if($Categoria != $Cat){
 		  $Cat_label = (!$Categoria)? "Sin Categoría":$Categoria;
-		  $style = "font-weight: bold;text-decoration: underline";
+		  $style = "font-weight: bold;text-decoration: underline;font-size:13px!important";
 		  $outItems = $outItems.
-		              "<menuitem style='$style' label='$Cat_label' value='0'/>\n";
+		              "<menuitem style='$style' label=' $Cat_label' value='0'/>\n";
 		}
 		
 		if ($peso){
@@ -100,7 +94,7 @@ if ($res) {
 		  if($NombrePantalla == "CON CONDICION DE VENTA" )  continue;
 		}
 
-		$outItems = $outItems . "<menuitem style='$style' label='  $NombrePantalla' value='$id' oncommand='SetActive(\"$activos\",\"$Categoria\")'/>\n";
+		$outItems = $outItems . "<menuitem style='$style' label='  $id. $NombrePantalla' value='$id' oncommand='SetActive(\"$activos\",\"$Categoria\")'/>\n";
 
 		$Cat = $Categoria;
 	}
@@ -163,7 +157,7 @@ function DetectaActivos($cod){
 	if(strpos($cod,'%PARTIDA%') > 0){
 	        $a .= "Partida,";
 	}
-	if(strpos($cod,'%TIPOVENTAOP%') > 0){
+	if(strpos($cod,'%TIPOVENTAOP%') > 0 and !$esTPV){
 	        $a .= "TipoVentaOP,";
 	}	
 	if(strpos($cod,'%DNICLIENTE%') > 0){
@@ -247,29 +241,50 @@ function DetectaActivos($cod){
 	if(strpos($cod,'%CODIGOCOMPROBANTE%') > 0){
 	        $a .= "CodigoComprobante,";
 	}	
+	if(strpos($cod,'%PRESUPUESTOVENTA%') > 0){
+	        $a .= "PresupuestoVenta,";
+	}	
+	if(strpos($cod,'%IDMONEDA%') > 0){
+	        $a .= "IdMoneda,";
+	}	
+	if(strpos($cod,'%ESTADOPRESUPUESTO%') > 0){
+	        $a .= "EstadoPresupuesto,";
+	}	
+	if(strpos($cod,'%VENTAESTADO%') > 0){
+	        $a .= "VentaEstado,";
+	}	
+	if(strpos($cod,'%TIPOVENTATPV%') > 0){
+	        $a .= "TipoVenta,";
+	}	
+	if(strpos($cod,'%PRODUCTOIDIOMA%') > 0){
+	        $a .= "ProductoIdioma,";
+	}	
+	if(strpos($cod,'%MODALIDADPAGO%') > 0){
+	        $a .= "ModalidadPago,";
+	}	
+	if(strpos($cod,'%CUENTABANCARIA%') > 0){
+	        $a .= "CuentaBancaria,";
+	}	
 
 	return $a;
 }
 
-echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
+StartXul('listados',$predata="",$css='');
 ?>
-<window id="listados-gPOS" title="listados"
-        xmlns:html="http://www.w3.org/1999/xhtml"        
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
+<vbox class="box">
   <groupbox>	
-    <hbox align="center" pack="center" style="background-color: #d7d7d7;padding:3px">
+    <hbox align="center" pack="center" >
       <label id="CategoriaListado" value="" pack="center"/>
       <menulist    id="esListas" label="Listados" class="media">
-	<menupopup>
+	<menupopup style="text-align: left;">
 	  <menuitem style="width: 300px;font-weight:bold;" label="ELIJA LISTADO"/>
 	  <?php echo $outItems; ?>
 	</menupopup>
       </menulist>
-      <button id="btnListado" image="../../img/gpos_listados.png" label="Listar" oncommand="CambiaListado()"/>
+      <button id="btnListado" image="../../img/gpos_listados.png" label="Listar" oncommand="CambiaListado()" class="btn"/>
     </hbox>
 
-    <hbox align="start" pack="center" style="background-color: #d7d7d7;padding:3px">
+    <hbox align="start" pack="center" class="box">
       <hbox id="getDesde" collapsed="true" align="center">
 	<vbox>
 	  <label value="Desde:"/>
@@ -297,6 +312,21 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  </menulist>
 	</vbox>
       </hbox>
+
+      <hbox id="getTipoCaja" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+        <vbox>
+          <label value="Caja:"/>
+	  <menulist  id="TipoCaja" oncommand="obtenerPartidasCaja(this.value)">
+            <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem value="VD" label="TPV Personal"/>
+	      <menuitem value="VC" label="TPV Corporativo"/>
+	      <menuitem value="CG" label="General"/>
+	    </menupopup>
+	  </menulist>
+        </vbox>	
+      </hbox>		
 
       <hbox id="getPartida" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
@@ -327,7 +357,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <hbox id="getTipoVentaOP" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
-          <label value="Tipo Venta:"/>
+          <label value="Venta Operación:"/>
 	  <menulist  id="TipoVentaOP">						
 	    <menupopup>
 	      <menuitem label="Todos" value="%%"/>
@@ -395,7 +425,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	  <menulist  id="IdUsuario">						
 	    <menupopup>
 	      <menuitem label="Todos" value="%%" selected="true"/>
-	      <?php echo genXulComboUsuarios(false,"menuitem") ?>
+              <?php echo genXulComboUsuarios(false,"menuitem",$IdLocal) ?>
 	    </menupopup>
 	  </menulist>	
         </vbox>
@@ -520,8 +550,8 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	      <menuitem label="Todos" value="%%"/>
 	      <menuitem label="Ingreso" value="Ingreso"/>
 	      <menuitem label="Gasto" value="Gasto"/>
-	      <menuitem label="Aportacion" value="Aportacion"/>
-	      <menuitem label="Sustraccion" value="Sustraccion"/>  
+	      <menuitem label="Aportación" value="Aportacion"/>
+	      <menuitem label="Sustracción" value="Sustraccion"/>  
 	    </menupopup>
 	  </menulist>
 	</vbox>
@@ -537,8 +567,8 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	      <menuitem label="Ingreso" value="Ingreso"/>
 	      <menuitem label="Egreso" value="Egreso"/>
 	      <menuitem label="Gasto" value="Gasto"/>
-	      <menuitem label="Aportacion" value="Aportacion"/>
-	      <menuitem label="Sustraccion" value="Sustraccion"/>  
+	      <menuitem label="Aportación" value="Aportacion"/>
+	      <menuitem label="Sustracción" value="Sustraccion"/>  
 	 </menupopup>
 	  </menulist>
 	</vbox>
@@ -582,7 +612,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	    <menupopup>
 	      <menuitem label="Todos" value="%%"/>
 	      <menuitem label="Pendiente" value="Pendiente" />
-	      <menuitem label="Ejecucion" value="Ejecucion"/>
+	      <menuitem label="Ejecución" value="Ejecucion"/>
 	      <menuitem label="Finalizado" value="Finalizado"/>
 	      <menuitem label="Cancelado" value="Cancelado"/>
 	    </menupopup>
@@ -627,7 +657,7 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	    <menupopup>
 	      <menuitem label="Todos" value="%%"/>
 	      <menuitem label="Pendiente" value="Pendiente" />
-	      <menuitem label="Ejecucion" value="Ejecucion"/>
+	      <menuitem label="Ejecución" value="Ejecucion"/>
 	      <menuitem label="Suspendido" value="Suspendido"/>
 	      <menuitem label="Finalizado" value="Finalizado"/>
 	      <menuitem label="Cancelado" value="Cancelado"/>
@@ -719,6 +749,106 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
 	</vbox>
       </hbox>
 
+      <hbox id="getPresupuestoVenta" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Tipo Pedido:"/>
+	  <menulist  id="PresupuestoVenta">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Proforma" value="Proforma"/>
+	      <menuitem label="Preventa" value="Preventa"/>
+	      <menuitem label="Proforma Online" value="ProformaOnline"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getEstadoPresupuesto" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Estado:"/>
+	  <menulist  id="EstadoPresupuesto">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Confirmado" value="Confirmado" selected="true"/>
+	      <menuitem label="Pendiente" value="Pendiente"/>
+	      <menuitem label="Vencido" value="Vencido"/>
+	      <menuitem label="Cancelado" value="Cancelado"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getIdMoneda" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Moneda:"/>
+	  <menulist  id="IdMoneda">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%" selected="true"/>
+	      <?php echo genXulComboMoneda(false,"menuitem",false) ?>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getTipoVenta" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Tipo Venta:"/>
+	  <menulist  id="TipoVenta">
+	    <menupopup>
+	      <menuitem label="Todos" value="%VentaTodos%"/>
+	      <menuitem label="Contado" value="%VentaContado%"/>
+	      <menuitem label="Crédito" value="%VentaCredito%"/>
+	      <menuitem label="Reserva" value="%VentaReserva%"/>
+	      <menuitem label="Suscripción" value="%VentaSuscripcion%"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getVentaEstado" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Estado:"/>
+	  <menulist  id="VentaEstado">
+	    <menupopup>
+	      <menuitem label="Todos" value="%EstadoTodos%"/>
+	      <menuitem label="Pendiente" value="%EstadoPendiente%"/>
+	      <menuitem label="Finalizado" value="%EstadoFinalizado%"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getModalidadPago" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Modalidad Pago:"/>
+	  <menulist  id="IdModalidadPago">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%" selected="true"/>
+	      <?php echo genXulComboModalidadPago(false,"menuitem") ?>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
+      <hbox id="getCuentaBancaria" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Cuenta Bancaria:"/>
+	  <menulist  id="CuentaBancaria">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%" selected="true"/>
+              <?php echo genXulComboCuentaBancaria2(false,"menuitem",false) ?>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+
       <hbox id="getSerieComprobante" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
@@ -786,15 +916,25 @@ echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css" type="text/css"?>';
       <hbox id="getCodigoComprobante" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
 	<vbox>
-	  <label value="Código:"/>
+	  <label value="Código Factura:"/>
 	  <textbox class="media" id="CodigoComprobante" value=""/>
 	</vbox>
       </hbox>
 
+      <hbox id="getProductoIdioma" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+        <vbox>
+	  <label value="Producto:"/>
+	  <textbox class="media" id="ProductoIdioma" value=""/>
+        </vbox>
+      </hbox>
+
     </hbox>
   </groupbox>
-
+</vbox>
+<vbox class="box" flex="1">
   <iframe id="webarea" src="about:blank" flex='1'/>
+</vbox>
   <script><![CDATA[
 
 var esTPV = <?php echo intval($esTPV); ?>;
@@ -837,7 +977,6 @@ function CambiaListado() {
 	        "&ns="+escape(id("NumeroSerie").value)+
 	        "&lote="+escape(id("Lote").value)+
 	        "&partida="+escape(id("Partida").value)+
-	        "&tipoventaop="+escape(id("TipoVentaOP").value)+
 	        "&dnicliente="+escape(DNICliente)+
 	        "&tipocomprobante="+escape(id("TipoComprobante").value)+
 	        "&seriecomprobante="+escape(SerieComprobante)+
@@ -849,7 +988,7 @@ function CambiaListado() {
 	        "&tipooperacion="+escape(id("TipoOperacion").value)+
 	        "&tipoopcjagral="+escape(id("TipoOpCjaGral").value)+
 	        "&periodoventa="+escape(id("PeriodoVenta").value)+
-	        "&nombrecliente="+escape(NombreCliente)+
+	        "&nombrecliente="+NombreCliente+
 	        "&tipocliente="+escape(id("TipoCliente").value)+
 	        "&idmarca="+escape(id("IdMarca").value)+
 	        "&condicionventa="+escape(id("CondicionVenta").value)+
@@ -865,13 +1004,23 @@ function CambiaListado() {
 	        "&codcomprobante="+escape(id("CodigoComprobante").value)+
 	        "&codigo="+escape(Codigo)+
 	        "&estadopagoventa="+escape(id("EstadoPagoVenta").value)+
+	        "&presupuestoventa="+escape(id("PresupuestoVenta").value)+
 	        "&estpvop="+escape(esTPVOP)+
+ 	        "&moneda="+escape(id("IdMoneda").value)+
+ 	        "&estadopresupuesto="+escape(id("EstadoPresupuesto").value)+
+ 	        "&tipoventa="+escape(id("TipoVenta").value)+
+ 	        "&ventaestado="+escape(id("VentaEstado").value)+
+ 	        "&productoidioma="+escape(id("ProductoIdioma").value)+
+ 	        "&modalidadpago="+escape(id("IdModalidadPago").value)+
+ 	        "&cuentabancaria="+escape(id("CuentaBancaria").value)+
 		"&r=" + Math.random();
 
 	if(!esTPV){
 		url += "&IdLocal="+id("Local").value;
+	        url += "&tipoventaop="+escape(id("TipoVentaOP").value);
 	} else {
 		url += "&IdLocal="+IdLocalActual;
+	        url += "&tipoventaop="+esTPVOP;
 	}
 
 	web.setAttribute("src", url) ;
@@ -932,6 +1081,14 @@ function SetActive( val, Categoria ){
 	id("getEstadoPagoVenta").setAttribute("collapsed","true");
 	id("getCobranza").setAttribute("collapsed","true");
 	id("getCodigoComprobante").setAttribute("collapsed","true");
+	id("getPresupuestoVenta").setAttribute("collapsed","true");
+	id("getIdMoneda").setAttribute("collapsed","true");
+	id("getEstadoPresupuesto").setAttribute("collapsed","true");
+	id("getTipoVenta").setAttribute("collapsed","true");
+	id("getVentaEstado").setAttribute("collapsed","true");
+	id("getProductoIdioma").setAttribute("collapsed","true");
+	id("getModalidadPago").setAttribute("collapsed","true");
+	id("getCuentaBancaria").setAttribute("collapsed","true");
 
 	for( t=0;t<dinterface.length;t++){
 	        dinterface[t] = dinterface[t].replace(/^\s+/,'').replace(/\s+$/,'');

@@ -26,7 +26,9 @@ switch($modo){
 	  //error(__FILE__,"Info: modo: $modo");
 		
 		$IdLocal = intval($_REQUEST["IdLocal"]);
-		$ultimosDiez = getUltimasDiezAsArray($IdLocal);		
+	        $anio        = CleanText($_REQUEST["anio"]);
+		$mes         = CleanText($_REQUEST["mes"]);
+		$ultimosDiez = getUltimasDiezAsArray($IdLocal,$anio,$mes);	
 		$output = $json->encode($ultimosDiez);
 		echo $output;
 		exit();
@@ -76,7 +78,10 @@ switch($modo){
         case "hacerOperacionDinero":
 
 	        /*+++++++++++ VALIDA CAJA +++++++++++++++*/
-	        if( cajaescerrado() == 1 )  return false;
+	       if( cajaescerrado() == 1 ) { 
+		 echo "cjacerrada";
+		 return;
+	       }
 
 	        $IdLocal      = intval($_REQUEST["xidl"]);
 		$cantidad     = CleanFloat($_REQUEST["cantidad"]);	
@@ -86,31 +91,52 @@ switch($modo){
 		$xIdArqueo    = CleanID($_REQUEST["xidacg"]);
 		$Partida      = CleanText($_REQUEST["partida"]);
 		$TipoVenta    = getSesionDato("TipoVentaTPV");
+		$CodPartida   = CleanCadena($_REQUEST["codpartida"]);
 		$mov          = new movimiento;
 		$IdArqueo     = $mov->getIdArqueoEsCerradoCaja($IdLocal,$TipoVenta);
 
-		$IdPartida    = obtenerPartidaCaja($Partida,$TipoVenta);
+		$IdPartida    = obtenerIdPartidaCaja($CodPartida);
 
-		if($IdArqueo != $xIdArqueo || !$IdArqueo)  return false;
+		if($IdPartida == 0 || !$IdPartida){
+		  echo 'errorpartida';
+		  return;
+		}
+
+		if($IdArqueo != $xIdArqueo || !$IdArqueo) {
+		  echo "cjacerrada";
+		  return;
+		}
+
+		if($operacion == 'Sustraccion' && ($CodPartida == "S112" || $CodPartida == "S115")){
+		  $movgral        = new movimientogral;
+		  $IdMoneda       = 1;
+		  $IdArqueoGral   = $movgral->getIdArqueoEsCerrado($IdMoneda,$IdLocal);
+		  $fechacajagral  = $movgral->getAperturaCajaGral($IdMoneda,$IdLocal);
+
+		  if($fechacajagral == 0){
+		    echo "cjagralcerrada";
+		    return;
+		  }
+		}
 		
 		EntregarOperacionCaja($IdLocal,$cantidad,$concepto,$IdPartida,$operacion,
 				      $fechacaja,$IdArqueo,$TipoVenta);
-		return true;
-		break;
 
-        case "AltaPartidaCaja":
-	        $Partida     = CleanText($_POST["partida"]);
-		$Operacion   = CleanText($_POST["op"]);
-		$IdLocal     = CleanID($_POST["xidl"]);
-		$TipoVenta   = getSesionDato("TipoVentaTPV");
-		$xidpartida  = obtenerPartidaCaja($Partida,$TipoVenta);
-		$xidpartida  = (!$xidpartida)? 0:$xidpartida;
-	   
-		if($xidpartida == 0)
-		  crearPartidaCaja($IdLocal,$Partida,$Operacion,$TipoVenta);
-		
-		echo $xidpartida;
-		exit();				
+		if($operacion == 'Sustraccion' && ($CodPartida == 'S112' || $CodPartida == 'S115')){
+		  $xtipo     = ($TipoVenta == 'VD')? 'TPV PERSONAL':'TPV CORPORATIVO';
+		  $concepto  = "VENTAS ".$xtipo;
+		  $IdPartida = 4;
+		  $cambiomoneda = 1;
+		  $operacion  = 'Ingreso';
+		  $IdUsuario  = CleanID(getSesionDato("IdUsuario"));
+		  
+		  EntregarOperacionGral($IdLocal,$cantidad,$concepto,$IdPartida,$IdMoneda,
+					$cambiomoneda,$operacion,$fechacajagral,$IdUsuario,
+					$IdArqueoGral,$documento=false,$codigodoc=false,
+					$proveedor=false,$IdComprobante=false);
+		}
+		  
+		echo "exito";
 		break;
 
 	case "hacerIngresoAdelantoDinero":				
@@ -119,13 +145,28 @@ switch($modo){
 		$concepto = $_REQUEST["concepto"];
 
 		global $UltimaInsercion;	
-		EntregarMetalico($IdLocal,$cantidad,$concepto,false,"Ingreso");
+		EntregarMetalico($IdLocal,$cantidad,$concepto,false,"Ingreso",false,false);
 
 		setSesionDato("OperacionCajaPresupuesto",$UltimaInsercion);
 		setSesionDato("OperacionCajaImportePresupuesto",$cantidad);
 		exit();	
 		break;			
-		
+
+	case "modificaOperacionCaja":				
+		$IdLocal  = CleanID($_GET["xidl"]);
+		$IdOperacionCaja = CleanID($_GET["xidoc"]);
+		$concepto = CleanText($_GET["concepto"]);	
+
+		echo "~".ModificarOperacionCaja($IdLocal,$IdOperacionCaja,$concepto);
+		exit();	
+		break;			
+
+        case "obtenerAnios":
+                $dato = obtenerAnios();
+		echo $dato;
+		exit();
+		break;					
+
 	default:
 		break;	
 }
@@ -140,11 +181,27 @@ function getImporteCierre($IdArqueo){
 	return $row["ImporteCierre"];	
 }
 
-
-function getUltimasDiezAsArray($IdLocal){
+function getUltimasDiezAsArray($IdLocal,$anio,$mes){
         $TipoVenta = getSesionDato("TipoVentaTPV");
-	$datos     = array();
+	$inicio    = "$anio-$mes-01";
+	$fin       = "$anio-$mes-31";
+	$mov       = new movimiento;
+	$fechacaja = $mov->getAperturaCaja($IdLocal,$TipoVenta);
+	$afecha    = explode(" ",$fechacaja);
+	$afecha    = explode("-",$afecha[0]);
+	$datenow   = date('Y-m');
+	$fcaja     = ($fechacaja)? $afecha[0]."-".$afecha[1]:$datenow;
 
+	if($anio."-".$mes == $datenow){
+	  $finicio = " AND (DATE(FechaApertura) >= '$inicio' OR DATE(FechaCierre) = '0000-00-00') ";
+	  $ffin = "";
+	}
+	else{
+	  $finicio = " AND DATE(FechaApertura) >= '$inicio' ";
+	  $ffin    = " AND DATE(FechaApertura) <= '$fin' ";
+	}
+
+	$datos     = array();
 	$sql = "SELECT IdArqueo, IdLocal, TipoVentaOperacion, ".
                "FechaApertura, FechaCierre, esCerrada, ".
                "ImporteApertura, ImporteIngresos, ImporteGastos, ".
@@ -152,8 +209,10 @@ function getUltimasDiezAsArray($IdLocal){
                "ImporteCierre, ImporteDescuadre ".
                "FROM ges_arqueo_caja ".
                "WHERE IdLocal='$IdLocal' ".
+	       "AND Eliminado = 0 ".
                "AND TipoVentaOperacion = '$TipoVenta' ".
-               "ORDER BY FechaApertura DESC, IdArqueo DESC LIMIT 10";
+               "$finicio $ffin ".
+               "ORDER BY FechaApertura DESC, IdArqueo DESC LIMIT 31";
 
 	$res = query($sql,'Ultimas diez..');
 	if (!$res) return $datos;
@@ -178,7 +237,6 @@ function getDatosArqueo($IdArqueo){
 
 	return queryrow($sql);	
 }
-
 
 function ActualizarArqueoDeLocal($IdArqueo,$IdLocal){
 		$row = CalcularUltimoArqueo($IdLocal,$IdArqueo);
@@ -313,18 +371,16 @@ function CalcularUltimoArqueo2($IdLocal,$IdArqueo=false){
 	return $datos;				
 }
 
-
-
 function getMovimientosArqueo($IdArqueo){
 	
 	$IdArqueo = intval($IdArqueo);
 	$TipoVenta = getSesionDato("TipoVentaTPV");
 	$datos = array();
 	$sql =
-	  " SELECT IdOperacionCaja, Identificacion, (IF(ges_dinero_movimientos.IdPartidaCaja <>0,(SELECT ges_partidascaja.PartidaCaja FROM ges_partidascaja WHERE ges_partidascaja.IdPartidaCaja = ges_dinero_movimientos.IdPartidaCaja AND ges_partidascaja.Eliminado = 0),'Venta')) as PartidaCaja, IdArqueoCaja, ".
+	  " SELECT IdOperacionCaja, Identificacion, (IF(ges_dinero_movimientos.IdPartidaCaja <>0,(SELECT ges_partidascaja.PartidaCaja FROM ges_partidascaja WHERE ges_partidascaja.IdPartidaCaja = ges_dinero_movimientos.IdPartidaCaja AND ges_partidascaja.TipoCaja = '$TipoVenta'),'Venta')) as PartidaCaja, IdArqueoCaja, ".
           " ges_dinero_movimientos.TipoOperacion, ".
 	  " TipoVentaOperacion, FechaCaja, Concepto, Importe, ".
-	  " IdModalidadPago, FechaInsercion ".
+	  " IdModalidadPago, FechaPago, IdComprobante,IdPartidaCaja ".
 	  " FROM   ges_dinero_movimientos ".
 	  " INNER JOIN ges_usuarios ON ".
 	  " ges_dinero_movimientos.IdUsuario = ges_usuarios.IdUsuario ".
@@ -338,6 +394,12 @@ function getMovimientosArqueo($IdArqueo){
 	
 	$n = 0;
 	while( $row = Row($res)){
+	        $row["Cliente"] = ($row["IdComprobante"] > 0)? obtenerClientexComprobante($row["IdComprobante"]):" ";
+		$row["Cliente"] = str_replace('&#038;','&',$row["Cliente"]);
+		
+		$codpartida    = ($row["IdPartidaCaja"] == 0)? '0':obtenerCodigoPartidaCaja($row["IdPartidaCaja"]);
+		$row["Codigo"] = $codpartida;
+
 		$datos["mov_$n"] = $row;
 		$n++;		
 	} 			
@@ -406,7 +468,7 @@ function ActualizarUtilidadVenta($IdArqueo){
 	  $status = verificarComprobante($IdComprobante);
 	  if($status == 0){
 	    $costocbte   = obtenerCostoComprobante($IdComprobante);
-	    $importecbte = obtenerImporteComprobante($IdComprobante);
+	    $importecbte = obtenerImporteNetoComprobante($IdComprobante);
 	    $margen      = $importecbte - $costocbte;
 	    $utilidad    = $utilidad + $margen;
 	  }
@@ -447,7 +509,7 @@ function obtenerCostoComprobante($IdComprobante){
     return $row["Costo"];
 }
       
-function obtenerImporteComprobante($IdComprobante){
+function obtenerImporteNetoComprobante($IdComprobante){
     $sql = "SELECT ImporteNeto ".
            "FROM   ges_comprobantes ".
            "WHERE  ges_comprobantes.IdComprobante = '$IdComprobante' ".
@@ -456,6 +518,44 @@ function obtenerImporteComprobante($IdComprobante){
     $row = queryrow($sql);
 
     return $row["ImporteNeto"];
+}
+
+function ModificarOperacionCaja($IdLocal,$IdOperacionCaja,$concepto){
+  $sql = " UPDATE ges_dinero_movimientos SET Concepto = '$concepto'".
+         " WHERE IdOperacionCaja='$IdOperacionCaja' ".
+         " AND IdLocal = '$IdLocal' ";
+  
+  $res = query($sql,'Actualizando Concepto');
+  if($res)
+    return 1;
+  else
+    return 'false';
+}
+
+function obtenerAnios(){
+  $sql = "SELECT GROUP_CONCAT(DISTINCT(YEAR(FechaApertura))) as Anios ".
+         "FROM ges_arqueo_caja ".
+         "WHERE DATE(ges_arqueo_caja.FechaApertura) <> '0000-00-00' ".
+         "ORDER BY ges_arqueo_caja.FechaApertura DESC";
+
+  $row = queryrow($sql);
+  return $row["Anios"];
+}
+
+function obtenerIdPartidaCaja($CodPartida){
+  $sql = "SELECT IdPartidaCaja as Id ".
+         "FROM   ges_partidascaja ".
+         "WHERE  Codigo = '$CodPartida'";
+  $row = queryrow($sql);
+  return $row["Id"];
+}
+
+function obtenerCodigoPartidaCaja($IdPartidaCaja){
+  $sql = "SELECT Codigo ".
+         "FROM   ges_partidascaja ".
+         "WHERE  IdPartidaCaja = '$IdPartidaCaja'";
+  $row = queryrow($sql);
+  return $row["Codigo"];
 }
 
 ?>

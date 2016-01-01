@@ -6,17 +6,22 @@ if (!getSesionDato("IdTienda")){
   exit();
 }
 
-$IdLocal        = getSesionDato("IdTienda");
-$locales        = getLocalesPrecios($IdLocal);
-$modo            = CleanText($_GET["modo"]);
-$DescuentoGral  = getSesionDato("DescuentoTienda");
-$MetodoRedondeo = getSesionDato("MetodoRedondeo");
-$COPImpuesto    = getSesionDato("COPImpuesto");
+$IdLocal        = isset($_GET["local"])? CleanID($_GET["local"]):getSesionDato("IdTienda");
+$modo           = CleanText($_GET["modo"]);
 $Moneda         = getSesionDato("Moneda"); 
-$MagenUtilidad  = getSesionDato("MargenUtilidad");
-$Impuesto       = getSesionDato("IGV");
+
+$aLista         = obetnerDatosLocalSeleccionado($IdLocal);
+$DescuentoGral  = $aLista["Descuento"];
+$MetodoRedondeo = $aLista["MetodoRedondeo"];
+$COPImpuesto    = $aLista["COPImpuesto"];
+$MagenUtilidad  = $aLista["MargenUtilidad"];
+$Impuesto       = $aLista["Impuesto"];
 
 switch($modo) {
+	case "verInventario":
+	  $xload    = "invent";
+	  include("xulinventario.php"); 
+	  break;
 	case "verAjuste":
 	  $xload    = "ajust";
 	  include("xulinventario.php"); 

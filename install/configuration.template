@@ -45,6 +45,9 @@ include("baseurl.php");
 
 ### GlobalGiroNegocio ###
 // PINF: Productos Informáticos
+// BTCA: Botica
+// BTQE: Boutique
+// MMKT: MiniMarket
 
 #### DATOS DEL NEGOCIO ####
 $_SESSION["GlobalNombreNegocio"] = '%NOMBRENEGOCIO%';

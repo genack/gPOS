@@ -15,25 +15,38 @@ function ListarUsuarios() {
 		//echo gas("titulo",_("Lista de usuarios"));
 		echo "<center>";
 		echo "<table border=0 class=forma>";
-		echo "<tr><td class='lh'>" ._("Usuario") . "</td><td class='lh'></td><td class='lh'></td></tr>";
-		
+		echo "<tr><td class='lh'>" ._("Usuario") . "</td><td class='lh'></td><td class='lh'></td><td class='lh'></td></tr>";
+		$idusuario = getSesionDato("IdUsuario");
 		
 		while ($oUsuario = UserFactory($res) ){		
 		
 			$id = $oUsuario->getId();
-			//error("Info: id es '$id'");
-		
+			$activo = $oUsuario->get("Estado");
 			$nombre = $oUsuario->getNombre();
-			//$linkEdicion = gModoButton("editar",_("Modificar"),"id=".$id);
-			//$linkborrado = gModoButton("borrar",_("Eliminar"),"id=".$id);  
+			$idperfil = $oUsuario->get("IdPerfil");
+
 			$linkEdicion = gAccion("editar",_("Modificar"),$id); 
-			$linkborrado = gAccionConfirmada( "borrar", _("Eliminar") ,$id ,_("¿Seguro que quiere borrar?"));  			
-			echo "<tr class='f'><td class='nombre'>$nombre</td><td>$linkEdicion</td><td>$linkborrado</td></tr>";
+			$linkborrado = gAccionConfirmada( "borrar", _("Eliminar") ,$id ,_("¿Seguro que quiere borrar?"));
+
+			switch($idusuario){
+			case 1:
+			  $linkEdicion = ($id == 2)? "":$linkEdicion;
+			  $linkborrado = ($id <=3 )? "":$linkborrado;
+			  echo "<tr class='f'><td class='nombre'>$nombre</td><td>$linkEdicion</td><td>$linkborrado</td><td>$activo</td></tr>";
+			  break;
+			default :
+			  if($id > 2){
+			    if($idperfil == 1){
+			      //$linkborrado = ($idusuario == $id )? "":$linkborrado;
+			      $linkborrado = ($idperfil  == 1 )? "":$linkborrado;
+			    }
+			    echo "<tr class='f'><td class='nombre'>$nombre</td><td>$linkEdicion</td><td>$linkborrado</td><td>$activo</td></tr>";			    
+			  }
+			  break;
+			}
 					
 		}		
 		echo "</table>";
-
-		
 	}
 	
 	userOperacionesConUsuarios();
@@ -52,8 +65,8 @@ function MostrarUsuarioParaEdicion($id) {
 	echo $oUsuario->formEntrada($action,true);	
 }
 
-function ModificarUsuario($id,$nombre,$identificacion,$direccion,$comision,
-			  $telefono,$pass,$idioma,$perfil,$cc,$nace,$local,$idlocales){
+function ModificarUsuario($id,$nombre,$identificacion,$direccion,$comision,$telefono,
+			  $pass,$idioma,$perfil,$cc,$nace,$local,$idlocales,$estado){
 	$oUsuario = new usuario;
 	if (!$oUsuario->Load($id)){
 		error(__FILE__ . __LINE__ ,"W: no pudo mostrareditar '$id'");
@@ -72,6 +85,7 @@ function ModificarUsuario($id,$nombre,$identificacion,$direccion,$comision,
 	$oUsuario->set("CuentaBanco",$cc,FORCE);		
 	$oUsuario->set("FechaNacim",$nace,FORCE);
 	$oUsuario->set("GrupoLocales",$idlocales,FORCE);
+	$oUsuario->set("Estado",$estado,FORCE);
 	
 	if ($oUsuario->Save()){
 		//if(isVerbose())
@@ -175,7 +189,7 @@ switch($modo){
 		$identificacion = CleanText($_POST["Identificacion"]);
 		$direccion = CleanText($_POST["Direccion"]);
 		$comision  = (isset($_POST["Comision"]))? CleanDinero($_POST["Comision"]):0;
-		$telefono  = CleanTelefono($_POST["Telefono"]);
+		$telefono  = CleanText($_POST["Telefono"]);
 		$pass      = CleanPass($_POST["Password"]);
 		$idioma    = CleanID($_POST["Idioma"]);
 		$perfil    = CleanID($_POST["Perfil"]);
@@ -190,6 +204,15 @@ switch($modo){
 
 		if($local == 0)
 		  $idlocales = '';
+
+		$userpermitidos = obtenerUsuariosPermitidos();
+		$xusers    = obtenrUsuariosActivos();
+
+		if($xusers >= $userpermitidos && $userpermitidos != 0){
+		  echo gas("aviso","A excedido cantidad de usuarios permitidos");	
+		  return PaginaBasica();
+		}
+
 	
 		CrearUsuario($nombre,$identificacion,$direccion,$comision,$telefono,
 			     $pass,$idioma,$perfil,$cc,$nace,$local,$idlocales);
@@ -204,25 +227,42 @@ switch($modo){
 		$identificacion = CleanText($_POST["Identificacion"]);
 		$direccion = CleanText($_POST["Direccion"]);
 		$comision  = CleanDinero($_POST["Comision"]);
-		$telefono  = CleanTelefono($_POST["Telefono"]);
+		$telefono  = CleanText($_POST["Telefono"]);
 		$pass      = CleanPass($_POST["Password"]);
 		$idioma    = CleanID($_POST["Idioma"]);
 		$perfil    = CleanID($_POST["Perfil"]);
 		$local     = CleanID($_POST["Local"]);
 		$cc 	   = CleanCC($_POST["CuentaBanco"]);
 		$nace	   = CleanText($_POST["FechaNacim"]);
-
+		$estado    = CleanText($_POST["Estado"]);
 		$glocales  = CleanText($_POST["GrupoLocales"]);
 		$idlocales = obtnerIdLocales($glocales,$local);
 		$existe    = verficarExistenciaUsuario($identificacion,$id);
-		if($existe) return MostrarUsuarioParaEdicion($id);;
+		
+		if($estado == 'Activo'){
+		  $userpermitidos = obtenerUsuariosPermitidos();
+		  $xusers         = obtenrUsuariosActivos();
+
+		  if($xusers >= $userpermitidos && $userpermitidos != 0){
+		    echo gas("aviso","A excedido cantidad de usuarios permitidos");	
+		    return PaginaBasica();
+		  }
+		}else{
+		  if($id <= 3)
+		    $estado = 'Activo';
+		  if($id == 2)
+		    $estado = 'Inactivo';
+		}
+
+		if($existe) return MostrarUsuarioParaEdicion($id);
 		if(strlen($pass) < 8 ) return MostrarUsuarioParaEdicion($id);
 
 		if($local == 0)
 		  $idlocales = '';
 
 		ModificarUsuario($id,$nombre,$identificacion,$direccion,$comision,
-				 $telefono,$pass,$idioma,$perfil,$cc,$nace,$local,$idlocales);
+				 $telefono,$pass,$idioma,$perfil,$cc,$nace,$local,$idlocales,
+				 $estado);
 		PaginaBasica();	
 		break;
 	case "editar":
