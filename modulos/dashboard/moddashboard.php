@@ -477,12 +477,12 @@
       
       if(sizeof($iddets) == 0) return;
       
-      $data = obtenerDetVencimiento($iddets,$esVencido,$Desde,$Hasta,$IdLocal);
+      $data = obtenerVencimientoDashboard($iddets,$esVencido,$Desde,$Hasta,$IdLocal);
 
       actualizarDataDB(false,'a_ProntoVencimiento',$IdLocal,$data);
     }
 
-    function obtenerDetVencimiento($iddets,$esVencido,$Desde,$Hasta,$IdLocal){
+    function obtenerVencimientoDashboard($iddets,$esVencido,$Desde,$Hasta,$IdLocal){
       $IdLocal = ($IdLocal == 0)? "":" AND ges_pedidos.IdLocal = $IdLocal ";
       $Hoy = date("Y-m-d");
       $xid = "";
