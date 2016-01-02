@@ -165,7 +165,15 @@ switch($modo){
                 $dato = obtenerAnios();
 		echo $dato;
 		exit();
-		break;					
+		break;
+
+        case "obtenerUltimaFechaCaja":
+		$IdLocal   = getSesionDato("IdTiendaDependiente");
+		$TipoVenta = getSesionDato("TipoVentaTPV");
+                $dato      = obtenerUltimaFechaCaja($IdLocal,$TipoVenta);
+		echo $dato;
+		exit();
+		break;
 
 	default:
 		break;	
@@ -533,13 +541,21 @@ function ModificarOperacionCaja($IdLocal,$IdOperacionCaja,$concepto){
 }
 
 function obtenerAnios(){
-  $sql = "SELECT GROUP_CONCAT(DISTINCT(YEAR(FechaApertura))) as Anios ".
+  $sql = "SELECT DISTINCT(YEAR(FechaApertura)) as Anios ".
          "FROM ges_arqueo_caja ".
          "WHERE DATE(ges_arqueo_caja.FechaApertura) <> '0000-00-00' ".
+         "AND Eliminado = 0 ".
          "ORDER BY ges_arqueo_caja.FechaApertura DESC";
 
-  $row = queryrow($sql);
-  return $row["Anios"];
+  $res = query($sql);
+  $anios = '';
+  $t = '';
+  while($row = Row($res)){
+    $anios .= $t.$row["Anios"];
+    $t = ',';
+  }
+
+  return $anios;
 }
 
 function obtenerIdPartidaCaja($CodPartida){
@@ -557,5 +573,18 @@ function obtenerCodigoPartidaCaja($IdPartidaCaja){
   $row = queryrow($sql);
   return $row["Codigo"];
 }
+
+function obtenerUltimaFechaCaja($IdLocal,$TipoVenta){
+  $sql = "SELECT FechaApertura as Fecha ".
+         "FROM   ges_arqueo_caja ".
+         "WHERE  IdLocal = '$IdLocal' ".
+         "AND TipoVentaOperacion = '$TipoVenta' ".
+         "AND Eliminado = 0 ".
+         "ORDER BY FechaApertura DESC ".
+         "LIMIT 1 ";
+  $row = queryrow($sql);
+  return $row["Fecha"];
+}
+
 
 ?>

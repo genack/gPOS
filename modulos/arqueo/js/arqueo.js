@@ -1331,11 +1331,12 @@ function VaciarAnioArqueos(){
 }
 
 function cargarDatosDefault(){
-    var fechadesde = calcularFechaActual('fecha');
-    var afecha     = fechadesde.split("-");
-    afecha[1]      = parseInt(afecha[1]);
-    
-    id("filtroMes").value = parseInt(afecha[1]);
+    var xfecha = obtenerUltimaFechaCaja();
+    xfecha     = (xfecha)? xfecha:calcularFechaActual('fecha');
+    var afecha = xfecha.split("-");
+    afecha[1]  = parseInt(afecha[1]);
+
+    id("filtroMes").value = afecha[1];
     id("filtroMes").setAttribute("selected",true);
 
     mesactual = parseInt(afecha[1]);
@@ -1398,4 +1399,15 @@ function cleanformVisualizacion(){
     id("estadoCajaFecha").setAttribute("value", esfecha_cja);
     habilitabotones();
     changeColorEstadoCaja();
+}
+
+function obtenerUltimaFechaCaja(){
+    var	url  = "arqueoservices.php?modo=obtenerUltimaFechaCaja";
+    var xrequest = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+
+    var xres = xrequest.responseText;
+
+    return xres;
 }

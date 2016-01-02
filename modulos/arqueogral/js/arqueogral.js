@@ -10,6 +10,7 @@ var cCodDocumento     = "";
 var cSubsidiario      = "";
 var cIdSubsidiario    = 0;
 var mesactual         = 0;
+var anioactual        = 0;
 
 var MonedaActual = 0;
 var FechaCaja    = "";
@@ -849,15 +850,18 @@ function log(text){
 function habilitabotones(){
     var estado  = cEstadoCaja;
     var mes     = id("filtroMes").getAttribute("value");
+    var anio    = id("filtroAnio").getAttribute("value");
 
-    var xabrir  = (mes != mesactual)? true:false;
-    var xcerrar = (mes != mesactual)? true:false;
-    var xarqueo = (mes != mesactual)? true:false;
-    var xbtnop  = (mes != mesactual)? true:false;
+    var xabrir  = (anio != anioactual && mes != mesactual)? true:false;
+    var xcerrar = (anio != anioactual && mes != mesactual)? true:false;
+    var xarqueo = (anio != anioactual && mes != mesactual)? true:false;
+    var xbtnop  = (anio != anioactual && mes != mesactual)? true:false;
 
     switch(estado){
     case 'ABIERTA':
 	xabrir  = true;
+	xcerrar = (IdArqueoGral < UlIdArqueoGral && anio != anioactual)? true:false;
+	xarqueo = (IdArqueoGral < UlIdArqueoGral && anio != anioactual)? true:false;
 	break;
     case 'CERRADA':
 	xabrir  = (IdArqueoGral < UlIdArqueoGral)? true:xabrir;
@@ -866,7 +870,7 @@ function habilitabotones(){
 	xbtnop  = true;
 	break;
     default :
-	xabrir  = (IdArqueoGral == 0 && mes == mesactual)? false:true;	
+	xabrir  = (IdArqueoGral == 0 && mes == mesactual && anio == anioactual)? false:true;
 	xcerrar = true;
 	xarqueo = true;
 	xbtnop  = true;
@@ -1376,14 +1380,16 @@ function VaciarAnioArqueos(){
 }
 
 function cargarDatosDefault(){
-    var fechadesde = calcularFechaActual('fecha');
-    var afecha     = fechadesde.split("-");
-    afecha[1]      = parseInt(afecha[1]);
-    
+    var xfecha = obtenerUltimaFechaCajaGral();
+    xfecha     = (xfecha)? xfecha:calcularFechaActual('fecha');
+    var afecha = xfecha.split("-");
+    afecha[1]  = parseInt(afecha[1]);
+
     id("filtroMes").value = parseInt(afecha[1]);
     id("filtroMes").setAttribute("selected",true);
 
     mesactual = parseInt(afecha[1]);
+    anioactual = parseInt(afecha[0]);
 }
 
 function calcularFechaActual(xvalue){
@@ -1673,3 +1679,15 @@ function CogeNroCuenta(){
 function changeNroCuenta( quien, txtcuenta) {
     //id("SeleccionCuentaBancaria").value     = quien.value;
 }
+
+function obtenerUltimaFechaCajaGral(){
+    var	url  = "arqueoservices.php?modo=obtenerUltimaFechaCajaGral&idmon=1";
+    var xrequest = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+
+    var xres = xrequest.responseText;
+
+    return xres;
+}
+

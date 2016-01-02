@@ -7,7 +7,7 @@ $TipoVenta = CleanText(getSesionDato("TipoVentaTPV"));
 $Moneda = getSesionDato("Moneda"); 
 
 StartXul('Caja TPV',$predata="",$css='');
-StartJs($js='modulos/arqueo/js/arqueo.js?v=3.1');
+StartJs($js='modulos/arqueo/js/arqueo.js?v=3.1.1');
 ?>
 
   <?php getMonedaJS($Moneda); ?>
@@ -46,15 +46,15 @@ StartJs($js='modulos/arqueo/js/arqueo.js?v=3.1');
           </menulist>
           <menulist id="filtroMes" label="Mes" oncommand="actualizarArqueo()">
             <menupopup id="menuMes">
-	    <menuitem value="01" label="Enero" />
-	    <menuitem value="02" label="Febrero" />
-	    <menuitem value="03" label="Marzo" />
-	    <menuitem value="04" label="Abril" />
-	    <menuitem value="05" label="Mayo" />
-	    <menuitem value="06" label="Junio" />
-	    <menuitem value="07" label="Julio" />
-	    <menuitem value="08" label="Agosto" />
-	    <menuitem value="09" label="Setiembre" />
+	    <menuitem value="1" label="Enero" />
+	    <menuitem value="2" label="Febrero" />
+	    <menuitem value="3" label="Marzo" />
+	    <menuitem value="4" label="Abril" />
+	    <menuitem value="5" label="Mayo" />
+	    <menuitem value="6" label="Junio" />
+	    <menuitem value="7" label="Julio" />
+	    <menuitem value="8" label="Agosto" />
+	    <menuitem value="9" label="Setiembre" />
 	    <menuitem value="10" label="Octubre" />
 	    <menuitem value="11" label="Noviembre" />
 	    <menuitem value="12" label="Diciembre" />

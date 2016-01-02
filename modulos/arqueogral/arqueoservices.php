@@ -256,6 +256,15 @@ switch($modo){
 
 		exit();
 		break;
+
+        case "obtenerUltimaFechaCajaGral":
+		$IdLocal   = getSesionDato("IdTiendaDependiente");
+		$IdMoneda  = CleanID($_GET["idmon"]);
+                $dato      = obtenerUltimaFechaCajaGral($IdLocal,$IdMoneda);
+		echo $dato;
+		exit();
+		break;
+
 	default:
 		break;	
 }
@@ -592,12 +601,20 @@ function ModificarOperacionCajaGral($IdLocal,$IdOperacionCaja,$concepto,
 }
 
 function obtenerAnios(){
-  $sql = "SELECT GROUP_CONCAT(DISTINCT(YEAR(FechaApertura))) as Anios ".
+  $sql = "SELECT DISTINCT(YEAR(FechaApertura)) as Anios ".
          "FROM ges_arqueo_cajagral ".
+         "WHERE Eliminado = 0 ".
          "ORDER BY ges_arqueo_cajagral.FechaApertura DESC";
 
-  $row = queryrow($sql);
-  return $row["Anios"];
+  $res = query($sql);
+  $anios = '';
+  $t = '';
+  while($row = Row($res)){
+    $anios .= $t.$row["Anios"];
+    $t = ',';
+  }
+
+  return $anios;
 }
 
 function verificarAperturaCajaGral($IdLocal,$IdMoneda){
@@ -679,5 +696,18 @@ function obtenerIdPartidaCaja($CodPartida){
   $row = queryrow($sql);
   return $row["Id"];
 }
+
+function obtenerUltimaFechaCajaGral($IdLocal,$IdMoneda){
+  $sql = "SELECT FechaApertura as Fecha ".
+         "FROM   ges_arqueo_cajagral ".
+         "WHERE  IdLocal = '$IdLocal' ".
+         "AND IdMoneda = '$IdMoneda' ".
+         "AND Eliminado = 0 ".
+         "ORDER BY FechaApertura DESC ".
+         "LIMIT 1 ";
+  $row = queryrow($sql);
+  return $row["Fecha"];
+}
+
 
 ?>
