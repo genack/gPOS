@@ -192,48 +192,6 @@ INSERT INTO `ges_marcas` (`IdMarca`, `Marca`, `Eliminado`) VALUES
 ;;;;;;
 
 ;;;;;;
-TRUNCATE TABLE `ges_proveedores`;
-;;;;;;
-
-;;;;;;
-INSERT INTO `ges_proveedores` (`IdProveedor`, `NombreComercial`, `NombreLegal`, `NumeroFiscal`, `Direccion`, `CP`, `Localidad`, `IdPais`, `Descuento`, `CuentaBancaria`, `CuentaBancaria2`, `IdModPagoHabitual`, `Telefono1`, `Telefono2`, `Email`, `PaginaWeb`, `Contacto`, `Cargo`, `Comentarios`, `Eliminado`) VALUES
-(1, 'CASAS VARIAS', '', '', '', '', '', 1, 0, '', '', 1, '', '', '', '', '', '', '', 0),
-(2, 'DELTRON', 'GRUPO DELTRON SA', '20212331377 ', 'LIMA', '', 'CALLE RAUL REBAGLIATI 170 - URB. SANTA CATALINA - LA VICTORIA', 1, 0, '193-0076989-1-74', '', 2, '415-0101', '0801-100-58', '', '', 'LUIS SUAREZ', '', '', 0),
-(3, 'INTCOMEX', 'INTCOMEX PERU SAC', '20254507874 ', 'LIMA', '', 'CALLE LOS NEGOCIOS NRO. 448 URB. LIMATAMBO LIMA - LIMA - SURQUILLO', 1, 0, '193-1201789-1-91', '', 2, '7165005 ', '', '', '', 'PAOLA PINEDO', '', '', 0),
-(4, 'TECNOLOGIES', 'GRUPO TECNOLOGIES SA', '20512096990 ', 'LIMA', '', 'LAS AGATAS 213 - LA VICTORIA', 1, 0, '193-1547436-1-75', '', 1, '470-8000', '', '', '', 'MARTHA VALDEZ', '', '', 0),
-(5, 'TECH DATA', 'TEDH DATA PERU', '20267163228 ', 'LIMA', '', 'PASAJE VICUñA 170 - SURQUILLO', 1, 0, '193-1132254-1-18', '', 1, '612-9999', '612-9955', '', '', 'JESSICA MEGO', '', '', 0),
-(6, 'ITD', 'IT DISTRIBUTION SA', '20385589604 ', 'LIMA', '', 'AV. PERSHING 470 - MAGDALENA DEL MAR', 1, 0, '193-1060352-1-35', '', 1, '460-6611', '460-2707', '', '', 'MELISA IMAN', '', '', 0),
-(7, 'MAXIMA', 'MAXIMA INTERNACIONAL', '20127745910 ', 'LIMA', '', 'AV. REPUBLICA DE PANAMA 3850 - SURQUILLO', 1, 0, '193-0041877-1-08', '', 1, '613-4000', '', '', '', 'JHONY CAJA', '', '', 0),
-(8, 'IGARASHI', 'EXPORTADORA IMPORTADORA IGARASHI ASCENCI O S.R.LTDA', '20252011910 ', 'LIMA', '', 'AV. PETIT THOUARS NRO. 1529 - LINCE', 1, 0, '192-0845019-1-54', '', 1, '612-6161', '', '', '', 'SILVANA ', '', '', 0),
-(9, 'IMPULSO', 'IMPULSO INFORMATICO SA', '20422561537 ', 'LIMA', '', 'AV. AREQUIPA NRO. 2923 LIMA - SAN ISIDRO', 1, 0, '193-1455673-1-76', '', 1, '2019960 ', '', '', '', 'PALOMA VERA', '', '', 0),
-(10, 'PC LINK', 'PC CLINK SAC', '20469317855 ', 'LIMA', '', 'AV. CUBA NRO. 254 LIMA - JESUS MARIA', 1, 0, '194-1420870-1-31', '', 1, '202-3550', '', '', '', 'SONIA VALDERRAMA', '', '', 0),
-(11, 'SATRA', 'SATRA PERU SAC', '20267049361 ', 'LIMA', '', 'JR. DOMINGO MARTINEZ LUJAN NRO. 935 - SURQUILLO', 1, 0, '194-0234279-1-63', '', 1, '640-3400', '', '', '', 'HEYDI ABAD', '', '', 0),
-(12, 'JAAMSA', 'MAQUINARIAS JAAM SA', '20193696920 ', 'LIMA', '', 'JR. LAMPA NRO. 990', 1, 0, '191-0034128-1-36', '', 1, '512-0500', '', '', '', 'MARYISABEL VARGAS', '', '', 0),
-(13, 'COMPUTER CA', 'COMPUTER CA EIRL', '20523832345 ', 'LIMA', '', 'AV. URUGUAY NRO. 346', 1, 0, '193-1833482-1-29', '', 1, '998115668', '', '', '', 'ANGELICA', '', '', 0),
-(14, 'KYOPERU', 'KYOPERU DATA SAC', '20524513880', 'LIMA', '', 'AV. REPUBLICA DE COLOMBIA 625 - SAN ISIDRO', 1, 0, '193-1853849-1-55', '', 1, '7174555', '', '', '', 'JENNY RAMOS', '', '', 0),
-(15, 'SUPERTEC', 'SUPERTEC SAC', '20434327611 ', 'LIMA', '', 'CALLE RICARDO FLORES NRO. 358 URB. SANTA CATALINA', 1, 0, '191-1475869-1-75', '', 1, '471-5686', '', '', '', 'ROXANA SUAREZ', '', '', 0),
-(16, 'COMPUDISKETT', 'COMPUDISKETT S.R.L.', '20123053037 ', 'LIMA', '', 'AV. REPUBLICA DE CHILE NRO. 504 - JESUS MARIA', 1, 0, '', '', 3, '', '', '', '', '', '', '', 0),
-(17, 'HALION', 'HALION INTERNACIONAL S.A', '20505970323', 'LIMA', 'LIMA 1', 'AV. IGNACIO MERINO 2488-LINCE', 1, 0, '194-1198532-1-92', '', 1, '227-1177', '*6933683', 'karin_halion_ventas@hotmail.com', '', 'KARIM BLAS', '', '', 0),
-(18, 'KOZUMI', 'KOZUMI PERU SA', '20520772813', 'LIMA', 'LIMA 1', 'JR. MIGUEL DE CERVANTES Nº 205', 1, 0, '193-1766260-1-19', '', 1, '304-3809', '*312839', 'yvelasco@brandednet.com', '', 'YAJAIRA VELASCO', '', '', 0),
-(19, 'RED LIDER SA', 'RED LIDER', '20432103197', 'LIMA', 'LIMA 1', 'JR HUSARES DE JUNIN Nº 848', 1, 0, '193-1498915-1-63', '', 1, '651-6161', '651-6162', '', '', 'MARGOTH OLAZAVAL', '', '', 0),
-(20, 'INSUMOS', 'INSUMOS Y ACCESORIOS DE OFICINA SAC', '20343155230', 'LIMA', 'LIMA 1', 'LAS GAVIOTAS 122-SURQUILLO', 1, 0, '193-0226511-1-99', '', 1, '421-4276', '221-3936', '', '', '', '', '', 0),
-(21, 'STORE Y WHITE', 'STORE Y WHITE', '', 'LIMA', '', 'ASOC DE VIVIENDA LAS BEGONIAS MZ B LT 5\r\nSAN MARTIN DE PORRES', 1, 0, '', '', 1, '', '', '', '', '', '', '', 0),
-(22, 'CODDDEPER', 'GRUPO CODDDEPER S.A.C.', '20449483899', 'LIMA', '', 'AV. INCA GARCILAZO DE LA VEGA 1358', 1, 0, '', '', 3, '', '', '', '', '', '', '', 0),
-(23, 'JBM', 'JBM PERU SAC', '20522074013', 'LIMA', 'LIMA1', 'Av Garcilazo de la Vega 1251 int 223', 1, 0, '', '', 1, '330-5348', '', '', '', '', '', '', 0),
-(24, 'HPM', 'HPM NEWTECH SAC', '20473849829', 'Lima', 'LIMA1', 'Mz F1 Lt 6 Urb Virgen del Rosario 3ra etapa SMP', 1, 0, '', '', 1, '522-1124', '', '', '', '', '', '', 0),
-(25, 'INGRAM MICRO', 'INGRAM MICRO PERU S.A.', '20262211968', 'LIMA', '', 'Av. Las Camelias N° 790 OF 504-505 San Isidro', 1, 0, '', '', 1, '440-9040', '421-7787', 'jjacinto.sc@hotmail.com', '', 'Jose Luis jacinto Flores', '', '', 0),
-(26, 'SWISS CORP', 'SWISS CORP AG SAC', '20522975673', 'LIMA', '', 'Pardo Bolognesi 125 ofic 1201', 1, 0, '', '', 1, '', '', '', '', '', '', '', 0),
-(27, 'MURDOCH', 'MURDOCH SISTEMAS S.A.', '20100043573', 'Lima', 'LIMA01', 'Jr Cuzco 492 ', 1, 0, '191-0610766-0-52 (soles)', '', 1, '01-4286317', '01-4274117', 'murdochtalleres@gmail.com', '', '', '', '', 0),
-(28, 'CUBIX', 'CUBIX PERU SAC', '20537944081', 'SURQUILLO', '', 'CALLE LOS NEGOCIOS 433', 1, 0, '', '', 1, '51975192174', '7123333', 'emarmars-erica@skype', '', 'EDITH MARTINEZ', '', '', 0),
-(29, 'NACORP', 'NACORP', '', 'LIMA', '', 'AV. GARCILAZO DE LA VEGA N°1261 GALERIA COMPUPLAZA TDA 247', 1, 0, '', '', 1, '(98)119*6358', '', 'nacorp.negocios@hotmail.com', '', 'KATIA', '', '', 0),
-(30, 'KROTON', 'KROTON SAC', '20346833280', 'LIMA', '', 'AV PETIT THOUARS N° 3460 -  SAN ISIDRO', 1, 0, '193-0248323-1-67', '', 1, '01-6111200', '', '', '', 'FANY FALERO', '', '', 0),
-(31, 'KIAN', 'KIAN COMPUTER SERVICE EIRL', '20523138724', 'LIMA', '', 'JR. M. PASTOR SEVILLA N° 217 DPTO 302', 1, 0, '', '', 1, '6246290', '689400831', 'kiancomputer_ventas@hotmail.com', '', '', '', '', 0),
-(32, 'SOON TECH', 'SOON TECH PERU SAC', '20545351391', 'LIMA', 'LIMA1', 'JR CAMANA  780 OFICINA 203', 1, 0, '', '', 1, '017217538', '', '', '', '', '', '', 0),
-(33, 'DATACONT', 'DATACONT S.A.', '20100131359', 'LIMA', 'LIMA 01', 'Calle Los Negocios 323', 1, 0, '', '', 1, '211-0909', '', '', '', 'GRACE NUÑEZ', '', '', 0),
-(34, 'ROMA', 'ROMA DISTRIBUCION Y SERVICIOS', '10214628177', 'LIMA', 'LIMA 01', 'JR SIMON NOGUERA 414 URB TUPAC AMARU SAN LUIS', 1, 0, '', '', 1, '3232426', '998877399', '', '', 'RICARDO ROJAS', '', '', 0);
-;;;;;;
-
-;;;;;;
 TRUNCATE TABLE `ges_subfamilias`;
 ;;;;;;
 
