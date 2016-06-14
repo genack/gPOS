@@ -284,7 +284,7 @@ function getClientesTPV($time=false){
           $sql = 
 	    " select IdCliente,TipoCliente,Telefono1,Direccion,Email, ".
 	    "        NombreLegal as legal,NombreComercial as comercial,Bono,Credito,".
-	    "        NumeroFiscal as NFiscal,Comentarios,FechaNacimiento,Debe ".
+	    "        NumeroFiscal as NFiscal,Comentarios,FechaNacimiento,Debe,Suscripcion ".
 	    " from   ges_clientes ".
 	    " where  TipoCliente <> 'Interno' ".
 	    " $extraChange ".
@@ -314,6 +314,7 @@ function getClientesTPV($time=false){
 		              qq($row["Direccion"]).",".
 		              qq($legal).",".
 		              qq($row["FechaNacimiento"]).",".
+                              $row["Suscripcion"].",".
 		              qq($row["Comentarios"])." );\n";
 	     }
 
@@ -438,10 +439,11 @@ function registrarMovimientoBonoCliente($IdCliente,$Bono,$Tipo,$IdLocal,$IdCompr
 
 
 function registrarMovimientoCreditoCliente($IdCliente,$Credito,$Tipo,$IdLocal,$IdComprobante,
-					   $IdUsuario,$xconcepto){
-  
+					   $IdUsuario,$xconcepto,$FechaOperacion=false){
+  global $UltimaInsercion;
   $IdLocal   = (!$IdLocal)? CleanID(getSesionDato("IdTienda")):$IdLocal;
   $IdUsuario = (!$IdUsuario)? CleanID(getSesionDato("IdUsuario")):$IdUsuario;
+  $FechaOperacion = ($FechaOperacion)? $FechaOperacion:date("Y-m-d H:i:s");
   $xcampo    = "";
   $xvalues   = "";
 
@@ -457,14 +459,20 @@ function registrarMovimientoCreditoCliente($IdCliente,$Credito,$Tipo,$IdLocal,$I
   $xvalues.= "'".$Credito."'".', ';
   $xcampo .= 'Concepto, ';
   $xvalues.= "'".$xconcepto."'".', ';
-  $xcampo .= 'Tipo ';
-  $xvalues.= "'".$Tipo."'".' ';
+  $xcampo .= 'Tipo, ';
+  $xvalues.= "'".$Tipo."'".', ';
+  $xcampo .= 'FechaOperacion ';
+  $xvalues.= "'".$FechaOperacion."'".' ';
 
   $sql = "INSERT INTO ges_clientescredito (".$xcampo.") VALUES (".$xvalues.")";
   query($sql);
 
+  $xidcc = $UltimaInsercion;
+
   // actuaiza credito del cliente
   actualizarCreditoCliente($IdCliente);
+
+  return $xidcc;
 }
 
 function actualizarBonoCliente($IdCliente){
@@ -501,4 +509,58 @@ function obtenerNombreCliente($IdCliente){
          "WHERE ges_clientes.IdCliente = '$IdCliente' ";
   $row = queryrow($sql);
   return $row["Cliente"];
+}
+
+function ObtenerCreditos($IdCliente,$IdLocal,$Desde,$Hasta,$TipoMov){
+  $extraFecha = " AND DATE(FechaOperacion) >= '$Desde' AND DATE(FechaOperacion) <= '$Hasta' ";
+  $extraMov   = ($TipoMov == 'todos')? '':" AND Tipo = $TipoMov ";
+  $sql = "SELECT IdClienteCredito,Concepto,Importe,Tipo, ". 
+         " CONCAT(DATE_FORMAT(FechaOperacion,'%d/%m/%y %H:%i'),'~',FechaOperacion) as FechaOperacion ".
+         " FROM ges_clientescredito ".
+         " WHERE ges_clientescredito.Eliminado=0 ".
+         " AND ges_clientescredito.IdCliente = $IdCliente ".
+         " AND ges_clientescredito.IdLocal = $IdLocal ".
+         " $extraFecha ".
+         " $extraMov ".
+         " ORDER BY FechaOperacion DESC ";
+
+  $res = query($sql);
+  if (!$res) return false;
+  $creditos = array();
+  $t = 0;
+  while($row = Row($res))
+    {
+      $nombre = "creditos_" . $t++;
+      
+      $row["Concepto"] = ($row["Concepto"])? $row["Concepto"]:' ';
+
+      $xidcc = $row['IdClienteCredito'];
+
+      $row["IdCuentaBancaria"] = ' ';
+      $row["CodOperacion"]     = ' ';
+      $row["Observaciones"]    = ' ';
+      $row["Cuenta"]           = ' ';
+
+      $sql = "SELECT ges_cobrosclientedoc.IdCuentaBancaria, CodOperacion, ".
+	"ges_cobrosclientedoc.Observaciones, ".
+	"CONCAT(EntidadFinanciera,' ',NumeroCuenta) as Cuenta ".
+	"FROM ges_cobrosclientedoc ".
+	"INNER JOIN ges_cuentasbancarias ON ges_cobrosclientedoc.IdCuentaBancaria = ges_cuentasbancarias.IdCuentaBancaria ".
+	//"INNER JOIN ges_moneda ON ges_cuentasbancarias.IdMoneda = ges_moneda.IdMoneda ".
+	"WHERE ges_cobrosclientedoc.IdClienteCredito = $xidcc ".
+	"AND ges_cobrosclientedoc.Eliminado = 0 ";
+      
+      $xrow = queryrow($sql);
+      if($xrow){
+	$row["IdCuentaBancaria"] = $xrow["IdCuentaBancaria"];
+	$row["CodOperacion"]     = ($xrow["CodOperacion"])? $xrow["CodOperacion"]:' ';
+	$row["Observaciones"]    = ($xrow["Observaciones"])? $xrow["Observaciones"]:' ';
+	$row["Cuenta"]           = $xrow["Cuenta"];
+      
+      }
+      
+      $creditos[$nombre] = $row;
+    }		
+
+  return $creditos;
 }

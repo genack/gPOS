@@ -228,14 +228,16 @@ $pdf->Ln(2);
 	  if(utf8_decode($row["TipoServicio"]) == ' ')
 	    $xtiposerv[1] = '';
 
+      $ospdDetalle = '';
 	  if($xtiposerv[1] == 1){
 
-	    $xsql = "SELECT ges_motivosat.Motivo, ".
+          $xsql = "SELECT ges_motivosat.Motivo, ".
 	            "       ges_productossat.Diagnostico, ".
 	            "       ges_productossat.Solucion, ".
 	            "       ges_productossat.IdProductoSat, ".
 	            "       ges_productossat.Detalle, ".
-	            "       ges_productossat.NumeroSerie ".
+	            "       ges_productossat.NumeroSerie, ".
+                "       ges_productossat.Descripcion ".
 	            "FROM   ges_productossat ".
 	            "INNER JOIN ges_motivosat ON ges_productossat.IdMotivoSat = ges_motivosat.IdMotivoSat ".
 	            "WHERE  ges_productossat.IdOrdenServicioDet = '$IdOrdenServicioDet' ";
@@ -263,7 +265,7 @@ $pdf->Ln(2);
 	       $aSolucion[0]  = '';
 
 	    if(trim($xrow["NumeroSerie"]) != '')
-	      $osdConcepto  = $osdConcepto." ".$xrow["NumeroSerie"];
+	      $osdConcepto  = $osdConcepto." ".$xrow["NumeroSerie"].", ".$xrow["Descripcion"].".";
 	    
 	    if($xrow["Detalle"] == 1){
 	      $ysql = "SELECT ges_productosidiomasat.Descripcion, ".
@@ -277,17 +279,17 @@ $pdf->Ln(2);
 		      "WHERE  ges_productossatdet.IdProductoSat = '$ospIdProdSat' ";
 
 	      $dres = query($ysql);
-	      $ospdDetalle = '';
+	      //$ospdDetalle = '';
 	      $xsep = '';
 	      while($yrow = Row($dres)){
 		$ospdDetalle .= $xsep.$yrow["Descripcion"]." ".
 		                $yrow["Marca"]." ".
 		                $yrow["Modelo"]." ".
 		                $yrow["NumeroSerie"];
-		$xsep = ' - ';
+		$xsep = ', ';
 	      }
 
-	      $osdConcepto = $osdConcepto.", ".$ospdDetalle;
+	      //$osdConcepto = $osdConcepto.", ".$ospdDetalle;
 	    }
 	  }
 
@@ -301,7 +303,9 @@ $pdf->Ln(2);
 	  //PRODUCTO ITEM
 	  $acotado = array();
 	  $acotado = getItemProducto($osdConcepto,105);
-	  
+
+      $acotadosat = array();
+	  $acotadosat = getItemProducto($ospdDetalle.".",105);
 
 	  // IMPRIME LINE
 	  $pdf->SetFont('','B',8);
@@ -323,6 +327,27 @@ $pdf->Ln(2);
 	    }
 	  }
 
+      if($acotadosat != ''){
+          $pdf->SetX(17); 
+          $pdf->Cell(1);
+          $pdf->SetFont('','');	
+          $pdf->Cell(6,4,'','',0,'C');
+          $pdf->Cell(172,4,utf8_decode($acotadosat[0]),'',0,'L');
+          $pdf->Ln(4);
+
+          foreach ($acotadosat as $key=>$line){
+              if($key>0 && $key < 27 ){
+                  $pdf->SetX(17); 
+                  $pdf->Cell(1);
+                  $pdf->Cell(6,4,"",'',0,'C');
+                  $pdf->Cell(172,4,utf8_decode($line),'',0,'L');
+                  $pdf->Ln(4);
+                  $contador++;
+                  $acotadoext = 0;
+              }
+          }          
+      
+      }
 
 	  if($xtiposerv[1] == 1 ){
 	      $pdf->SetX(17); 

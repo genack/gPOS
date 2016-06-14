@@ -73,53 +73,11 @@ location.href = 'modcompras.php?modo=buscarproductos';
 
 
 function cambiodoc(tipo){
-    /*
-    var	url = "services.php?modo=getTipoDocCompra";
-    var xrequest = new XMLHttpRequest();
-    xrequest.open("GET",url,false);
-    xrequest.send(null);
-    var res = xrequest.responseText;
-    if(res=='SD' && tipo!='SD'){
-        var	url = "services.php?modo=ComprobarProveedor";
-        var xrequest = new XMLHttpRequest();
-        xrequest.open("GET",url,false);
-        xrequest.send(null);
-        var resultado = xrequest.responseText;
-        if(resultado==0){
-                var p = confirm('gPOS:\n\n Atención, esta acción Vaciara Carrito. \n Desea seguir? ');
-            if(p){
-                    var	url = "services.php?modo=ResetearCarritoCompra";
-                    var xrequest = new XMLHttpRequest();
-                    xrequest.open("GET",url,false);
-                    xrequest.send(null);
-                    var	url = "services.php?modo=settipodocCompra&tipodoc="+tipo;
-                    var xrequest = new XMLHttpRequest();
-                    xrequest.open("GET",url,false);
-                    xrequest.send(null);
-            }else{
-                    //document.getElementById("SD").checked=true;
-	            return s_radioComprobante('SD');
-            }
-        }
-        if(resultado==1){
-            var	url = "services.php?modo=settipodocCompra&tipodoc="+tipo;
-            var xrequest = new XMLHttpRequest();
-            xrequest.open("GET",url,false);
-            xrequest.send(null);
-        }
-    }
-    */
      
     var url = "services.php?modo=settipodocCompra&tipodoc="+tipo;
     var xrequest = new XMLHttpRequest();
     xrequest.open("GET",url,false);
     xrequest.send(null);
-
-    //var buscar = parent.document.getElementById("btnbuscar");
-    //if(tipo!=res){
-    // buscar.oncommand();
-    //parent.Compras_buscar();
-    //}
 }
 
 function incluirIGV(aux){
@@ -439,6 +397,8 @@ ven["addprodcart"] ='ven_addprodcart';
 ven["altalaboratorio"] ='ven_alta';
 ven["familiaplus"] ='ven_familiaplus';
 ven["cuenta"] = 'ven_cuenta';
+ven["credito"] = 'ven_credito';
+ven["editproducto"] = 'ven_editproducto';
 
 function popup(url,tipo) {
 
@@ -1255,7 +1215,8 @@ function deshabilitar(xthis,xblock){
 
 //All check
 if( xblock == 1) {
-  return xthis.checked= ( !xthis.checked );
+    if(xthis.id != 'ventamenudeo')
+        return xthis.checked= ( !xthis.checked );
 }
 
 //Check Menudeo
@@ -1440,6 +1401,7 @@ function s_radioComprobante(aux){
 	apareceCapa('acred');
 	apareceCapa('pgdoc');
 	desapareceCapa('albdoc');
+    desapareceCapa('guiaremision');
 	CambiaTextDoc(1,'Pedido');
 	incluirIGV(true);
 	cambiodoc('O');
@@ -1451,6 +1413,7 @@ function s_radioComprobante(aux){
 	apareceCapa('acred');
 	apareceCapa('pgdoc');
 	apareceCapa('albdoc');
+    desapareceCapa('guiaremision');
 	CambiaTextDoc(0,'Factura'); 
 	cambiodoc('F');
 	break;
@@ -1461,6 +1424,7 @@ function s_radioComprobante(aux){
 	apareceCapa('acred');
 	apareceCapa('pgdoc');
 	desapareceCapa('albdoc');
+    desapareceCapa('guiaremision');
 	CambiaTextDoc(0,'Boleta'); 
 	cambiodoc('R');
 	break;
@@ -1471,6 +1435,7 @@ function s_radioComprobante(aux){
 	apareceCapa('acred');
 	apareceCapa('fdoc');
 	desapareceCapa('albdoc');
+    apareceCapa('guiaremision');
 	CambiaTextDoc(0,'Albarán'); 
 	cambiodoc('G');
 	break;
@@ -1481,7 +1446,8 @@ function s_radioComprobante(aux){
 	desapareceCapa('acred');
 	desapareceCapa('albdoc');
 	apareceCapa('pgdoc');
-	CambiaTextDoc();
+    desapareceCapa('guiaremision');
+	//CambiaTextDoc();
 	CambiaTextDoc(0,'Ticket'); 
 	cambiodoc('SD');
 	break;
@@ -1492,8 +1458,8 @@ function s_radioComprobante(aux){
 function CambiaTextDoc(op,ttext){
 
   var ftext = getMe('fecha_op');
-  var bcapt = parent.document.getElementById("bcapturar");
-  var bcanc = parent.document.getElementById("bcancelar");
+  var bcapt = document.getElementById("bcapturarcart");
+  var bcanc = document.getElementById("bcancelarcart");
   var tcomp = document.getElementById("t_comprov");
 
   if(ttext)
@@ -1501,15 +1467,17 @@ function CambiaTextDoc(op,ttext){
 
   if (!ftext) 
     return;
+  if (!bcapt)
+    return;
   if(op){  
     ftext.firstChild.nodeValue="Fecha Entrega:";
-    bcapt.setAttribute("label",' Finalizar Pedido');
-    bcanc.setAttribute("label",' Cancelar Pedido');
+    bcapt.value=' Finalizar Pedido';
+    bcanc.value=' Cancelar Pedido';
   }
   else{
     ftext.firstChild.nodeValue="Fecha Emisión:";
-    bcapt.setAttribute("label",' Finalizar Compra');
-    bcanc.setAttribute("label",' Cancelar Compra');
+    bcapt.value=' Finalizar Compra';
+    bcanc.value=' Cancelar Compra';
   }
 }
 
@@ -1871,7 +1839,7 @@ function changeUM(valor){
    var mtprod       = document.getElementById("MetaProducto");
 
    if(check)
-   check.checked    = (valor=='und')?true:false;
+       //check.checked    = (valor=='und')?true:false;
 
    if(mtprod)
    mtprod.checked   = (mtprod.checked)?false:false;
@@ -2552,4 +2520,77 @@ function VerificarNumeroFiscalSubs(){
     document.getElementById("NumeroFiscal").focus();
     return;
   }
+}
+
+function habilitarcajacentral(){
+ var conpass = document.getElementById("esCentral");
+ conpass = (conpass)? conpass:false;
+
+ if(conpass.checked) {
+   MuestraCapaBase("rCentralizaCaja"); 
+ }
+ else 
+   OcultaCapa("rCentralizaCaja"); 
+}
+
+function validarCajaCentral(){
+  
+}
+
+function setGuiaRemision(xmodo,xthis){
+    var xvalue = xthis.value;
+    var xset = 0;
+    
+    switch(xmodo){
+    case 'concepto':
+        xset = 17;
+        break;
+    case 'partida':
+        xset = 18;
+        break;
+    case 'llegada':
+        xset = 19;
+        break;
+    case 'marca':
+        xset = 20;
+        break;
+    case 'placa':
+        xset = 21;
+        break;
+    case 'licencia':
+        xset = 22;
+        break;
+    case 'peso':
+        xset = 23;
+        setGuiaRemision('pesomedidaTN',xthis);
+        break;
+    case 'pesomedidaKlg':
+        xset = 24;
+        xvalue = 'Klg';
+        break;
+    case 'pesomedidaTN':
+        xset = 24;
+        xvalue = 'TN';
+        break;
+    }
+
+    var url      = "services.php?modo=setGuiaRemision&xdata="+xvalue+"&xset="+xset;
+    var xrequest = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+
+}
+
+function setfechatraslado(){
+    var fecha = document.getElementById("FechaTraslado");
+
+    if(fecha)
+      if( validaFechaDDMMAAAA(fecha.value) ){
+        var	url = "services.php?modo=setftrasladoguia&ftraslado="+fecha.value;
+        var xrequest = new XMLHttpRequest();
+        xrequest.open("GET",url,false);
+        xrequest.send(null);
+      }
+      else
+        fecha.value='';
 }

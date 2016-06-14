@@ -71,6 +71,7 @@ include ("modulos/productos/familia.class.php");
 include ("modulos/productos/producto.class.php");
 include ("modulos/almacen/almacen.class.php");
 include ("modulos/suscripciones/suscripciones.class.php");
+include ("modulos/guiaremision/guiaremision.class.php");
 
 include ("modulos/dashboard/moddashboard.php");
 

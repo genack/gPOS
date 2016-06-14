@@ -15,7 +15,13 @@
      <menuitem id="mheadAgregaPago" label="<?php echo _("Agregar Pago")?>" oncommand="AddOrdenCompra()" <?php gulAdmite("Pagos") ?>  />
      <menuitem id="mheadCreaProforma" label="<?php echo _("Proformar")?>" oncommand="proformarOrdenCompra()" />
      <menuseparator />
-     <menuitem id="mheadConfirma" label="<?php echo _("Confirmar") ?>"  oncommand="ModificarOrdenCompra(3)"/>
+     <menu id="mheadConfirma" label="<?php echo _("Confirmar") ?>" >
+         <menupopup>
+	     <menuitem id="iConfPendiente" label="Pendiente" oncommand="ModificarOrdenCompra(3)"/>
+	     <menuitem label="Pedido"  oncommand="ModificarOrdenCompra(4)"/>
+         </menupopup>
+     </menu>
+     
      <menu id="mheadRecibe" label="Recibir" <?php gulAdmite("Compras") ?>  >
       <menupopup>
 	<menuitem label="Factura" oncommand="ModificarOrdenCompra(11)"/>

@@ -314,11 +314,11 @@ function convertirNumLetras(number)
    /* Asigna el tipo de moneda, para 1 = PESO, para distinto de 1 = PESOS*/
    if (number == 1)
    {
-    var  moneda = " NUEVO SOL ";  
+    var  moneda = " SOL ";  
    }
    else
    {
-      moneda = " NUEVOS SOLES  ";  
+      moneda = " SOLES  ";  
    }
    /* Regresa el número en cadena entre paréntesis y con tipo de moneda y la fase M.N.*/
    //Mind Mod, si se deja MIL pesos y se utiliza esta función para imprimir documentos

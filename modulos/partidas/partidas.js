@@ -54,9 +54,10 @@ function loadfocus(){
     agnadirDirecto();
 }
  
-function UsarNuevo() {
+function GuardarCreaPartida() {
     var partida, url;
-    var nuevopartida = document.getElementById('buscapartida');			
+    var nuevopartida = document.getElementById('txtPartida');
+    var idlocal      = document.getElementById('listIdLocal');
 
     if (nuevopartida)
         partida = nuevopartida.value;
@@ -68,6 +69,7 @@ function UsarNuevo() {
     url = url + 'modo';
     url = url + '=salvapartida';
     url = url + '&partida=' + partida;
+    url = url + '&local=' + idlocal;
     url = url + '&cja=' + cja;
     url = url + '&xop=' + op;
     url = url + '&xidl=' + xlocal;
@@ -159,3 +161,28 @@ function soloAlfaNumerico(e){
         }
     }
 }
+
+function VerFormPartida(xval){
+    if(xval) LimpiarFormPartida();
+
+    var partida = document.getElementById('buscapartida').value;
+    document.getElementById('txtPartida').value = trim(partida);
+
+    document.getElementById('formPartida').setAttribute('collapsed',xval);
+    document.getElementById('ListaPartidas').setAttribute('collapsed',!xval);
+
+    document.getElementById('btnGuardaPartida').setAttribute('label','Guardar');
+    document.getElementById('btnGuardaPartida').setAttribute('oncommand','GuardarCreaPartida()');
+}
+
+function CancelarCreaPartida(){
+    LimpiarFormPartida();
+    VerFormPartida(true);
+}
+
+function LimpiarFormPartida(){
+    document.getElementById('txtPartida').value = "";
+    document.getElementById('listIdLocal').value = 1;
+    document.getElementById('titlePartida').label = 'Nueva Partida';
+}
+

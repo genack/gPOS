@@ -675,17 +675,32 @@ function ModificarOrdenCompra(xocs,xdet){
 
     case 3:
  	//Estado Borrador > Pendiente
-	xrest = (estado=='Pendiente' || estado=='Borrador')?false:true;
+	xrest = (estado=='Borrador')?false:true;
 	if(xrest) return alert(amsj+codigo+' -'+estado+'-,'+
-			       '\n   debe tener estado Borrador o Pendiente. ');
+			       '\n   debe tener estado Borrador. ');
  	//Estado Pendiente to Pedido
-	xocs    = (estado=='Borrador')?xocs:4;
-	xestado = (xocs==3)?'Pendiente':'Pedido';
+	//xocs    = (estado=='Borrador')?xocs:4;
+	//xestado = (xocs==3)?'Pendiente':'Pedido';
+        xestado = 'Pendiente';
 	//Carga mesaje 
 	msj='\n     Confirmar Pedido Nro.'+codigo+' -'+estado+'-\n\n '+
 	    '    - Nuevo estado: '+xestado+'';
 	break;
 
+    case 4:
+ 	//Estado Borrador > Pendiente
+	xrest = (estado=='Pendiente' || estado=='Borrador')?false:true;
+	if(xrest) return alert(amsj+codigo+' -'+estado+'-,'+
+			       '\n   debe tener estado Borrador o Pendiente. ');
+ 	//Estado Pendiente to Pedido
+	//xocs    = (estado=='Borrador')?xocs:4;
+	//xestado = (xocs==3)?'Pendiente':'Pedido';
+        xestado = 'Pedido';
+	//Carga mesaje 
+	msj='\n     Confirmar Pedido Nro.'+codigo+' -'+estado+'-\n\n '+
+	    '    - Nuevo estado: '+xestado+'';
+	break;
+        
     case 5:
  	//Estado Cancelar
 	xrest = (estado=='Recibido' || estado=='Cancelado')?true:false;
@@ -966,7 +981,7 @@ function ModificarOrdenCompra(xocs,xdet){
 
     //Termina verCarritoCompra
     if(xedit)
-	return  parent.solapa('modulos/compras/xulcompras.php?modo=entra','Compras - Presupuestos','compras');
+	return  parent.solapa('modulos/compras/xulcompras.php?modo=entra','Compras > Presupuestos','compras');
 
     //Termina OrdenCompra
     if(reload)   BuscarOrdenCompra();    
@@ -1185,6 +1200,7 @@ function xmenuOrdenCompra(){
     var quitardet    = true;
     var agregarpago  = true;
     var recibir      = true;
+    var confpend     = false;
 
     switch(cEstado){
     case 'Borrador':
@@ -1203,6 +1219,7 @@ function xmenuOrdenCompra(){
 	cancelar     = false;
 	modificardet = false;
 	quitardet    = false;
+        confpend     = true;
 	break;
     case 'Pedido':
 	modificar    = false;
@@ -1229,6 +1246,7 @@ function xmenuOrdenCompra(){
     id("mheadCancela").setAttribute("disabled",cancelar);
     id("mdetModifica").setAttribute("disabled",modificardet);
     id("mdetQuita").setAttribute("disabled",quitardet);
+    id("iConfPendiente").setAttribute("disabled",confpend);
 }
 
 function mostrarBusquedaAvanzada(xthis){

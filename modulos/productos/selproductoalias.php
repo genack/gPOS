@@ -1,7 +1,7 @@
 <?php
 
 include("../../tool.php");
-$txtMoDet    = getModeloDetalle2txt();
+$txtMoDet    = getGiroNegocio2txt();
 $txtalias    = $txtMoDet[3];
 $idfamilia   = CleanID($_GET['idfamilia']);
 $idalias     = CleanText($_GET['id']);

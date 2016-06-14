@@ -45,6 +45,8 @@ function xNuevaTallaColor(){
         var vpvc          = id("xPVC").value;
         var vpvcd         = id("xPVCD").value;
         var vcostoop      = id("xCostoOP").value;
+        var vpvde         = id("xPVDE").value;
+        var vpvded        = id("xPVDED").value;
 	//Buscando color seleccionado
 	var idex = 0;
 	var el;
@@ -88,9 +90,15 @@ function xNuevaTallaColor(){
 		return alert("gPOS: \n\n           Fecha de vencimiento incorrecto");
 	}
     
-        if( trim(id('Descripcion').value) == '' ) 
- 	    return alert('gPOS: \n\n Ingrese correctamente - Nombre -');
+        //valida integridad nombre/marca
+        if( trim(id('Descripcion').value) == '' )
+        { 
+ 	    alert('gPOS: \n\n Ingrese correctamente - Nombre -');
+	    id('Descripcion').focus();
+	    return; 
+	}
 
+    
         if(id("Lote").checked) 
             if ( vlt == '')
 		return alert('gPOS: \n\n Ingrese correctamente - Lote de Producción -');
@@ -102,8 +110,9 @@ function xNuevaTallaColor(){
 		return alert('gPOS: \n\n '+ po_unidadescompra );
 
 	//Ha pasado filtros
-        changeEditHeadDatos('true');//Inicia carrito
-
+        changeEditHeadDatos(true);//Inicia carrito
+        blockfacesaltarapida(true);
+    
         noretryTC[autentitalla] = autenticolor;		
 	noretryCOD[actualCOD] = 1;		
 
@@ -148,6 +157,12 @@ function xNuevaTallaColor(){
 
 	var xpvcd = document.createElement("treecell");
         xpvcd.setAttribute("label",vpvcd);		
+
+	var xpvde = document.createElement("treecell");
+        xpvde.setAttribute("label",vpvde);		
+
+	var xpvded = document.createElement("treecell");
+        xpvded.setAttribute("label",vpvded);		
 
         //Alias
 	var xalias = document.createElement("treecell");
@@ -214,6 +229,8 @@ function xNuevaTallaColor(){
 	xpvdd.setAttribute("id",firma+ "_pvdd");
         xpvc.setAttribute("id",firma+ "_pvc");
         xpvcd.setAttribute("id",firma+ "_pvcd");
+        xpvde.setAttribute("id",firma+ "_pvde");
+        xpvded.setAttribute("id",firma+ "_pvded");
 
 	xalias.setAttribute("id",firma+ "_alias");
         xfv.setAttribute("id",firma+ "_fv");
@@ -238,6 +255,8 @@ function xNuevaTallaColor(){
 	xrow.appendChild( xpvdd );
 	xrow.appendChild( xpvc );
 	xrow.appendChild( xpvcd );
+	xrow.appendChild( xpvde );
+	xrow.appendChild( xpvded );
         xrow.appendChild( xmenudeo );
         xrow.appendChild( xfv );
 	xrow.appendChild( xlt );
@@ -338,6 +357,8 @@ function AltaProducto(){
 	pvdd         = id( firma + t + "_pvdd"  ).getAttribute("label");
 	pvc          = id( firma + t + "_pvc"  ).getAttribute("label");
 	pvcd         = id( firma + t + "_pvcd"  ).getAttribute("label");
+	pvde         = id( firma + t + "_pvde"  ).getAttribute("label");
+	pvded        = id( firma + t + "_pvded"  ).getAttribute("label");
         unids        = enviar["UnidadMedida"];
 
 	data = data + "&Referencia=" + escape(id("Referencia").value);
@@ -372,6 +393,8 @@ function AltaProducto(){
 	data = data + "&UnidadMedida="+ unids;
 	data = data + "&Almacen="+ xAlmacen;
 	data = data + "&CostoOP="+ escape(costoop);
+	data = data + "&vPVDE="+ pvde;
+	data = data + "&vPVDED="+ pvded;
 
 	//Mensaje
 	id("msjAltaRapida").setAttribute("label","...registrando "+
@@ -383,14 +406,14 @@ function AltaProducto(){
 	xrequest.send(data);
 
 	var xres = xrequest.responseText.split(';');
-	
+
 	if(xres[0]!='')
 	{
 	    var existeClon = xrequest.responseText.split('~');
 	    
 	    if ( !parseInt( existeClon[0] ) ){
 		if( !esInventario )
-		    alert('gPOS Alta Rapida:   Modelo y detalle existente \n\n '+
+		    alert('gPOS Alta Rápida:   Modelo y detalle existente \n\n '+
 			  id( firma + t + "_talla" ).getAttribute("label")+' - '+
 			  id( firma + t + "_color" ).getAttribute("label")+'.\n\n'+
 			  '         - Aceptar para continuar - ');
@@ -398,7 +421,7 @@ function AltaProducto(){
 	    else
 		alert(po_servidorocupado+'\n\n -'+xres[0]+'-');	
 	}
-	
+
 	//Inventario	
 	if(esInventario)
 	    if( parseInt( xres[1] ) > 0){
@@ -420,6 +443,8 @@ function AltaProducto(){
 		aProducto[cb+'_pvdd']       = pvdd;
 		aProducto[cb+'_pvc']        = pvc;
 		aProducto[cb+'_pvcd']       = pvcd;
+		aProducto[cb+'_pvde']       = pvde;
+		aProducto[cb+'_pvded']       = pvded;
 		aProducto[cb+'_lote']       = vlt;// valor lote
 		aProducto[cb+'_vence']      = vfv;// valor vencimiento
 		xArt++;
@@ -446,7 +471,7 @@ function AltaProducto(){
 
 	if(esInventario){
 	    if( imm != '')
-		alert('gPOS Alta Rapida:   Modelos y detalles duplicados \n '+imm);
+		alert('gPOS Alta Rápida:   Modelos y detalles duplicados \n '+imm);
 
 	    if( xArt > 0 ){ 
 		//Mensaje
@@ -641,9 +666,8 @@ function quitarTacolorSelect(){
     
     noretryTC[xtalla] = '';
     
-    if(itacolor==1)
-	if(cAccion == 'alta')
-	    changeEditHeadDatos('false');
+    if(itacolor==1 && cAccion == 'alta' ) changeEditHeadDatos(false);
+    if(itacolor==1) blockfacesaltarapida(false);
     itacolor--;
     
     setTimeout("ordenaListaTaColor()",100);
@@ -878,12 +902,11 @@ function changeEditHeadDatos(val){
     id('lFamSub').setAttribute("collapsed",val);
     id('Referencia').setAttribute("readonly",val);
     id('Descripcion').setAttribute("readonly",val);
-    //id('UnidadMedida').setAttribute("disable",val);
+    id('UnidadMedida').setAttribute("disable",val);
     id('NS').setAttribute("disabled",val);
     id('Lote').setAttribute("disabled",val);
     id('FechaVencimiento').setAttribute("disabled",val);
     id('Menudeo').setAttribute("disabled",val);
-
 }
 
 
@@ -926,6 +949,8 @@ function verDatosExtra(xsw,xval){
 	id("Menudeo").checked = xval;
 	id("xEmpaqueProductoAlta").setAttribute("collapsed",sval);
 	id("xEmpaqueProductoAlta").setAttribute("label","xEmpaque");
+	id("rowPVEmpaque").setAttribute('collapsed',sval);
+	//id("rowPVDocena").setAttribute('collapsed',sval);
 	break;
 
     case 'ns':
@@ -1008,6 +1033,11 @@ var sPVD  = 0;
 var xPVC  = 0;
 var xPVCD = 0;
 var sPVC  = 0;
+var xPVDE = 0;
+var sPVDE = 0;
+var xPVDED = 0;
+var sPVDED = 0;
+var PBASE  = 0;
 
 function setCostoPreciosAltaRapida(xval,xdato){
 
@@ -1017,6 +1047,11 @@ function setCostoPreciosAltaRapida(xval,xdato){
     var sdato   = parseFloat(xdato.value);
     var xCosto  = parseFloat(id("Costo").value);
     var xPrecio = parseFloat(id("xCostoOP").value);
+    var xCostoEpq = parseFloat(id("costoxEmpaque").value); // costo por empaque
+    var uxcont    = parseFloat(id("UnidadesxContenedor").value);
+    var xCostoDoc = xCosto*12;
+
+    xCostoEpq   = (xCostoEpq > 0.01)? xCostoEpq:xCosto*uxcont;
 
     var xkey    = enviar["IdFamilia"]+"-"+enviar["IdSubFamilia"];
 
@@ -1035,6 +1070,10 @@ function setCostoPreciosAltaRapida(xval,xdato){
     COP         = (COPImpuesto)? 0:xPrecio;
     MUD         = ((xCosto*cCambio) + COP)*(xMUD/100);
     MUC         = ((xCosto*cCambio) + COP)*(xMUC/100);
+
+    PBASE = parseFloat(xCosto) + parseFloat(xCosto*cImpuesto/100);
+    PBASE = PBASE.round(2);
+
 
     switch (xval) {
 
@@ -1059,41 +1098,76 @@ function setCostoPreciosAltaRapida(xval,xdato){
 	sPVC     = xPVC;
 	sPVCD    = xPVCD;
 
+	// Calculo precio x empaque
+	xPVDE    = (xCostoEpq*cCambio) + MUD + COP;
+	IMP      = (xPVDE*cImpuesto/100).round(2);
+	xPVDE    = (COPImpuesto)? (xPVDE + IMP + xPrecio):(xPVDE + IMP);
+	xPVDE    = xPVDE.round(2);
+	sPVDE    = xPVDE;
+
+	// Calculo precio x docena
+	xPVDED   = (xCostoDoc*cCambio) + MUD + COP;
+	IMP      = (xPVDED*cImpuesto/100).round(2);
+	xPVDED   = (COPImpuesto)? (xPVDED + IMP + xPrecio):(xPVDED + IMP);
+	xPVDED   = xPVDED.round(2);
+	sPVDED   = xPVDED;
+
 	break;
 
     case 'pvd':
         var PVD  = parseFloat(id("xPVD").value);
-	PVD      = (PVD <= FormatPreciosTPV(sPVD))? sPVD:PVD;
+	//PVD      = (PVD <= FormatPreciosTPV(sPVD))? sPVD:PVD;
+        PVD      = (PVD < PBASE)? sPVD:PVD;
 	xPVD     = PVD;
-	xPVDD    = (xPVD-(MUD*xDSTO/100)).round(2);
+        var xdto = (PVD < sPVD)? 0:(MUD*xDSTO/100);
+	xPVDD    = (xPVD-xdto).round(2);
 
 	break;
 
     case 'pvdd':
 	var PVDD = parseFloat(id("xPVDD").value);
-	PVDD     = (PVDD < FormatPreciosTPV(sPVDD) || PVDD > xPVD)? sPVD-(MUD*xDSTO/100):PVDD;
+        var xdto = (PVDD < sPVD)? PBASE:sPVD-(MUD*xDSTO/100);
+	//PVDD     = (PVDD < FormatPreciosTPV(sPVDD) || PVDD > xPVD)? sPVD-(MUD*xDSTO/100):PVDD;
+        PVDD     = (PVDD < PBASE || PVDD > xPVD)? xdto:PVDD;
 	xPVDD    = PVDD;
 	break;
 
     case 'pvc':
 	var PVC  = parseFloat(id("xPVC").value);
-	PVC      = (PVC <= FormatPreciosTPV(sPVC))? sPVC:PVC;
+	//PVC      = (PVC <= FormatPreciosTPV(sPVC))? sPVC:PVC;
+        PVC      = (PVC < PBASE)? sPVC:PVC;
 	xPVC     = PVC;
-	xPVCD    = (xPVC-(MUC*xDSTO/100)).round(2);
+        var xdto = (PVC < sPVC)? 0:(MUC*xDSTO/100);
+	xPVCD    = (xPVC-xdto).round(2);
 	break;
 
     case 'pvcd':
 	var PVCD = parseFloat(id("xPVCD").value);
-	PVCD     = (PVCD < FormatPreciosTPV(sPVCD) || PVCD > xPVC)? sPVC-(MUC*xDSTO/100):PVCD;
+	//PVCD     = (PVCD < FormatPreciosTPV(sPVCD) || PVCD > xPVC)? sPVC-(MUC*xDSTO/100):PVCD;
+        var xdto = (PVCD < sPVC)? PBASE:sPVC-(MUC*xDSTO/100);
+        PVCD     = (PVCD < PBASE || PVCD > xPVC)? xdto:PVCD;
 	xPVCD    = PVCD;
 	break;
-    }
-    
-    id("xPVD").value          = FormatPreciosTPV(xPVD);  
-    id("xPVDD").value         = FormatPreciosTPV(xPVDD);  
-    id("xPVC").value          = FormatPreciosTPV(xPVC); 
-    id("xPVCD").value         = FormatPreciosTPV(xPVCD);
 
+    case 'pvpe':
+	var PVDE  = parseFloat(id("xPVDE").value);
+	PVDE      = (PVDE <= 0)? sPVDE:PVDE;
+	xPVDE     = PVDE;
+	break;
+
+    case 'pvped':
+	var PVDED  = parseFloat(id("xPVDED").value);
+	PVDED      = (PVDED <= 0)? sPVDED:PVDED;
+	xPVDED     = PVDED;
+	break;
+    }
+
+    id("xPVD").value   = FormatPreciosTPV(xPVD);  
+    id("xPVDD").value  = FormatPreciosTPV(xPVDD);  
+    id("xPVC").value   = FormatPreciosTPV(xPVC); 
+    id("xPVCD").value  = FormatPreciosTPV(xPVCD);
+    id("xPVDE").value  = FormatPreciosTPV(xPVDE);  
+    id("xPVDED").value  = FormatPreciosTPV(xPVDED);  
 }
 
 function CargarDataSubFamilias(){
@@ -1161,6 +1235,8 @@ function ordenaListaTaColor(){
 	var zpvdd = id(zfirma+ "_pvdd");
 	var zpvc = id(zfirma+ "_pvc");
 	var zpvcd = id(zfirma+ "_pvcd");
+	var zpvde = id(zfirma+ "_pvde");
+	var zpvded = id(zfirma+ "_pvded");        
     
 	var zalias = id(zfirma+ "_alias");
 	var zfv = id(zfirma+ "_fv");
@@ -1188,7 +1264,9 @@ function ordenaListaTaColor(){
 	zpvdd.setAttribute("id",zfirma+ "_pvdd");
         zpvc.setAttribute("id",zfirma+ "_pvc");
         zpvcd.setAttribute("id",zfirma+ "_pvcd");
-
+	zpvde.setAttribute("id",zfirma+ "_pvde");
+	zpvded.setAttribute("id",zfirma+ "_pvded");        
+        
 	zalias.setAttribute("id",zfirma+ "_alias");
         zfv.setAttribute("id",zfirma+ "_fv");
         zlt.setAttribute("id",zfirma+ "_lt");
@@ -1219,8 +1297,106 @@ function mostrarCostoTotalAlta(){
     var UnidxCont = id("UnidadesxContenedor").value;
     var costo = document.getElementById("Costo");
     var nuevocosto = p/parseFloat(UnidxCont);
-
+    
+    id("costoxEmpaque").value = costoxcontenedor;
     //costo.value = nuevocosto.toFixed(3);
     costo.value = Math.round( nuevocosto*100000 )/100000;
     setCostoPreciosAltaRapida('costo',costo);
+}
+function checkOpcionesAvanzadas(xcheck){
+    cOpcionesAvanzadas = (!xcheck);
+    opcionesavanzadas();
+}
+function opcionesavanzadas(){
+    id("row_referencia").setAttribute("collapsed",cOpcionesAvanzadas);
+    //id("row_codigobarras").setAttribute("collapsed",cOpcionesAvanzadas);
+    id("row_refproveedor").setAttribute("collapsed",cOpcionesAvanzadas);
+    id("row_proveedorhabitual").setAttribute("collapsed",cOpcionesAvanzadas);
+    id("row_tipodetalle").setAttribute("collapsed",cOpcionesAvanzadas);
+}
+
+function setfacesaltarapida(xface){
+
+    //valida integridad nombre/marca
+    if( trim(id('Descripcion').value) == '' )
+    { 
+ 	alert('gPOS: \n\n Ingrese correctamente - Nombre -');
+	id('Descripcion').focus();
+	return; 
+    }
+    
+    if( checkIntegridadProducto() )
+	return reloadClonar();
+    
+    //set varables
+    cFaceAltaRapida = xface;
+    facesaltarapida();
+}
+
+function checkIntegridadProducto(){
+    
+    if(cAccion=='clon') return 0;
+
+    cDescripcion = id("Descripcion").value;    
+    cMarca       = ( id("Marca").value =='Generico')? ' ':id("Marca").value;
+    cLaboratorio = id("LabHab").value;
+    cModeloDetalle = cDescripcion+' '+cMarca+' '+cLaboratorio;
+    
+    id("txtModeloDetalle").setAttribute("label",cModeloDetCore+' '+cModeloDetalle);
+    
+    var z   = null;
+    var url = "../../services.php?modo=checkIntegridadProducto"+
+	"&xmarca="+enviar["IdMarca"]+
+	"&xlab="+enviar["IdLabHab"]+
+	"&xdescripcion="+encodeURIComponent( cDescripcion );
+    var obj = new XMLHttpRequest();
+    var objarr;
+    
+    obj.open("GET",url,false);
+    try{
+	obj.send(null);
+	//cClonIdBase;
+	objarr      = obj.responseText.split('~');
+	cClonIdBase = ( parseInt( objarr[1] ) == '0' )? 0:parseInt( objarr[1] );
+
+	//Preguntar si quiere usar un clon?
+	if(cClonIdBase)
+	    cClonIdBase = ( confirm("gPOS ALTA RAPIDA: \n\nEl producto base, ya existe!\n\n"+
+				    " - "+cModeloDetalle+" - \n\n"+
+				    "desea utilizarlo para que "+
+				    cModeloDetCore+'?') )? cClonIdBase:0; 
+	
+	return cClonIdBase;
+
+    } catch(z){
+	return;
+    }
+}
+
+function blockfacesaltarapida(xset){
+    id("btnFaceMatris").setAttribute("collapsed",xset);
+    id("btnAccionAltaRapida").setAttribute("collapsed",!xset);    
+}
+function facesaltarapida(){
+    //cFaceAltaRapida
+    switch(cFaceAltaRapida){
+    case 'name':
+	id("faceNameBox").setAttribute("collapsed",false);
+	id("faceMatrisBox").setAttribute("collapsed",true);
+	break;
+    case 'matris':
+	id("faceNameBox").setAttribute("collapsed",true);
+	id("faceMatrisBox").setAttribute("collapsed",false);
+	id("btnAccionAltaRapida").setAttribute("collapsed",true);
+	break;
+    }
+}
+
+function reloadClonar(){
+    //cClonIdBase;
+    if( cClonIdBase != 0 )
+    {
+	var xcoreref  = ( esInventario )? "xulaltarapida.php?modo=altainventario&clonidbase=":"xulaltarapida.php?modo=alta&clonidbase=";
+	location.href = xcoreref+cClonIdBase;
+    }
 }

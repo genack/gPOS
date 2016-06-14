@@ -442,3 +442,80 @@ function soloAlfaNumericoSerie(e){
         return false;
     }
 }
+function CogerNumeroSeriesLote(){ popup('selcomprar.php?modo=selSeriesLote','marca'); }
+
+function row_cargarNumeroSerieLote(c_NumeroSerieLote){
+
+    var xres,url,prod,xjsOut,z,AjaxDemon,xdata;
+
+    AjaxDemon = new XMLHttpRequest();
+    z         = null;	    
+    url       = "selcomprar.php?modo=cargarNumeroSeriesLote2js"+
+                "&idlocal="+cIdLocal+
+                "&idproducto="+cIdProducto;
+
+    xdata     = 'listanslote='+c_NumeroSerieLote;
+    
+    AjaxDemon.open("POST",url,false);
+    AjaxDemon.setRequestHeader('Content-Type',
+                               'application/x-www-form-urlencoded; charset=UTF-8');
+    try {
+      AjaxDemon.send(xdata);
+      if (!( AjaxDemon.status >= 200 && AjaxDemon.status < 304 ) ) 
+        return;
+    } catch(z){
+      return;
+    }
+    
+    xjsOut = AjaxDemon.responseText;
+    
+    if(!xjsOut)
+      return;//OK, detiene el proceso.
+    try {	
+      if (xjsOut) {
+            eval(xjsOut);//“eval es el mal"
+	}	
+    } catch(e){	
+	return;
+    }
+  
+}
+function exe_cargarNumeroSerieLote(ns){
+
+    var lista = xid("lista");
+    var numeros_serie = document.getElementsByTagName('listcell');
+
+    //Valida lista de series cargadas
+
+    //total de series a cargar
+    if( n == cUnidades && !nsAdd)
+        return;
+    if( n > cUnidades && !nsAdd )
+        return alert('gPOS: \n\n La lista tiene exedentes:\n'+ns);
+
+    //busca si ya esta en la lista
+    for(var i=0;i<lista.itemCount;i++ ){	
+        if( numeros_serie[i*2+1].attributes.getNamedItem('label').nodeValue == ns ) return;
+    }
+
+    //crea un elemento y carga la serie en la lista
+    var row = document.createElement('listitem');
+
+    var cell_item = document.createElement('listcell');
+    cell_item.setAttribute('label',lista.itemCount+1);
+
+    var cell_ns = document.createElement('listcell');
+    cell_ns.setAttribute('label',ns);
+    cell_ns.setAttribute('name','ns');
+
+    row.appendChild(cell_item);
+    row.appendChild(cell_ns);
+
+    n++;
+    lista.appendChild(row);
+    lista.ensureElementIsVisible(row);
+    lista.clearSelection();
+    //limpiar_caja();
+    actualizarTotalNS();
+}
+

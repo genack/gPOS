@@ -49,22 +49,26 @@
     </panel>
 
     <listbox id="listaProductos" flex="1" contextmenu="accionesLista" ondblclick="agnadirPorMenu(1)" 
-	     class="listado" onclick="menuContextualPreVentaTPV(false)" 
-	     onkeypress="if (event.which == 13) setTimeout('agnadirPorMenu(\'preguntar\')',50)" >
+	     class="listado" oncontextmenu="menuContextualPreVentaTPV(false)"
+	     onkeypress="if (event.which == 13) setTimeout('agnadirPorMenu(\'preguntar\')',50)">
       <listcols flex="1">
-	<listcol/>		
+	<listcol id="colListaProductoViewCR" collapsed="true"/>		
 	<listcol/>
 	<listcol/>		
 	<listcol/>			
 	<listcol/>
 	<listcol/>			
-	<listcol  flex="8"/>		
-	<listcol/>			
-	<listcol/>
+	<listcol flex="8"/>		
+	<listcol id="colListaProductoViewSTOCK"/>			
+	<listcol id="colListaProductoViewCTO" collapsed="true"/>
+      	<listcol id="colListaProductoViewPVP"/>
+        <listcol id="colListaProductoViewPVC" collapsed="true"/>
+        <listcol id="colListaProductoViewPVD" collapsed="true"/>
+        <listcol id="colListaProductoViewPVE" collapsed="true" />
 	<listcol style="width:1em"/>
       </listcols>
       <listhead>
-	<listheader label="CR"/>
+	<listheader  id="headListaProductoViewCR" collapsed="true" label="CR"/>
 	<listheader label="Producto"/>
 	<listheader label=""/>
 	<listheader label=""/>
@@ -72,7 +76,11 @@
 	<listheader label=""/>
 	<listheader label=""/>
 	<listheader label="Stock" />
-	<listheader label="PV/U"/>
+      	<listheader id="headListaProductoViewCTO" collapsed="true" label="PCP"/>
+	<listheader id="headListaProductoViewPVP" label="PVP/U"/>
+      	<listheader id="headListaProductoViewPVC" collapsed="true" label="PVC/U"/>
+        <listheader id="headListaProductoViewPVD" collapsed="true" label="PV/D"/>
+      	<listheader id="headListaProductoViewPVE" collapsed="true" label="PV/E"/>
 	<listheader label="" />
       </listhead>
     </listbox>

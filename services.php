@@ -175,6 +175,8 @@ switch($modo) {
 			$PVDD     = CleanCadena($_POST["vPVDD"]);
 			$PVC      = CleanCadena($_POST["vPVC"]);
 			$PVCD     = CleanCadena($_POST["vPVCD"]);
+			$PVDE     = CleanCadena($_POST["vPVDE"]);
+			$PVDED    = CleanCadena($_POST["vPVDED"]);
 			$cModo    = CleanCadena($_POST["vModo"]);
 			$esInvent = ( $cModo == 'altainventario' )? true:false;
 			$vfv      = ($vfv=='')? false:date("d-m-Y", strtotime($vfv));
@@ -187,7 +189,7 @@ switch($modo) {
 						       $vfv,$vlt,0,
 						       $importe,0);
 			//Ventas Precios
-			registrarPreciosVentaAlmacenProducto($PVD,$PVDD,$PVC,$PVCD,$costoop,$id);
+			registrarPreciosVentaAlmacenProducto($PVD,$PVDD,$PVC,$PVCD,$costoop,$id,$PVDE,$PVDED);
 			
 			echo ";".$id.";".getDatosArticuloExtra($id,$almacen);
 
@@ -208,12 +210,14 @@ switch($modo) {
 			  $PVDD     = CleanCadena($_POST["vPVDD"]);
 			  $PVC      = CleanCadena($_POST["vPVC"]);
 			  $PVCD     = CleanCadena($_POST["vPVCD"]);
+			  $PVDE     = CleanCadena($_POST["vPVDE"]);
+			  $PVDED    = CleanCadena($_POST["vPVDED"]);
 			  
 			  $importe  = $unidades*$costo;
 			  AgnadirCarritoComprasDirecto($id,$unidades,$costo,$vfv,$vlt,0,$importe,0);
 
 			  //Ventas Precios
-			  registrarPreciosVentaAlmacenProducto($PVD,$PVDD,$PVC,$PVCD,$costoop,$id);
+			  registrarPreciosVentaAlmacenProducto($PVD,$PVDD,$PVC,$PVCD,$costoop,$id,$PVDE,$PVDED);
 			}
 		    }
 
@@ -402,7 +406,7 @@ switch($modo) {
 	       $idproducto = CleanID($_GET["idproducto"]);
 	       $idlocal    = CleanID($_GET["idlocal"]);
 	       $idlocal    = ($idlocal)? $idlocal : getSesionDato("IdTienda");
-	       $xout       = validaNumeroSerie($idproducto,$serie,$idlocal);
+	       $xout       = validaNumeroSerie($idproducto,$serie,$idlocal,false);
 	       echo $xout;
 	       exit();
 	       break;
@@ -412,7 +416,7 @@ switch($modo) {
 	       $idproducto = CleanID($_GET["idproducto"]);
 	       $idlocal    = CleanID($_GET["idlocal"]);
 	       $idlocal    = ($idlocal)? $idlocal : getSesionDato("IdTienda");
-	       $xout       = validaNumeroSerie($idproducto,$serie,$idlocal);
+	       $xout       = validaNumeroSerie($idproducto,$serie,$idlocal,false);
 	       echo $xout;
 	       exit();
 	       break;
@@ -836,6 +840,15 @@ switch($modo) {
 		$detadoc[13]==0;
 		$detadoc[14]==0;
 		$detadoc[15]=='';
+        $detadoc[17]='';
+        $detadoc[18]='';
+        $detadoc[19]='';
+        $detadoc[20]='';
+        $detadoc[21]='';
+        $detadoc[22]='';
+        $detadoc[23]='';
+        $detadoc[24]='';
+        $detadoc[25]=false;
 	      }
 	      setSesionDato('detadoc',$detadoc);
 	      exit();	
@@ -1206,6 +1219,14 @@ switch($modo) {
     	   exit();
  	   break;
 
+         case "ObtenerIdComprobantesAlbaran":
+	   $IdLocal   = getSesionDato("IdTiendaDependiente");
+	   $esVenta   = (isset($_GET["esVenta"]))? CleanText($_GET["esVenta"]):'';
+	   $IdLocal   = ($esVenta == 'on')? CleanID($_GET["idlocal"]):$IdLocal;
+	   echo getIdComprobanteAlbaran(CleanID($_GET["idex"]),$IdLocal);
+    	   exit();
+ 	   break;
+        
          case "setIdClienteDocumento":
 	   $iduser = CleanID($_GET["iduser"]);
 	   $id = CleanID($_GET["id"]);
@@ -1498,6 +1519,49 @@ switch($modo) {
 	case "actualizarDashBoard":
 	  updateDashBoard();
 	  break;				
+	case "checkIntegridadProducto":
+	  $idmarca        = CleanID($_GET["xmarca"]);
+	  $idlaboratorio  = CleanID($_GET["xlab"]);
+	  $descripcion    = CleanCadena($_GET["xdescripcion"]);
+	  
+	  echo " ~".checkIntegridadProducto($idmarca,$idlaboratorio,$descripcion);
+	  break;
+
+	case "mostrarCreditosCliente":
+	  $IdCliente = CleanID($_GET["IdCliente"]);
+	  $IdLocal   = getSesionDato("IdTienda");
+	  $Desde     = CleanCadena($_GET["desde"]);
+	  $Hasta     = CleanCadena($_GET["hasta"]);
+	  $TipoMov   = CleanText($_GET["mov"]);
+	  $datos     = ObtenerCreditos($IdCliente,$IdLocal,$Desde,$Hasta,$TipoMov);
+	  VolcandoXML( Traducir2XML($datos),"detalles");				
+	  exit();				
+	  break;
+      
+    case "setGuiaRemision":
+        $data       = CleanText($_GET["xdata"]);
+        $xset       = CleanID($_GET["xset"]);
+        $detadoc    = getSesionDato('detadoc');
+        $detadoc[$xset] = $data;
+        setSesionDato('detadoc',$detadoc);
+        exit();	
+        break;
+
+      case "setftrasladoguia":
+        $fcambio     = CleanCadena($_GET["ftraslado"]);
+        $detadoc     = getSesionDato('detadoc');
+        $detadoc[25] = $fcambio;
+        setSesionDato('detadoc',$detadoc);
+        
+        exit();	
+        break;
+
+	case "verificaProductoInformacion":
+	  $idproducto        = CleanID($_GET["xidp"]);
+	  
+	  echo getfichatecnica2Producto($idproducto);
+	  break;
+        
 }
 
 ?>

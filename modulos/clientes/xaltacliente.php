@@ -15,8 +15,8 @@ switch($modo) {
 		$direccion      = CleanText($_POST["Direccion"]);
 		$cp             = (isset($_POST["CP"]))? CleanCP($_POST["CP"]):'';
 		$email          = CleanEmail($_POST["Email"]);
-		$telefono1      = CleanText($_POST["Telefono1"]);
-		$telefono2      = (isset($_POST["Telefono2"]))? CleanText($_POST["Telefono2"]):'';
+		$telefono1      = CleanTextTel($_POST["Telefono1"]);
+		$telefono2      = (isset($_POST["Telefono2"]))? CleanTextTel($_POST["Telefono2"]):'';
 		$contacto       = (isset($_POST["Contacto"]))? CleanText($_POST["Contacto"]):'';
 		$cargo          = (isset($_POST["Cargo"]))? CleanText($_POST["Cargo"]):'';
 		$cuentabancaria = (isset($_POST["CuentaBancaria"]))? CleanCC($_POST["CuentaBancaria"]):'';
@@ -75,8 +75,8 @@ switch($modo) {
 		$direccion = CleanText($_POST["Direccion"]);
 		$cp        = CleanCP($_POST["CP"]);
 		$email     = CleanEmail($_POST["Email"]);
-		$telefono1 = CleanText($_POST["Telefono1"]);
-		$telefono2 = ( isset($_POST["Telefono2"]) )? CleanText($_POST["Telefono2"]):'';
+		$telefono1 = CleanTextTel($_POST["Telefono1"]);
+		$telefono2 = ( isset($_POST["Telefono2"]) )? CleanTextTel($_POST["Telefono2"]):'';
 		$contacto  = ( isset($_POST["Contacto"]) )? CleanText($_POST["Contacto"]):'';
 		$cargo     = ( isset($_POST["Pago"]) )? CleanText($_POST["Cargo"]):'';
 		$cuentabancaria = (isset($_POST["CuentaBancaria"]))? CleanCC($_POST["CuentaBancaria"]):'';

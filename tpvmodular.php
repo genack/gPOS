@@ -44,6 +44,9 @@
         $TipoVentaText = ( $TipoVenta=='VC' )? " CORPORATIVO":" PERSONAL";
         $esCheckVC     = ( $TipoVenta=='VC' )? 'checked="true"':'';
         $esCheckVD     = ( $TipoVenta=='VD' )? 'checked="true"':'';
+        $txtMoDet      = getGiroNegocio2txt();
+        $esWESL        = ( $txtMoDet[0] == "WESL" );
+        $wesl          = ( $esWESL )?'false':'true';
 
 	if (!$IdLocalActivo){
 		session_write_close();
@@ -88,7 +91,7 @@
 
         echo str_replace("@","?",'<@xml version="1.0" encoding="UTF-8"@>');
 	echo str_replace("@","?",'<@xml-stylesheet href="chrome://global/skin/" type="text/css"@>');
-	echo str_replace("@","?",'<@xml-stylesheet href="css/xultpv.css?v=2" type="text/css"@>');
+	echo str_replace("@","?",'<@xml-stylesheet href="css/xultpv.css?v=3" type="text/css"@>');
         echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css?v=2" type="text/css"?>';
 ?>
 	
@@ -149,6 +152,11 @@
 	  <caption  label="TOTAL :"  class="grande boxtotal" style="color: #0f0;background-color: black"/>
 	  <caption  id="TotalLabel"  class="grande boxtotal" style="color: #0f0;background-color: black"  label=" <?php echo $Moneda[1]['S']?> 0.00"/>
 
+	  <caption class="boxtotal" orient="vertical" >
+	    <label  id="TotalListadoLabel" value = "en 0 productos"/>
+	    <label  value= "listados"/>
+	  </caption>
+	  
 	  <spacer flex="1"/>
 	  <toolbarbutton id="ticketPromocionSeleccionado" image="img/gpos_tpvpromocion.png"
 			 style="color: #fff; font-size: 13px"  collapsed="true"
@@ -203,9 +211,9 @@
 <!-- ficha Query Abono -->
 
 <!-- ficha Arqueo de caja -->
-<vbox style="padding:1em">
+<vbox style="padding:1em 1em 0em 1em">
 <iframe id="frameArqueo" name="frameArqueo" flex="1" src="<?php echo $_BasePath; ?>modulos/arqueo/arqueo.php"/>
-<button class="media btn"  image="img/gpos_volver.png" label="Volver TPV" oncommand="VerTPV()" collapsed="false"/>
+<button class="media btn"  image="img/gpos_volver.png" label="Volver TPV" oncommand="VerTPV()" collapsed="true"/>
 </vbox>
 <!-- ficha Arqueo de caja -->
 
@@ -213,6 +221,12 @@
 <?php include("partes-tpv/tpvmodificacionlineaseries.php"); ?>
 <!-- modificacion de linea de serie -->
 
+<!-- ficha Guia Remision -->
+<vbox style="padding:1em 1em 0em 1em">
+<iframe id="frameGuiaRemision" name="frameGuiaRemision" flex="1" src="<?php echo $_BasePath; ?>modulos/guiaremision/xulguiaremision.php"/>
+</vbox>
+<!-- ficha Guia Remision -->
+                             
 </deck>
 
 <!-- panel botones derecho y mesajeria -->
@@ -266,6 +280,7 @@ var cktextid                = "NOM,NombreClienteBusqueda,NombreBusqueda,buscaCli
  Local.esSAT                = "<?php echo ( Admite('SAT'))? 1:0; ?>";
  Local.esStock              = "<?php echo ( Admite('Stocks'))? 1:0; ?>";
  Local.esAdmin              = "<?php echo ( Admite('Precios'))? true:false; ?>";
+ Local.esWESL               = "<?php echo ( $esWESL )? true:false; ?>";
  Local.ocupado              = true;
  Local.esCajaCerrada        = "<?php echo cajaescerrado(); ?>";
  Local.esSyncPreventa       = false;
@@ -299,7 +314,12 @@ var cktextid                = "NOM,NombreClienteBusqueda,NombreBusqueda,buscaCli
  Local.AbonoClienteDebe      = 0;
  Local.CreditoClienteImporte = 0;
  Local.CreditoClienteEntregado = 0;
- Local.CreditoClienteTotal    = 0;
+ Local.CreditoClienteTotal   = 0;
+ Local.ListaProductoViewCR   = true;
+ Local.ListaProductoViewCTO  = true;
+ Local.ListaProductoViewPVC  = true;
+ Local.ListaProductoViewPVE  = true;
+ Local.ListaProductoViewPVD  = true;
 
  Global.fechahoy = "<?php 
 	$cad = "%A %d del %B, %Y";
@@ -362,10 +382,9 @@ CargarbtnSalir();
 //Prepara listado de productos para limpieza rapida.
  document.gClonedListbox = document.getElementById('listaProductos').cloneNode(true);
  document.gClonedListboxPanel = document.getElementById('listaPanelProductos').cloneNode(true);
-
 //]]></script>
 
-<script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tpv.js?ver=3.1/r<?php echo rand(0,99999999); ?>" async="async"/>
+<script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tpv.js?ver=4.7.1/r<?php echo rand(0,99999999); ?>" async="async"/>
 
 </window>
 

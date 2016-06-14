@@ -15,6 +15,7 @@ $IdComprobante = CleanID($_GET["idcomprobante"]);
 $operador      = ($_GET["nombreusuario"])? $_GET["nombreusuario"]:$_SESSION["NombreUsuario"];
 $LocalVenta    = (isset($_GET["idlocal"]))? CleanID($_GET["idlocal"]):0;
 $IdLocal       = ($LocalVenta != 0)? $LocalVenta:$IdLocal;
+$IdComprobanteNum = CleanID($_GET["idnum"]);
 
  $sql = "SELECT DireccionFactura
           FROM   ges_locales
@@ -79,7 +80,7 @@ if ($codcliente==0){
                 $esmov
                 WHERE ges_comprobantes.Eliminado = 0
                 AND  ges_comprobantesnum.Eliminado = 0
-                AND  ges_comprobantesnum.Status = 'Emitido'
+                AND  ges_comprobantesnum.Status IN ('Emitido','Facturado')
                 AND  ges_comprobantes.IdComprobante = '$IdComprobante'
                 AND  ges_comprobantes.IdLocal       = '$IdLocal'";
  //AND  ges_comprobantestipo.TipoComprobante = 'AlbaranInt'";
@@ -92,6 +93,16 @@ $nombre    = $acliente[0];
 $direccion = $acliente[1];
 $nif       = $acliente[2];
 $nombre    = str_replace('&#038;','&',$nombre);
+
+// obtener datos guia remision
+$sql = "SELECT * FROM ges_guiaremision ".
+       "WHERE IdComprobanteNum = '$IdComprobanteNum' ".
+       "AND Eliminado = 0 ".
+       "AND IdLocal = '$IdLocal' ";
+
+$row_guia = queryrow($sql);
+
+// *************
 
 //Imprime Comrpobante
 //$pdf=new PDF();
@@ -222,7 +233,8 @@ $IdComprobante=$lafila["IdComprobante"];
 	  "	    ges_productos.UnidadMedida ".
 	  "FROM     ges_comprobantesdet,ges_productos,ges_productos_idioma, ".
 	  "         ges_detalles,ges_modelos,ges_marcas,ges_laboratorios ".
-	  "WHERE    ges_comprobantesdet.IdComprobante = '".$IdComprobante."' ".
+	  "WHERE    (ges_comprobantesdet.IdComprobante = '".$IdComprobante."' ".
+	  "OR    ges_comprobantesdet.IdAlbaran = '".$IdComprobante."') ". 
 	  "AND      ges_productos.IdLabHab = ges_laboratorios.IdLaboratorio ".
 	  "AND      ges_comprobantesdet.IdProducto = ges_productos.IdProducto ".
 	  "AND      ges_productos.IdColor = ges_modelos.IdColor  ".

@@ -2,7 +2,7 @@
 include("../tool.php");
 header("Content-Type: text/javascript; charset=UTF-8");
 
-$txtMoDet   = getModeloDetalle2txt();
+$txtMoDet   = getGiroNegocio2txt();
 $txtModelo  = $txtMoDet[1];
 $txtDetalle = $txtMoDet[2];
 

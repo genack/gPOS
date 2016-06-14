@@ -96,8 +96,8 @@ switch($modo){
 	case 'BTQE':
 	  $pathdbinicio = dirname(__FILE__) . "/../esquema/dbinicio_btqe.sql";
 	  break;
-	case 'MMKT':
-	  $pathdbinicio = dirname(__FILE__) . "/../esquema/dbinicio_mmkt.sql";
+	case 'WESL':
+	  $pathdbinicio = dirname(__FILE__) . "/../esquema/dbinicio_wesl.sql";
 	  break;
 	}
 	

@@ -3,7 +3,7 @@
     <html:iframe id='windowpopup' name='windowpopup' src='about:blank' width='100%' style='border: 0' height='100%'  onload='if(this.src != "about:blank" ) loadFocusPopup()'></html:iframe> 
     </html:div>
 
-<command id="quitaArticulo" oncommand="QuitarArticulo()"   disabled='false'  label="<?php echo _(" Quitar artículo") ?>"/>  
+<command id="quitaArticulo" oncommand="QuitarArticulo()" label="<?php echo _(" Quitar artículo") ?>"/>  
 
 <popupset>
   <popup id="accionesLista" class="media">
@@ -11,6 +11,7 @@
       <menupopup>
 	<menuitem label="<?php echo _("¿Cuántas?"); ?>" 
 		  oncommand="setTimeout('agnadirPorMenu(\'preguntar\')',50)"/>
+        <menuseparator />
 	<menuitem label="1" oncommand="agnadirPorMenu(1)"/>
 	<menuitem label="2" oncommand="agnadirPorMenu(2)"/>
 	<menuitem label="3" oncommand="agnadirPorMenu(3)"/>
@@ -20,15 +21,37 @@
 	<menuitem label="7" oncommand="agnadirPorMenu(7)"/>
 	<menuitem label="8" oncommand="agnadirPorMenu(8)"/>
 	<menuitem label="9" oncommand="agnadirPorMenu(9)"/>
-	<menuitem label="10" oncommand="agnadirPorMenu(10)"/>				   
+	<menuitem label="10" oncommand="agnadirPorMenu(10)"/>
+        <menuseparator />
+        <menuitem id="agnadirMenoreoPorMedio" label="1/2"
+                  oncommand="agnadirPorMenu(0.5)" collapsed="true"/>
+        <menuitem id="agnadirMenoreoPorCuarto" label="1/4"
+                  oncommand="agnadirPorMenu(0.25)" collapsed="true"/>
       </menupopup>
     </menu>
+    <!--menuitem class="menuitem-iconic" image="img/gpos_tpv_menudeo.png" label=" Vender x Unidad"  oncommand="agnadirPorMenu()"/ -->
+    <menuitem id="preventaMayoreoEmpaque" class="menuitem-iconic" image="img/gpos_tpv_mayoreo.png" label="Vender x Empaque"  oncommand="agnadirPorMenu('mayoreo')" collapsed="true" />
+    <menuitem id="preventaMayoreoDocena" class="menuitem-iconic" image="img/gpos_tpv_mayoreo.png" label="Vender x Docena"  oncommand="agnadirPorMenu('docena')" collapsed="<?php echo $wesl;?>"/>
+    <menuitem id="preventaCorporativo" class="menuitem-iconic" image="img/gpos_tpv_mayoreo.png" label="Vender a Precio Corp."  oncommand="agnadirPorMenu('corporativo')" collapsed="true" />
     <menuseparator />
-    <menuitem class="menuitem-iconic" image="img/gpos_tpv_menudeo.png" label=" Vender"  oncommand="agnadirPorMenu()"/>
-    <menuitem id="preventaMayoreo" class="menuitem-iconic" image="img/gpos_tpv_mayoreo.png" label=" Mayoreo"  oncommand="agnadirPorMenu('mayoreo')" disabled="true"/>
-    <menuseparator />
-    <menuitem id="preventaFichaTecnica" class="menuitem-iconic" image="img/gpos_tpv_fichatec.png" label="<?php echo _(" Ficha Tecnica") ?>"  oncommand="lanzarFichaTecnica()" disabled="true"/>
+    <menuitem id="preventaFichaTecnica" class="menuitem-iconic" image="img/gpos_tpv_fichatec.png" label="<?php echo _(" Ficha Tecnica") ?>"  oncommand="lanzarFichaTecnica()" collapsed="true"/>
     <menuitem class="menuitem-iconic" image="img/gpos_tpv_fichaex.png" label="<?php echo _(" Ficha de Existencias") ?>"  oncommand="ToggleFichaForm()"/>
+           <menu label=" Ver Listado">
+    <menupopup>
+       <menuitem class="menuitem-iconic" image="img/gpos_tpv_ventas.png" id="viewpreventaCostos" 
+                  label="Precio Compra" oncommand="viewListaProductoPrecios('CTO')"  collapsed="true"/>
+	<menuitem class="menuitem-iconic" image="img/gpos_tpv_ventas.png" id="viewpreventaCorporativo"
+            label="Precio Corporativo" oncommand="viewListaProductoPrecios('PVC')"  collapsed="true"/>
+	<menuitem class="menuitem-iconic" image="img/gpos_listados.png" collapsed="<?php echo $wesl;?>"
+                  label="Precio Docena" oncommand="viewListaProductoPrecios('PVD')"/>
+	<menuitem class="menuitem-iconic" image="img/gpos_cajallena.png"
+                  label="Precio Empaque" oncommand="viewListaProductoPrecios('PVE')"/>
+        <menuseparator />
+	<menuitem class="menuitem-iconic" image="img/gpos_listados.png"
+                  label="Codigo Referencia" oncommand="viewListaProductoPrecios('CR')"/>
+      </menupopup>
+    </menu>
+
     <menuseparator />
     <menuitem class="menuitem-iconic" image="img/gpos_tpvmensaje.png" label="<?php echo _(" Anotar Nuevo Producto") ?>"  oncommand="lanzarRegistroBorrador()" />
     <menuseparator />	   	   	   
@@ -42,13 +65,13 @@
      <menuseparator />
      <menu id="VentaRealizadaImprimir" label="<?php echo _("Imprimir") ?>">
        <menupopup> 
-         <menuitem label="<?php echo _("Comprobante") ?>" 
+         <menuitem label="<?php echo _("Comprobante") ?>" class="menuitem-iconic" image="img/gpos_tpv_limpiarlista.png"
                    oncommand="ReimprimirVentaSeleccionada(1)"/>
-         <menuitem label="<?php echo _("Ticket detallado") ?>" 
+         <menuitem label="<?php echo _("Ticket detallado") ?>" class="menuitem-iconic" image="img/gpos_tpv_limpiarlista.png"
                    oncommand="imprimirFormatoDetalladoTicketSeleccionada()"/>
-         <menuitem label="<?php echo _("Ticket de Pago") ?>" 
+         <menuitem label="<?php echo _("Ticket de Pago") ?>" class="menuitem-iconic" image="img/gpos_tpv_limpiarlista.png"
                    oncommand="imprimirFormatoImporteVentaSeleccionada()"/>
-         <menuitem id="VentaSuscripcionImprimir" label="<?php echo _("Suscripción") ?>"
+         <menuitem id="VentaSuscripcionImprimir" label="<?php echo _("Suscripción") ?>" class="menuitem-iconic" image="img/gpos_tpv_limpiarlista.png"
                    oncommand="ReimprimirVentaSuscripcion()" collapsed="true"/>
        </menupopup>
      </menu>
@@ -68,6 +91,15 @@
      <menuitem id="VentaRealizadaBoletar" label="<?php echo _("Boletar")?>" oncommand="BoletarNroDocumento('Boletar')" />
      <menuitem id="VentaRealizadaFacturar" label="<?php echo _("Facturar")?>" oncommand="FacturarNroDocumento('Facturar')" />
      <menuitem id="VentaRealizadaFacturarLote" label="<?php echo _("Facturar por lote")?>" oncommand="FacturarPorLote()" />
+     <menuseparator />
+     <menu id="VentaGuiaRemision" label="<?php echo _("Guía Remisión") ?>">
+         <menupopup>
+             <menuitem label="<?php echo _("Imprimir") ?>" 
+                       oncommand="imprimirGuiaRemisionVentaSeleccionada()"/>   
+             <menuitem label="<?php echo _("Editar") ?>" id="VentaGuiaRemisionEdit"
+                       oncommand="editarGuiaRemisionVentaSeleccionada()"/>
+         </menupopup>
+     </menu>
      <menuseparator />
      <menuitem id="VentaRealizadaCambioCliente" label="<?php echo _("Cambiar cliente")?>" oncommand="CambiarClienteDocumento()"  <?php gulAdmite("Administracion") ?> />
      <menuseparator />
@@ -115,13 +147,13 @@
     <menuseparator />	      
     <menuitem id="ticketModificarPrecio" label="<?php echo _(" Modificar precio") ?>" 
     class="menuitem-iconic" image="img/gpos_tpv_ventas.png" 
-    oncommand="ModificarPrecio(false)" <?php gulAdmite("Precios") ?> />
+    oncommand="ModificarPrecio(false)" <?php gulAdmite("Precios")  ?>  collapsed="true" />
     <menuitem id="ticketModificarDescuento" label="<?php echo _(" Modificar descuento") ?>" 
     class="menuitem-iconic" image="img/gpos_tpv_ventas.png" 
     oncommand="ModificarDescuento(<?php jsAdmite("Precios",false) ?>,false)"/>
     <menuitem id="ticketModificarImporte" label="<?php echo _(" Modificar importe") ?>" 
     class="menuitem-iconic" image="img/gpos_tpv_ventas.png" 
-    oncommand="ModificarImporte()" <?php gulAdmite("Precios") ?> />
+    oncommand="ModificarImporte()" <?php gulAdmite("Precios") ?> collapsed="true" />
     <menuseparator />
     <menuitem class="menuitem-iconic" image="img/gpos_tpvservicios.png" 
 	      label="<?php echo _(" Agregar Servicio") ?>"
@@ -130,19 +162,18 @@
 	      label="<?php echo _(" Modificar Concepto") ?>"
     oncommand="ConceptoParaFila()"/>	   
     <menuseparator />
-    <menuitem class="menuitem-iconic" image="img/gpos_productos.png" 
-	      command="quitaArticulo" />
-    <menuseparator />
     <menuitem id="preventaNumerosSeries" label="<?php echo _(" Mostrar Números Serie") ?>" 
-    class="menuitem-iconic" image="img/gpos_barcode.png" disabled="true"
+    class="menuitem-iconic" image="img/gpos_barcode.png" collapsed="true"
     oncommand="mostrarseries('mostrar',0)"/>
     <menuitem id="preventaDetalleMProducto" label="<?php echo _(" Mostrar MixProductos") ?>"
-    class="menuitem-iconic" image="img/gpos_tpvreferencia.png" disabled="true"
+    class="menuitem-iconic" image="img/gpos_tpvreferencia.png" collapsed="true"
     oncommand="mostrardetalleMProducto('mostrar',0)"/>
     <menuseparator />
     <menuitem class="menuitem-iconic" image="img/gpos_tpv_cancelarventa.png" 
 	      label="<?php echo _(" Cancelar venta") ?>" oncommand="CancelarTicket()" />
-    
+    <menuitem class="menuitem-iconic" image="img/gpos_productos.png" 
+	      command="quitaArticulo" />
+     
   </popup>
   <popup id="AccionesProductoDetalleSat">
     <menuitem id="itemAgregarProductoSatDet" label="<?php echo _("Agregar") ?>"

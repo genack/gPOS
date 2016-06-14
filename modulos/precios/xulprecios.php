@@ -1,7 +1,7 @@
 <?php
 SimpleAutentificacionAutomatica("visual-xulframe");
 StartXul('Precios',$predata="",$css='');
-StartJs($js='modulos/precios/preciostpv.js?v=3.1');
+StartJs($js='modulos/precios/preciostpv.js?v=4.5');
 ?>
 
   <script>//<![CDATA[
@@ -10,7 +10,7 @@ StartJs($js='modulos/precios/preciostpv.js?v=3.1');
   var cDescuentoGral  = <?php echo $DescuentoGral ?>;
   var cMetodoRedondeo = "<?php echo $MetodoRedondeo ?>";
   var cImpuestoIncluido = <?php echo $COPImpuesto ?>;
-
+  var cWhosesale        = <?php echo $wesl ?>;
   //]]></script>
   <?php $Moneda = getSesionDato("Moneda"); getMonedaJS($Moneda); ?>
 
@@ -103,12 +103,12 @@ StartJs($js='modulos/precios/preciostpv.js?v=3.1');
 	      <columns>
 		<column/>
 		<column/>
-		<column/>
+		<!--column/-->
 	      </columns>
 	      <rows id="detalle_productos">
 		<row  class="box">
 		  <caption label ="Stock"/>
-		  <caption label ="Stock Min"/>
+		  <!--caption label ="Stock Min"/-->
 		  <!--label value="."/-->
 		</row>
 	      </rows>
@@ -155,6 +155,8 @@ StartJs($js='modulos/precios/preciostpv.js?v=3.1');
 	    </grid>
 	  </groupbox>  
 	</hbox>
+
+
 	<hbox> 
 	  <groupbox id="ventaCorporativa" hidden="true" >
 	    <caption class="box" label="Venta Corporativa"/>
@@ -178,6 +180,27 @@ StartJs($js='modulos/precios/preciostpv.js?v=3.1');
 	    </grid>
 	  </groupbox>  
 	</hbox>
+
+        	<hbox> 
+	  <groupbox >
+	    <caption  class="box" label="Venta/Mayor" />
+	    <grid >
+	      <columns>
+		<column/>
+		<column/>
+		<column/>
+	      </columns>
+	      <rows id="precio_empaque">
+		<row  class="box">
+		  <caption label=""/>
+		  <caption label="PV/Empaq."/>
+		  <caption label="PV/Docena" collapsed="<?php echo $wesl ?>"/>
+		</row>
+	      </rows>
+	    </grid>
+	  </groupbox>  
+	</hbox>
+
       </hbox>
     </hbox>
 

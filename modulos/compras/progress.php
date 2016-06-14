@@ -110,14 +110,14 @@ function lWebFormCartBuy(){
 }
 
 function loadCompras(){
-     parent.MostrarDeck();
+     //parent.MostrarDeck();
      //parent.Compras_buscar();
      parent.Compras_verCarrito()
      hWebForm();
 }
 
 function loadPresupuesto(){
-     parent.MostrarDeck();
+     //parent.MostrarDeck();
      var subweb = parent.document.getElementById("web");
      if(subweb)
  	 subweb.setAttribute("src","about:blank");
@@ -133,7 +133,7 @@ function postloadPresupuesto(){
 }
 
 function postViewPresupuesto(){ parent.xwebCollapsed(false);
-                                parent.solapa('modulos/compras/xulcompras.php?modo=entra','Compras - Presupuestos','compras');
+                                parent.solapa('modulos/compras/xulcompras.php?modo=entra','Compras > Presupuestos','compras');
 }
 
 

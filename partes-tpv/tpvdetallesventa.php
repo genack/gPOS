@@ -123,7 +123,7 @@
     
 
     <listbox id="busquedaVentas" contextmenu="AccionesBusquedaVentas" 
-	     onclick="RevisarVentaSeleccionada()" flex="1"
+	     onclick="RevisarVentaSeleccionada()" flex="1"  oncontextmenu="RevisarVentaSeleccionada()"
 	     onkeypress="if (event.keyCode==13) RevisarVentaSeleccionada()">
       <listcols flex="1">
 	<listcol/>		
@@ -308,10 +308,10 @@
 	  <caption id="wtitleComprobanteVenta"
 		   style="padding:0.4em;font-size: 12px;font-weight: bold;"		   
 		   label="<?php echo _("Fecha Emisión") ?>" />
-          <hbox>
+          <vbox>
             <datepicker id="dateFechaEmision" type="popup" />
             <timepicker id="timeFechaEmision" type="popup" />
-          </hbox>
+          </vbox>
           <hbox align="center" id="hboxReservado" collapsed="true">
             <caption class="xbase" label="Reservado "/>
             <checkbox id="checkReserva" />

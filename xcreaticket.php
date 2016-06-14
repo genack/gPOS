@@ -174,6 +174,7 @@ for($t=0;$t<$numlines;$t++)
       {
 	$unidades 	= CleanFloat($_POST[$firma . "unid"]);
 	$precio 	= CleanFloat($_POST[$firma . "precio"]);
+	$precioalmacen 	= CleanFloat($_POST[$firma . "precioalmacen"]);
 	$descuento 	= CleanFloat($_POST[$firma . "descuento"]);
 	$impuesto 	= CleanFloat($_POST[$firma . "impuesto"]);
 	$importe        = CleanFloat($_POST[$firma . "importe"]);
@@ -190,11 +191,12 @@ for($t=0;$t<$numlines;$t++)
 	$idproducto	= CleanText($_POST[$firma . "idproducto"]);
 	$costo	        = CleanDinero($_POST[$firma . "costo"]);
 	$unidadimporte  = ($importe/$unidades);
+	$concepto       = ($concepto == 'undefined')? '':$concepto;
 
 	AgnadirTicket($codigo,$unidades,$precio,$descuento,$impuesto,
 		      $importe,$concepto,$talla,$color,$referencia,$cb,
 		      $idsubsidiario,$nombre,$pedidodet,$status,$oferta,$costo,
-		      $idproducto,$unidadimporte);
+		      $idproducto,$unidadimporte,$precioalmacen);
       }
   }
 
@@ -225,7 +227,7 @@ echo $idComprobante;
 function AgnadirTicket($codigo,$unidades,$precio,$descuento,$impuesto,
 		       $importe,$concepto,$talla,$color,$referencia,$cb,
 		       $idsubsidiario,$nombre,$pedidodet,$status,$oferta,$costo,
-		       $idproducto,$unidadimporte) {
+		       $idproducto,$unidadimporte,$precioalmacen) {
 
 	global $ImporteNeto,$IvaImporte,$TotalImporte;
 	global $icarrito,$carrito;
@@ -236,7 +238,7 @@ function AgnadirTicket($codigo,$unidades,$precio,$descuento,$impuesto,
 	$fila->Set($codigo,$unidades,$precio,$descuento,$impuesto,
 		   $importe,$concepto,$talla,$color,$referencia,$cb,
 		   $idsubsidiario,$nombre,$pedidodet,$status,$oferta,$costo,
-		   $idproducto,$unidadimporte);
+		   $idproducto,$unidadimporte,$precioalmacen);
 
 	//Guardamos en carrito
 	$carrito[$icarrito] = $fila;
@@ -347,9 +349,10 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
 	registrarMovimientoBonoCliente($IdCliente,"-".$entregaBono,1,$IdLocal,
 				       $idComprobante,$idDependiente);
       //Registra Nota Credito Entregado
+      $xconcepto = "Pago ".$textticket;
       if($entregaCredito > 0)
 	registrarMovimientoCreditoCliente($IdCliente,"-".$entregaCredito,1,$IdLocal,
-					  $idComprobante,$idDependiente,false);
+                                      $idComprobante,$idDependiente,$xconcepto,false);
       //Registra Bono Entregado
       if($bonoPromocion > 0)
 	registrarMovimientoBonoCliente($IdCliente,$bonoPromocion,0,$IdLocal,
@@ -405,7 +408,8 @@ function EjecutarTicket( $idDependiente, $entregado ,$IdLocal, $Num,
     //Dinero...
     if($esVenta)
       EntregarCantidades($textCaja,$IdLocal,$entregaEfectivo,$entregaBono,$entregaTarjeta,
-			 $idComprobante,$TipoOperacion,false,$modalidadpago,false);
+			 $idComprobante,$TipoOperacion,false,$modalidadpago,false,
+			 $idDependiente);
 
     //Procesar Lineas...
     foreach ($carrito as $fila) 

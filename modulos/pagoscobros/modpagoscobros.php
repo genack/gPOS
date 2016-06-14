@@ -11,11 +11,13 @@ define("FAC_PAGADA",2);
 $IdLocal = getSesionDato("IdTienda");
 $locales = getLocalesPrecios($IdLocal);
 
-$modo = CleanText($_GET["modo"]);
+$modo   = CleanText($_GET["modo"]);
+$Moneda = getSesionDato("Moneda");
+
 switch($modo) {
   case "verPagosProveedor":
     $xval  = 'rPagos';
-    $tcbte = 'Pagos';
+    $tcbte = 'Comprobantes Proveedor';
     include("xulpagosproveedor.php"); 		
     break;
   case "verCobrosCliente":
@@ -24,8 +26,7 @@ switch($modo) {
     include("xulpagosproveedor.php"); 		
     break;
   case "verPagosProveedorDocComprobantes":
-    $btnVolver     = true;
-    
+    //$btnVolver     = true;
   case "verPagosProveedorDoc":
     $idordencompra = (isset($_GET["xorden"]))? CleanID($_GET["xorden"]):0;
     $idproveedor   = (isset($_GET["xprov"]))? CleanID($_GET["xprov"]):0;
@@ -276,7 +277,8 @@ switch($modo) {
     $IdUsuario         = CleanID(getSesionDato("IdUsuario"));
     $LocalActual       = CleanID(getSesionDato("IdTienda"));
     $idlocal           = ($idlocal=='false')? $LocalActual : $idlocal; 
-    $tipoprov          = CleanText($_POST["tipoprov"]); 
+    $tipoprov          = CleanText($_POST["tipoprov"]);
+    $cambiodivisa      = CleanText($_POST["cambiodivisa"]); 
 
     $fechaoperacion    = ($fechaoperacion=='')? false:date("Y-m-d H:i:s", strtotime($fechaoperacion));
 
@@ -286,11 +288,22 @@ switch($modo) {
     $IdArqueo          = (!$IdArqueo)? 0:$IdArqueo;
     $esRegistroCaja    = false;
 
+    if($tipomoneda != 1 && $cambiodivisa == '1'){
+        $CodPartida = 'S125';
+        $IdMoneda = $tipomoneda;
+        $IdMonedaCambio = $IdMoneda;//($IdMoneda == 1)? 2:1;
+        $IdArqueoM  = $mov->getIdArqueoEsCerrado($IdMonedaCambio,$idlocal);
+        if(!$IdArqueoM){ 
+		    echo "~1~"; // Caja de moneda destino está cerrada;
+		    return false;
+        }
+    }
+
     $id = CrearPagoDocumento($provhab,$ordencompra,$modalidadpago,$fechaoperacion,
 			     $codigooperacion,$nrodocumento,$cuentaproveedor,
 			     $cuentaempresa,$tipomoneda,
 			     $cambiomoneda,$importe,$obs,$idlocal,$IdUsuario,
-			     $estado,$IdArqueo,$tipoprov);
+                             $estado,$IdArqueo,$tipoprov,$cambiodivisa);
 
     if($IdArqueo == 0){
       if($xestado == "Pendiente")
@@ -298,13 +311,10 @@ switch($modo) {
     }
 
     if($esRegistroCaja && $id)
-      echo "0";
+      echo "~0~";
 
     if(!$esRegistroCaja && $id)
-      echo "1";
-
-    if (!$id)		
-      echo "$id";
+      echo "~~".$id;
 
     exit();
     break;
@@ -328,7 +338,8 @@ switch($modo) {
 
     $IdUsuario         = CleanID(getSesionDato("IdUsuario"));
     $LocalActual       = CleanID(getSesionDato("IdTienda"));
-    $idlocal           = ($idlocal=='false')? $LocalActual : $idlocal; 
+    $idlocal           = ($idlocal=='false')? $LocalActual : $idlocal;
+    $cambiodivisa      = CleanText($_POST["cambiodivisa"]); 
 
 
     $fechaoperacion    = ($fechaoperacion=='')? false:date("Y-m-d H:i:s", strtotime($fechaoperacion));
@@ -338,17 +349,27 @@ switch($modo) {
     $estado            = (!$IdArqueo)? "Borrador":$estado;
     $IdArqueo          = (!$IdArqueo)? 0:$IdArqueo;
 
+    if($tipomoneda != 1 && $cambiodivisa == '1'){
+        $CodPartida = 'S125';
+        $IdMoneda = $tipomoneda;
+        $IdMonedaCambio = $IdMoneda;//($IdMoneda == 1)? 2:1;
+        $IdArqueoM  = $mov->getIdArqueoEsCerrado($IdMonedaCambio,$idlocal);
+        if(!$IdArqueoM){ 
+		    echo "~1~"; // Caja de moneda destino está cerrada;
+		    return false;
+        }
+    }
 
     $id = ModificaPagoDocumento($provhab,$modalidadpago,$fechaoperacion,
 				$codigooperacion,$nrodocumento,$cuentaproveedor,
 				$cuentaempresa,$tipomoneda,
 				$cambiomoneda,$importe,$obs,$idlocal,$IdUsuario,
-				$estado,$idoc,$IdArqueo,$cEstado);
+                                $estado,$idoc,$IdArqueo,$cEstado,$cambiodivisa);
 	  
     if ($id)		
-      echo "$id";
+      echo "~~".$id;
     else
-      echo "0";
+      echo "~0~";
 	  
     exit();
     break;

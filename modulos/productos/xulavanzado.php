@@ -41,7 +41,7 @@ function OpcionesBusqueda($retorno) {
 
 function GeneraXul($retorno) {
 
- $txtMoDet   = getModeloDetalle2txt();
+ $txtMoDet   = getGiroNegocio2txt();
  $esBTCA     = (  $txtMoDet[0]  == "BTCA" );
  $btca       = ( $esBTCA )?'':'collapsed="true"';
  $txtalias   = $txtMoDet[3];

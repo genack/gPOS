@@ -2,7 +2,7 @@
 //include("tool.php");
 SimpleAutentificacionAutomatica("visual-xulframe");
 StartXul('Compras Pedidos',$predata="",$css='');
-StartJs($js='modulos/ordencompra/ordencompra.js?v=3.1');
+StartJs($js='modulos/ordencompra/ordencompra.js?v=3.1.1');
 ?>
 
   <script>//<![CDATA[

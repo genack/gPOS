@@ -360,6 +360,8 @@ function registrarAlbaranDestino($Destino,$Origen,$Motivo,$NComprobante,$TipoOpe
 		$Values   .= "'".$Origen."-".$NComprobante."',";
 		$Keys     .= "FechaFacturacion,";
 		$Values   .= "NOW(),";
+		$Keys     .= "FechaPago,";
+		$Values   .= "NOW(),";        
 		$Keys     .= "EstadoDocumento";
 		$Values   .= "'Borrador'";
 		$sql       = "insert into ges_comprobantesprov (".$Keys." ) values (".$Values.")";
@@ -531,6 +533,15 @@ function ResetearCarritoCompras(){
         $detadoc[13]=0;
         $detadoc[14]=0;
         $detadoc[15]='';
+        $detadoc[17]='';
+        $detadoc[18]='';
+        $detadoc[19]='';
+        $detadoc[20]='';
+        $detadoc[21]='';
+        $detadoc[22]='';
+        $detadoc[23]='';
+        $detadoc[24]='';
+        $detadoc[25]=false;
         setSesionDato("detadoc",$detadoc);
         setSesionDato("aCredito",false);
 	setSesionDato('incImpuestoDet',false);

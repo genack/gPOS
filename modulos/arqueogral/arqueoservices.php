@@ -102,9 +102,12 @@ switch($modo){
 		$Partida      = CleanText($_REQUEST["partida"]);
 		$CodPartida   = CleanCadena($_REQUEST["codpartida"]);
 		$IdCuenta     = CleanID($_REQUEST["idcuenta"]);
+        $xidlocaldest = CleanID($_REQUEST["xidld"]);
 
 		$IdPartida    = obtenerIdPartidaCaja($CodPartida);
 
+        if($IdPartida == 0 || !$IdPartida) return false;
+        
 		// Control de arqueo
 		$mov          = new movimientogral;
 		$IdArqueo     = $mov->getIdArqueoEsCerrado($IdMoneda,$IdLocal);
@@ -140,6 +143,23 @@ switch($modo){
 		  $xcambiomoneda = $cambiomoneda;
 		}
 		$cambiomoneda = ($IdMoneda == 1)? 1:$cambiomoneda;
+
+        // Control transferencia a otro almacen
+        if($CodPartida == 'S126'){
+            //$oLocal->Load($xidlocaldest);
+            $LocalDestino = $xidlocaldest;//$oLocal->get("IdLocal");
+            //$nLocalDestino= $oLocal->get("NombreComercial");
+            $IdArqueoDest = $mov->getIdArqueoEsCerrado($IdMoneda,$LocalDestino);
+            if(!$IdArqueoDest) {
+                echo "~"."05"; // Caja destino cerrada
+                return false;
+            }
+            
+            if($IdLocal == $LocalDestino){
+                echo "~"."03"; // Mismo local
+                return false;
+            }
+        }
 		  
 		$idopcaja = EntregarOperacionGral($IdLocal,$cantidad,$concepto,$IdPartida,
 						  $IdMoneda,$cambiomoneda,$operacion,
@@ -149,7 +169,7 @@ switch($modo){
 		if($IdCuenta){
 		  $IdOperacionCaja     = 0;
 		  $IdOperacionCajaGral = $idopcaja;
-		  $TipoMovimiento      = ($operacion == 'Ingreso')? 'Salida':'Entrada';
+		  $TipoMovimiento      = ($operacion == 'Ingreso')? 'Salida':'Ingreso';
 
 		  RegistrarMovimientoBancario($IdLocal,$IdOperacionCaja,$IdOperacionCajaGral,
 					    $IdUsuario,$IdCuenta,$TipoMovimiento,$concepto,
@@ -158,7 +178,7 @@ switch($modo){
 
 		if($CodPartida == 'S124'){
 		  $operacion = 'Ingreso';
-		  $concepto  = 'Transferecnia desde '.$LocalActual;
+		  $concepto  = 'Transferencia desde '.$LocalActual;
 		  $IdLocal   = $LocalDestino;
 		  $IdArqueo  = $IdArqueoDest;
 		  
@@ -185,6 +205,18 @@ switch($modo){
 					$cambiomoneda,$operacion,$fechacaja,$IdUsuario,
 					$IdArqueo,$documento,$codigodoc,$proveedor);  
 		}
+
+        if($CodPartida == "S126"){
+            $operacion = 'Ingreso';
+            $concepto  = 'Transferencia desde '.$LocalActual;
+            $IdLocal   = $xidlocaldest;
+            $IdArqueo  = $IdArqueoDest;
+            
+            EntregarOperacionGral($IdLocal,$cantidad,$concepto,$IdPartida,$IdMoneda,
+					$cambiomoneda,$operacion,$fechacaja,$IdUsuario,
+					$IdArqueo,$documento,$codigodoc,$proveedor);  
+            
+        }
 
 		echo "~"."00";
 		return true;
@@ -495,7 +527,7 @@ function getMovimientosArqueo($IdArqueo){
                " ges_librodiario_cajagral.IdMoneda = ges_moneda.IdMoneda ".
 	       "WHERE ges_librodiario_cajagral.IdArqueoCajaGral = '$IdArqueo' ".
 	       "AND ges_librodiario_cajagral.Eliminado = 0 ".
-	       "ORDER BY ges_librodiario_cajagral.FechaInsercion DESC ";
+	       "ORDER BY ges_librodiario_cajagral.FechaInsercion DESC, ges_librodiario_cajagral.IdOperacionCaja DESC ";
 
 	$res = query($sql);
 	if (!$res) return $datos;
@@ -506,9 +538,21 @@ function getMovimientosArqueo($IdArqueo){
 		$row["Proveedor2"] = str_replace('&#038;','&',$row["Proveedor2"]);
 		$row["Proveedor"] = str_replace('&#038;','&',$row["Proveedor"]);
 		$DocProv = ($row["IdPagoProvDoc"] != 0)? obtenerDocGralProv($row["IdPagoProvDoc"]):"";
-		$aDocProv = ($DocProv)? explode("~",$DocProv):"";
-		$row["Documento"] = ($DocProv)? $aDocProv[0]:$row["Documento"];
-		$row["CodigoDocumento"] = ($DocProv)? $aDocProv[1]:$row["CodigoDocumento"];
+		//$aDocProv = ($DocProv)? explode("~",$DocProv):"";
+		//$row["Documento"] = ($DocProv)? $aDocProv[0]:$row["Documento"];
+		//$row["CodigoDocumento"] = ($DocProv)? $aDocProv[1]:$row["CodigoDocumento"];
+
+        if($DocProv){
+            $aDocProv = explode("~~",$DocProv);
+            $t = '';
+
+            for($i=0;$i < count($aDocProv);$i++){
+                $aDoc = explode("~",$aDocProv[$i]);
+                $row["Documento"] .= $t.$aDoc[0];
+                $row["CodigoDocumento"] .= $t.$aDoc[1];
+                $t = ',';
+            }
+        }
 
 		$datos["mov_$n"] = $row;
 		$n++;		
@@ -586,10 +630,10 @@ function InicializaCajaGral($IdLocal,$datosArqueo){
 
 function ModificarOperacionCajaGral($IdLocal,$IdOperacionCaja,$concepto,
 				    $codigodoc,$subsidiario,$documento){
-  $sql = " UPDATE ges_librodiario_cajagral SET Concepto = '$concepto', ".
-         " IdSubsidiario = '$subsidiario', ".
-         " Documento = '$documento', ".
-         " CodigoDocumento = '$codigodoc' ".
+  $sql = " UPDATE ges_librodiario_cajagral SET Concepto = '$concepto' ".
+       //" IdSubsidiario = '$subsidiario', ".
+       // " Documento = '$documento', ".
+       //" CodigoDocumento = '$codigodoc' ".
          " WHERE IdOperacionCaja='$IdOperacionCaja' ".
          " AND IdLocal = '$IdLocal' ";
   
@@ -601,9 +645,11 @@ function ModificarOperacionCajaGral($IdLocal,$IdOperacionCaja,$concepto,
 }
 
 function obtenerAnios(){
+  $IdLocal = getSesionDato("IdTienda");
   $sql = "SELECT DISTINCT(YEAR(FechaApertura)) as Anios ".
          "FROM ges_arqueo_cajagral ".
          "WHERE Eliminado = 0 ".
+         "AND IdLocal = $IdLocal ".
          "ORDER BY ges_arqueo_cajagral.FechaApertura DESC";
 
   $res = query($sql);
@@ -627,20 +673,6 @@ function verificarAperturaCajaGral($IdLocal,$IdMoneda){
   $row = queryrow($sql);
   return $row["Id"];
 
-}
-
-function RegistrarMovimientoBancario($IdLocal,$IdOperacionCaja,$IdOperacionCajaGral,
-				     $IdUsuario,$IdCuenta,$TipoMovimiento,$concepto,
-				     $cantidad){
-
-  $listkey = "IdLocal,IdUsuario,IdCuentaBancaria,IdOperacionCaja,IdOperacionCajaGral, 
-              TipoMovimiento,Concepto,Importe";
-  
-  $keyvalues = "'$IdLocal','$IdUsuario','$IdCuenta','$IdOperacionCaja','$IdOperacionCajaGral',
-                '$TipoMovimiento','$concepto',$cantidad";
-  
-  $sql = "INSERT INTO ges_movimiento_bancario ($listkey) values ($keyvalues)";
-  $res = query($sql,'Insertando nueva operacion cuenta bancaria');  
 }
 
 function obtenerDatosCuentaBancaria($idcta,$TipoMovimiento){
@@ -687,14 +719,6 @@ function obtenerUltimoSaldo($CuentaOrigen){
 
   $saldo = $ingreso - $salida;
   return $saldo;
-}
-
-function obtenerIdPartidaCaja($CodPartida){
-  $sql = "SELECT IdPartidaCaja as Id ".
-         "FROM   ges_partidascaja ".
-         "WHERE  Codigo = '$CodPartida'";
-  $row = queryrow($sql);
-  return $row["Id"];
 }
 
 function obtenerUltimaFechaCajaGral($IdLocal,$IdMoneda){

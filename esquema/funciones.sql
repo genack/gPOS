@@ -248,7 +248,7 @@ begin
   ELSE  
     UPDATE ges_synctpv SET ges_synctpv.ProformaOnline = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal; 
   END IF; 
-  CALL actualizar_presupuestosventas_up (NEW.TipoPresupuesto,NEW.Status,OLD.TotalImporte,NEW.IdLocal); 
+  CALL actualizar_presupuestosventas_up (NEW.TipoPresupuesto,NEW.Status,OLD.TotalImporte,NEW.IdLocal,OLD.Status,OLD.TipoPresupuesto); 
 END; 
 
 ;;;;;;
@@ -273,8 +273,8 @@ begin
   UPDATE ges_synctpv SET ges_synctpv.Stock = 1 WHERE ges_synctpv.IdLocal = NEW.IdLocal;  
   SELECT Servicio INTO xservicio FROM ges_productos WHERE ges_productos.IdProducto = NEW.IdProducto; 
   IF(xservicio = 0) THEN 
-    CALL actualizar_almacenes_up (OLD.StockMin,NEW.Unidades, OLD.Unidades, NEW.IdLocal,NEW.StockMin,NEW.PrecioVenta,OLD.PrecioVenta); 
-  END IF; 
+    CALL actualizar_almacenes_up (OLD.StockMin,NEW.Unidades, OLD.Unidades, NEW.IdLocal,NEW.StockMin,NEW.PrecioVenta,OLD.PrecioVenta);
+  END IF;
 END; 
 
 ;;;;;;
@@ -443,7 +443,7 @@ END;
 create procedure actualizar_almacenes_in (NEWUnidades INT, NEWIdLocal INT,NEWStockMin INT) 
 
 begin 
-    UPDATE ges_dashboard SET a_ProductosSinStock = a_ProductosSinStock+1; 
+    UPDATE ges_dashboard SET a_ProductosSinStock = a_ProductosSinStock+1  WHERE IdLocal = NEWIdLocal; 
 END; 
 
 ;;;;;;
@@ -466,15 +466,20 @@ begin
   SET n_importe = NEW.Importe;
   SET o_importe = OLD.Importe;
 
-  IF(NEW.Estado = 'Pendiente' AND OLD.Estado = 'Cancelado') THEN 
+  IF(OLD.Estado = 'Cancelado' AND NEW.Estado = 'Pendiente') THEN 
     UPDATE ges_dashboard SET v_PendServicio = v_PendServicio+1 WHERE IdLocal = NEW.IdLocal;
+    UPDATE ges_dashboard SET v_PendServicioMonto = v_PendServicioMonto+o_importe  WHERE IdLocal = NEW.IdLocal; 
+  END IF; 
+  IF(OLD.Estado = 'Pendiente' AND NEW.Estado = 'Ejecucion') THEN 
+    UPDATE ges_dashboard SET v_PendServicio = v_PendServicio-1 WHERE IdLocal = NEW.IdLocal; 
+    UPDATE ges_dashboard SET v_PendServicioMonto = v_PendServicioMonto-o_importe  WHERE IdLocal = NEW.IdLocal; 
+  END IF; 
+  IF(OLD.Estado = 'Pendiente' AND NEW.Estado = 'Cancelado') THEN 
+    UPDATE ges_dashboard SET v_PendServicio = v_PendServicio-1 WHERE IdLocal = NEW.IdLocal; 
+    UPDATE ges_dashboard SET v_PendServicioMonto = v_PendServicioMonto-o_importe  WHERE IdLocal = NEW.IdLocal; 
   END IF; 
   IF(NEW.Estado = 'Pendiente' OR NEW.Estado = 'Ejecucion') THEN 
     UPDATE ges_dashboard SET v_PendServicioMonto = v_PendServicioMonto+n_importe-o_importe  WHERE IdLocal = NEW.IdLocal;
-  END IF; 
-  IF(NEW.Estado = 'Cencelado' OR NEW.Estado = 'Finalizado') THEN 
-    UPDATE ges_dashboard SET v_PendServicio = v_PendServicio-1 WHERE IdLocal = NEW.IdLocal;
-    UPDATE ges_dashboard SET v_PendServicioMonto = v_PendServicioMonto-o_importe  WHERE IdLocal = NEW.IdLocal;
   END IF; 
 END; 
 
@@ -592,17 +597,36 @@ END;
 
 ;;;;;;
 
-create procedure actualizar_presupuestosventas_up (NEWTipoPresupuesto char(14),NEWStatus char(10),OLDTotalImporte double,NEWIdLocal int) 
+create procedure actualizar_presupuestosventas_up (NEWTipoPresupuesto char(14),NEWStatus char(10),OLDTotalImporte double,NEWIdLocal int,OLDStatus char(10),OLDTipoPresupuesto char(14)) 
 
 begin 
-  IF(NEWTipoPresupuesto = 'Preventa' AND NEWStatus <> 'Pendiente') THEN 
-    UPDATE ges_dashboard SET v_PendPreventas = v_PendPreventas-1 WHERE IdLocal = NEWIdLocal;
-    UPDATE ges_dashboard SET v_PendPreventasMonto = v_PendPreventasMonto-OLDTotalImporte WHERE IdLocal = NEWIdLocal;
+  IF(NEWTipoPresupuesto = 'Preventa' AND OLDTipoPresupuesto = 'Preventa') THEN
+    IF(NEWStatus <> 'Pendiente' AND OLDStatus = 'Pendiente') THEN 
+      UPDATE ges_dashboard SET v_PendPreventas = v_PendPreventas-1 WHERE IdLocal = NEWIdLocal;
+      UPDATE ges_dashboard SET v_PendPreventasMonto = v_PendPreventasMonto-OLDTotalImporte WHERE IdLocal = NEWIdLocal;
+    END IF;
+    IF(NEWStatus = 'Pendiente' AND OLDStatus <> 'Pendiente') THEN
+      UPDATE ges_dashboard SET v_PendPreventas = v_PendPreventas+1 WHERE IdLocal = NEWIdLocal;
+      UPDATE ges_dashboard SET v_PendPreventasMonto = v_PendPreventasMonto+OLDTotalImporte WHERE IdLocal = NEWIdLocal;
+    END IF;      
   END IF; 
-  IF(NEWTipoPresupuesto = 'Proforma' AND NEWStatus <> 'Pendiente') THEN 
-    UPDATE ges_dashboard SET v_PendProformas = v_PendProformas-1 WHERE IdLocal = NEWIdLocal;
-    UPDATE ges_dashboard SET v_PendProformasMonto = v_PendProformasMonto-OLDTotalImporte WHERE IdLocal = NEWIdLocal;
-  END IF; 
+  IF(NEWTipoPresupuesto = 'Proforma' AND OLDTipoPresupuesto = 'Proforma') THEN
+    IF(NEWStatus <> 'Pendiente' AND OLDStatus = 'Pendiente') THEN 
+      UPDATE ges_dashboard SET v_PendProformas = v_PendProformas-1 WHERE IdLocal = NEWIdLocal;
+      UPDATE ges_dashboard SET v_PendProformasMonto = v_PendProformasMonto-OLDTotalImporte WHERE IdLocal = NEWIdLocal;
+    END IF;
+    IF(NEWStatus = 'Pendiente' AND OLDStatus <> 'Pendiente') THEN 
+      UPDATE ges_dashboard SET v_PendProformas = v_PendProformas+1 WHERE IdLocal = NEWIdLocal;
+      UPDATE ges_dashboard SET v_PendProformasMonto = v_PendProformasMonto+OLDTotalImporte WHERE IdLocal = NEWIdLocal;
+    END IF;    
+  END IF;
+  IF(OLDTipoPresupuesto = 'Preventa' AND NEWTipoPresupuesto = 'Proforma') THEN
+      UPDATE ges_dashboard SET v_PendProformas = v_PendProformas+1 WHERE IdLocal = NEWIdLocal;
+      UPDATE ges_dashboard SET v_PendProformasMonto = v_PendProformasMonto+OLDTotalImporte WHERE IdLocal = NEWIdLocal;
+
+      UPDATE ges_dashboard SET v_PendPreventas = v_PendPreventas-1 WHERE IdLocal = NEWIdLocal;
+      UPDATE ges_dashboard SET v_PendPreventasMonto = v_PendPreventasMonto-OLDTotalImporte WHERE IdLocal = NEWIdLocal;
+  END IF;
 END; 
 
 ;;;;;;
@@ -762,15 +786,16 @@ END;
 
 ;;;;;;
 
-create trigger actualizar_movbancario_in after insert on ges_movimiento_bancario  
+create trigger actualizar_movbancario_in before insert on ges_movimiento_bancario  
 FOR EACH ROW 
 begin 
-  DECLARE pendiente double; 
+  DECLARE xSaldo DOUBLE; 
+  SELECT IF(SUM(Saldo) IS NULL,0,Saldo) INTO xSaldo FROM ges_movimiento_bancario WHERE IdCuentaBancaria = NEW.IdCuentaBancaria AND Eliminado = 0 ORDER BY IdMovimientoBancario DESC LIMIT 1;  
   IF(NEW.TipoMovimiento = 'Ingreso' ) THEN 
-    UPDATE ges_movimiento_bancario SET Saldo = Saldo + Importe WHERE IdLocal = NEW.IdLocal;
+    SET NEW.Saldo = xSaldo + NEW.Importe; 
   END IF; 
   IF(NEW.TipoMovimiento = 'Salida' ) THEN 
-    UPDATE ges_movimiento_bancario SET Saldo = Saldo - Importe WHERE IdLocal = NEW.IdLocal;
+    SET NEW.Saldo = xSaldo - NEW.Importe; 
   END IF; 
 END; 
 
@@ -797,6 +822,22 @@ begin
   END IF; 
   IF(NEWEstado <> 'Ejecucion' AND OLDEstado = 'Ejecucion') THEN 
     UPDATE ges_dashboard SET v_EjecPromociones = v_EjecPromociones-1 WHERE IdLocal = NEWIdLocal;
+  END IF; 
+END; 
+
+;;;;;;
+
+create trigger actualizar_unidadesvitrina before update on ges_almacenes 
+FOR EACH ROW 
+begin
+  DECLARE Resto DOUBLE; 
+  IF(OLD.Unidades > NEW.Unidades) THEN 
+    SET Resto = (OLD.Unidades - NEW.Unidades); 
+    IF((NEW.UnidadesVitrina-Resto) > 0 ) THEN 
+      SET NEW.UnidadesVitrina = NEW.UnidadesVitrina-Resto;
+    ELSE
+      SET NEW.UnidadesVitrina = 0;    
+    END IF; 
   END IF; 
 END; 
 

@@ -36,7 +36,12 @@ switch($modo) {
       $sdato    = explode("~",$xdato);
       $fechafin = ($sdato[0] == 'Ilimitado')? ",FechaFin='$sdato[0]'":",FechaFin='$sdato[1]'";
       $campoxdato = "Prolongacion='".$sdato[0]."'".$fechafin; break;
-    case '4': $campoxdato = "FechaInicio='".$xdato."'"; break;
+    case '4':
+      $campoxdato    = "FechaInicio='".$xdato."'";
+      $campoxdatodet = "FechaFacturacion='".$xdato."'";
+      //Actualizar FechaFacturacionDetalle
+      ModificaSuscripcionDet($IdSuscripcion,$campoxdatodet);
+      break;
     case '5': $campoxdato = "FechaFin='".$xdato."'";   break;
     case '6': 
       $campoxdato = "Estado='".$xdato."'";
@@ -44,7 +49,8 @@ switch($modo) {
       break;
     case '7': $campoxdato = "Comprobante='".$xdato."'"; break;
     case '8': $campoxdato = "SerieComprobante='".$xdato."'"; break;
-    case '9': $campoxdato = "Observaciones='".$xdato."'"; break;      
+    case '9': $campoxdato = "Observaciones='".$xdato."'"; break;
+    case '10': $campoxdato = "IdSubsidiario='".$xdato."'"; break;
     }
 
     ModificaSuscripcion($IdSuscripcion,$campoxdato);
@@ -147,12 +153,12 @@ function guardarSuscripcionLinea($Concepto,$IdProducto,$Cantidad,$Precio,$Descue
   $oSuscripcion->set("DiaFacturacion",$DiaFacturar,FORCE);
   $oSuscripcion->set("AdelantoPeriodo",$AdelantoPlazo,FORCE);
   $oSuscripcion->set("PlazoPago",$PlazoPago,FORCE);
+  $oSuscripcion->set("Concepto",$Concepto,FORCE);
   
   switch($Opcion){
   case 'Nuevo':
     $oSuscripcion->set("IdSuscripcion",$IdSuscripcion,FORCE);
     $oSuscripcion->set("IdProducto",$IdProducto,FORCE);
-    $oSuscripcion->set("Concepto",$Concepto,FORCE);
 
     if($oSuscripcion->Alta($table,$idtable))
       $id = $oSuscripcion->get("IdSuscripcionDet");

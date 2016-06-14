@@ -4,7 +4,7 @@ function CrearPagoDocumento($provhab,$ordencompra,$modalidadpago,$fechaoperacion
 			    $codigooperacion,$nrodocumento,$cuentaproveedor,$cuentaempresa,
 			    $tipomoneda,$cambiomoneda,$importe,$obs,
 			    $idlocal=false,$IdUsuario=false,$estado,$IdArqueo,
-			    $tipoprov=false){
+                            $tipoprov=false,$cambiodivisa){
 
 
         $IdLocal   = (!$idlocal)?   getSesionDato("IdTienda"):$idlocal;
@@ -34,7 +34,8 @@ function CrearPagoDocumento($provhab,$ordencompra,$modalidadpago,$fechaoperacion
 	if($IdArqueo != 0){
 	  if($estado == 'Pendiente' && $modpago == 1){
 	    $idreg =  registrarLibroDiarioCajaGral($IdLocal,$IdUsuario,$tipomoneda,
-						   $cambiomoneda,$importe,$IdArqueo);
+                                               $cambiomoneda,$importe,$IdArqueo,
+                                               $cambiodivisa);
 	    if(!$idreg){
 	      $estado = "Borrador";
 	      $oPagoDoc->set("Estado", $estado, FORCE);
@@ -63,7 +64,8 @@ function CrearPagoDocumento($provhab,$ordencompra,$modalidadpago,$fechaoperacion
 function ModificaPagoDocumento($provhab,$modalidadpago,$fechaoperacion,$codigooperacion,
 			       $nrodocumento,$cuentaproveedor,$cuentaempresa,
 			       $tipomoneda,$cambiomoneda,$importe,
-			       $obs,$idlocal,$IdUsuario,$estado,$idoc,$IdArqueo,$cEstado){
+                               $obs,$idlocal,$IdUsuario,$estado,$idoc,$IdArqueo,$cEstado,
+                               $cambiodivisa){
 
         $IdLocal   = (!$idlocal)? getSesionDato("IdTienda"):$idlocal;
 	$IdUsuario = (!$IdUsuario)? getSesionDato("IdUsuario"):$IdUsuario;
@@ -128,7 +130,8 @@ function ModificaPagoDocumento($provhab,$modalidadpago,$fechaoperacion,$codigoop
 	      if($IdArqueo != 0 && $entrar == 1){
 		if($modpago == 1){
 		  $idreg =  registrarLibroDiarioCajaGral($IdLocal,$IdUsuario,$tipomoneda,
-							 $cambiomoneda,$importe,$IdArqueo);
+                                                 $cambiomoneda,$importe,$IdArqueo,
+                                                 $cambiodivisa);
 		  if(!$idreg){
 		    $estado = "Borrador";
 		    $oPagoDoc->set("Estado", $estado, FORCE);
@@ -156,8 +159,21 @@ function EliminarPagoDocumento($IdLocal,$IdUsuario,$idoc,$Estado){
     $oPagoDoc->set("IdUsuario", $IdUsuario, FORCE);
     $oPagoDoc->set("Eliminado", $eliminado, FORCE);
     if ($oPagoDoc->Modificar($idoc)){
-      if($Estado == 'Pendiente')
+      if($Estado == 'Pendiente'){
 	actualizarMovimientoCjaGral($idoc);
+
+	$oPagoDoc->Load($idoc);
+	$Importe     = $oPagoDoc->get("Importe");
+	$IdCuenta    = $oPagoDoc->get("IdCuentaEmpresa");
+	$IdModalidad = $oPagoDoc->get("IdModalidadPago");
+
+	$concepto = "Cancelación de pago a proveedor ";
+	
+	if($IdCuenta > 0)
+	  if($IdModalidad == 3 || $IdModalidad == 4 || $IdModalidad == 5 || $IdModalidad == 6)
+	    RegistrarMovimientoBancario($IdLocal,0,0,$IdUsuario,$IdCuenta,'Ingreso',$concepto,
+					$Importe);
+      }
       return $idoc;
     }
     else
@@ -167,6 +183,13 @@ function EliminarPagoDocumento($IdLocal,$IdUsuario,$idoc,$Estado){
 class pagodoc extends Cursor {
     function pagodoc() {
     	return $this;
+    }
+
+    function Load($id) {
+      $id = CleanID($id);
+      $this->setId($id);
+      $this->LoadTable("ges_pagosprovdoc", "IdPagoProvDoc ", $id);
+      return $this->getResult();
     }
 
     function Alta(){
@@ -343,23 +366,59 @@ function PagoDocumentoPeriodo($desde,$hasta,$nombre=false,$esSoloMoneda=false,
 }
 
 function registrarLibroDiarioCajaGral($IdLocal,$IdUsuario,$IdMoneda,$cambiomoneda,$importe,
-				      $IdArqueo){
+                                      $IdArqueo,$cambiodivisa){
 
      $mov          = new movimientogral;
      $FechaApertura= $mov->getAperturaCajaGral($IdMoneda,$IdLocal);
      $IdLocal      = CleanID($IdLocal);
+     $IdUsuario    = CleanID($IdUsuario);
      $cantidad     = CleanFloat($importe);
+     $fechacaja    = CleanCadena($FechaApertura);
+     $documento    = 'Ticket';
+     $codigodoc    = 0;
+     $proveedor    = "";
+     $oIdMoneda    = $IdMoneda;
+     $ocambiomoneda= $cambiomoneda;
+     $CodPartida   = 'S125';
+     $IdPartida    = obtenerIdPartidaCaja($CodPartida);
+     $Moneda       = getSesionDato("Moneda");
+
+     if($oIdMoneda != 1 && $cambiodivisa == '1'){
+         //Registrar operacion sustraccion cambio moneda
+         $IdMoneda  = 1;//$IdMonedaCambio;
+         $operacion = 'Sustraccion';
+         $concepto  = 'Cambio moneda a '.$Moneda[$oIdMoneda]['T'];
+         $xIdArqueo  = $mov->getIdArqueoEsCerrado($IdMoneda,$IdLocal);//$IdArqueoM;
+         $xcambiomoneda = 1;//($IdMoneda == 1)? 1:$xcambiomoneda;
+         $cantidad =  round(($cantidad*$cambiomoneda),2);
+
+         EntregarOperacionGral($IdLocal,$cantidad,$concepto,$IdPartida,$IdMoneda,
+                               $xcambiomoneda,$operacion,$fechacaja,$IdUsuario,
+                               $xIdArqueo,$documento,$codigodoc,$proveedor);  
+
+         // Registrar operacion ingreso cambio moneda
+         $IdMoneda  = $oIdMoneda;
+         $operacion = 'Ingreso';
+         $concepto  = 'Cambio moneda desde '.$Moneda[1]['T'];
+         $IdArqueoM = $mov->getIdArqueoEsCerrado($IdMoneda,$IdLocal);
+         $xIdArqueo = $IdArqueoM;
+         $xcambiomoneda = ($IdMoneda == 1)? 1:$cambiomoneda;
+         $cantidad = $importe;
+
+         EntregarOperacionGral($IdLocal,$cantidad,$concepto,$IdPartida,$IdMoneda,
+                               $xcambiomoneda,$operacion,$fechacaja,$IdUsuario,
+                               $xIdArqueo,$documento,$codigodoc,$proveedor);       
+
+     }
+     
+     // Registra operacion egreso por pago factura
      $concepto     = "Compra";
      $operacion    = "Egreso";
      $IdPartida    = obtenerPartidaCajaGral('Compras','CG',$operacion);
      $IdMoneda     = CleanID($IdMoneda);
      $cambiomoneda = CleanFloat($cambiomoneda);
-     $fechacaja    = CleanCadena($FechaApertura);
-     $IdUsuario    = CleanID($IdUsuario);
-     $documento    = 'Ticket';
-     $codigodoc    = 0;
-     $proveedor    = "";
-    
+     $cantidad     = $importe;
+
      $id =  EntregarOperacionGral($IdLocal,$cantidad,$concepto,$IdPartida,$IdMoneda,
 				  $cambiomoneda,$operacion,$fechacaja,$IdUsuario,
 				  $IdArqueo,$documento,$codigodoc,$proveedor);

@@ -187,7 +187,7 @@ function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFinal
 	$extraBoleta  = ($esSoloBoleta)?" AND ges_comprobantestipo.TipoComprobante = 'Boleta' ":"";
 	$extraFactura = ($esSoloFactura)?" AND ges_comprobantestipo.TipoComprobante = 'Factura' ":"";
 	$extraAlbaran = ($esSoloAlbaran)?" AND ges_comprobantestipo.TipoComprobante = 'Albaran' ":"";
-	$extraAlbaranInt = ($esSoloAlbaranInt)?" AND ges_comprobantestipo.TipoComprobante = 'AlbaranInt' ":" AND ges_comprobantestipo.TipoComprobante <> 'AlbaranInt' ";
+	$extraAlbaranInt = ($esSoloAlbaranInt)?" AND ges_comprobantestipo.TipoComprobante = 'AlbaranInt' ":" AND ges_comprobantesnum.IdMotivoAlbaran <> 4 ";
 	$extraTicket     = ($esSoloTicket)?" AND ges_comprobantestipo.TipoComprobante = 'Ticket' ":"";
 	$extraTipoVenta  = ($TipoVenta)?" AND ges_comprobantes.TipoVentaOperacion = '$TipoVenta'":"";
 
@@ -225,7 +225,7 @@ function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFinal
                 ges_comprobantes.Cobranza, 
                 IF(ges_comprobantes.Observaciones like '',' ',ges_comprobantes.Observaciones) as Observaciones, 
                 ges_comprobantes.Reservado, 
-	        IF(ges_comprobantes.FechaEntregaReserva = '0000-00-00 00:00:00',' ',CONCAT(DATE_FORMAT(ges_comprobantes.FechaEntregaReserva,'%d/%m/%Y %H:%i'),'~',ges_comprobantes.FechaEntregaReserva)) AS FechaEntregaReserva
+	        IF(ges_comprobantes.FechaEntregaReserva = '0000-00-00 00:00:00',' ',CONCAT(DATE_FORMAT(ges_comprobantes.FechaEntregaReserva,'%d/%m/%Y %H:%i'),'~',ges_comprobantes.FechaEntregaReserva)) AS FechaEntregaReserva,ges_comprobantes.IdAlbaranes,ges_comprobantesnum.IdNumComprobante 
     		FROM ges_comprobantes " .
     		"LEFT JOIN ges_clientes ON ges_comprobantes.IdCliente = ges_clientes.IdCliente
                 INNER JOIN ges_comprobantesstatus ON ges_comprobantes.Status = ges_comprobantesstatus.IdStatus
@@ -268,7 +268,9 @@ function VentasPeriodo($local,$desde,$hasta,$esSoloPendientes=false,$esSoloFinal
 	    if(!strpos(strtoupper($xclient),strtoupper($xnombre)))
 	      continue;
 	  }
-	    
+      $row["IdAlbaranes"] = ($row["IdAlbaranes"])? $row["IdAlbaranes"]: " ";
+      $idguiarem = obtenerIdGuiaRemision($row["IdNumComprobante"]);
+      $row["IdGuiaRemision"] = (!$idguiarem)? ' ':$idguiarem;
 	  $nombre = "venta_" . $t++;
 	  $ventas[$nombre] = $row;
 	  
@@ -348,7 +350,7 @@ function OperarPagoSobreTicket($IdComprobante,$pago_efectivo, $pago_bono, $pago_
 
 	EntregarCantidades("Abonando pendiente ".$concepto, $IdLocal,$pago_efectivo, 
 			   $pago_bono, $pago_tarjeta,$IdComprobante,"Ingreso",
-			   $fechapago,$modalidadpago,$doccobro);
+			   $fechapago,$modalidadpago,$doccobro,$IdUsuario);
 	
 	
 	/* Estudiamos el estado final */
@@ -380,7 +382,7 @@ function OperarPagoSobreTicket($IdComprobante,$pago_efectivo, $pago_bono, $pago_
 					 $IdComprobante,$IdUsuario);
 	if($pago_credito > 0)
 	  registrarMovimientoCreditoCliente($idcliente,"-".$pago_credito,1,$IdLocal,
-					    $IdComprobante,$IdUsuario,false);
+                                        $IdComprobante,$IdUsuario,$concepto,false);
 
 
 	return $newpendiente;		
@@ -611,6 +613,23 @@ function ModificarCobros($Opcion,$IdComprobante,$IdOperacionCaja,$IdCliente,$IdM
       if($IdModalidadPago == 10 && $ImporteCobro > 0)
 	registrarMovimientoBonoCliente($IdCliente,$ImporteCobro,0,$IdLocal,$IdComprobante,
 				       $IdUsuario);
+
+      //EliminarMovimientoBancario($IdOperacionCaja,$IdLocal);
+
+      $IdCuenta = obtenerCtaMovimientoBancario($IdOperacionCaja,$IdLocal);
+
+      if($IdCuenta){
+	$concepto = "Movimiento cancelado por error de operación";
+	$IdOperacionCaja = ($TipoVenta == 'CG')? 0:$IdOperacionCaja;
+	$IdOperacionCajaGral = ($TipoVenta == 'CG')? $IdOperacionCaja:0;
+	
+	RegistrarMovimientoBancario($IdLocal,$IdOperacionCaja,$IdOperacionCajaGral,
+				    $IdUsuario,$IdCuenta,'Salida',$concepto,
+				    $ImporteCobro);
+      }
+
+      EliminarDocCObrosClientes($IdOperacionCaja,$IdLocal);
+
       $dato = ($TipoVenta == 'CG')? EliminarMovimientoCajaGral($IdOperacionCaja):EliminarMovimientoCaja($IdOperacionCaja);
       return $dato;
       break;
@@ -666,4 +685,47 @@ function obtenerImporteComprobante($idc){
   return $row["Importe"];
 }
 
+function EliminarMovimientoBancario($IdOperacionCaja,$IdLocal){
+  $sql   =
+    " update ges_movimiento_bancario ".
+    " set    Eliminado = 1 ".
+    " where  IdOperacionCaja = '$IdOperacionCaja' ".
+    " and    IdLocal = $IdLocal ";
+  
+  query($sql);      
+}
+
+function EliminarDocCObrosClientes($IdOperacionCaja,$IdLocal){
+  $sql   =
+    " update ges_cobrosclientedoc ".
+    " set    Eliminado = 1 ".
+    " where  IdOperacionCaja = '$IdOperacionCaja' ".
+    " and    IdLocal = $IdLocal ";
+  
+  query($sql);        
+}
+
+function obtenerCtaMovimientoBancario($IdOperacionCaja,$IdLocal){
+  $sql   =
+    " SELECT ges_movimiento_bancario.IdCuentaBancaria  ".
+    " FROM   ges_movimiento_bancario ".
+    " where  IdOperacionCaja = '$IdOperacionCaja' ".
+    " or     IdOperacionCajaGral = '$IdOperacionCaja' ".
+    " and    IdLocal = $IdLocal ";
+  $row = queryrow($sql);
+  return $row["IdCuentaBancaria"];  
+}
+
+function obtenerIdGuiaRemision($IdNumComprobante){
+    $sql = "SELECT IdGuiaRemision ".
+           "FROM ges_guiaremision ".
+           "WHERE IdComprobanteNum = $IdNumComprobante ".
+           "AND Eliminado = 0 ";
+    $row = queryrow($sql);
+
+    if($row["IdGuiaRemision"] == '' || !$row )
+        return false;
+    else
+        return $row["IdGuiaRemision"];
+}
 ?>

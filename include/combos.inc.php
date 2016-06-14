@@ -1188,7 +1188,8 @@ function genXulComboPartidaCaja($selected=false,$xul="listitem",$idlocal=false,
 	if (!$res)
 		return false;
 
-	$t = 0;
+        $t = 0;
+        $xitem='';
 	if($op == 'Aportacion') $xitem = "partida_aportacion_def_";
 	if($op == 'Sustraccion') $xitem = "partida_sustraccion_def_";
 	if($op == 'Ingreso') $xitem = "partida_ingreso_def_";
@@ -1533,5 +1534,32 @@ function genXulComboCuentaBancaria2($selected=false,$xul="listitem",$xidm){
 	return $out;		
 }
 
+function genXulComboAdminSuscripcion($selected=false,$xul="listitem"){
+    $IdLocal = getSesionDato("IdTienda");
+    $sql =
+         "SELECT DISTINCT(ges_subsidiarios.IdSubsidiario) as IdSubsidiario, ".
+         "ges_subsidiarios.NombreComercial ".
+         "FROM ges_subsidiarios ".
+         "INNER JOIN ges_suscripciones ON ges_suscripciones.IdSubsidiario = ges_subsidiarios.IdSubsidiario ".
+         "WHERE ges_suscripciones.Eliminado = 0 ".
+         "AND IdLocal = '$IdLocal' ".
+         "ORDER BY ges_subsidiarios.NombreComercial ASC ";
+
+	$res = query($sql);
+	if (!$res)
+		return false;
+		
+	$out = "";	
+			
+	while($row=Row($res)){
+		$key   = $row["IdSubsidiario"];
+		$value = CleanXulLabel($row["NombreComercial"]);
+		if ($key!=$selected)
+			$out .= "<$xul value='$key' label='$value'/>";
+		else	
+			$out .= "<$xul selected='true' value='$key' label='$value'/>";
+	}
+	return $out;		
+}
 
 ?>

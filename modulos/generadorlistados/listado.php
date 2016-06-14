@@ -297,7 +297,10 @@ function exportarcsv(){
    var ProductoIdioma = "<?php echo $_GET["productoidioma"]?>";
    var ModalidadPago = "<?php echo $_GET["modalidadpago"]?>";
    var CuentaBancaria = "<?php echo $_GET["cuentabancaria"]?>";
-
+   var TipoProducto = "<?php echo $_GET["tipoproducto"]?>";
+   var AdminSuscripcion = "<?php echo $_GET["adminsuscripcion"]?>";
+   var OperacionCredito = "<?php echo $_GET["operacioncredito"]?>";
+   
    var url  = 
      "exportarlistados.php?modo=ExportarDirectoCSV"+
      "&xfile="+TipoArchivo+
@@ -353,6 +356,9 @@ function exportarcsv(){
      "&productoidioma="+ProductoIdioma+
      "&modalidadpago="+ModalidadPago+
      "&cuentabancaria="+CuentaBancaria+
+     "&tipoproducto="+TipoProducto+
+     "&adminsuscripcion="+AdminSuscripcion+
+     "&operacioncredito="+OperacionCredito+
      "&cb="+cb;
 
    document.location=url;
@@ -649,7 +655,12 @@ function PostProcesarSQL( $cod,$LocalActual ) {
     $VentaEstado = " AND ges_comprobantes.Status = 2 ";
   if($xestado == '%EstadoFinalizado%' && $xtipo == '%VentaReserva%')
     $VentaEstado = " AND ges_comprobantes.FechaEntregaReserva <> '0000-00-00 00:00:00.000000' ";
-  
+
+  $tipoprod = CleanText($_GET["tipoproducto"]);
+
+  if($tipoprod == 'TipoTodo') $TipoProducto = '';
+  if($tipoprod == 'Producto') $TipoProducto = ' AND ges_productos.Servicio = 0 ';
+  if($tipoprod == 'Servicio') $TipoProducto = ' AND ges_productos.Servicio > 0 ';
 
   $cod = str_replace("%IDIDIOMA%",$IdLang,$cod);
   $cod = str_replace("%DESDE%",		CleanCadena($_GET["Desde"]),$cod);
@@ -704,7 +715,10 @@ function PostProcesarSQL( $cod,$LocalActual ) {
   $cod = str_replace("%PRODUCTOIDIOMA%",CleanText($_GET["productoidioma"]),$cod);
   $cod = str_replace("%MODALIDADPAGO%",CleanText($_GET["modalidadpago"]),$cod);
   $cod = str_replace("%CUENTABANCARIA%",CleanText($_GET["cuentabancaria"]),$cod);
-
+  $cod = str_replace("'%TIPOPRODUCTO%'",$TipoProducto,$cod);
+  $cod = str_replace("%ADMINSUSCRIPCION%",CleanText($_GET["adminsuscripcion"]),$cod);
+  $cod = str_replace("%OPERACIONCREDITO%",CleanText($_GET["operacioncredito"]),$cod);
+  
   return $cod;
 }
 

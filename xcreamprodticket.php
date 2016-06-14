@@ -128,6 +128,7 @@ for($t=0;$t<$numlines;$t++)
 	$oferta   	= CleanText($_POST[$firma . "oferta"]);
 	$idproducto	= CleanText($_POST[$firma . "idproducto"]);
 	$costo	        = CleanDinero($_POST[$firma . "costo"]);
+	$concepto       = ($concepto == 'undefined')? '':$concepto;
 	
 	AgnadirTicket($codigo,$unidades,$precio,$descuento,$impuesto,
 		      $importe,$concepto,$talla,$color,$referencia,$cb,
@@ -173,7 +174,7 @@ function AgnadirTicket($codigo,$unidades,$precio,$descuento,$impuesto,
 	$fila->Set($codigo,$unidades,$precio,$descuento,$impuesto,
 		   $importe,$concepto,$talla,$color,$referencia,$cb,
 		   $idsubsidiario,$nombre,$pedidodet,$status,$oferta,$costo,
-		   $idproducto,false);
+		   $idproducto,false,false);
 
 	//Guardamos en carrito
 	$carrito[$icarrito] = $fila;

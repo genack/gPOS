@@ -477,6 +477,33 @@ switch ($modo) {
 	       include("xulseries.php");
 	       break;
 
+	     case "selSeriesLote" :
+	       include("xulserieslote.php");
+	       break;
+             case "cargarNumeroSeriesLote2js":
+               
+               $listanslote = CleanText($_POST["listanslote"]);
+               $idproducto  = CleanID($_GET["idproducto"]);
+               $idlocal     = CleanID($_GET["idlocal"]);
+               $idlocal     = ($idlocal)? $idlocal : getSesionDato("IdTienda");
+               $num         = 0;
+               $nuevos      = 0;
+               $xout        = '';
+               
+               foreach (split("\n",$listanslote) as $ns ){
+                 $ns = CleanCadena($ns);	
+                 $num ++;
+
+                 if( $ns != '')
+                   {
+                       if( validaNumeroSerie($idproducto,$ns,$idlocal,false) != 1 )
+                           echo _("exe_cargarNumeroSerieLote('".$ns."');\n");
+                   }
+                 $nuevos ++;			
+               }
+		exit();
+                
+               break;
 	     case "agnadirCarritoDirecto" :
 	       $id         = CleanID($_GET["id"]);
 	       $costo      = CleanDinero($_GET["costo"]);

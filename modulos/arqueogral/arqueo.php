@@ -4,7 +4,7 @@
 SimpleAutentificacionAutomatica("visual-xulframe");
 $Moneda = getSesionDato("Moneda"); 
 StartXul('Caja General',$predata="",$css='');
-StartJs($js='modulos/arqueogral/js/arqueogral.js?v=3.1.1');
+StartJs($js='modulos/arqueogral/js/arqueogral.js?v=3.1.8');
 ?>
 
   <?php getMonedaJS($Moneda); ?>
@@ -22,7 +22,7 @@ StartJs($js='modulos/arqueogral/js/arqueogral.js?v=3.1.1');
       </menu>
       <menuseparator />
       <menuitem label="<?php echo _("Modificar Concepto"); ?>" id="ConceptoOperacionCaja"
-		oncommand="editarOperacionCajaGral()"/> 
+		oncommand="ModificarOperacionCajaGral()"/> 
     </popup>
   </popupset>
   <!-- No Visuales /-->
@@ -49,11 +49,17 @@ StartJs($js='modulos/arqueogral/js/arqueogral.js?v=3.1.1');
   <hbox align="start">
     <hbox>
       <caption class="box" label="Arqueos de caja"/>
-      <menulist id="filtroAnio" oncommand="actualizarArqueoGral()">
+      <menulist label="<?php echo _("Elige Moneda...") ?>" id="SeleccionMoneda" 
+                oncommand="actualizarArqueoGral(true)" >
+	<menupopup id="itemsMoneda">
+          <?php echo genXulComboMoneda(false,"menuitem")?>
+  	</menupopup>
+      </menulist>
+      <menulist id="filtroAnio" oncommand="actualizarArqueoGral(false)">
         <menupopup id="elementosanio">
         </menupopup>
       </menulist>
-      <menulist id="filtroMes" label="Mes" oncommand="actualizarArqueoGral()">
+      <menulist id="filtroMes" label="Mes" oncommand="actualizarArqueoGral(false)">
         <menupopup id="menuMes">
 	  <menuitem value="1" label="Enero" />
 	  <menuitem value="2" label="Febrero" />
@@ -69,12 +75,7 @@ StartJs($js='modulos/arqueogral/js/arqueogral.js?v=3.1.1');
 	  <menuitem value="12" label="Diciembre" />
         </menupopup>
       </menulist>
-      <menulist label="<?php echo _("Elige Moneda...") ?>" id="SeleccionMoneda" 
-                oncommand="actualizarArqueoGral()" >
-	<menupopup id="itemsMoneda">
-          <?php echo genXulComboMoneda(false,"menuitem")?>
-  	</menupopup>
-      </menulist>
+
       <menulist label="<?php echo _("Elige arqueo...") ?>" id="SeleccionArqueo" >
 	<menupopup id="itemsArqueo">
 	  <menuitem label="<?php echo _("Elige arqueo...")?>"/>      
@@ -294,6 +295,15 @@ StartJs($js='modulos/arqueogral/js/arqueogral.js?v=3.1.1');
             </menulist>
             <caption label="   Saldo:"/>
             <textbox id="saldoCuentaBancariaSust" readonly="true"/>
+          </hbox>
+          <hbox id="boxTransferenciaAlmacenes" collapsed="true" align="center">
+              <caption label='     Local Destino:'/>
+              <menulist id="SeleccionLocalDestino" >
+	          <menupopup id="itemsLocalDestinoSust">
+                      <menuitem value="" label="Elige..." selected="true"/>
+                      <?php echo genXulComboLocales(false,"menuitem",false)?>
+  	          </menupopup>
+              </menulist>
           </hbox>
         </hbox>
 	<hbox align="center">

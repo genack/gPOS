@@ -106,36 +106,36 @@ if (isUsuarioAdministradorWeb()){
 <command id="verKardex"   oncommand="solapa('modulos/kardex/selkardex.php?modo=verKardex','<?php echo _("Almacén - Kardex") ?>','framelist')" accesskey="K"
   <?php gulAdmite("Kardex") ?> label="<?php echo _("Kardex") ?>"/>
 
-<command id="verAjuste"   oncommand="solapa('modulos/inventario/modinventario.php?modo=verAjuste','<?php echo _("Almacén - Ajuste") ?>','framelist')" accesskey="A"
+<command id="verAjuste"   oncommand="solapa('modulos/inventario/modinventario.php?modo=verAjuste','<?php echo _("Almacén > Ajustes") ?>','framelist')" accesskey="A"
   <?php gulAdmite("VerAjustes") ?> label="<?php echo _("Ajustes") ?>"/>
 
-<command id="verInventario"   oncommand="solapa('modulos/inventario/modinventario.php?modo=verInventario','<?php echo _("Almacén - Inventario") ?>','framelist')" accesskey="I"
+<command id="verInventario"   oncommand="solapa('modulos/inventario/modinventario.php?modo=verInventario','<?php echo _("Almacén > Inventarios") ?>','framelist')" accesskey="I"
   <?php gulAdmite("VerAjustes") ?> label="<?php echo _("Inventario") ?>"/>
 
 
 <!-- ====== MENU ALMACEN - ITEM  ====== -->
 
 <!-- ====== MENU COMPRAS - ITEM  ====== -->
-<command id="verPresupuesto" oncommand="solapa('modulos/compras/xulcompras.php?modo=entra','<?php echo _("Compras - Presupuestos ") ?>','compras');" accesskey="r"
+<command id="verPresupuesto" oncommand="solapa('modulos/compras/xulcompras.php?modo=entra','<?php echo _("Compras > Presupuestos ") ?>','compras');" accesskey="r"
   <?php gulAdmite("Presupuestos") ?> label="<?php echo _("Presupuestos") ?>"/>
 
-<command id="verProveedores" oncommand="solapa('modproveedores.php?modo=lista','<?php echo _("Proveedores - Gestión de Proveedores") ?>','proveedores')" accesskey="v"
+<command id="verProveedores" oncommand="solapa('modproveedores.php?modo=lista','<?php echo _("Proveedores > Gestión de Proveedores") ?>','proveedores')" accesskey="v"
   <?php gulAdmite("Proveedores") ?>  label="<?php echo _("Proveedores") ?>"/>
 
-<command id="verProductos"  oncommand="solapa('modulos/productos/xulproductos.php?modo=lista','<?php echo _("Productos - Gestión de Productos") ?>','productos')" accesskey="d"
+<command id="verProductos"  oncommand="solapa('modulos/productos/xulproductos.php?modo=lista','<?php echo _("Productos > Gestión de Productos") ?>','productos')" accesskey="d"
   <?php gulAdmite("Productos") ?>    label="<?php echo _("Productos") ?>"/>
 
-<command id="verPedidoCompra"  oncommand="solapa('modulos/ordencompra/modordencompra.php?modo=listarTodoOrdenCompra','<?php echo _("Compras - Pedidos") ?>','framelist')" accesskey="p"
+<command id="verPedidoCompra"  oncommand="solapa('modulos/ordencompra/modordencompra.php?modo=listarTodoOrdenCompra','<?php echo _("Compras > Pedidos") ?>','framelist')" accesskey="p"
   <?php gulAdmite("Presupuestos") ?>    label="<?php echo _("Pedidos") ?>"/>
 
-  <command id="verComprasBorrador"  oncommand="solapa('modulos/comprobantecompra/modcomprasborrador.php?modo=listarTodoCompra','<?php echo _("Compras - Comprobantes") ?>','framelist')" accesskey="o"
+  <command id="verComprasBorrador"  oncommand="solapa('modulos/comprobantecompra/modcomprasborrador.php?modo=listarTodoCompra','<?php echo _("Compras > Comprobantes") ?>','framelist')" accesskey="o"
   <?php gulAdmite("ComprobantesCompra") ?>    label="<?php echo _("Comprobantes") ?>"/>
 
 
-<command id="verPedidoAlta"  oncommand="solapa('#','<?php echo _("Compras - Pedido Nuevo") ?>','framelist')"
+<command id="verPedidoAlta"  oncommand="solapa('#','<?php echo _("Compras > Pedido Nuevo") ?>','framelist')"
   <?php gulAdmite("Productos") ?>    label="<?php echo _("Nuevo") ?>"/>
 
-<command id="verPedidos"  oncommand="solapa('#','<?php echo _("Compras - Pedidos") ?>','framelist')"
+<command id="verPedidos"  oncommand="solapa('#','<?php echo _("Compras > Pedidos") ?>','framelist')"
   <?php gulAdmite("Productos") ?>    label="<?php echo _("Pedidos") ?>"/>
 
 
@@ -146,13 +146,13 @@ if (isUsuarioAdministradorWeb()){
 
 <command id="lanzarTPV" oncommand="lanzarTPV('rd')" <?php gulAdmite("TPV") ?>  label="<?php echo _("TPV") ?>"/>
 
-<command id="VerPedidosVentas" oncommand="solapa('modulos/pedidosventa/modpedidosventa.php?modo=mostrarPedidos','<?php echo _("Ventas - Pedidos") ?>','framelist')" 
+<command id="VerPedidosVentas" oncommand="solapa('modulos/pedidosventa/modpedidosventa.php?modo=mostrarPedidos','<?php echo _("Ventas > Pedidos") ?>','framelist')" 
    <?php gulAdmite("PedidosVenta") ?> label="<?php echo _("Pedidos") ?>"/>
 
-<command id="VerComprobantesVentas" oncommand="solapa('modulos/comprobanteventa/modventas.php?modo=mostrarComprobantes','<?php echo _("Ventas - Comprobantes") ?>','framelist')" 
+<command id="VerComprobantesVentas" oncommand="solapa('modulos/comprobanteventa/modventas.php?modo=mostrarComprobantes','<?php echo _("Ventas > Comprobantes") ?>','framelist')" 
    <?php gulAdmite("ComprobantesVenta") ?> label="<?php echo _("Comprobantes") ?>"/>
 
-<command id="VerPromociones" oncommand="solapa('modulos/promociones/modpromociones.php?modo=mostrarPromociones','<?php echo _("Ventas - Promociones") ?>','framelist')" 
+<command id="VerPromociones" oncommand="solapa('modulos/promociones/modpromociones.php?modo=mostrarPromociones','<?php echo _("Ventas > Promociones") ?>','framelist')" 
    <?php gulAdmite("Promociones") ?> label="<?php echo _("Promociones") ?>"/>
 
 <command id="verClientes"  oncommand="solapa('modclientes.php?modo=lista','<?php echo _("Clientes") ?>','clientes')" 
@@ -162,21 +162,26 @@ if (isUsuarioAdministradorWeb()){
 
 
 <!--  ====== MENU FINAZAS - ITEM   ====== -->
-<command id="verPagosProveedor" oncommand="solapa('modulos/pagoscobros/modpagoscobros.php?modo=verPagosProveedor','<?php echo _("Finanzas - Comprobantes") ?>','framelist')" accesskey="P"
-   <?php guladmite("Pagos") ?> label="<?php echo _("Pagos") ?>"/>
+<command id="verPagosProveedor" oncommand="solapa('modulos/pagoscobros/modpagoscobros.php?modo=verPagosProveedorDocComprobantes','<?php echo _("Finanzas > Comprobantes Proveedor > Registrar Pagos") ?>','framelist')" accesskey="a"
+   <?php guladmite("Pagos") ?> label="<?php echo _("Registrar Pago") ?>"/>
 
-<command id="verCobrosClientes" oncommand="solapa('modulos/pagoscobros/modpagoscobros.php?modo=verCobrosCliente','<?php echo _("Finanzas - Comprobantes") ?>','framelist')" accesskey="C"
+<command id="verAsociarPagosProveedor" oncommand="solapa('modulos/pagoscobros/modpagoscobros.php?modo=verPagosProveedor','<?php echo _("Finanzas > Comprobantes Proveedor > Asociar Pagos") ?>','framelist')" accesskey="P" <?php guladmite("Pagos") ?> label="<?php echo _("Asociar Pago") ?>"/>
+
+<command id="verCobrosClientes" oncommand="solapa('modulos/pagoscobros/modpagoscobros.php?modo=verCobrosCliente','<?php echo _("Finanzas > Comprobantes Clientes") ?>','framelist')" accesskey="C"
    <?php guladmite("Cobros") ?> label="<?php echo _("Cobros") ?>"/>
 
-<command id="verCajaGeneral" oncommand="solapa('modulos/arqueogral/modarqueogral.php?modo=verCajaGeneral&amp;xidacg=&amp;xidl=','<?php echo _("Finanzas - Caja General") ?>','framelist')" 
+<command id="verCajaGeneral" oncommand="solapa('modulos/arqueogral/modarqueogral.php?modo=verCajaGeneral&amp;xidacg=&amp;xidl=','<?php echo _("Finanzas > Caja General") ?>','framelist')" 
    <?php gulAdmite("CajaGeneral") ?> label="<?php echo _("Caja General") ?>"/>
 
-<command id="verEstablecerPrecioPedido" oncommand="solapa('modulos/recepcionpedido/modalmacenborrador.php?modo=recibirProductosAlmacen','<?php echo _("Almacén - Recibir Pedidos ") ?>','framelist')" accesskey="R"
+<command id="verEstablecerPrecioPedido" oncommand="solapa('modulos/recepcionpedido/modalmacenborrador.php?modo=recibirProductosAlmacen','<?php echo _("Almacén > Recibir Pedidos ") ?>','framelist')" accesskey="R"
    <?php gulAdmite("VerStocks") ?> label="<?php echo _("Recibir Pedidos") ?>"/>
 
-<command id="verEstablecerPrecioAlmacen" oncommand="solapa('modulos/precios/selprecios.php?modo=mostrarProductosPrecios','<?php echo _("Ventas - Precios") ?>','framelist')" 
+<command id="verEstablecerPrecioAlmacen" oncommand="solapa('modulos/precios/selprecios.php?modo=mostrarProductosPrecios','<?php echo _("Ventas > Precios") ?>','framelist')" 
    <?php gulAdmite("Precios") ?> label="<?php echo _("Precios") ?>"/>
 
+<command id="verEstablecerExhibicionAlmacen" oncommand="solapa('modulos/exhibicion/selexhibicion.php?modo=mostrarProductosExhibicion','<?php echo _("Almacén > Exhibición") ?>','framelist')" 
+   <?php gulAdmite("Kardex") ?> label="<?php echo _("Exhibición") ?>"/>
+    
 <!-- ====== MENU FINAZAS - ITEM  ====== -->
 
 <!-- ====== MENU REPORTES  ====== -->  
@@ -192,7 +197,7 @@ if (isUsuarioAdministradorWeb()){
 <command id="verReportes" oncommand="solapa('modulos/reportes/modreportes.php?modo=xReportes','<?php echo _("Reportes") ?>','framelist')"
     <?php echo $disablelistado; ?>  label="<?php echo _("Utilidad") ?>"/> 
 <command id="verReportesVence" oncommand="solapa('modulos/reportes/modreportes.php?modo=xReportesVence','<?php echo _("Reportes") ?>','framelist')" 
-      label="<?php echo _("Fecha Vencimiento") ?>" <?php echo $btca?> /> 
+      label="<?php echo _("Vencimientos") ?>" <?php echo $btca?> /> 
 <!-- ====== MENU REPORTES  ====== -->  
 
 
@@ -322,7 +327,8 @@ if (isUsuarioAdministradorWeb()){
  		    <menuseparator />
 		    <?php
  		       $menuConfiguracion = array(
-		       _("Almacen") =>  "verAlmacen"	
+		       _("Almacen") =>  "verAlmacen",
+		       _("Exhibicion") =>  "verEstablecerExhibicionAlmacen"
  		    );  
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
 		    ?>
@@ -378,22 +384,29 @@ if (isUsuarioAdministradorWeb()){
 
 		<toolbarbutton class="boxtool" label="<?php echo _("Finanzas  ") ?>" image="img/gpos_finanzas.png" type="menu">	        	       
 		  <menupopup id="idconfig">
+
+                    <menu label="Pagos">
+                     <menupopup>
 		      <?php
 		      $menuConfiguracion = array(
 					         _("Pagos Proveedor") =>  "verPagosProveedor",
-					         _("Cobros Cliente") =>  "verCobrosClientes"
-
-
+					         _("Cobros Cliente") =>  "verAsociarPagosProveedor"
 		    );  
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
 		    ?>
+                     </menupopup>
+                    </menu>
 
-		    <menuseparator />
+		    <?php
+		      $menuConfiguracion = array(
+		      _("Cobros Cliente") =>  "verCobrosClientes" );  
+ 		       echo xulMakeMenuOptionsCommands($menuConfiguracion);
+		      ?>
+
+		    <menuseparator/>
 		      <?php
 		      $menuConfiguracion = array(		
-					  _("Caja General") =>  "verCajaGeneral"
-
-		    );  
+					  _("Caja General") =>  "verCajaGeneral" );  
  		    echo xulMakeMenuOptionsCommands($menuConfiguracion);
 		    ?>
 
@@ -774,7 +787,7 @@ if (isUsuarioAdministradorWeb()){
 	 <vbox>
 	   <button class="btn"  image="img/gpos_productos.png"  label="<?php echo _(" Nuevo producto"); ?>" oncommand="Productos_ModoAlta();"/>
            <spacer style="height:10px"/>
-           <button  class="btn" image="img/gpos_fichatecnica.png"  label="<?php echo _("  Ficha Técnica"); ?>" oncommand="solapa('modulos/productos/modproductoextra.php?modo=verProductoInformacion','<?php echo _("Productos - Ficha Técnica") ?>','framelist');" flex="1"/>
+           <button  class="btn" image="img/gpos_fichatecnica.png"  label="<?php echo _("  Ficha Técnica"); ?>" oncommand="solapa('modulos/productos/modproductoextra.php?modo=verProductoInformacion','<?php echo _("Productos > Ficha Técnica") ?>','framelist');" flex="1"/>
 	 </vbox>
        </groupbox>
      </box>
@@ -783,7 +796,7 @@ if (isUsuarioAdministradorWeb()){
 	 <caption label="<?php echo _("Recursos:"); ?>" class="frameNormal box"/>
 	 <hbox  equalsize="always">
 	 <button class="btn"  image="img/gpos_presupuesto.png"  label="<?php echo _(" Ir a Presupuestos"); ?>" 
-	          oncommand="solapa('modulos/compras/xulcompras.php?modo=entra','<?php echo _("Compras - Presupuestos") ?>','compras');" <?php gulAdmite("Presupuestos") ?> flex="1"/>
+	          oncommand="solapa('modulos/compras/xulcompras.php?modo=entra','<?php echo _("Compras > Presupuestos") ?>','compras');" <?php gulAdmite("Presupuestos") ?> flex="1"/>
 
 	 </hbox>
        </groupbox>
@@ -1079,8 +1092,7 @@ function solapa(url,area,deck){
 	  	break;
 
 	  case "compras":
-	  	OpenDeck(2);
-		MostrarDeck();
+		OcultaDeck();
 	  	//document.getElementById("c_Nombre").focus();
 
 		if( cSolapaNormal != deck){
@@ -1229,7 +1241,7 @@ function lanzarTPV(rt){
     if( esTPVPopUp )
       {
 	//FRAME
-	solapa(url,'<?php echo _("Ventas - Terminal de Punto Venta") ?>','frametpv');
+	solapa(url,'<?php echo _("Ventas > Terminal de Punto Venta") ?>','frametpv');
       }
     else
       {
@@ -1245,7 +1257,7 @@ function lanzarTPV(rt){
 
 function lanzarVentasGeneral(){
    	    var url="modulos/comprobanteventa/modventas.php?modo=mostrarComprobantes"
-	    solapa(url,'<?php echo _("Ventas - Comprobantes") ?>','framelist')
+	    solapa(url,'<?php echo _("Ventas > Comprobantes") ?>','framelist')
 }
 
 /* ========== TPV ============ */
@@ -1661,6 +1673,8 @@ function Compras_cancelarCarrito() {
 
 function Compras_compraEfectuar() {
 
+    Compras_setLocal( localcesion );
+    
     var	url = "services.php?modo=verificadocCompra";
     var xrequest = new XMLHttpRequest();
     xrequest.open("GET",url,false);
@@ -1693,7 +1707,7 @@ function Compras_verCarrito(modo=false) {
 }
 
 function Compras_loadCarrito(){
-  solapa("modulos/compras/xulcompras.php?modo=entra"," Compras - Presupuestos ","compras");
+  solapa("modulos/compras/xulcompras.php?modo=entra"," Compras > Presupuestos ","compras");
 }
 
 function Compras_CBCompra() {  Compras_selrapidaCompra(true); }
@@ -1730,7 +1744,7 @@ function Compras_altaRapida() {
 
 function xwebAltaRapida(){
         xwebCollapsed(true);
-        OcultaDeck();
+        //OcultaDeck();
 }
 
 function Compras_ClonarProducto(xid) {
@@ -1881,13 +1895,6 @@ function Clientes_buscar()
 }
 
 /* ========== CLIENTES ============ */
-
-//if(window.innerWidth){
-    //var iframe = document.getElementById("web");
-    //alert(window.innerWidth);
-    //var ancho = window.innerWidth - 280 + 7;
-    //iframe.setAttribute("width",ancho); 
-//}
 
 var localcesion = "<?php echo getSesionDato("IdTienda");?>";
 function startgPOS(){

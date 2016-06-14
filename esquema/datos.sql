@@ -33,7 +33,7 @@ INSERT INTO `ges_idiomas` VALUES (1, 'ESPAÑOL', 'es', 1, 0, 0);
 
 ;;;;;;
 INSERT INTO `ges_locales` 
-VALUES (1, 1, 1, 1, 'ALMACEN', 'almacen', md5('almacen'), 'LOCAL', '0', '', '', '', '', '', '', '', '', '',18,0, 1, 2, 0, 0, '', '','', 10, 0, 7, 12, 0, 'RDE', 0, 0, 0);
+VALUES (1, 1, 1, 1, 'ALMACEN', 'almacen', md5('almacen'), 'LOCAL', '0', '', '', '', '', '', '', '', '', '',18,0, 1, 2, 0, 0, '', '','', 10, 0, 7, 12, 0, 'RDE', 0, 0, 0, 0);
 
 ;;;;;;
 
@@ -152,7 +152,7 @@ VALUES (1,'...', 0),
 
 
 ;;;;;;
-INSERT INTO `ges_usuarios` VALUES (1, 'Mantenimiento', 'soporte', md5('gadministrador13'), 1, 'Las labores de mantenimiento se realizan con esta cuenta. Por tanto es aconsejable no borrarla.', '', '', '0000-00-00', 0, 1, 0, 1, 0, '', '', 'Activo', 0);
+INSERT INTO `ges_usuarios` VALUES (1, 'Mantenimiento', 'soporte', md5('x0+admin13'), 1, 'Las labores de mantenimiento se realizan con esta cuenta. Por tanto es aconsejable no borrarla.', '', '', '0000-00-00', 0, 1, 0, 1, 0, '', '', 'Activo', 0);
 ;;;;;;
 
 INSERT INTO `ges_usuarios` VALUES (2, 'Web', 'web', md5('web'), 1, '', '', '', '0000-00-00', 0, 7, 0, 0, 0, '', '', 'Inactivo', 0);
@@ -236,7 +236,9 @@ VALUES (1,'Venta',0,0,1,0),
        (7,'Ajuste',0,0,0,0),
        (8,'Inventario',0,0,0,0),
        (9,'MetaProducto',0,0,0,0),
-       (10,'Traslado y Recepción',1,0,0,0);
+       (10,'Traslado y Recepción',1,0,0,0),
+       (11,'Importacion', 0, 1, 0, 0),
+       (12,'Exportacion', 0, 0, 0, 0);
 
 ;;;;;;
 
@@ -265,7 +267,8 @@ VALUES (1,0,'CG','Aporte Socios','Aportacion',CURRENT_TIMESTAMP,'S101',0),
        (22,0,'VC','Adelanto Comprobante','Sustraccion',CURRENT_TIMESTAMP,'S122',0),
        (23,0,'VD','Adelanto Comprobante','Sustraccion',CURRENT_TIMESTAMP,'S123',0),
        (24,0,'CG','Transferencia a almacén central','Sustraccion',CURRENT_TIMESTAMP,'S124',0),
-       (25,0,'CG','Cambio moneda','Sustraccion',CURRENT_TIMESTAMP,'S125',0);
+       (25,0,'CG','Cambio moneda','Sustraccion',CURRENT_TIMESTAMP,'S125',0),
+       (26,0,'CG','Transferencia entre almacenes','Sustraccion',CURRENT_TIMESTAMP,'S126',0);
 
 ;;;;;;
 

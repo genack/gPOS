@@ -194,6 +194,7 @@ function AddLineaPagoDocumento(item,Local,Pedido,Proveedor,FechaRegistro,FechaOp
     xitem = document.createElement("listitem");
     xitem.value = IdPagoProvDoc;
     xitem.setAttribute("id","lineabuscadocumento_"+ilineabuscadocumento);
+    xitem.setAttribute("oncontextmenu","seleccionarlineadocumentospago("+ilineabuscadocumento+")");
     ilineabuscadocumento++;
 
     xnumitem = document.createElement("listcell");
@@ -357,6 +358,11 @@ function AddLineaPagoDocumento(item,Local,Pedido,Proveedor,FechaRegistro,FechaOp
     lista.appendChild( xitem );		
 }
 
+function seleccionarlineadocumentospago(linea){
+    var lista = id("listaPagoDocumento");
+    var fila  = id("lineabuscadocumento_"+linea);
+    lista.selectItem(fila);
+}
 
 function CesionDocumento(){
     var idex = id("listaPagoDocumento").selectedItem;
@@ -451,13 +457,23 @@ function loadProvHab() {
 }
 
 function OcultarMoneda(xval){
+    var cdivisa = true;
     if(xval==1){
+        cdivisa = true;
         //id("cambmoneda").setAttribute('collapsed',true);
     }else{
+        cdivisa = false;
         //id("cambmoneda").setAttribute('collapsed',false);
     }
 
+    var txt = "Marque si desea que se registre operaciones "+
+              "cambio moneda, de ["+cMoneda[1]['T']+
+              "] a ["+cMoneda[xval]['T']+"] en caja general";
+    
+    id("checkCambioDivisa").checked = false;
+    id("checkCambioDivisa").setAttribute('tooltiptext',txt);
     var xvalue = id("ModalidadPago").getAttribute("value");
+    id("trasladomoneda").setAttribute('collapsed',cdivisa);
 
     if(esNuevo) CargarDetallePagoDocumento(xvalue);
 }
@@ -541,10 +557,15 @@ function AltaPagoDocumento(){
     var estado            = id("EstadoDocumento").value;
     var tipoprov          = id("TipoProveedor").value;
     //var local             = (esAlmacen == 1)? id("FiltroLocal").value:'false';
+    var cambiodivisa      = id("checkCambioDivisa").checked;
+    cambiodivisa          = (cambiodivisa)? '1':'0';
+
     cambiomoneda          = (!cambiomoneda || cambiomoneda == 0)? 1:cambiomoneda;
 
     fechaoperacion = fechaoperacion+' '+horaoperacion;
     var mgpos = 'gPOS:   Registro Documento Pago\n\n ';
+
+    var modopago   = (modalidadpago == 1 || modalidadpago == 2 || modalidadpago == 7)? 1:0;
 
     if(provhab == 0)
 	return alert(mgpos+ ' - Seleccione un Proveedor' );
@@ -613,6 +634,7 @@ function AltaPagoDocumento(){
     data = data + "&xidl="+ idlocal;
     data = data + "&estado="+ estado;
     data = data + "&tipoprov="+ tipoprov;
+    data = data + "&cambiodivisa="+ cambiodivisa;
     //data = data + "&local="+ local;
 
     msj=' Registrar pago del proveedor -'+proveedor+'-';
@@ -629,11 +651,23 @@ function AltaPagoDocumento(){
         res = false;	
     }
 
-    if(isNaN(res)) 
-	alert("gPOS: \n\n"+po_servidorocupado+'\n\n -'+res+'-');
+    var ares = res.split("~");
+    
+    if(ares[0] != '') 
+	return alert("gPOS: \n\n"+po_servidorocupado+'\n\n -'+res+'-');
 
-    if(res == "0")
-	alert("gPOS: Caja General \n\n  - Estado Cerrada \n  - No se registró la operación de egreso.");
+    if(ares[1] == "0")
+	return alert("gPOS: Caja General \n\n  - Estado Cerrada \n  - No se registró la operación de egreso.");
+
+    if(ares[1] == '1')
+        return alert("gPOS: Caja General \n\n  - Caja moneda "+cMoneda[tipomoneda]['T']+" está cerrada \n  - No se registró la operación.");
+
+    var xxmsj = '';
+    if(tipomoneda != 1 && modopago == 1 && cambiodivisa == '1'){
+        xxmsj = (estado == 'Pendiente' && cEstado != 'Pendiente')? '\n  - Se realizaron las siguientes operaciones: \n    * Se retiró dinero de la caja '+cMoneda[1]['T']+' \n    * Se ingresó dinero a la caja '+cMoneda[tipomoneda]['T']:'';
+    }
+
+    alert("gPOS: Caja General \n\n  - Se registró la operación con éxito."+xxmsj);
 
     CancelarPagoDocumento();
     BuscarPagoDocumento();
@@ -808,11 +842,15 @@ function GuardarPagoDocumento(){
     var estado            = id("EstadoDocumento").value;
     var tipoprov          = id("TipoProveedor").value;
     var IdLocal           = (esAlmacen == 1)? id("FiltroLocalCambio").value:'false';
+    var cambiodivisa      = id("checkCambioDivisa").checked;
+    cambiodivisa          = (cambiodivisa)? '1':'0';
     cambiomoneda          = (!cambiomoneda || cambiomoneda == 0)? cCambioMoneda:cambiomoneda;
 
     fechaoperacion = fechaoperacion+' '+horaoperacion;
     var cambiodoc  = verificarCambioDato();
     var mgpos = 'gPOS:   Modificando Documento Pago \n\n';
+
+    var modopago   = (modalidadpago == 1 || modalidadpago == 2 || modalidadpago == 7)? 1:0;
 
     // Control
     if(cambiodoc == "")
@@ -873,6 +911,7 @@ function GuardarPagoDocumento(){
     data = data + "&xidppd="+ idoc;
     data = data + "&xidl="+ IdLocal;
     data = data + "&cestado="+ cEstado;
+    data = data + "&cambiodivisa="+ cambiodivisa;
 
     // Mensaje de confirmación
 
@@ -891,9 +930,26 @@ function GuardarPagoDocumento(){
         res = false;	
     }
 
-    if(!parseInt(res)) 
-	alert(po_servidorocupado+'\n\n -'+res+'-');	
+    //if(!parseInt(res)) 
+	//alert(po_servidorocupado+'\n\n -'+res+'-');
 
+    var ares = res.split("~");
+    
+    if(ares[0] != '') 
+	return alert("gPOS: \n\n"+po_servidorocupado+'\n\n -'+res+'-');
+
+    if(ares[1] == "0")
+	return alert("gPOS: Caja General \n\n  - Estado Cerrada \n  - No se registró la operación de egreso.");
+
+    if(ares[1] == '1')
+        return alert("gPOS: Caja General \n\n  - Caja moneda "+cMoneda[tipomoneda]['T']+" está cerrada \n  - No se registró la operación.");
+
+    var xxmsj = '';
+    if(tipomoneda != 1 && modopago == 1 && cambiodivisa == '1'){
+        xxmsj = (estado == 'Pendiente' && cEstado != 'Pendiente')? '\n  - Se realizaron las siguientes operaciones: \n    * Se retiró dinero de la caja '+cMoneda[1]['T']+' \n    * Se ingresó dinero a la caja '+cMoneda[tipomoneda]['T']:'';
+    }
+    
+    alert("gPOS: Caja General \n\n  - Se registró los cambios con éxito"+xxmsj);
     CerrarPagoDocumento();
     BuscarPagoDocumento();
 }

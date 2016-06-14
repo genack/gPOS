@@ -88,10 +88,24 @@ function CleanTo($text,$to="")  {
 	
 	return $text;	
 }
+function CleanToTel($text,$to="")  {
+	$text = str_replace("'",$to,$text);
+	$text = str_replace("\\",$to,$text);
+	$text = str_replace("@",$to,$text);
+	//$text = str_replace("#",$to,$text);
+	$text = str_replace(" ",$to,$text);
+	$text = str_replace("\t",$to,$text);
+	
+	return $text;	
+}
 
 
 function CleanText($text){
 	return CleanTo($text," ");	
+}
+
+function CleanTextTel($text){
+	return CleanToTel($text," ");	
 }
 
 function Clean($text){

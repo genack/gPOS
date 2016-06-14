@@ -10,7 +10,7 @@
 	  <menuseparator />
 	  <menuitem id="t_preventa" type="checkbox" label="TICKET PREVENTA"  
 		    oncommand="selTipoPresupuesto(1)" />
-	  <menuitem id="t_proforma" type="checkbox" label="TICKET PEDIDO" 
+	  <menuitem id="t_proforma" type="checkbox" label="TICKET PROFORMA" 
 		    oncommand="selTipoPresupuesto(2)" />
 	  <menuitem id="t_proformaonline" type="checkbox" label="TICKET ONLINE"  
 		    oncommand="selTipoPresupuesto(3)" />
@@ -19,11 +19,12 @@
 		    oncommand="selTipoPresupuesto(4)" />
 	</menupopup>
       </menu>
+                                                                                                             
       <textbox id="buscapedido" collapsed="true" size="9" value="Nro" onfocus="if(this.value=='Nro')this.value='';select();" onblur="if(this.value=='')this.value='Nro';" class="nro"  onkeypress=" if (event.which == 13) buscarNroTicket(); return soloNumerosEnterosTPV(event,this.value);" />
 
       <menulist label="Elije ticket...."  flex="1" id="SelPreventa" collapsed="true"  class="listado">
       <menupopup id="itemsPreventa">
-	<menuitem id="0" style="width:14em" label="Elije ticket...."/>      
+	<menuitem id="0" style="width:14em" label="Elije ticket...." oncommand="selTipoPresupuesto(1)" />      
       </menupopup>
       </menulist>
 
@@ -57,34 +58,34 @@
       <radiogroup orient="horizontal" id="rgModosTicket" oncommand="NuevoModo()"  class="listado">
 	<radio id="rVenta" label="Contado" selected="true" value="venta"/>
 	<radio id="rCesion" label="Crédito" value="cesion"/>
-	<radio id="rPedido" label="Pedido" selected="true" value="pedidos"/>
+	<radio id="rPedido" label="Proforma" selected="true" value="pedidos"/>
 	<radio id="rMProducto" label="MixProductos" value="mproducto"/>
 	<radio id="rInterno" label="Servicios" value="interno" collapsed="true"/>
       </radiogroup>    	
     </hbox>
-    <listbox id="listadoTicket" rows="4" flex="1" contextmenu="accionesTicket"  class="listado" onclick="menuContextualPreVentaTPV(true)" onkeypress="if (event.which == 13) setTimeout('ModificaTicketUnidades(-1)',50)" >
+    <listbox id="listadoTicket" rows="4" flex="1" contextmenu="accionesTicket"  class="listado" oncontextmenu="menuContextualPreVentaTPV(true)" onkeypress="if (event.which == 13) setTimeout('ModificaTicketUnidades(-1)',50)" >
       <listcols flex="1">
-	<listcol style="width:5em"/>
+	<listcol id="colListaTicketViewCR" collapsed="true"/>
 	<splitter class="tree-splitter" />
 	<listcol flex="1" />
 	<splitter class="tree-splitter" />
 	<listcol />
 	<splitter class="tree-splitter" />
-	<listcol />
+	<listcol id="colListaTicketViewUND" />
 	<splitter class="tree-splitter" />
-	<listcol />
+	<listcol id="colListaTicketViewDCTO" />
 	<splitter class="tree-splitter" />		
 	<listcol  collapsed="<?php echo $esOcultoImpuesto ?>"/>
 	<splitter class="tree-splitter" />				
-	<listcol/>
+	<listcol id="colListaTicketViewPV"/>
 	<listcol collapsed="true" />
 	<listcol collapsed="true" />
 	<listcol collapsed="true" />
-	<listcol />
+	<listcol id="colListaTicketViewImporte"/>
 	<listcol style="width:1em"/>
       </listcols>
       <listhead>
-	<listheader label="CR" />
+	<listheader id="headListaTicketViewCR" collapsed="true" label="CR" />
 	<listheader label="Producto"  />
 	<listheader label="" />
 	<listheader label="Und" style="text-align:center"/>

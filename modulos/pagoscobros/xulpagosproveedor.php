@@ -1,7 +1,7 @@
 <?php
 SimpleAutentificacionAutomatica("visual-xulframe");
 StartXul('Pagos Proveedor',$predata="",$css='');
-StartJs($js='modulos/pagoscobros/pagosproveedor.js?v=3.1');
+StartJs($js='modulos/pagoscobros/pagosproveedor.js?v=3.2.1');
 StartJs($js='modulos/comprobanteventa/ventas.js?v=3.1');
 ?>
   <script>//<![CDATA[
@@ -224,20 +224,17 @@ StartJs($js='modulos/comprobanteventa/ventas.js?v=3.1');
       </listbox>
       <splitter collapse="none" resizeafter="farthest" orient="vertical">• • •</splitter>
       <hbox pack="left">
-	<caption class="box" label="<?php echo _("Detalle Pagos") ?>"></caption>
-	<hbox flex="1" pack="center">
-	  <!--label value="Pendientes:"/>
-	  <description id="TotalPendientes" value="" />
-	  <label value="Confirmadas:"/>
-	  <description id="TotalConfirmada" value="" />
-	  <label value="Pendiente:"/>
-	  <description id="ImportePendiente" value="" />
-	  <label value="Pagada:"/>
-	  <description id="ImportePagada" value="" />
-	  <label value="Mora:"/>
-	  <description id="ImporteMora" value="" />
-	  <label value="Excedente:"/>
-	  <description id="ImporteExcedente" value="" /-->
+	<!-- caption class="box" label="<?php echo _("Detalle Pagos") ?>"></caption-->
+	<hbox flex="1" align="center">
+            <menu id="onlistDetalle" class="menuhead" collapsed="false" label="Detalle Pagos">
+                <menupopup id="combolistPagos">
+                    <menuitem id="t_detalle_pago" type="checkbox" label="Detalle Pagos" checked="true" 
+                              oncommand="mostrarDetalleComprobanteProv('pago')"></menuitem>
+                    <menuitem id="t_detalle_cbte" type="checkbox" label="Detalle Comprobante" 
+                              oncommand="mostrarDetalleComprobanteProv('comprobante')" 
+                              ></menuitem>
+                </menupopup>
+            </menu>
 	</hbox>
 	<hbox style="margin-top:-1em;margin-right:0.5em;">
 	  <menu>
@@ -307,6 +304,50 @@ StartJs($js='modulos/comprobanteventa/ventas.js?v=3.1');
 	</listhead>
 
       </listbox>
+
+      <listbox id="busquedaDetallesCompra" flex="1" collapsed="true">
+          <listcols flex="1">
+	      <listcol/>
+	      <splitter class="tree-splitter" />
+	      <listcol/>
+	      <splitter class="tree-splitter" />
+	      <listcol/>
+	      <splitter class="tree-splitter" />
+	      <listcol flex="3"/>
+	      <splitter class="tree-splitter" />
+	      <listcol flex="1"/>
+	      <splitter class="tree-splitter" />
+	      <listcol/>
+	      <splitter class="tree-splitter" />
+	      <listcol />
+	      <splitter class="tree-splitter" />
+	      <listcol />
+	      <splitter class="tree-splitter" />
+	      <listcol />
+	      <splitter class="tree-splitter" />
+	      <listcol flex="0"/>
+	      <splitter class="tree-splitter" />
+	      <listcol flex="0"/>
+	      <splitter class="tree-splitter" />
+	      <listcol  flex="8"/>
+          </listcols>
+          <listhead>
+	      <listheader label=" # " style="font-style:italic;"/>
+	      <listheader label="CR" />
+	      <listheader label="CB" />
+	      <listheader label="Producto"/>
+	      <listheader label="Detalle"/>
+	      <listheader label="Cantidad"/>
+	      <listheader label="Costo" />
+	      <listheader label="Precio" />
+	      <listheader label="Dscto" />
+	      <listheader label="Valor Compra" />
+	      <listheader label="Precio Compra" />
+	      <listheader label="" />
+          </listhead>
+
+      </listbox>
+
     </vbox>
       <vbox collapsed="false" class="box" id="boxResumenComprobanteCompra">
 	<caption class="box" label="<?php echo _("Resumen Comprobantes") ?>" />
@@ -334,12 +375,13 @@ StartJs($js='modulos/comprobanteventa/ventas.js?v=3.1');
 
       <vbox>
 	<box flex="1"></box>
-	<button  id="btnIrPagosProveedor" 
+	<button  id="btnIrPagosProveedor" collapsed="true"
 		 class="btn" image="<?php echo $_BasePath; ?>img/gpos_tpvmultipagos.png"  
 	         label=" Pagos Proveedor" 
 		 oncommand="mostrarOperacionesPagosProveedor('pagos')" 
                  <?php gulAdmite("Pagos") ?> />
       </vbox>
+
   </vbox>
 
 
@@ -481,7 +523,7 @@ StartJs($js='modulos/comprobanteventa/ventas.js?v=3.1');
       </hbox>
 
       <listbox flex="1" id="busquedaVentas" contextmenu="AccionesBusquedaVentas" 
-	       onclick="RevisarVentaSeleccionada()" 
+	       onclick="RevisarVentaSeleccionada()" oncontextmenu="RevisarVentaSeleccionada()"
 	       onkeypress="if (event.keyCode==13) RevisarVentaSeleccionada()">
 	<listcols flex="1">
 	  <listcol/>		
@@ -541,7 +583,7 @@ StartJs($js='modulos/comprobanteventa/ventas.js?v=3.1');
 	<caption class="box" label="<?php echo _("Detalle Cobros") ?>"></caption>
       </hbox>
       <listbox id="busquedaDetallesCobro" flex="1" contextmenu="AccionesBusquedaCobros" 
-	       onclick="RevisarCobroSeleccionada()" 
+	       onclick="RevisarCobroSeleccionada()" oncontextmenu="RevisarCobroSeleccionada()"
 	       onkeypress="if (event.keyCode==13) RevisarCobroSeleccionada()">
 	<listcols flex="1">
 	  <listcol/>

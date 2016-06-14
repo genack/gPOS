@@ -35,18 +35,26 @@ function EntregarOperacionCaja($IdLocal,$cantidad,$concepto,$IdPartida,$operacio
 }
 
 	
-function EntregarCantidades($concepto, $IdLocal,$entregaEfectivo, $entregaBono, $entregaTarjeta,$IdComprobante,$TipoOperacion="Ingreso",$fechapago=false,$modalidadpago=1,$doccobro=false){
+function EntregarCantidades($concepto, $IdLocal,$entregaEfectivo, $entregaBono, 
+			    $entregaTarjeta,$IdComprobante,$TipoOperacion="Ingreso",
+			    $fechapago=false,$modalidadpago=1,$doccobro=false,$IdUsuario){
+
+        $IdUsuario = ($IdUsuario)? $IdUsuario : getSesionDato("IdUsuario");
 
 	if($entregaEfectivo)
-	  EntregarMetalico($IdLocal,$entregaEfectivo,$concepto,$IdComprobante,$TipoOperacion,$fechapago,$modalidadpago,$doccobro);
+	  EntregarMetalico($IdLocal,$entregaEfectivo,$concepto,$IdComprobante,$TipoOperacion,
+			   $fechapago,$modalidadpago,$doccobro,$IdUsuario);
 	if($entregaBono)
 	  EntregarBono($IdLocal,$entregaBono,$concepto,$IdComprobante,$fechapago);
 	if($entregaTarjeta)
-	  EntregarTarjeta($IdLocal,$entregaTarjeta,$concepto,$IdComprobante,$doccobro,$fechapago);
+	  EntregarTarjeta($IdLocal,$entregaTarjeta,$concepto,$IdComprobante,$doccobro,
+			  $fechapago,$IdUsuario);
 
 }	
 
-function EntregarMetalico($IdLocal,$entregado,$concepto,$IdComprobante=false,$TipoOperacion="SinEspecificar",$fechapago=false,$modalidadpago=1,$doccobro=false){
+function EntregarMetalico($IdLocal,$entregado,$concepto,$IdComprobante=false,
+			  $TipoOperacion="SinEspecificar",$fechapago=false,$modalidadpago=1,
+			  $doccobro=false,$IdUsuario){
 	$mov = new Movimiento();
 
 	$mov->SetComprobante($IdComprobante);
@@ -77,7 +85,9 @@ function EntregarMetalico($IdLocal,$entregado,$concepto,$IdComprobante=false,$Ti
 	    $doccobro["obs"] = '';
 	  }
 
-	  GuardarDocumentosCobros($idopcaja,$doccobro,$IdLocal);
+	  GuardarDocumentosCobros($idopcaja,$doccobro,$IdLocal,$IdUsuario,0,false);
+	  RegistrarMovimientoBancario($IdLocal,$idopcaja,0,$IdUsuario,$doccobro["id"],
+				      'Ingreso',$concepto,$entregado);
 	}
 }
 
@@ -93,7 +103,7 @@ function EntregarBono($IdLocal,$entregado,$concepto,$IdComprobante=false,$fechap
 }
 
 function EntregarTarjeta($IdLocal,$entregado,$concepto,$IdComprobante=false,$doccobro=false,
-			 $fechapago){
+			 $fechapago,$IdUsuario){
 	$mov = new Movimiento();
 	
 	$mov->SetComprobante($IdComprobante);
@@ -102,7 +112,11 @@ function EntregarTarjeta($IdLocal,$entregado,$concepto,$IdComprobante=false,$doc
 	$mov->set("FechaPago",$fechapago,FORCE);
 	$idopcaja = $mov->GuardaOperacion();
 	
-	if($doccobro) GuardarDocumentosCobros($idopcaja,$doccobro,$IdLocal);
+	if($doccobro) {
+	  GuardarDocumentosCobros($idopcaja,$doccobro,$IdLocal,$IdUsuario,0,false);
+	  RegistrarMovimientoBancario($IdLocal,$idopcaja,0,$IdUsuario,$doccobro["id"],
+				      'Ingreso',$concepto,$entregado);
+	}
 }
 
 
@@ -557,7 +571,7 @@ function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobant
 	   switch($devolvermodo ){
 	   case "credito":    
 	     registrarMovimientoCreditoCliente($IdCliente,$MontoDevul,0,$IdLocal,
-					       $IdComprobante,$idDependiente,false);
+                                           $IdComprobante,$idDependiente,$concepto,false);
 	     break;
 	   case "efectivo":
 	     EntregarOperacionCaja($IdLocal,$MontoDevul,$concepto,$IdPartida,'Sustraccion',
@@ -581,7 +595,7 @@ function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobant
 	 //Devuelve credito al cliente
 	 if($MontoCredito > 0)
 	   registrarMovimientoCreditoCliente($IdCliente,$MontoCredito,0,$IdLocal,
-					     $IdComprobante,$idDependiente,false);
+                                         $IdComprobante,$idDependiente,$concepto,false);
 
 	 //actualiza deuda cliente
 	 actualizarImportePendienteCliente($IdCliente);
@@ -745,6 +759,7 @@ function DevolverComprobanteTPV($IdComprobante,$Monto,$idDependiente,$Comprobant
 	     // actualiza registros kardex
 	     $almacenes->actualizarCosto($id,$IdLocal);
 	     actualizaResumenKardex($id,$IdLocal);
+             actualizaDevolucionVitrina($row['Cantidad'],$IdLocal,$id);
 	   }
 	 
 	 return " ~".$IdPresupuesto;
@@ -998,9 +1013,9 @@ function LiberarAlbaranComprobante($IdComprobante,$IdLocal){
 
 	 //Quita IdComprobante 
 	 $sql = "UPDATE ges_comprobantesnum 
-              SET    Status            = 'Facturado',
-                     IdComprobante     = ''
-              WHERE  IdComprobante     = '".$IdComprobante."'
+              SET    Status            = 'Facturado' ".
+         //"        IdComprobante     = '' ".
+            " WHERE  IdComprobante     = '".$IdComprobante."'
               AND    Eliminado         = '0'";
 	 query($sql);
 
@@ -1671,16 +1686,20 @@ function ValidarFechaAperturaCaja($Fecha){
     return "1";
 }
 
-function GuardarDocumentosCobros($idopcaja,$doccobro,$IdLocal){
-  $IdUsuario       = CleanID(getSesionDato("IdUsuario"));
+function GuardarDocumentosCobros($idopcaja,$doccobro,$IdLocal,$IdUsuario,
+				 $IdClienteCredito=0,$FechaOperacion=false){
+
+  $FechaOperacion = ($FechaOperacion)? $FechaOperacion:date("Y-m-d H:i:s");
 
   $values = "IdLocal, IdUsuario, IdOperacionCaja, IdCuentaBancaria,
-             CodOperacion, NumDocumento, Observaciones";
+             CodOperacion, NumDocumento, Observaciones, IdClienteCredito,FechaOperacion";
   $keys   = "'$IdLocal','$IdUsuario','$idopcaja','".$doccobro["id"]."',
-             '".$doccobro["op"]."','".$doccobro["doc"]."','".$doccobro["obs"]."'";
+             '".$doccobro["op"]."','".$doccobro["doc"]."','".$doccobro["obs"]."',
+             '".$IdClienteCredito."','".$FechaOperacion."'";
     
   $sql = "INSERT INTO ges_cobrosclientedoc ( $values ) VALUES ( $keys )";
   $res = query($sql);
+
 }
 
 function ckCodigoAutorizacionTPV($xid,$xaccion,$xcod=false){
@@ -1810,13 +1829,29 @@ function obtenerEncabezadoComprobanteVenta($IdComprobante){
 }
 
 function verificarCodigoOperacion($codop,$idcuenta){
-  $sql = "SELECT CodOperacion FROM ges_cobrosclientedoc 
-          WHERE CodOperacion = '$codop' AND IdCuentaBancaria = '$idcuenta' LIMIT 1";
+  $sql = "SELECT CodOperacion FROM ges_cobrosclientedoc ".
+         "WHERE CodOperacion = '$codop' ".
+         "AND IdCuentaBancaria = '$idcuenta' ".
+         "AND Eliminado = 0 ".
+         "LIMIT 1";
 
   $row = queryrow($sql);
   if(!$row || $row["CodOperacion"] == '000000')
     return false;
   return $row["CodOperacion"];
+}
+
+function getIdComprobanteAlbaran($IdComprobante,$IdLocal){
+  //$IdLocal = getSesionDato("IdTienda"); 
+  //$IdLocal   = getSesionDato("IdTiendaDependiente");
+    $sql = "SELECT GROUP_CONCAT(DISTINCT(IdAlbaran)) as Albaranes ".
+           " FROM  ges_comprobantesdet ".
+           " WHERE IdComprobante = $IdComprobante ";
+
+  $row = queryrow($sql);
+   if (!$row) 
+     return false; 
+   return $row["Albaranes"];
 }
 
 ?>

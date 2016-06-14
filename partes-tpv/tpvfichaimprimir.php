@@ -125,7 +125,8 @@
                   <checkbox id="checkimprimir" class="Compacta red-core" label="Imprimir" tooltiptext="Lanzar la ventada de impresión"
                             checked="true" oncommand="CambiarModoImpresion(this.checked)"/>
                 </box>
-		<hbox>		
+		<hbox>
+		<button flex="1" id="BotonGuiaRemision" image="img/gpos_vaciarcompras.png" class="media btn" label="  Siguiente  " oncommand="VerGuiaRemision()" collapsed="true"/>                    
 		<button flex="1" id="BotonAceptarImpresion" image="img/gpos_imprimir.png" class="media btn" label="  Aceptar  " oncommand="ImprimirTicket()"/>
 		<button flex="1" id="BotonCancelarImpresion" image="img/gpos_vaciarcompras.png" class="media btn" label="  Cancelar  " oncommand="CerrarPeticion()"/>
 		</hbox>

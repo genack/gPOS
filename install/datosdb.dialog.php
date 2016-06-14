@@ -43,10 +43,10 @@
 
 <label for="giroNegocio">Tipo de negocio de la aplicación</label><br />
 <select name="gironegocio" id="gironegocio">
-  <option value="PINF" selected>Productos Informáticos</option>
-  <option value="BTCA">Botica</option>
-  <option value="BTQE">Boutique</option>
-  <option value="MMKT">MiniMarket</option>
+  <option value="PINF" selected>Tecnología</option>
+  <option value="BTCA">Medicamentos</option>
+  <option value="BTQE">Moda/Ropa</option>
+  <option value="WESL">Minorista/Mayorista</option>
 </select>
 <br/>
 

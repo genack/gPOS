@@ -646,6 +646,9 @@ ven["altaproveedor"] ='ven_alta';
 ven["altalaboratorio"] ='ven_alta';
 ven["familiaplus"] ='ven_familiaplus';
 ven["cuenta"] = 'ven_cuenta';
+ven["planes"] = 'ven_planes';
+ven["credito"] = 'ven_credito';
+ven["editproducto"] = 'ven_editproducto';
 
 function popup(url,tipo) {
 
@@ -684,6 +687,24 @@ function soloAlfaNumericoExt(e,ext){
     tecla = String.fromCharCode(key).toLowerCase();
     letras = " áéíóúabcdefghijklmnñopqrstuvwxyz0123456789+-_$%@:,"+ext;
     especiales = [8, 13, 9, 39, 46, 35, 36, 38, 40];
+    tecla_especial = false
+    for(var i in especiales){
+        if(key == especiales[i]){
+            tecla_especial = true;
+            break;
+        }
+    }
+    
+    if(letras.indexOf(tecla)==-1 && !tecla_especial){
+        return false;
+    }
+}
+
+function soloAlfaNumericoSerieTextArea(e){
+    key = e.keyCode || e.which;
+    tecla = String.fromCharCode(key).toLowerCase();
+    letras = "abcdefghijklmnopqrstuvwxyz0123456789-";
+    especiales = [8, 13, 9, 35, 36, 37, 38, 39, 40];
     tecla_especial = false
     for(var i in especiales){
         if(key == especiales[i]){

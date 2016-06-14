@@ -2,7 +2,7 @@
 //include("tool.php");
 SimpleAutentificacionAutomatica("visual-xulframe");
 StartXul('Comprobantes Venta',$predata="",$css='');
-StartJs($js='modulos/comprobanteventa/ventas.js?v=3.1');
+StartJs($js='modulos/comprobanteventa/ventas.js?v=3.2');
 ?>
 
   <script>//<![CDATA[
@@ -46,7 +46,7 @@ StartJs($js='modulos/comprobanteventa/ventas.js?v=3.1');
 <vbox flex="1" class="box">
   <hbox pack="center">
     <caption class="h1">
-      <?php echo _("Comprobantes ") ?>
+      <?php echo _("Comprobantes Ventas") ?>
     </caption>
   </hbox>
 
@@ -181,7 +181,7 @@ StartJs($js='modulos/comprobanteventa/ventas.js?v=3.1');
     <!-- Ventas -->
     <vbox flex="1">
       <hbox flex="0">
-	<caption class="box" label="<?php echo _("Comprobantes") ?>" />
+	<caption class="box" label="<?php echo _("Comprobantes Ventas") ?>" />
       </hbox>
 
 
@@ -246,7 +246,7 @@ StartJs($js='modulos/comprobanteventa/ventas.js?v=3.1');
 
       <!-- Detalles -->
       <hbox pack="left" class="box">
-	<caption class="box" label=" <?php echo _("Detalle Comprobantes") ?>" />
+	<caption class="box" label=" <?php echo _("Detalle Comprobantes Ventas") ?>" />
       </hbox>
 
       <listbox id="busquedaDetallesVenta" flex="1" contextmenu="AccionesDetallesVentas" onclick="RevisarDetalleVentaSeleccionada()" >
@@ -294,7 +294,7 @@ StartJs($js='modulos/comprobanteventa/ventas.js?v=3.1');
 
 <!-- Resumen -->
 <vbox class="box" id="boxResumenComprobante" >
-  <caption class="box" label="<?php echo _("Resumen Comprobantes") ?>" />
+  <caption class="box" label="<?php echo _("Resumen Comprobantes Ventas") ?>" />
   <hbox  class="resumen" pack="center" align="left">
     <label value="Ventas:" />
     <description id="TotalVentasRealizadas" value="" />

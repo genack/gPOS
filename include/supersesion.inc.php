@@ -247,6 +247,15 @@ function getSesionDato($nombre){
 				$detadoc[13]=0;
 				$detadoc[14]=0;
 				$detadoc[15]='';
+				$detadoc[17]='';
+                $detadoc[18]='';
+                $detadoc[19]='';
+                $detadoc[20]='';
+                $detadoc[21]='';
+                $detadoc[22]='';
+                $detadoc[23]='';
+                $detadoc[24]='';
+                $detadoc[25]=false;
 				$_SESSION[$nombre]=$detadoc;
 			}
 			return $_SESSION[$nombre];
@@ -325,7 +334,7 @@ function setSesionDato($dato,$valor) {
 	$_SESSION[$dato] = $valor;
 }
 
-function getModeloDetalle2txt(){
+function getGiroNegocio2txt(){
 
    $atxt = array();
 
@@ -342,6 +351,14 @@ function getModeloDetalle2txt(){
      array_push($atxt, 'BTQE');
      array_push($atxt, 'Color ó Modelo');
      array_push($atxt, 'Talla ó Detalle');
+     array_push($atxt, 'Etiqueta');
+     array_push($atxt, 'Referencia Fabr.');
+     break;
+
+   case "WESL": 
+     array_push($atxt, 'WESL');
+     array_push($atxt, 'Modelo');
+     array_push($atxt, 'Detalle');
      array_push($atxt, 'Etiqueta');
      array_push($atxt, 'Referencia Fabr.');
      break;

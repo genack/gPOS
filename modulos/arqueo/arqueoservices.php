@@ -77,12 +77,6 @@ switch($modo){
 
         case "hacerOperacionDinero":
 
-	        /*+++++++++++ VALIDA CAJA +++++++++++++++*/
-	       if( cajaescerrado() == 1 ) { 
-		 echo "cjacerrada";
-		 return;
-	       }
-
 	        $IdLocal      = intval($_REQUEST["xidl"]);
 		$cantidad     = CleanFloat($_REQUEST["cantidad"]);	
 		$concepto     = $_REQUEST["concepto"];
@@ -102,50 +96,111 @@ switch($modo){
 		  return;
 		}
 
+	        /*+++++++++++ VALIDA CAJA +++++++++++++++*/
+	        if( cajaescerrado() == 1 ) { 
+	            echo "cjacerrada";
+	            return;
+	        }
+        
 		if($IdArqueo != $xIdArqueo || !$IdArqueo) {
 		  echo "cjacerrada";
 		  return;
 		}
-
+        
+        	$movgral        = new movimientogral;
+        	$CajaCentral = getSesionDato("esCajaCentral");
+                $oLocal = new local;
+        	$LocalDestino = $oLocal->getIdLocalCentral();
+        
 		if($operacion == 'Sustraccion' && ($CodPartida == "S112" || $CodPartida == "S115")){
-		  $movgral        = new movimientogral;
-		  $IdMoneda       = 1;
-		  $IdArqueoGral   = $movgral->getIdArqueoEsCerrado($IdMoneda,$IdLocal);
-		  $fechacajagral  = $movgral->getAperturaCajaGral($IdMoneda,$IdLocal);
+		    $IdMoneda       = 1;
+		    $IdArqueoGral   = $movgral->getIdArqueoEsCerrado($IdMoneda,$IdLocal);
+		    $fechacajagral  = $movgral->getAperturaCajaGral($IdMoneda,$IdLocal);
+                    
+		    if($fechacajagral == 0){
+		        echo "cjagralcerrada";
+		        return;
+		    }
 
-		  if($fechacajagral == 0){
-		    echo "cjagralcerrada";
-		    return;
-		  }
+                    if($CajaCentral && ($LocalDestino != $IdLocal)){
+	                $esCjaCentralAbierta = $movgral->getAperturaCajaGral($IdMoneda,$LocalDestino);
+                        
+	                if($esCjaCentralAbierta == 0){
+		            echo "cjacentralcerrada";
+		            return;
+	                }
+                    }
 		}
-		
-		EntregarOperacionCaja($IdLocal,$cantidad,$concepto,$IdPartida,$operacion,
-				      $fechacaja,$IdArqueo,$TipoVenta);
 
-		if($operacion == 'Sustraccion' && ($CodPartida == 'S112' || $CodPartida == 'S115')){
-		  $xtipo     = ($TipoVenta == 'VD')? 'TPV PERSONAL':'TPV CORPORATIVO';
-		  $concepto  = "VENTAS ".$xtipo;
-		  $IdPartida = 4;
-		  $cambiomoneda = 1;
-		  $operacion  = 'Ingreso';
-		  $IdUsuario  = CleanID(getSesionDato("IdUsuario"));
+	        EntregarOperacionCaja($IdLocal,$cantidad,$concepto,$IdPartida,$operacion,
+			              $fechacaja,$IdArqueo,$TipoVenta);
+
+	        if($operacion == 'Sustraccion' && ($CodPartida == 'S112' || $CodPartida == 'S115')){
+	            $xtipo     = ($TipoVenta == 'VD')? 'TPV PERSONAL':'TPV CORPORATIVO';
+	            $concepto  = "VENTAS ".$xtipo;
+	            $IdPartida = 4;
+	            $cambiomoneda = 1;
+	            $operacion  = 'Ingreso';
+	            $IdUsuario  = CleanID(getSesionDato("IdUsuario"));
+	            
+	            EntregarOperacionGral($IdLocal,$cantidad,$concepto,$IdPartida,$IdMoneda,
+				          $cambiomoneda,$operacion,$fechacajagral,$IdUsuario,
+				          $IdArqueoGral,$documento=false,$codigodoc=false,
+				          $proveedor=false,$IdComprobante=false);
+
+	            // Trasladando a la caja central
+	            $CajaCentral = getSesionDato("esCajaCentral");
+	    
+	            if($CajaCentral  && ($LocalDestino != $IdLocal)){
+
+		    // salida caja general
+		    $concepto  = "VENTAS ".$xtipo;
+		    $IdPartida = obtenerIdPartidaCaja("S124");
+		    $cambiomoneda = 1;
+		    $operacion  = 'Sustraccion';
+
+		    EntregarOperacionGral($IdLocal,$cantidad,$concepto,$IdPartida,$IdMoneda,
+					  $cambiomoneda,$operacion,$fechacajagral,$IdUsuario,
+					  $IdArqueoGral,$documento=false,$codigodoc=false,
+					  $proveedor=false,$IdComprobante=false);
+
+		    // Ingreso a almacen central
+		    $mov    = new movimientogral;
+		    $oLocal = new local;
+		    $LocalDestino = $oLocal->getIdLocalCentral();
+		    $esCjaCentralAbierta = $movgral->getAperturaCajaGral($IdMoneda,$LocalDestino);
+
+		    if($esCjaCentralAbierta == 0){
+		      echo "cjacentralcerrada";
+		      return;
+		    }
+
+		    $IdArqueoDest = $mov->getIdArqueoEsCerrado($IdMoneda,$LocalDestino);
+
+		    $LocalActual  = getNombreComercialLocal($IdLocal);
+		    $operacion = 'Ingreso';
+		    $concepto  = 'Transferencia desde '.$LocalActual.' - '.$concepto;
+		    $IdLocal   = $LocalDestino;
+		    $IdArqueo  = $IdArqueoDest;
 		  
-		  EntregarOperacionGral($IdLocal,$cantidad,$concepto,$IdPartida,$IdMoneda,
-					$cambiomoneda,$operacion,$fechacajagral,$IdUsuario,
-					$IdArqueoGral,$documento=false,$codigodoc=false,
-					$proveedor=false,$IdComprobante=false);
+		    EntregarOperacionGral($IdLocal,$cantidad,$concepto,$IdPartida,$IdMoneda,
+					  $cambiomoneda,$operacion,$fechacaja,$IdUsuario,
+					  $IdArqueo,$documento,$codigodoc,$proveedor);
+		  }
 		}
 		  
 		echo "exito";
 		break;
 
 	case "hacerIngresoAdelantoDinero":				
-		$IdLocal  = getSesionDato("IdTiendaDependiente");
-		$cantidad = CleanFloat($_REQUEST["cantidad"]);	
-		$concepto = $_REQUEST["concepto"];
+		$IdLocal   = getSesionDato("IdTiendaDependiente");
+		$cantidad  = CleanFloat($_REQUEST["cantidad"]);	
+		$concepto  = $_REQUEST["concepto"];
+		$IdUsuario = CleanID($_REQUEST["xidu"]);
 
 		global $UltimaInsercion;	
-		EntregarMetalico($IdLocal,$cantidad,$concepto,false,"Ingreso",false,false);
+		EntregarMetalico($IdLocal,$cantidad,$concepto,false,"Ingreso",false,1,false,
+				 $IdUsuario);
 
 		setSesionDato("OperacionCajaPresupuesto",$UltimaInsercion);
 		setSesionDato("OperacionCajaImportePresupuesto",$cantidad);
@@ -541,10 +596,12 @@ function ModificarOperacionCaja($IdLocal,$IdOperacionCaja,$concepto){
 }
 
 function obtenerAnios(){
+  $IdLocal = getSesionDato("IdTienda");
   $sql = "SELECT DISTINCT(YEAR(FechaApertura)) as Anios ".
          "FROM ges_arqueo_caja ".
          "WHERE DATE(ges_arqueo_caja.FechaApertura) <> '0000-00-00' ".
          "AND Eliminado = 0 ".
+         "AND IdLocal = $IdLocal ".
          "ORDER BY ges_arqueo_caja.FechaApertura DESC";
 
   $res = query($sql);
@@ -556,14 +613,6 @@ function obtenerAnios(){
   }
 
   return $anios;
-}
-
-function obtenerIdPartidaCaja($CodPartida){
-  $sql = "SELECT IdPartidaCaja as Id ".
-         "FROM   ges_partidascaja ".
-         "WHERE  Codigo = '$CodPartida'";
-  $row = queryrow($sql);
-  return $row["Id"];
 }
 
 function obtenerCodigoPartidaCaja($IdPartidaCaja){

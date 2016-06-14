@@ -36,6 +36,13 @@
 
   <menuitem id="menuClonaArticulo" label="<?php echo _("Clonar") ?>"  
             oncommand="clonarArticulo()"  collapsed="true"/>
+  <menuseparator />
+  <menuitem id="menuModificarDescripcionArticulo"
+            label="<?php echo _("Modificar Nombre Producto") ?>"  
+            oncommand="modificarDescripcionArticulo('nombre')"  collapsed="true"/>
+  <menuitem id="menuModificarDetalleArticulo"
+            label="<?php echo _("Modificar Detalle Producto") ?>"  
+            oncommand="modificarDescripcionArticulo('detalle')"  collapsed="true"/>  
   <vbox id="menuAlmacenFinalizarInventario" collapsed="true">
   <menuseparator />
   <menuitem  label="<?php echo _("Finalizar Inventario") ?>"  

@@ -58,6 +58,9 @@ switch($modo){
     $ProductoIdioma    = CleanText($_GET["productoidioma"]);
     $ModalidadPago     = CleanText($_GET["modalidadpago"]);
     $CuentaBancaria    = CleanText($_GET["cuentabancaria"]);
+    $TipoProducto      = CleanText($_GET["tipoproducto"]);
+    $AdminSuscripcion  = CleanText($_GET["adminsuscripcion"]);
+    $OperacionCredito  = CleanText($_GET["operacioncredito"]);
 
     $Consulta          = "SELECT * FROM $Tabla WHERE (IdListado = '$Id')";
     $row               = queryrow($Consulta);
@@ -81,7 +84,8 @@ switch($modo){
 				    $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta,
 				    $Cobranza,$CodigoComprobante,$PresupuestoVenta,
 				    $IdMoneda,$EstadoPresupuesto,$TipoVentaTPV,$VentaEstado,
-				    $ProductoIdioma,$ModalidadPago,$CuentaBancaria);
+                                    $ProductoIdioma,$ModalidadPago,$CuentaBancaria,
+                                    $TipoProducto,$AdminSuscripcion,$OperacionCredito);
 
     }
     $NombreArchivo = '"'.$NombreArchivo.'"';
@@ -217,7 +221,7 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
 		     $Prolongacion,$IdCLiente,$Codigo,$EstadoPagoVenta,$Cobranza,
 		     $CodigoComprobante,$PresupuestoVenta,$IdMoneda,$EstadoPresupuesto,
 		     $TipoVentaTPV,$VentaEstado,$ProductoIdioma,$ModalidadPago,
-		     $CuentaBancaria) {
+                     $CuentaBancaria,$TipoProducto,$AdminSuscripcion,$OperacionCredito) {
 
   $Moneda = getSesionDato("Moneda");
   
@@ -271,6 +275,13 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
     $VentaEstado = " AND ges_comprobantes.Status = 2 ";
   if($xestado == '%EstadoFinalizado%' && $xtipo == '%VentaReserva%')
     $VentaEstado = " AND ges_comprobantes.FechaEntregaReserva <> '0000-00-00 00:00:00.000000' ";
+
+  $tipoprod = $TipoProducto;
+
+  if($tipoprod == 'TipoTodo') $TipoProducto = '';
+  if($tipoprod == 'Producto') $TipoProducto = ' AND ges_productos.Servicio = 0 ';
+  if($tipoprod == 'Servicio') $TipoProducto = ' AND ges_productos.Servicio > 0 ';
+
 
   $cod = str_replace("%IDIDIOMA%",$IdLang,$cod);
   $cod = str_replace("%DESDE%",		$Desde,$cod);
@@ -326,6 +337,9 @@ function ProcesarSQL($cod,$Desde,$Hasta,$IdLocal,$IdFamilia,
   $cod = str_replace("%PRODUCTOIDIOMA%",$ProductoIdioma,$cod);
   $cod = str_replace("%MODALIDADPAGO%",$ModalidadPago,$cod);
   $cod = str_replace("%CUENTABANCARIA%",$CuentaBancaria,$cod);
+  $cod = str_replace("'%TIPOPRODUCTO%'",$TipoProducto,$cod);
+  $cod = str_replace("%ADMINSUSCRIPCION%",$AdminSuscripcion,$cod);
+  $cod = str_replace("%OPERACIONCREDITO%",$OperacionCredito,$cod);
 
   if($esTPVOP)
     $cod = str_replace("%TIPOVENTA%",	$esTPVOP,$cod);

@@ -47,6 +47,7 @@
 	  <row>
 	    <description value="NS Stock"/>
 	    <caption id="totalNS" label="0" class="xtotal"/>
+   	    <textbox id="totalSelNSDef" collapsed="true"/>
 	  </row>
 	  <row>
 	    <description value="NS Selecciondos"/>

@@ -230,6 +230,8 @@ function getProductosSyncAlmacen($aprod=array(),$IdLocalActivo,$filtro=false,$es
 	   "       ges_almacenes.ResumenKardex, ".
 	   "       ges_almacenes.CostoUnitario, ".
 	   "       ges_almacenes.PrecioVenta AS PVD,".
+	   "       ges_almacenes.PrecioVentaEmpaque AS PVEMP,".
+	   "       ges_almacenes.PrecioVentaDocena AS PVDOCE,".
 	   "       ges_almacenes.PVDDescontado AS PVDD, ".
 	   "       ges_almacenes.PrecioVentaCorporativo AS PVC,".
 	   "       ges_almacenes.PVCDescontado AS PVCD, ".
@@ -270,6 +272,8 @@ function getProductosSyncAlmacen($aprod=array(),$IdLocalActivo,$filtro=false,$es
 	     $xproducto    = $row["IdProducto"];
 	     $xlocal       = $row["IdLocal"];
 	     $PVD          = $row["PVD"];
+	     $PVEMP        = $row["PVEMP"];
+	     $PVDOCE       = $row["PVDOCE"];
 	     $PVDD         = $row["PVDD"];
 	     $PVC          = $row["PVC"];
 	     $PVCD         = $row["PVCD"];
@@ -280,7 +284,7 @@ function getProductosSyncAlmacen($aprod=array(),$IdLocalActivo,$filtro=false,$es
 	     $Disponible   = $row["Disponible"];
 
 	     $rkdx        = $row["ResumenKardex"];
-	     $Dosis       = getfichatecnica2Producto($xproducto);
+	     $Dosis       = ' ';//getfichatecnica2Producto($xproducto);
 	     $Serie       = ($row["Serie"] )? getPedidoDet2Kardex('Serie',$rkdx,$xproducto,$xlocal):"";
 	     $Lote        = ($row["Lote"]  )? getPedidoDet2Kardex('Lote',$rkdx,$xproducto,$xlocal) :"";
 	     $Vence       = ($row["Vence"] )? getPedidoDet2Kardex('Vence',$rkdx,$xproducto,$xlocal):"";
@@ -312,6 +316,9 @@ function getProductosSyncAlmacen($aprod=array(),$IdLocalActivo,$filtro=false,$es
 
 	     //Precios...
 	     $qmnPVD      = qminimal($PVD*100);
+	     $qmnPVEMP    = qminimal($PVEMP);
+	     $qmnPVDOCE   = qminimal($PVDOCE);
+	     
 	     $qmnPVDD     = qminimal($PVDD);
 	     $qmnPVC      = qminimal($PVC*100);
 	     $qmnPVCD     = qminimal($PVCD);
@@ -341,6 +348,8 @@ function getProductosSyncAlmacen($aprod=array(),$IdLocalActivo,$filtro=false,$es
 	       $qmnImagen.",".
 	       $qmnRef.",".
 	       $qmnPVD.",".
+	       $qmnPVEMP.",".
+	       $qmnPVDOCE.",".
 	       $qmnPVC.",".
 	       $qmnImpuesto.",".
 	       $lexTalla.",".
@@ -1722,7 +1731,7 @@ function obtenerKardexInventarioAlmacen($idlocal,$xfamilia,$xmarca,$xstock,
 	 $extra .= ( $xstock   == "1" )? " AND ges_almacenes.Unidades > 0 ":"";
 	 $extra .= ( $xstock   == "2" )? " AND ges_almacenes.Unidades = 0 ":"";
 	 $extra .= ( $xstock   == "3" )? " AND ges_almacenes.EstadoInventario = 1 ":"";
-	 $extra .= ( ( $xstock != "3" ) && $esInvent )? " AND ges_almacenes.EstadoInventario = 0 ":"";
+	 $extra .= ( ( $xstock == "0" || $xstock == "1" || $xstock == "2") && $esInvent )? " AND ges_almacenes.EstadoInventario = 0 ":"";
 
 	 //Nombre
          $anombre = explode("|", $xnombre);	   
@@ -1759,7 +1768,11 @@ function obtenerKardexInventarioAlmacen($idlocal,$xfamilia,$xmarca,$xstock,
 	   "       ges_productos.FechaVencimiento, ".
 	   "       ges_productos.IdFamilia, ".
 	   "       ges_productos.IdSubFamilia, ".
-	   "       ges_almacenes.CostoOperativo ".
+	   "       ges_almacenes.CostoOperativo, ".
+	   "       ROUND(ges_almacenes.PrecioVentaEmpaque,2) as PVDE, ".
+	   "       ROUND(ges_almacenes.PrecioVentaDocena,2) as PVDED, ".
+	   "       ges_almacenes.EstadoInventario, ".
+	   "       ges_productos.IdProdBase ".
 	   "FROM   ges_almacenes ".
 	   "LEFT   JOIN ges_productos ON ges_almacenes.IdProducto = ges_productos.IdProducto ".
 	   "INNER  JOIN ges_productos_idioma ON ges_productos.IdProdBase = ges_productos_idioma.IdProdBase ".
@@ -2093,25 +2106,30 @@ function getmotivoAlbaran($xid,$idaju=false){
 
 }
 
-function registrarPreciosVentaAlmacen($PVD,$PVDD,$PVC,$PVCD,$IdArticulo){
-         $sql = 
-	   " update ges_almacenes".
-	   " set    PrecioVenta            = ".$PVD.",".
-	   "        PrecioVentaCorporativo = ".$PVC.",".
-	   "        PVDDescontado          = ".$PVDD.",".
-	   "        PVCDescontado          = ".$PVCD." ".
-	   " where  (Id = '".$IdArticulo."')";
-	 query($sql);
-}
-
-function registrarPreciosVentaAlmacenProducto($PVD,$PVDD,$PVC,$PVCD,$CostoOP,$IdProducto){
+function registrarPreciosVentaAlmacen($PVD,$PVDD,$PVC,$PVCD,$IdArticulo,$PVDE,$PVDED){
          $sql = 
 	   " update ges_almacenes".
 	   " set    PrecioVenta            = ".$PVD.",".
 	   "        PrecioVentaCorporativo = ".$PVC.",".
 	   "        PVDDescontado          = ".$PVDD.",".
 	   "        PVCDescontado          = ".$PVCD.",".
-	   "        CostoOperativo         = ".$CostoOP." ".
+	   "        PrecioVentaEmpaque     = ".$PVDE.",".
+	   "        PrecioVentaDocena      = ".$PVDED." ".
+	   " where  (Id = '".$IdArticulo."')";
+	 query($sql);
+}
+
+function registrarPreciosVentaAlmacenProducto($PVD,$PVDD,$PVC,$PVCD,$CostoOP,$IdProducto,
+					      $PVDE,$PVDED){
+         $sql = 
+	   " update ges_almacenes".
+	   " set    PrecioVenta            = ".$PVD.",".
+	   "        PrecioVentaCorporativo = ".$PVC.",".
+	   "        PVDDescontado          = ".$PVDD.",".
+	   "        PVCDescontado          = ".$PVCD.",".
+	   "        CostoOperativo         = ".$CostoOP.",".
+	   "        PrecioVentaEmpaque     = ".$PVDE.",".
+	   "        PrecioVentaDocena      = ".$PVDED." ".
 	   " where  (IdProducto = '".$IdProducto."')";
 	 query($sql);
 }
@@ -2382,6 +2400,22 @@ function getDatosArticuloExtra($id,$almacen){
     }
   else
     return;
+}
+
+function actualizaDevolucionVitrina($unid,$idlocal,$id){
+
+  $unid          = CleanFloat($unid); 
+  $id            = CleanID($id);
+  $idlocal       = CleanID($idlocal);
+  echo $sql 	         = "UPDATE ges_almacenes SET StockVitrinaDevol = '$unid' " .
+                   "WHERE  (IdLocal = '$idlocal') AND (IdProducto = '$id') ";
+  $res 	         = query($sql,"Actualizar Stock Vitrina Devolución");
+  
+  if (!$res){			
+    error(__FILE__ .  __LINE__ ,"E: no pudo agnadir Stock Vitrina Devolución");
+    return false;
+  }		
+  return true;
 }
 
 ?>

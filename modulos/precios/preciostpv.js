@@ -34,8 +34,9 @@ function VaciarProductosAlamcen(){
     var grid2= id("detalle_directo");
     var grid3= id("detalle_corporativo");
     var grid4= id("costo_productos");
+    var grid5= id("precio_empaque");
 
-    var row1,row2,row3,row4,row0;
+    var row1,row2,row3,row4,row0,row5;
     var col=id("iniciopagina").value;
     col++;
     for (var i = 0; i < numLista; i++) { 
@@ -44,11 +45,13 @@ function VaciarProductosAlamcen(){
         row2 = id('ROW2-'+(col));
         row3 = id('ROW3-'+(col));
         row4 = id('ROW4-'+(col));
+        row5 = id('ROW5-'+(col));
 	grid0.removeChild(row0);
 	grid1.removeChild(row1);
 	grid2.removeChild(row2);
 	grid3.removeChild(row3);
 	grid4.removeChild(row4);
+	grid5.removeChild(row5);
 	col++;
  	numFilas--;
 	id("numLista").value=numFilas;
@@ -277,23 +280,33 @@ function cambiarMarca(valor){
     filtrarProductos();
 }
 
-function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnitario,MU_Directo,IGV_Directo,PVD,PVD_Descontado,MU_Corporativo,IGV_Corporativo,PVC,PVC_Descontado,i,z,pvBloq,pvcBloq,UnidadMedida,CostoOperativo,MUSubFamilia){
+function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnitario,MU_Directo,IGV_Directo,PVD,PVD_Descontado,MU_Corporativo,IGV_Corporativo,PVC,PVC_Descontado,i,z,pvBloq,pvcBloq,UnidadMedida,CostoOperativo,MUSubFamilia,PVDE,esMenudeo,Empaque,PVDED){
 
     var grid0= id("productos"); 
     var grid1= id("detalle_productos");
     var grid2= id("detalle_directo");
     var grid3= id("detalle_corporativo");
     var grid4= id("costo_productos");
+    var grid5= id("precio_empaque");
     var row0 = document.createElement('row');
     var row1 = document.createElement('row');
     var row2 = document.createElement('row');
     var row3 = document.createElement('row');
     var row4 = document.createElement('row');
+    var row5 = document.createElement('row');
     var button0 = document.createElement('image');
     var button1 = document.createElement('image');
     var button2 = document.createElement('image');
     var button3 = document.createElement('image');
+    var button4 = document.createElement('image');
     var item = document.createElement('description');
+    var nameprod = NombreProducto.split('~~');
+    var CodProducto = nameprod[0];
+    NombreProducto  = nameprod[1];
+
+    esMenudeo = (esMenudeo == 1)? false:true;
+
+    var txtEmpaque = (Empaque == '...')? '...':'x'+Empaque;
 
     var aMUSF   = MUSubFamilia.split('~~');
     var MUSFVD  = aMUSF[0];
@@ -309,8 +322,8 @@ function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnit
     item.setAttribute('value', parseFloat(i)+parseFloat(1));
 
     var xNombreProducto = document.createElement('description');
-    xNombreProducto.textContent = ( NombreProducto.length > 65 )? NombreProducto.slice(0,65)+ '....':NombreProducto;
-    if ( NombreProducto.length > 65 ) xNombreProducto.setAttribute("tooltiptext",NombreProducto);
+    xNombreProducto.textContent = ( NombreProducto.length > 105 )? NombreProducto.slice(0,105)+ '....':NombreProducto;
+    //xNombreProducto.setAttribute("tooltiptext",CodProducto+' '+NombreProducto);
     xNombreProducto.setAttribute('readonly','true');
     xNombreProducto.setAttribute('id','PRDTO'+(parseFloat(i)+parseFloat(1)));
 
@@ -328,7 +341,8 @@ function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnit
     xStockMin.setAttribute('onkeypress','return soloNumeros(event,this.value)');
     xStockMin.setAttribute('onfocus','this.select()');
     xStockMin.setAttribute('onchange',"buttonSave("+(parseFloat(i)+parseFloat(1))+",'SM')");
-
+    xStockMin.setAttribute('collapsed','true');
+    
     var xCostoUnitario = document.createElement('description');
     xCostoUnitario.setAttribute('value',formatDineroTotal(CostoUnitario));
     xCostoUnitario.setAttribute('readonly','true');
@@ -421,13 +435,47 @@ function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnit
     xPVC_Descontado.setAttribute('onchange',"buttonSave("+(parseFloat(i)+parseFloat(1))+",'PVC',"+IdProducto+")");
     if ( NombreProducto.length > 65 ) xPVC_Descontado.setAttribute("tooltiptext",NombreProducto);
 
+    var xPVDE = document.createElement('textbox');
+    xPVDE.setAttribute('value',formatDineroTotal(PVDE));
+    xPVDE.setAttribute("style","text-align:right"); 
+    xPVDE.setAttribute("class","precio"); 
+    xPVDE.setAttribute('id','PVDE'+(parseFloat(i)+parseFloat(1)));
+    xPVDE.setAttribute('onkeypress','return soloNumeros(event,this.value)');
+    xPVDE.setAttribute('onfocus','this.select()');
+    xPVDE.setAttribute('onchange',"buttonSave("+(parseFloat(i)+parseFloat(1))+",'PVDE')");
+    if(!esMenudeo) 
+	xPVDE.removeAttribute("readonly"); 
+    else{
+	xPVDE.setAttribute("disabled",esMenudeo);
+	xPVDE.setAttribute("readonly",esMenudeo); 	
+	xPVDE.setAttribute('value','');
+    }
+
+    var xPVDED = document.createElement('textbox');
+    xPVDED.setAttribute('value',formatDineroTotal(PVDED));
+    xPVDED.setAttribute("style","text-align:right"); 
+    xPVDED.setAttribute("class","precio"); 
+    xPVDED.setAttribute('id','PVDED'+(parseFloat(i)+parseFloat(1)));
+    xPVDED.setAttribute('onkeypress','return soloNumeros(event,this.value)');
+    xPVDED.setAttribute('onfocus','this.select()');
+    xPVDED.setAttribute('onchange',"buttonSave("+(parseFloat(i)+parseFloat(1))+",'PVDED')");
+    xPVDED.removeAttribute("readonly");
+    xPVDED.setAttribute("collapsed",cWhosesale); 
+
+    var xEmpaque = document.createElement('description');
+    xEmpaque.setAttribute('value',txtEmpaque);
+    xEmpaque.setAttribute('readonly','true');
+    xEmpaque.setAttribute('style',"text-align:right");
+    xEmpaque.setAttribute('id','EMP'+(parseFloat(i)+parseFloat(1)));
+
+
     var xIdProducto = document.createElement('textbox');
     xIdProducto.setAttribute('value',IdProducto);
     xIdProducto.setAttribute('id','IDP'+(parseFloat(i)+parseFloat(1)));
 
     button0.setAttribute('hidden','true');
     button3.setAttribute('hidden','true');
-
+    button4.setAttribute('hidden','true');
 
 
     if(pvBloq == 1){
@@ -455,31 +503,47 @@ function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnit
     }
     xIdProducto.setAttribute('hidden','true');
 
-
+    row0.setAttribute("tooltiptext",CodProducto+' '+NombreProducto);
+    row2.setAttribute("tooltiptext",CodProducto+' '+NombreProducto);
+    row3.setAttribute("tooltiptext",CodProducto+' '+NombreProducto);
+    row4.setAttribute("tooltiptext",CodProducto+' '+NombreProducto);
+    row5.setAttribute("tooltiptext",CodProducto+' '+NombreProducto);
 
     row0.setAttribute('id','ROW0-'+(parseFloat(i)+parseFloat(1)));
     row1.setAttribute('id','ROW1-'+(parseFloat(i)+parseFloat(1)));
     row2.setAttribute('id','ROW2-'+(parseFloat(i)+parseFloat(1)));
     row3.setAttribute('id','ROW3-'+(parseFloat(i)+parseFloat(1)));
     row4.setAttribute('id','ROW4-'+(parseFloat(i)+parseFloat(1)));
+    row5.setAttribute('id','ROW5-'+(parseFloat(i)+parseFloat(1)));
     item.setAttribute('id','ITEM'+(parseFloat(i)+parseFloat(1)));
 
 
     button0.setAttribute('id','Save0-'+(parseFloat(i)+parseFloat(1)));
     button0.setAttribute('src','../../img/gpos_precios_guardar.png');
-    button0.setAttribute('title','Guardar Cambios');
+    button0.setAttribute('tooltiptext','Guardar Cambios');
+    button0.setAttribute("class","btn"); 
     button0.setAttribute("onclick","SalvarCambiosSM("+(parseFloat(i)+parseFloat(1))+","+IdProducto+",'Save0-"+(parseFloat(i)+parseFloat(1))+"','SM')");
 
     button1.setAttribute('id','Save1-'+(parseFloat(i)+parseFloat(1)));
-    button1.setAttribute('title','Guardar Cambios');
-
+    button1.setAttribute('tooltiptext','Guardar Cambios');
+    button1.setAttribute("class","btn");
+    
     button2.setAttribute('id','Save2-'+(parseFloat(i)+parseFloat(1)));
-    button2.setAttribute('title','Guardar Cambios');
-
+    button2.setAttribute('tooltiptext','Guardar Cambios');
+    button2.setAttribute("class","btn");
+    
     button3.setAttribute('id','Save3-'+(parseFloat(i)+parseFloat(1)));
     button3.setAttribute('src','../../img/gpos_precios_guardar.png');
-    button3.setAttribute('title','Guardar Cambios');
+    button3.setAttribute('tooltiptext','Guardar Cambios');
     button3.setAttribute("onclick","SalvarCambiosCOP("+(parseFloat(i)+parseFloat(1))+","+IdProducto+",'Save3-"+(parseFloat(i)+parseFloat(1))+"','COP')");
+    button3.setAttribute("class","btn");
+    
+    button4.setAttribute('id','Save4-'+(parseFloat(i)+parseFloat(1)));
+    button4.setAttribute('src','../../img/gpos_precios_guardar.png');
+    button4.setAttribute('tooltiptext','Guardar Cambios');
+    button4.setAttribute("onclick","SalvarCambiosPVDE("+(parseFloat(i)+parseFloat(1))+","+IdProducto+",'Save4-"+(parseFloat(i)+parseFloat(1))+"','PVDE')");
+    button4.setAttribute("class","btn");
+    
 
     row0.appendChild(item);
     row0.appendChild(xIdProducto);
@@ -511,6 +575,13 @@ function AddLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnit
     row3.appendChild(xPVC_Descontado);
     row3.appendChild(button2);
     grid3.appendChild(row3);
+
+    //row4.appendChild(xUnidades);
+    row5.appendChild(xEmpaque);
+    row5.appendChild(xPVDE);
+    row5.appendChild(xPVDED);
+    row5.appendChild(button4);
+    grid5.appendChild(row5);
 
 
     //TOTAL LISTA
@@ -625,7 +696,7 @@ function RawfiltrarProductos(idfamilia,listalocal,idmarca,codigo,descripcion,ini
     var tex = "";
     var cr = "\n";
     var IdProducto,Descripcion,Marca,Color,Talla,NombreComercial,Unidades,StockMin,CostoUnitario,MU_Directo,IGV_Directo,CostoOperativo,MUSubFamilia;
-    var PVD,PVD_Descontado,MU_Corporativo,IGV_Corporativo,PVC,PVC_Descontado,NombreProducto,PrecioVenta;
+    var PVD,PVD_Descontado,MU_Corporativo,IGV_Corporativo,PVC,PVC_Descontado,NombreProducto,PrecioVenta,PVDE,PrecioEmpaque,esMenudeo,Empaque,PrecioDocena,PVDED;
     var PVDDescontado,PrecioVentaCorporativo,PVCDescontado;
     var node,t,i,z,restoPaginas,totalPaginas,numFilasPaginas,totalFilasProductos,xml,filasProductos;
     var pvBloq = 0;
@@ -690,7 +761,11 @@ function RawfiltrarProductos(idfamilia,listalocal,idmarca,codigo,descripcion,ini
             PrecioVentaCorpSource = node.childNodes[t++].firstChild.nodeValue;
 	    UnidadMedida          = node.childNodes[t++].firstChild.nodeValue;
 	    CostoOperativo        = node.childNodes[t++].firstChild.nodeValue;
-	    MUSubFamilia          = node.childNodes[t+2].firstChild.nodeValue;
+	    PrecioEmpaque         = node.childNodes[t+2].firstChild.nodeValue;
+	    esMenudeo             = node.childNodes[t+3].firstChild.nodeValue;
+	    Empaque               = node.childNodes[t+4].firstChild.nodeValue;
+	    PrecioDocena          = node.childNodes[t+5].firstChild.nodeValue;
+	    MUSubFamilia          = node.childNodes[t+6].firstChild.nodeValue;
 
 	    //Precios Sources
 	    if(PrecioVentaSource != 0){
@@ -705,7 +780,7 @@ function RawfiltrarProductos(idfamilia,listalocal,idmarca,codigo,descripcion,ini
 		PVCDescontado          = srcPV[1];
 	    }
 
- 	    PVD            = (PrecioVenta == 0 )? CostoUnitario*(1+cMargenUtilidad/100)*(1+IGV/100):PrecioVenta;
+ 	    PVD            = PrecioVenta;
 	    PVD_Descontado = (PrecioVenta == 0 )? PVD:PVDDescontado;
             PVD            = Math.round(PVD*100)/100;
             PVD_Descontado = Math.round(PVD_Descontado*100)/100;
@@ -717,6 +792,9 @@ function RawfiltrarProductos(idfamilia,listalocal,idmarca,codigo,descripcion,ini
 	    PVC_Descontado = (PrecioVentaCorporativo == 0)? PVC:PVCDescontado;
             PVC            = Math.round(PVC*100)/100;
             PVC_Descontado = Math.round(PVC_Descontado*100)/100
+
+	    PVDE           = Math.round(PrecioEmpaque*100)/100;
+	    PVDED          = Math.round(PrecioDocena*100)/100;
 
 	    // SUMA COSTOS Y PRECIOS
 	    totalCP   = parseFloat(totalCP) + parseFloat(CostoUnitario*Unidades);
@@ -790,7 +868,11 @@ function RawfiltrarProductos(idfamilia,listalocal,idmarca,codigo,descripcion,ini
             PrecioVentaCorpSource    = node.childNodes[t++].firstChild.nodeValue;
 	    UnidadMedida        = node.childNodes[t++].firstChild.nodeValue;
 	    CostoOperativo      = node.childNodes[t++].firstChild.nodeValue;
-	    MUSubFamilia        = node.childNodes[t+2].firstChild.nodeValue;
+	    PrecioEmpaque       = node.childNodes[t+2].firstChild.nodeValue;
+	    esMenudeo           = node.childNodes[t+3].firstChild.nodeValue;
+	    Empaque             = node.childNodes[t+4].firstChild.nodeValue;
+	    PrecioDocena        = node.childNodes[t+5].firstChild.nodeValue;
+	    MUSubFamilia        = node.childNodes[t+6].firstChild.nodeValue;
             NombreProducto      = Descripcion+' '+Marca+' '+Color+' '+Talla+' '+NombreComercial;
 
 	    //CARGA LOS PRECIOS SIN CONFIRMAR****
@@ -810,9 +892,12 @@ function RawfiltrarProductos(idfamilia,listalocal,idmarca,codigo,descripcion,ini
 	    }
 
 	    //*****
+
+	    PVDE  = Math.round(PrecioEmpaque*100)/100;
+	    PVDED = Math.round(PrecioDocena*100)/100;
 	    
             if( PrecioVenta == 0 ){
-		PVD = CostoUnitario*(1+cMargenUtilidad/100)*(1+IGV/100); 
+		PVD = PrecioVenta;//CostoUnitario*(1+cMargenUtilidad/100)*(1+IGV/100); 
 		PVD_Descontado = PVD;
             }else{
 		PVD = PrecioVenta;
@@ -844,7 +929,7 @@ function RawfiltrarProductos(idfamilia,listalocal,idmarca,codigo,descripcion,ini
 	    MU_Corporativo  = (cImpuestoIncluido)? (((PVC-CostoOperativo)/(1+IGV/100))-CostoUnitario):MU_Corporativo;
 	    MU_Corporativo  = parseFloat(MU_Corporativo).toFixed(2);
 
-	    FuncionProcesaLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnitario,MU_Directo,IGV_Directo,PVD,PVD_Descontado,MU_Corporativo,IGV_Corporativo,PVC,PVC_Descontado,i,z,pvBloq,pvcBloq,UnidadMedida,CostoOperativo,MUSubFamilia);
+	    FuncionProcesaLineaProductos(IdProducto,NombreProducto,Unidades,StockMin,CostoUnitario,MU_Directo,IGV_Directo,PVD,PVD_Descontado,MU_Corporativo,IGV_Corporativo,PVC,PVC_Descontado,i,z,pvBloq,pvcBloq,UnidadMedida,CostoOperativo,MUSubFamilia,PVDE,esMenudeo,Empaque,PVDED);
 	    pvcBloq = 0;
 	    pvBloq = 0;
         }
@@ -1057,6 +1142,10 @@ function buttonSave(fila,GridId,IdProducto){
 	idbutton = 'Save2-'+fila;
     if (GridId == 'COP')
 	idbutton = 'Save3-'+fila;
+    if (GridId == 'PVDE')
+	idbutton = 'Save4-'+fila;
+    if (GridId == 'PVDED')
+	idbutton = 'Save4-'+fila;
 
     if ( GridId == 'PVC' || GridId == 'PVD' ){
 	var elemento = id(idbutton);
@@ -1185,7 +1274,7 @@ function SalvarCambiosCOP(numfila,idproducto,idbutton,MDS){
 	if(xrequest.responseText){
 	    COP.setAttribute('value',xrequest.responseText);
 	} else {
-	    alert("gPOS: Precios TPV \n\n - No se registro los cambios del Stock Mínimo.\n Para volver a intentarlo, refresque la búsqueda.");
+	    alert("gPOS: Precios TPV \n\n - No se registro los cambios del Costo Operativo.\n Para volver a intentarlo, refresque la búsqueda.");
 	    COP.setAttribute('value',0);
 	}
     }
@@ -1239,12 +1328,47 @@ function verificarVariacionPrecios(iniciopagina,numFilasPaginas,totalFilasProduc
 	yPVCD      = FormatPreciosTPV(yPVCD);
 
 	if(PVD.value  != yPVD )
-	    PVD.setAttribute("style","color:#C91918;text-align:right");
+	    PVD.setAttribute("style","color:#C91918!important;text-align:right");
 	if(PVDD.value != yPVDD)
-	    PVDD.setAttribute("style","color:#C91918;text-align:right");
+	    PVDD.setAttribute("style","color:#C91918!important;text-align:right");
 	if(PVC.value  != yPVC )
-	    PVC.setAttribute("style","color:#C91918;text-align:right");
+	    PVC.setAttribute("style","color:#C91918!important;text-align:right");
 	if(PVCD.value != yPVCD)
-	    PVCD.setAttribute("style","color:#C91918;text-align:right");
+	    PVCD.setAttribute("style","color:#C91918!important;text-align:right");
+    }
+}
+
+function SalvarCambiosPVDE(numfila,idproducto,idbutton,MDS){
+    var savebutton = id(idbutton);
+    var listalocal= id("listalocal").value;
+    var url,PVDE,PVDED;
+    PVDE  = id('PVDE'+numfila);
+    PVDED = id('PVDED'+numfila);
+
+    if((PVDE && MDS == 'PVDE') || (PVDED && MDS == 'PVDED') ){
+	//PVDE.setAttribute('readonly','true');
+	var xstyle = 'display:block;border:0px solid black;background-color: #BEBDBC;';
+	PVDE.setAttribute('style',xstyle);
+	PVDED.setAttribute('style',xstyle);
+
+	ocultar('Save4-'+numfila);
+	url = "selprecios.php?modo=actualizarPrecioEmpaque"+
+	      "&PVDE="+PVDE.value+
+	      "&PVDED="+PVDED.value+
+	      "&idproducto="+idproducto+
+	      "&listalocal="+listalocal;
+
+	var xrequest = new XMLHttpRequest();
+	xrequest.open("GET",url,false);
+	xrequest.send(null);
+
+	var xres = xrequest.responseText.split("~");
+	if( !xres[1] ){
+	    alert("gPOS: Precios TPV \n\n    - No se registró los cambios del precio - ");
+	    if(MDS == 'PVDE')
+		PVDE.setAttribute('value',0);
+	    else
+		PVDED.setAttribute('value',0);
+	}
     }
 }

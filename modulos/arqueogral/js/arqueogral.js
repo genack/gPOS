@@ -12,7 +12,7 @@ var cIdSubsidiario    = 0;
 var mesactual         = 0;
 var anioactual        = 0;
 
-var MonedaActual = 0;
+var MonedaActual = 1;
 var FechaCaja    = "";
 var IdArqueoGral = 0;
 var Simbolo      = 0;
@@ -375,6 +375,8 @@ function RegenerarCuadroDeMovimientos(){
 	var xrow = document.createElement("listitem");
 	xrow.setAttribute("esMov",true);
 	xrow.setAttribute("value",mov.IdOperacionCaja);
+        xrow.setAttribute("id","listamovimientos_"+mov.IdOperacionCaja);
+        xrow.setAttribute("oncontextmenu","seleccionarlistamovimientos("+mov.IdOperacionCaja+")");
 
 	xcell = document.createElement("listcell");	xcell.setAttribute("esMov",true);
 	xcell.setAttribute("label",datetimeToFechaCastellano(mov.FechaInsercion) );
@@ -444,6 +446,11 @@ function RegenerarCuadroDeMovimientos(){
 
 }
 
+function seleccionarlistamovimientos(linea){
+    var lista = id("listaMovimientos");
+    var fila  = id("listamovimientos_"+linea);
+    lista.selectItem(fila);
+}
 
 // desde "4,43.33 $"  hacia  "443,33"
 function formatDinero(numero) {
@@ -646,7 +653,7 @@ function comando_HacerUnaOperacion(op){
     var fechacaja    = FechaCaja;
     var idarqueogral = IdArqueoGral;
     var simbolo      = Simbolo;
-    var cantidad, concepto, cambiomoneda, documento, codigodoc, proveedor, partida, codpartida, idcuenta;
+    var cantidad, concepto, cambiomoneda, documento, codigodoc, proveedor, partida, codpartida, idcuenta, idlocaldestino;
 
     switch(op){
     case 'Aportacion':
@@ -668,6 +675,7 @@ function comando_HacerUnaOperacion(op){
 	cambiomoneda = (MonedaActual == 1 && codpartida == 'S125')? xcambio:cambiomoneda;
 	idcuenta     = (codpartida == 'S105')? id("SeleccionCuentaBancariaSust").value:false;
 	xmsj         = "Se hizo una sustracción de la caja: ";
+        idlocaldestino = (codpartida == 'S126')? id("SeleccionLocalDestino").value:false;
 	break;
 
     case 'Ingreso':
@@ -715,12 +723,24 @@ function comando_HacerUnaOperacion(op){
 	       "&partida="+partida+
 	       "&codpartida="+codpartida+
 	       "&idcuenta="+idcuenta+
+	       "&xidld="+idlocaldestino+
                "&r=" + Math.random();
 
     var val = validarOperacionCaja(cambiomoneda,codpartida,cantidad,concepto);
 
     if(val)
 	return;
+
+    var p = confirm('gPOS: Operación Caja General \n\n  - Va registrar operación caja, desea continuar?');
+    if (!p) return;
+
+    if(trim(codpartida) == 'S126'){
+        if(idlocaldestino == Local.IdLocalActivo || !idlocaldestino)
+            return alert("gPOS:   Operación Caja General \n\n - Seleccione local destino diferente" );
+
+        if( !confirm("gPOS:  Operación Caja General\n\n"+" - Va transferir dinero a la caja general "+id("SeleccionLocalDestino").label+",  ¿Desea Continuar?") )
+	    return;
+    }
 
     if(trim(codpartida) == 'S124')
         if( !confirm("gPOS:  Operación Caja General\n\n"+" - Va transferir dinero a Almacén Central,  ¿Desea Continuar?") )
@@ -748,6 +768,9 @@ function comando_HacerUnaOperacion(op){
     if(ares[1] == '04')
 	return alert(msj+"  - La caja de moneda destino está cerrada, Consulte con su administrador");
 
+    if(ares[1] == '05')
+	return alert(msj+"  - La caja de local destino está cerrada, Consulte con su administrador");
+
     alert("gPOS:   Operación Caja General \n\n "+xmsj+simbolo+" "+formatDinero(cantidad) );
     
     CleanFormOperacion();
@@ -763,7 +786,7 @@ function validarOperacionCaja(cambiomoneda,codpartida,cantidad,concepto){
 
     var impteop   = (cantidad <= 0 || cantidad == "")? true:false;
     var cbmoneda  = (cambiomoneda <= 1)? true:false;
-    var part      = (codpartida == "0")? true:false;
+    var part      = (codpartida == "0" || !codpartida)? true:false;
     var cpto      = (concepto == "")? true:false;
 
     cjadata += (part)  ? " - Partida":"";
@@ -983,8 +1006,15 @@ function exportarMovimientosCajaGral(xtipo){
     }
 }
 
-function ModificarOperacionCaja(){
+function ModificarOperacionCajaGral(){
     if(cCodPartida == "0") return;
+    
+    var p = prompt("Modificar concepto",cConcepto);
+
+    if(!p) return false;
+
+    if(p == '')
+        return false;
 
     var	url      = "arqueoservices.php?";
     var xrequest = new XMLHttpRequest();
@@ -992,28 +1022,29 @@ function ModificarOperacionCaja(){
 
     var concepto, documento, codigodoc, proveedor,subsidiario="";
 
+    p = trim(p);
     switch(cOperacion){
     case 'Aportacion':
-	concepto     = id("conceptoText").value;
+	concepto     = p;//id("conceptoText").value;
 	break;
 
     case 'Sustraccion':
-	concepto     = id("conceptoTextSubs").value;
+	concepto     = p;//id("conceptoTextSubs").value;
 	break;
 
     case 'Ingreso':
-	concepto     = id("conceptoTextIngreso").value;
+	concepto     = p;//id("conceptoTextIngreso").value;
 	break;
 
     case 'Gasto':
-	concepto     = trim(id("conceptoTextGasto").value);
+	concepto     = p;//trim(id("conceptoTextGasto").value);
 	documento    = id("SeleccionDocumentoGasto").label;
 	codigodoc    = id("CodigoTextGasto").value;
 	proveedor    = id("IdSubsidiario").value;
 	subsidiario  = id("EmpresaTextGasto").value;
 
-	if(!codigodoc || !proveedor)
-	    return alert("gPOS:  Operación Caja General\n\n  - Ingrese el código del comprobante y seleccione la empresa");
+	//if(!codigodoc || !proveedor)
+	    //return alert("gPOS:  Operación Caja General\n\n  - Ingrese el código del comprobante y seleccione la empresa");
 	break;
     }
     msj       = "Se guardó los cambios: ";
@@ -1025,9 +1056,9 @@ function ModificarOperacionCaja(){
 
     cjadata =  "modo=modificaOperacionCajaGral&xidl="+Local.IdLocalActivo+
                "&concepto="+encodeURIComponent(concepto)+
-	       "&codigodoc="+codigodoc+
-	       "&proveedor="+proveedor+
- 	       "&doc="+documento+
+	       //"&codigodoc="+codigodoc+
+	       //"&proveedor="+proveedor+
+ 	       //"&doc="+documento+
 	       "&xidoc="+cIdOperacionCaja;
 
 
@@ -1041,7 +1072,7 @@ function ModificarOperacionCaja(){
     
     alert("gPOS:  Operación Caja General \n\n - "+ msj);
     id("gral_concepto_"+cIdOperacionCaja).setAttribute("label",xconcepto.toUpperCase());
-    habilitarOperacionCaja();
+    //habilitarOperacionCaja();
     CargarArqueoSeleccionado(0);
 }
 
@@ -1066,7 +1097,7 @@ function revisarOperacionCajaGral(){
     
     id("ConceptoOperacionCaja").setAttribute("disabled",xcpto);
 
-    habilitarOperacionCaja();
+    //habilitarOperacionCaja();
 }
 
 function editarOperacionCajaGral(){
@@ -1142,7 +1173,7 @@ function editarOperacionCajaGral(){
 }
 
 function habilitarOperacionCaja(){
-    var op = cOperacion;
+    //var op = cOperacion;
     var xlabel,xcommand;
     var op = id("tab_boxoperacion").getAttribute("selectedIndex");
 
@@ -1174,8 +1205,9 @@ function habilitarOperacionCaja(){
 
     if(!id("btn"+xcommand)) return;
 
+
+    id("btn"+xcommand).setAttribute("oncommand","comando_HacerUnaOperacion("+"'"+xcommand+"'"+")");
     id("btn"+xcommand).setAttribute("label",xlabel);
-    id("btn"+xcommand).setAttribute("oncommand",'comando_HacerUnaOperacion('+'"'+xcommand+'"'+')');
 }
 
 function CogePartidaCaja(operacion){
@@ -1325,12 +1357,14 @@ function validarDatosExtra(xlabel,xvalue){
 
     xbni = (xparti == 'S106')? false:true;
     xbns = (xparts == 'S105')? false:true;
+    xld  = (xparts == 'S126')? false:true;
 
     id("cambioMonedaSust").setAttribute("collapsed",xval);
     id("importeCambioMonedaSust").setAttribute("collapsed",xval);
 
     id("boxCuentaBancariaSust").setAttribute("collapsed",xbns);
     id("boxCuentaBancariaIng").setAttribute("collapsed",xbni);
+    id("boxTransferenciaAlmacenes").setAttribute("collapsed",xld);
 }
 
 function regenAnioArqueo(){
@@ -1340,7 +1374,7 @@ function regenAnioArqueo(){
     xrequest.open("GET",url,false);
     xrequest.send(null);
     var xres = xrequest.responseText;
-    
+
     var xanios = xres.split(",");
     
     for(var i=0;i<xanios.length;i++){
@@ -1353,6 +1387,10 @@ function AddAnioArqueo(anios){
 
     var xanio = document.createElement("menuitem");
     xanio.setAttribute("id","anio_def_" + ianios);
+
+    var xf = calcularFechaActual('fecha');
+    var axf = xf.split("-");
+    anios = (anios)? anios:axf[0];
 	
     xanio.setAttribute("value",anios);
     xanio.setAttribute("label",anios);
@@ -1387,6 +1425,8 @@ function cargarDatosDefault(){
 
     id("filtroMes").value = parseInt(afecha[1]);
     id("filtroMes").setAttribute("selected",true);
+    id("filtroAnio").value = afecha[0];
+    id("filtroAnio").setAttribute("selected",true);
 
     mesactual = parseInt(afecha[1]);
     anioactual = parseInt(afecha[0]);
@@ -1401,11 +1441,12 @@ function calcularFechaActual(xvalue){
     return actual;
 }
 
-function actualizarArqueoGral(){
+function actualizarArqueoGral(xval){
     MonedaActual = id("SeleccionMoneda").value;
     VaciarDeHijosTag("listaMovimientos","esMov");
     VaciarDeHijos("itemsArqueo");
     id("SeleccionArqueo").setAttribute("label","Elige arqueo ...");
+    if(xval) cargarDatosDefault();
     CambioListaArqueos();
     RegenCuentasBancarias();
 }
@@ -1681,7 +1722,7 @@ function changeNroCuenta( quien, txtcuenta) {
 }
 
 function obtenerUltimaFechaCajaGral(){
-    var	url  = "arqueoservices.php?modo=obtenerUltimaFechaCajaGral&idmon=1";
+    var	url  = "arqueoservices.php?modo=obtenerUltimaFechaCajaGral&idmon="+MonedaActual;
     var xrequest = new XMLHttpRequest();
     xrequest.open("GET",url,false);
     xrequest.send(null);

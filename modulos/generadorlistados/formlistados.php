@@ -265,7 +265,15 @@ function DetectaActivos($cod){
 	if(strpos($cod,'%CUENTABANCARIA%') > 0){
 	        $a .= "CuentaBancaria,";
 	}	
-
+        if(strpos($cod,'%TIPOPRODUCTO%') > 0){
+	        $a .= "TipoProducto,";
+        }	
+        if(strpos($cod,'%ADMINSUSCRIPCION%') > 0){
+	        $a .= "AdminSuscripcion,";
+        }
+        if(strpos($cod,'%OPERACIONCREDITO%') > 0){
+	        $a .= "OperacionCredito,";
+        }
 	return $a;
 }
 
@@ -849,6 +857,47 @@ StartXul('listados',$predata="",$css='');
 	</vbox>
       </hbox>
 
+      <hbox id="getTipoProducto" collapsed="true" align="center">
+	  <spacer style="width: 5px"/>
+	  <vbox>
+	      <label value="Tipo Producto:"/>
+	      <menulist  id="TipoProducto">
+	          <menupopup>
+	              <menuitem label="Todos" value="TipoTodo" selected="true"/>
+	              <menuitem label="Producto" value="Producto" />
+	              <menuitem label="Servicio" value="Servicio"/>
+	          </menupopup>
+	      </menulist>
+	  </vbox>
+      </hbox>
+
+      <hbox id="getAdminSuscripcion" collapsed="true" align="center">
+	  <spacer style="width: 5px"/>
+	  <vbox>
+	      <label value="Administrador:"/>
+	      <menulist  id="AdminSuscripcion">
+	          <menupopup>
+	              <menuitem label="Todos" value="%%" selected="true"/>
+	              <?php echo genXulComboAdminSuscripcion(false,"menuitem") ?>
+	          </menupopup>
+	      </menulist>
+	  </vbox>
+      </hbox>
+
+      <hbox id="getOperacionCredito" collapsed="true" align="center">
+	<spacer style="width: 5px"/>
+	<vbox>
+	  <label value="Tipo Operación:"/>
+	  <menulist  id="OperacionCredito">
+	    <menupopup>
+	      <menuitem label="Todos" value="%%"/>
+	      <menuitem label="Entrada" value="0"/>
+	      <menuitem label="Salida" value="1"/>
+	    </menupopup>
+	  </menulist>
+	</vbox>
+      </hbox>
+      
       <hbox id="getSerieComprobante" collapsed="true" align="center">
 	<spacer style="width: 5px"/>
         <vbox>
@@ -1013,6 +1062,9 @@ function CambiaListado() {
  	        "&productoidioma="+escape(id("ProductoIdioma").value)+
  	        "&modalidadpago="+escape(id("IdModalidadPago").value)+
  	        "&cuentabancaria="+escape(id("CuentaBancaria").value)+
+ 	        "&tipoproducto="+escape(id("TipoProducto").value)+
+ 	        "&adminsuscripcion="+escape(id("AdminSuscripcion").value)+
+                "&operacioncredito="+escape(id("OperacionCredito").value)+
 		"&r=" + Math.random();
 
 	if(!esTPV){
@@ -1089,7 +1141,10 @@ function SetActive( val, Categoria ){
 	id("getProductoIdioma").setAttribute("collapsed","true");
 	id("getModalidadPago").setAttribute("collapsed","true");
 	id("getCuentaBancaria").setAttribute("collapsed","true");
-
+        id("getTipoProducto").setAttribute("collapsed","true");
+        id("getAdminSuscripcion").setAttribute("collapsed","true");
+        id("getOperacionCredito").setAttribute("collapsed","true");
+       
 	for( t=0;t<dinterface.length;t++){
 	        dinterface[t] = dinterface[t].replace(/^\s+/,'').replace(/\s+$/,'');
 		Mostrar(dinterface[t]);

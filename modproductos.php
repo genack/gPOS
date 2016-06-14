@@ -6,9 +6,8 @@ SimpleAutentificacionAutomatica("visual-iframe");
 
 global $tamPagina,$txtMoDet;
 
-$tamPagina  = ( getSesionDato("GlobalGiroNegocio") == 'BTQE')? 200:100;
-
-$txtMoDet  = getModeloDetalle2txt();
+$tamPagina = ( getSesionDato("GlobalGiroNegocio") == 'BTQE')? 200:100;
+$txtMoDet  = getGiroNegocio2txt();
 
 function UploadFoto() {        
         require ("modulos/fileupload/fileupload-class.php");
@@ -229,7 +228,7 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,$base,$idfamilia) {
 	echo $ot->Output();	
 }
 
-function MostrarProductoParaEdicion($id,$lang) {
+function MostrarProductoParaEdicion($id,$lang,$esPopup=false) {
 	global $action;
 	
 	$oProducto = new producto;
@@ -238,10 +237,10 @@ function MostrarProductoParaEdicion($id,$lang) {
 		return false;	
 	}
 	
-	echo $oProducto->formEntrada($action,true);	
+	echo $oProducto->formEntrada($action,true,false,$esPopup);	
 }
 
-function MostrarProductoBarParaEdicion($id,$lang) {
+function MostrarProductoBarParaEdicion($id,$lang,$esPopup=false) {
 	global $action;
 	
 	$oProducto = new producto;
@@ -250,7 +249,7 @@ function MostrarProductoBarParaEdicion($id,$lang) {
 		return false;	
 	}
 	
-	echo $oProducto->formEntradaBar($action,true);	
+	echo $oProducto->formEntradaBar($action,true,$esPopup);	
 }
 
 function MostrarProductoParaClonado($id,$idBase,$lang,$volver=false) {
@@ -845,8 +844,14 @@ switch($modo){
 		if ( ModificarProductoBar($id,$codigobarras,$refprovhab,$idcontenedor,
 					  $ventamenudeo,$unidxcont,$unidadmedida,$idcolor,
 					  $idtalla,$nombre,$tieneserie,$tienelote,$fechav,
-					  $idalias0,$idalias1,$condventa) ) 
-		  PaginaBasica();
+                                  $idalias0,$idalias1,$condventa) ) {
+
+            if(getSesionDato('esPopup')){
+                echo "<script>parent.cerrarVentanaEditProducto();</script>";
+                return;
+            }
+            PaginaBasica();
+        }
 		else 
 		  MostrarProductoBarParaEdicion($id,$lang);
 
@@ -902,6 +907,11 @@ switch($modo){
 		  //if(isVerbose())
 		  //     echo gas("aviso","Producto modificado");
 		  //Separador();
+            
+            if(getSesionDato('esPopup')){
+                echo "<script>parent.cerrarVentanaEditProducto();</script>";
+                return;
+            }
 		  
 		  PaginaBasica();						
 		} else {
@@ -925,15 +935,20 @@ switch($modo){
 	case "editar":
 		$id = CleanID($_GET["id"]);
 		$idBase = CleanID($_GET["idBase"]);
+        $esPopup = isset($_GET["espopup"])? true:false;
 		$_SESSION["IdUltimoCambioProductos"] = $idBase;
-		MostrarProductoParaEdicion($id,$lang);
+        setSesionDato("esPopup",$esPopup);
+        
+		MostrarProductoParaEdicion($id,$lang,$esPopup);
 		break;
 	case "editarbar":
 		$id     = CleanID($_GET["id"]);
 		$idBase = CleanID($_GET["idBase"]);
+        $esPopup = isset($_GET["espopup"])? true:false;
 		$_SESSION["IdUltimoCambioProductos"] = $idBase;
+        setSesionDato("esPopup",$esPopup);
 
-		MostrarProductoBarParaEdicion($id,$lang);
+		MostrarProductoBarParaEdicion($id,$lang,$esPopup);
 		break;		
 	case "pagmenos":
 		$indice = getSesionDato("PaginadorListaProd");

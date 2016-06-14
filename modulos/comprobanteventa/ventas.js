@@ -11,6 +11,9 @@ var cPendienteComprobanteVenta = 0;
 var cIdLocalVenta              = 0;
 var cIdSuscripcionVenta        = 0;
 var cReservado                 = 0;
+var cIdAlbaranes          = 0;
+var cIdComprobantesNum    = 0;
+var cIdGuiaRemision       = 0;
 
 var RevDet = 0;
 
@@ -70,6 +73,11 @@ function RevisarVentaSeleccionada(){
     cIdLocalVenta              = idex.childNodes[15].attributes.getNamedItem('value').nodeValue;
     cIdSuscripcionVenta        = idex.childNodes[16].attributes.getNamedItem('value').nodeValue;
     cReservado                 = id("venta_reservado_"+idex.value).getAttribute("value");
+    cIdAlbaranes               = id("venta_albaranes_"+idex.value).getAttribute("value");
+    cIdComprobantesNum         = id("venta_comprobantesnum_"+idex.value).getAttribute("value");
+
+    cIdGuiaRemision            = id("venta_guiaremision_"+idex.value).getAttribute("value");
+    
 
     menuContextualVentasRealizadas(cIdComprobanteVenta);
 
@@ -424,9 +432,10 @@ var ilineabuscaventas = 0;
 function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
 			IdComprobanteVenta,nombreCliente,NumeroDocumento,TipoDocumento,
 			IdCliente,Local,IdLocal,MotivoAlba,IdSuscripcion,FechaEmision,
-			PlazoPago,Cobranza,Observaciones,Reservado,FechaEntregaReserva){
+			PlazoPago,Cobranza,Observaciones,Reservado,FechaEntregaReserva,
+                        Albaranes,IdComprobanteNum,IdGuiaRemision){
     var lista = id("busquedaVentas");
-    var xitem, xnumitem, xvendedor,xserie,xnum,xfecha,xtotal,xpendiente,xestado,xtipodoc,xop,xlocal,xsuscripcion,xemision,xplazopago,xcobranza,xobservaciones,xreserva,xfechareserva;
+    var xitem, xnumitem, xvendedor,xserie,xnum,xfecha,xtotal,xpendiente,xestado,xtipodoc,xop,xlocal,xsuscripcion,xemision,xplazopago,xcobranza,xobservaciones,xreserva,xfechareserva,xalbaranes,xcomprobantesnum,xguiaremision;
     
     var vfecha = "0000-00-00 00:00:00";
     var lfecha = "";
@@ -554,7 +563,24 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
     xfechareserva.setAttribute("label", lfecha);
     xfechareserva.setAttribute("id","venta_fechareserva_"+IdComprobanteVenta);
 
-    
+    xalbaranes = document.createElement("listcell");
+    xalbaranes.setAttribute("value", Albaranes);
+    xalbaranes.setAttribute("style","text-align:left");
+    xalbaranes.setAttribute("collapsed","true");
+    xalbaranes.setAttribute("id","venta_albaranes_"+IdComprobanteVenta);
+
+    xcomprobantesnum = document.createElement("listcell");
+    xcomprobantesnum.setAttribute("value", IdComprobanteNum);
+    xcomprobantesnum.setAttribute("style","text-align:left");
+    xcomprobantesnum.setAttribute("collapsed","true");
+    xcomprobantesnum.setAttribute("id","venta_comprobantesnum_"+IdComprobanteVenta);
+
+    xguiaremision = document.createElement("listcell");
+    xguiaremision.setAttribute("value", IdGuiaRemision);
+    xguiaremision.setAttribute("style","text-align:left");
+    xguiaremision.setAttribute("collapsed","true");
+    xguiaremision.setAttribute("id","venta_guiaremision_"+IdComprobanteVenta);
+
     xitem.appendChild( xnumitem );
     xitem.appendChild( xserie );
     xitem.appendChild( xop );
@@ -575,6 +601,9 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,
     xitem.appendChild( xcobranza );
     xitem.appendChild( xobservaciones );
     xitem.appendChild( xreservado );
+    xitem.appendChild( xalbaranes );
+    xitem.appendChild( xcomprobantesnum );
+    xitem.appendChild( xguiaremision );
 
     lista.appendChild( xitem );		
 }
@@ -670,7 +699,7 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
     var tex = "";
     var cr = "\n";
     
-    var vendedor,serie,num,fecha,total,pendiente,estado,IdComprobanteVenta,NumeroDocumento,TipoDocumento,IdCliente,Local,IdLocal,FechaEmision,PlazoPago,Cobranza,Observaciones,Reservado,FechaEntregaReserva;
+    var vendedor,serie,num,fecha,total,pendiente,estado,IdComprobanteVenta,NumeroDocumento,TipoDocumento,IdCliente,Local,IdLocal,FechaEmision,PlazoPago,Cobranza,Observaciones,Reservado,FechaEntregaReserva,Albaranes,IdComprobanteNum,IdGuiaRemision;
     var node,t,i,codventa; 
     var totalVenta = 0;
     var totalVentaPendiente = 0;
@@ -725,6 +754,10 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
 	    Observaciones = node.childNodes[t++].firstChild.nodeValue;
 	    Reservado     = node.childNodes[t++].firstChild.nodeValue;
 	    FechaEntregaReserva = node.childNodes[t++].firstChild.nodeValue;
+            Albaranes           = node.childNodes[t++].firstChild.nodeValue;
+            IdComprobanteNum    = node.childNodes[t++].firstChild.nodeValue;
+            IdGuiaRemision      = node.childNodes[t++].firstChild.nodeValue;
+
 
 	    totalVenta    = (TipoDocumento == 'AlbaranInt' && MotivoAlba == 'Devolución')? parseFloat(totalVenta)-parseFloat(total):totalVenta;
 	    totalVentaPendiente    = (TipoDocumento == 'AlbaranInt' && MotivoAlba == 'Devolución')? parseFloat(totalVentaPendiente)-parseFloat(pendiente):totalVentaPendiente;
@@ -733,7 +766,8 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
 				IdComprobanteVenta,nombreCliente,NumeroDocumento,
 				TipoDocumento,IdCliente,Local,IdLocal,MotivoAlba,
 				IdSuscripcion,FechaEmision,PlazoPago,Cobranza,Observaciones,
-				Reservado,FechaEntregaReserva);
+				Reservado,FechaEntregaReserva,Albaranes,
+                                IdComprobanteNum,IdGuiaRemision);
 	    
 	    item--;
         }
@@ -813,7 +847,9 @@ function mostrarBusquedaAvanzadaVenta(xthis){
 function menuContextualVentasRealizadas(xval){
     var aAlbaInt  = id("venta_tipodoc_"+xval).getAttribute("label").split(" ");
     var AlbaInt   = trim(aAlbaInt[0]);
-    var esAlbaInt = (AlbaInt == 'AlbaranInt')? true:false;
+    var AlbConsig = ( aAlbaInt[1] )? trim( aAlbaInt[1].substring(0,9) ):'';
+
+    var esAlbaInt = ( AlbaInt == 'AlbaranInt' && AlbConsig != 'Consignac')? true:false;
 
     if(esFinanzas){
 	id("VentaRealizadaAbonar").setAttribute("disabled",true);

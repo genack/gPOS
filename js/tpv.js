@@ -2,13 +2,17 @@
 
     var id          = function(name) { return document.getElementById(name); }
     var comprobante = 0;
+    var cLoadCBalter= '';
     var Vistas      = new Object(); 
     Vistas.ventas   = 7;
     Vistas.abonar   = 10;
     Vistas.tpv      = 0; 
-    Vistas.caja     = 11; 
+    Vistas.caja     = 11;
+    Vistas.guia     = 13;
+    cURLPrint       = '';
 
-    //Ultimo articulo aÃ±adido al carrito.
+
+    //Ultimo articulo añadido al carrito.
     var xlastArticulo;
     var accionInicioTPV   = function() {  despachadortpv(); cargarDatosInicio(); }
     var despachadortpv    = function() {  addEventListener("focus",setFocusedElement,true); }
@@ -152,6 +156,18 @@
 	setTimeout("syncPromociones()",300);     //Promociones
         setTimeout("syncClientes()",400);        //Clientes 
 
+    }
+
+    function pushSyncModule(xmodulo){
+
+    	//Termina Brutal
+	if(esSyncBoton('on')) return;
+    	//Termina Brutal
+	if( esSyncModuleBoton('syncModulo'+xmodulo,'on') ) return;
+        syncClientes();
+        buscarCliente();
+        //Se oculta muy pronto
+        setTimeout("esSyncModuleBoton('syncModulo"+xmodulo+"')",2000);
     }
 
     function syncTipoVentaTPV(){
@@ -426,7 +442,11 @@
             ticket[idt].pedidodet    = '';
             ticket[idt].concepto     = '';
             ticket[idt].unidades     = 0;
-
+	    ticket[idt].idsubsidiario = 0;
+	    ticket[idt].descuento    = 0;
+            ticket[idt].vdetalle     = '';
+            ticket[idt].cStatus      = '';
+	    ticket[idt].importe      = 0;
         }
 
     }
@@ -479,12 +499,12 @@
     /*+++++++++++++++++ Productos ++++++++++++++++*/
 
     //Funcion compacta para crear articulo
-    function tA(idproducto,codigo,Lnombre,imagen,referencia,centimopvd,centimopvc,impuesto,LTalla, 
-		LColor,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,Lalias1,Lalias2,
-		refprovhab,unidades,serie,LMarca,costo,ventamenudeo,unidxcontenedor,unidmedida,
-		Llaboratorio,contenedor,pvdd,pvcd,vence,lote,servicio,mproducto,
+    function tA(idproducto,codigo,Lnombre,imagen,referencia,centimopvd,pvemp,pvdoce,centimopvc,
+		impuesto,LTalla,LColor,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,
+		Lalias1,Lalias2,refprovhab,unidades,serie,LMarca,costo,ventamenudeo,unidxcontenedor,
+		unidmedida,Llaboratorio,contenedor,pvdd,pvcd,vence,lote,servicio,mproducto,
 		ilimitado,dosis){
-	
+
         //Traduce desde lex a normal.
         var talla       = (LTalla)?L[LTalla]:"";		
         var color       = (LColor)?L[LColor]:"";
@@ -500,18 +520,18 @@
         contenedor      = ( contenedor!="..." )? contenedor:"";
 
         //Funcion "larga" que no acepta el uso de lexers
-        tAL(idproducto,codigo,nombre,imagen,referencia,centimopvd,centimopvc,impuesto,talla, color, 
-	    Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,alias1,alias2,refprovhab,
-	    unidades,serie,marca,costo,ventamenudeo,unidxcontenedor,unidmedida,
+	tAL(idproducto,codigo,nombre,imagen,referencia,centimopvd,pvemp,pvdoce,centimopvc,impuesto,
+	    talla,color,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,alias1,
+	    alias2,refprovhab,unidades,serie,marca,costo,ventamenudeo,unidxcontenedor,unidmedida,
 	    laboratorio,contenedor,pvdd,pvcd,vence,lote,servicio,mproducto,
 	    ilimitado,dosis);
     }
 
-    function tAL(idproducto,codigo,Nombre,imagen,referencia,centimopvd,centimopvc,impuesto,Talla,
-		 Color,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,alias1,alias2,
-		 refprovhab,unidades,serie,marca,costo,ventamenudeo,unidxcontenedor,unidmedida,
-		 laboratorio,contenedor,pvdd,pvcd,vence,lote,servicio,mproducto,
-		 ilimitado,dosis){
+    function tAL(idproducto,codigo,Nombre,imagen,referencia,centimopvd,pvemp,pvdoce,centimopvc,
+		 impuesto,Talla,Color,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,
+		 alias1,alias2,refprovhab,unidades,serie,marca,costo,ventamenudeo,unidxcontenedor,
+		 unidmedida,laboratorio,contenedor,pvdd,pvcd,vence,lote,servicio,mproducto,ilimitado,
+		 dosis){
 	
         if (!codigo) return;//No acepta lexers
 
@@ -519,9 +539,9 @@
 
 	//Ya tenemos este producto listado
         if (pool.Existe( codigo.toUpperCase() ))
-            return stAL(idproducto,codigo,Nombre,imagen,referencia,centimopvd,centimopvc,impuesto,
-			Talla,Color,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,
-			alias1,alias2,refprovhab,unidades,serie,marca,costo,ventamenudeo,
+            return stAL(idproducto,codigo,Nombre,imagen,referencia,centimopvd,pvemp,pvdoce,centimopvc,
+			impuesto,Talla,Color,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,
+			rKardex,alias1,alias2,refprovhab,unidades,serie,marca,costo,ventamenudeo,
 			unidxcontenedor,unidmedida,laboratorio,contenedor,pvdd,pvcd,vence,lote,
 			servicio,mproducto,ilimitado,dosis);
 
@@ -551,6 +571,8 @@
 	a.oferta 	= Oferta;
 	a.ofertaunid 	= OfertaUnid;
         a.pvd   	= (centimopvd/100).toFixed(2);
+	a.pvemp   	= pvemp;
+	a.pvdoce   	= pvdoce;
         a.pvc   	= (centimopvc/100).toFixed(2);
         a.impuesto 	= impuesto;
         a.costo         = costo;
@@ -608,10 +630,10 @@
 	//setTimeout(function(){xProgress(true);},600);
     }
 
-    function stAL(idproducto,codigo,Nombre,imagen,referencia,centimopvd,centimopvc,impuesto,Talla,
-		  Color,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,alias1,alias2,
-		  refprovhab,unidades,serie,marca,costo,ventamenudeo,unidxcontenedor,unidmedida,
-		  laboratorio,contenedor,pvdd,pvcd,vence,lote,servicio,mproducto,
+    function stAL(idproducto,codigo,Nombre,imagen,referencia,centimopvd,pvemp,pvdoce,centimopvc,
+		  impuesto,Talla,Color,Oferta,OfertaUnid,pvo,condventa,idsubsidiario,nombre2,rKardex,
+		  alias1,alias2,refprovhab,unidades,serie,marca,costo,ventamenudeo,unidxcontenedor,
+		  unidmedida,laboratorio,contenedor,pvdd,pvcd,vence,lote,servicio,mproducto,
 		  ilimitado,dosis){
 	//alert("stAL ->"+codigo );
         codigo  = new String(codigo);	
@@ -635,6 +657,8 @@
 	    xsyn.oferta        = Oferta;
 	    xsyn.ofertaunid    = OfertaUnid;
             xsyn.pvd           = (centimopvd/100).toFixed(2);
+	    xsyn.pvemp         = pvemp;
+	    xsyn.pvdoce        = pvdoce;
             xsyn.pvc           = (centimopvc/100).toFixed(2);
             xsyn.impuesto      = impuesto;
             xsyn.costo         = costo;
@@ -673,7 +697,8 @@
 
 	    //Refresca Lista
 	    if ( prodlist_cb[codigo]) 
-		ModificarEntradaEnProductos(xsyn.producto,codigo,xsyn.referencia,precio,
+		ModificarEntradaEnProductos(xsyn.producto,codigo,xsyn.referencia,
+					    precio,pvemp,pvdoce,xsyn.pvc,
 					    xsyn.impuesto,xsyn.unidades,xsyn.costo,xsyn.lote,
 					    xsyn.vence,xsyn.serie,xsyn.menudeo,xsyn.unidxcont,
 					    xsyn.unid,xsyn.cont,xsyn.servicio,xsyn.ilimitado,
@@ -693,39 +718,34 @@
 	//alert(event.keyCode); 
 
 	switch (event.keyCode) { 
-
-        case 112 : 
-	    VerTPV();
-	    break;
-
-        case 113 : 
-	    MostrarUsuariosForm();
-	    break;
-
-        case 45 : 
+            
+        case 45 : //Insert
 	    pushSyncTPV();
 	    break;
-
-        case 115 : 
-	    elijeComprobanteTPV();
+        case 112 : //F1
+            VerTPV();
 	    break;
-
-        case 118 : 
+        case 113 ://F2 
+	    MostrarUsuariosForm();
+	    break;
+        case 114 ://F3 
+	    break;
+        case 115 : //F4
+            VerTPV();
+            elijeComprobanteTPV();
+	    break;
+        case 118 : //F7
 	    selTipoPresupuesto(2);
 	    id("buscapedido").focus(); 
 	    break;
-
-        case 119 : 
+        case 119 : //F8
 	    selTipoPresupuesto(1);
 	    id("buscapedido").focus(); 
 	    break;
-
-        case 120 : 
-	    VerVentas();
+        case 120 : //F9
+            syncClientes();
 	    break;
-
-        case 121 : 
-	    VerCaja();
+        case 122 :
 	    break;
 	}
 
@@ -733,16 +753,19 @@
 
 	    switch (event.keyCode) { 
 
-            case 122 : 
-		//Shift + F11  
+            case 13 : 
+		//Shift + Enter
+                //Pregunta unidades del ultimo articulo agregado
+                if ( ticketlist.length == 0 )
+	            return;
+                
+                //alert( cLoadCBalter );
+                ModificaTicketUnidades(-1);
 		break;
 
-            case 123 : 
-		VerServicios();
-		break;
             case 46 : 
-		selTipoPresupuesto(0);
-		id("NOM").focus(); 
+                BorrarVentaTPV();
+                selTipoPresupuesto(0);
 		break;
 	    } 
 
@@ -750,11 +773,25 @@
 
 	    switch (event.keyCode) { 
 
-            case 114 : 
-		//Shift + F3 
-		break;
+            case 112 ://ctrol + F1  
+                VerVentas();
+	        break;
+            case 113 ://ctrol + F2
+                VerServicios();
+	    break;
+            case 114 ://ctrol + F3
+                VerTPV();
+                id("CB").focus();
+	        break;
+            case 120 : //F9 
+	        VerCaja();
+	        break;
+            case 122 : //F11 
+                syncPresupuesto('Preventa');
+	        break;
+	    }
 
-	    } 
+
     }
 
 
@@ -876,8 +913,10 @@
                     k      = productos[cod];
 		    precio = (Local.TPV=='VC')? k.pvc:k.pvd;
                     if (k)
-			CrearEntradaEnProductos(k.producto,k.nombre,k.marca,k.color,k.talla,k.laboratorio,
+			CrearEntradaEnProductos(k.producto,k.nombre,k.marca,k.color,k.talla,
+						k.laboratorio,
 						k.codigobarras,k.referencia,precio,
+						k.pvemp,k.pvdoce,k.pvc,
 						k.impuesto,k.unidades,k.costo,k.lote,k.vence,
 						k.serie,k.menudeo,k.unidxcont,k.unid,k.cont,
 						k.servicio,k.ilimitado,k.oferta,k.ofertaunid,
@@ -897,7 +936,9 @@
             var cod     = getCodigoSelectedProd();
 	    var pstock  = id("prevt-stock").getAttribute("checked");
 	    var modo    = (pstock != "true")? "pedidos":id("rgModosTicket").value;
-	    var esMayoreo = false;
+	    var esMayoreo = (unidades=="mayoreo");
+	    var esDocena  = (unidades=="docena");
+	    var esCorporativo = (unidades=="corporativo");
 	    
             if (!cod) return;
 	    if (habilitarAddMProducto()) return;
@@ -920,13 +961,13 @@
             }
 
 	    //Inicia Menudeo
-            if (unidades=="mayoreo")
+            if (esMayoreo)
 	    {
 		
 		if(!productos[cod].menudeo) return;
-		var esMayoreo = true;
+
 		var xunidades = prompt('¿Cuántas '+productos[cod].cont+'+'+
-				       productos[cod].unid+'?',0);
+				       productos[cod].unid+' ( PV/E: '+productos[cod].pvemp+' ) ?',0);
 		if(!xunidades) return;
 		var aUnidades = xunidades.split('+');
 		var xcont     = aUnidades[0]*productos[cod].unidxcont;
@@ -945,6 +986,48 @@
 		    return;
             }
 
+            if ( esDocena )
+	    {
+		//if(!productos[cod].menudeo) return;
+		var aunidades;
+		var xunidades = prompt('¿Cuántas Docenas ( PV/D: '+productos[cod].pvdoce+' ) ?',0);
+		if(!xunidades) return;
+
+		aunidades     = xunidades.split(".");
+
+		if( aunidades[1] )
+		{
+		    xunidades    = parseFloat(xunidades);
+		    xunidades    = xunidades.toFixed(1);
+		    aunidades    = xunidades.split(".");
+		    aunidades[1] = ( parseInt( aunidades[1] ) <=  5  )? aunidades[1]:0;
+		    aunidades[1] = ( parseInt( aunidades[1] ) ==  5  )? 6:aunidades[1];
+		    unidades     = parseInt(aunidades[1]) + parseInt( aunidades[0] ) * parseInt( 12 );
+		} 
+		else
+		    unidades  = parseInt(xunidades) * parseInt( 12 );
+		
+		//Control de Enteros
+		if ( isNaN(unidades) )
+		    return alert(c_gpos + 'Ingresar un valor numérico');
+		
+		if ( unidades < 0 )
+		    return alert(c_gpos + 'Ingresar un valor numérico positivo.');
+
+		if ( !unidades || unidades<0 ) 
+		    return;
+            }
+
+            if ( esCorporativo )
+	    {
+		if( Local.esB2B == 0 ) return;
+		
+		var xunidades = prompt('¿Cuántas unidades a precio corporativo ( PVC/U: '+productos[cod].pvc+' ) ?',0);
+		if(!xunidades) return;
+		unidades     = parseInt(xunidades);
+
+            }
+	    
  	    //Stock
             if (!unidades) { unidades = 1;}
             unidades = ConvertirSignoApropiado( unidades );
@@ -993,14 +1076,17 @@
 		return agnadirPorSeries(productos[cod].serie,
 					productos[cod].producto,
 					productos[cod].unidades,
-					cod);
+					cod,unidades);
 
 	    //Carrito TPV
 	    if ( esMayoreo )
 		tpv.AddCarritoMayoreo( cod.toUpperCase() , unidades);
+	    else if( esDocena )
+		tpv.AddCarritoDocena( cod.toUpperCase() , unidades);
+	    else if( esCorporativo )
+		tpv.AddCarritoCorporativo( cod.toUpperCase() , unidades);
 	    else
 		tpv.AddCarrito( cod.toUpperCase() , unidades);
-            //RecalculoTotal();***
 
             var extatus = id("rgModosTicket").value;	
             if (extatus == 'interno' ){		
@@ -1082,8 +1168,10 @@
 
 		    if(cadena2=="")
 		    {
-			CrearEntradaEnProductos(k.producto,k.nombre,k.marca,k.color,k.talla,k.laboratorio,
+			CrearEntradaEnProductos(k.producto,k.nombre,k.marca,k.color,k.talla,
+						k.laboratorio,
 						k.codigobarras,k.referencia,precio,
+						k.pvemp,k.pvdoce,k.pvc,
 						k.impuesto,k.unidades,k.costo,k.lote,k.vence,
 						k.serie,k.menudeo,k.unidxcont,k.unid,k.cont,
 						k.servicio,k.ilimitado,k.oferta,k.ofertaunid,
@@ -1097,8 +1185,10 @@
 			    (al1.indexOf( cadena2 ) != -1) || 
 			    (al2.indexOf( cadena2 ) != -1) || 
 			    (ref.indexOf( cadena2 ) != -1) )
-			    CrearEntradaEnProductos(k.producto,k.nombre,k.marca,k.color,k.talla,k.laboratorio,
+			    CrearEntradaEnProductos(k.producto,k.nombre,k.marca,k.color,k.talla,
+						    k.laboratorio,
 						    k.codigobarras,k.referencia,precio,
+						    k.pvemp,k.pvdoce,k.pvc,
 						    k.impuesto,k.unidades,k.costo,k.lote,k.vence,
 						    k.serie,k.menudeo,k.unidxcont,k.unid,k.cont,
 						    k.servicio,k.ilimitado,k.oferta,k.ofertaunid,
@@ -1150,7 +1240,7 @@
 		return agnadirPorSeries(productos[vcb].serie,
 					productos[vcb].producto,
 					productos[vcb].unidades,
-					vcb);
+					vcb,1);
 	    }
 	    
 	    //Intenta anhadirlo...
@@ -1197,9 +1287,11 @@
 			{		
                             yaexiste = prodlist_cb[k.codigobarras];
                             if (!yaexiste)
-				CrearEntradaEnProductos(k.producto,k.nombre,k.marca,k.color,k.talla,k.laboratorio,
+				CrearEntradaEnProductos(k.producto,k.nombre,k.marca,k.color,k.talla,
+							k.laboratorio,
 							k.codigobarras,k.referencia,
-							precio,k.impuesto,k.unidades,k.costo,
+							precio,k.pvemp,k.pvdoce,k.pvc,k.impuesto,
+							k.unidades,k.costo,
 							k.lote,k.vence,k.serie,k.menudeo,
 							k.unidxcont,k.unid,k.cont,
 							k.servicio,k.ilimitado,k.oferta,k.ofertaunid,
@@ -1624,11 +1716,15 @@
 	    if( trim( concepto ) != '' ) ConceptoParaFilaPreventa(concepto,vcb);	    
 	    
 	    //Precio
-            id("tic_precio_"+ vcb).setAttribute("value",formatDinero(precio));	
+	    ticket[vcb].precio = formatDinero(precio);
+	    id("tic_precio_"+ vcb).value= ticket[vcb].precio;	
+            id("tic_precio_"+ vcb).setAttribute("value",ticket[vcb].precio);	
             Blink("tic_precio_" + vcb, "label-precio" );
 
 	    //Descuento
-            id("tic_descuento_"+ vcb ).setAttribute("value",FormateComoDescuento(descuento));
+	    ticket[vcb].descuento = descuento;
+	    id("tic_descuento_"+ vcb ).value=FormateComoDescuento(ticket[vcb].descuento);
+            id("tic_descuento_"+ vcb ).setAttribute("value",FormateComoDescuento(ticket[vcb].descuento));
 	    Blink("tic_descuento_" + vcb, "label-descuento" );	
 
 	    //Actulaliza el consolidado carrito productos
@@ -1672,11 +1768,10 @@
 	    CEEP(vcb);
 	    
 	    //Precio
-            id("tic_precio_"+ vcb).setAttribute("value",formatDinero(precio));	
+	    ticket[vcb].precio   = precio;
+	    id("tic_precio_"+ vcb).value=formatDinero( ticket[vcb].precio );	
+            id("tic_precio_"+ vcb).setAttribute("value",formatDinero( ticket[vcb].precio ));	
             Blink("tic_precio_" + vcb, "label-precio" );
-	    
-	    //Actulaliza el consolidado carrito productos
-            //RecalculoTotal();***
 	    
             //NOTA: no se añade entrada en productos
 	    return encontrado;
@@ -2230,8 +2325,16 @@
 	    var r_venta = id("rVenta");
 	    var modo    = id("rgModosTicket");	   
  	    var t_bpedi = id("buscapedido");
+            
 	    var modotpv,noreset=true;
 
+	    //Default Variables Globales
+	    IdTipoPresupuesto = 0;
+	    IdPresupuesto     = 0;  
+	    IdMProducto       = 0;  
+	    IdMetaProducto    = 0;  
+	    StockMetaProducto = 0;
+            
 	    //CONTROL
 	    switch( modo.value ){
 	    case 'venta':
@@ -2271,7 +2374,7 @@
 
 		//PROFORMA
 		if(selticket == 2)
-		    m_alert = 'CONTADO, CREDITO ó PEDIDO';
+		    m_alert = 'CONTADO, CREDITO ó PROFORMA';
 
 		//METAPRODUCTO
 		if(selticket == 4)
@@ -2323,11 +2426,11 @@
 		r_pedid.setAttribute("collapsed", "false");
 
 		//Default Variables Globales
-		IdTipoPresupuesto = 0;
-		IdPresupuesto     = 0;  
-		IdMProducto       = 0;  
-		IdMetaProducto    = 0;  
-		StockMetaProducto = 0;
+		//IdTipoPresupuesto = 0;
+		//IdPresupuesto     = 0;  
+		//IdMProducto       = 0;  
+		//IdMetaProducto    = 0;  
+		//StockMetaProducto = 0;
 		//reset modo
 		AjustarEtiquetaMetaproducto();
 
@@ -2384,7 +2487,7 @@
 		    setTimeout("runsyncTPV('Proforma')",200);
 
 		//MENU Ticket Proforma
-		t_comb.label="TICKET PEDIDO";
+		t_comb.label="TICKET PROFORMA";
 		i_prof.setAttribute('checked', 'true');
 		i_profol.setAttribute('checked', 'false');
 		i_mpro.setAttribute('checked', 'false');
@@ -2647,15 +2750,20 @@
 	    
 	    //Unidades...
 	    xunidades = ticket[vcb].series.length;
-	    id("tic_unid_" + vcb).value = xunidades;
 	    ticket[vcb].unidades        = xunidades;
+	    id("tic_unid_" + vcb).value = ticket[vcb].unidades;
+
 
 	    //Precio...
-            id("tic_precio_"+ vcb).setAttribute("value",formatDinero(precio));	
+	    ticket[vcb].precio   = precio;
+	    id("tic_precio_"+ vcb).value = formatDinero( ticket[vcb].precio  );	
+            id("tic_precio_"+ vcb).setAttribute("value",formatDinero( ticket[vcb].precio  ));	
             Blink("tic_precio_" + vcb, "label-precio" );
 
 	    //Descuento...
-	    id("tic_descuento_"+ vcb ).setAttribute("value",FormateComoDescuento(descuento));
+	    ticket[vcb].descuento = descuento;
+	    id("tic_descuento_"+vcb).value = FormateComoDescuento(ticket[vcb].descuento);
+	    id("tic_descuento_"+vcb).setAttribute("value",FormateComoDescuento(ticket[vcb].descuento));
 	    Blink("tic_descuento_" + vcb, "label-descuento" );	
 
 	    //Detalle...
@@ -2709,10 +2817,28 @@
 	    var cod = getCodigoSelectedProd();
 	    if(cod == null) return;
 
-	    if (!productos[cod].dosis ) return;
-	    
+            if(!trim(productos[cod].dosis)){
+                var url       = "services.php?modo=verificaProductoInformacion&"+
+	                        "xidp="+productos[cod].idproducto;
+ 	        var z         = null;
+	        var xrequest  = new XMLHttpRequest();
+                
+	        xrequest.open("GET",url,false);
+	        try {
+	            xrequest.send(null);
+	        } catch(z){
+	            return;
+	        }
+	        var xres   = xrequest.responseText;
+                if(!xres) return;
+
+                productos[cod].dosis = xres.split('&');
+            }
+            
+	    if (!trim(productos[cod].dosis) ) return;
+            
 	    var cfichaTecnica = productos[cod].dosis;
-	    var esBTCA        = (Local.Giro=='BTCA')?true:false;
+	    var esBTCA        = (Local.Giro=='BTCA');
 	    var titleFicha    = '';
 	    var mm            = '';
 	    var tm            = '';
@@ -2765,17 +2891,17 @@
 	    //xconcepto = xconcepto.toUpperCase();
 	    ticket[cod].concepto = xconcepto;
 
-	    id("tic_nombre_"+cod).setAttribute('value',xconcepto); 
-	    id("tic_concepto_"+cod).setAttribute('value',xconcepto); 
+	    id("tic_nombre_"+cod).setAttribute('value', ticket[cod].concepto); 
+	    id("tic_concepto_"+cod).setAttribute('value', ticket[cod].concepto); 
 	} 
 
 
          function ConceptoParaFilaPreventa( xconcepto,vcb ){
-	    xconcepto = xconcepto.toUpperCase();
+ 	    //xconcepto = xconcepto.toUpperCase();
 	    ticket[vcb].concepto = xconcepto;
 
-	    id("tic_nombre_"+vcb).setAttribute('value',xconcepto); 
-	    id("tic_concepto_"+vcb).setAttribute('value',xconcepto); 
+	    id("tic_nombre_"+vcb).setAttribute('value',ticket[vcb].concepto); 
+	    id("tic_concepto_"+vcb).setAttribute('value',ticket[vcb].concepto); 
 	} 
 
         function lanzarRegistroBorrador(){
@@ -2804,25 +2930,49 @@
 
         function menuContextualPreVentaTPV(xlisttpv){
 
-	    id("preventaFichaTecnica").setAttribute("disabled",true);
-	    id("preventaMayoreo").setAttribute("disabled",true);
-	    id("preventaDetalleMProducto").setAttribute("disabled",true);
-	    id("preventaNumerosSeries").setAttribute("disabled",true);
+	    id("preventaFichaTecnica").setAttribute("collapsed",true);
+	    id("preventaMayoreoEmpaque").setAttribute("collapsed",true);
+	    //id("preventaMayoreoDocena").setAttribute("collapsed",true);
+	    id("preventaDetalleMProducto").setAttribute("collapsed",true);
+	    id("preventaNumerosSeries").setAttribute("collapsed",true);
+	    id("preventaCorporativo").setAttribute("collapsed",true);
+	    id("viewpreventaCorporativo").setAttribute("collapsed",true);
+	    id("viewpreventaCostos").setAttribute("collapsed",true);
+	    id("ticketModificarPrecio").setAttribute("collapsed",true);
+	    id("ticketModificarImporte").setAttribute("collapsed",true);
 
+	    habilitaAgnadirMenoreo(true);
+
+	    if ( Local.esB2B == 1 ) id("viewpreventaCorporativo").setAttribute("collapsed",false);
+	    if ( Local.esAdmin ) id("viewpreventaCostos").setAttribute("collapsed",false);
+	    
 	    var cod  = (xlisttpv)? getCodigoSelectedTicket():getCodigoSelectedProd();
 	    if(cod == null) return;
 
-	    if ( productos[cod].serie ) id("preventaNumerosSeries").removeAttribute("disabled");
-	    if ( productos[cod].menudeo ) id("preventaMayoreo").removeAttribute("disabled")
-	    if ( productos[cod].mproducto ) id("preventaDetalleMProducto").removeAttribute("disabled");
-	    if ( productos[cod].dosis ) id("preventaFichaTecnica").removeAttribute("disabled");
+	    if ( productos[cod].serie ) id("preventaNumerosSeries").setAttribute("collapsed",false);
+	    if ( productos[cod].menudeo ) id("preventaMayoreoEmpaque").setAttribute("collapsed",false)
+	    //if ( productos[cod].menudeo ) id("preventaMayoreoDocena").setAttribute("collapsed",false)
+	    if ( productos[cod].mproducto ) id("preventaDetalleMProducto").setAttribute("collapsed",false);
+	    if ( productos[cod].dosis ) id("preventaFichaTecnica").setAttribute("collapsed",false);
+	    if ( Local.esB2B == 1 ) id("preventaCorporativo").setAttribute("collapsed",false);
 
+	    if ( Local.esPrecios ) id("ticketModificarPrecio").setAttribute("collapsed",false);
+	    if ( Local.esPrecios ) id("ticketModificarImporte").setAttribute("collapsed",false);
+	    
+	    if ( productos[cod].unid =='mts') habilitaAgnadirMenoreo(false);
+	    if ( productos[cod].unid =='lts') habilitaAgnadirMenoreo(false);
+	    if ( productos[cod].unid =='kls') habilitaAgnadirMenoreo(false);  
+            
             //Si lo ha encontrado, sera una buena idea mostrar el cb y su foto,si la hay..
 	    //setImagenProducto( cod );
             //setTimeout("UpdateImageview()",50);
-            setTimeout("setImagenProducto("+cod+")",200);
 
+            setTimeout("setImagenProducto("+cod+")",200);
         }
+        function habilitaAgnadirMenoreo(xsetcoll){
+	    id("agnadirMenoreoPorCuarto").setAttribute("collapsed",xsetcoll);
+	    id("agnadirMenoreoPorMedio").setAttribute("collapsed",xsetcoll);
+	}
 
 /*+++++++++++++++++++++++++++++ SERVICES ++++++++++++++++++++++++++++++++++*/
 
@@ -2855,6 +3005,10 @@
 
         tpv.AddServicio(ticketcodigo,arregloid,aque.value,arregloref,acuanto.value,
 			impuesto_normal,asubsidiario);
+
+        ticket[ arregloid ].pedidodet = 'servicio';
+        ticket[ arregloid ].nombre    =  arregloid+' '+aque.value;
+        
         id("tic_pedidodet_"+ arregloid ).setAttribute("value",'servicio');
         id("tic_nombre_"+ arregloid ).setAttribute("value",arregloid+' '+aque.value);
 
@@ -2911,9 +3065,13 @@
         tpv.AddServicio(ticketcodigo,arregloid,servicio,arregloref,acuanto,
 			impuesto_normal,asubsidiario);
 
-        id("tic_nombre_"+ arregloid ).setAttribute("value",arregloid+' '+servicio);
-        id("tic_pedidodet_"+ arregloid ).setAttribute("value",'servicio-externo');
-        id("tic_descuento_"+ arregloid ).setAttribute("value",FormateComoDescuento(descuento));
+	ticket[arregloid].nombre    = arregloid+' '+servicio;
+	ticket[arregloid].pedidodet = 'servicio-externo';
+	ticket[arregloid].descuento = descuento;
+	
+        id("tic_nombre_"+ arregloid ).setAttribute("value",ticket[arregloid].nombre);
+        id("tic_pedidodet_"+ arregloid ).setAttribute("value",ticket[arregloid].pedidodet);
+        id("tic_descuento_"+ arregloid ).setAttribute("value",FormateComoDescuento(ticket[arregloid].descuento));
         Blink("tic_descuento_" + arregloid, "label-descuento" );	
 
         RecalculoTotal();
@@ -2959,11 +3117,11 @@
     //------------------------------------------------------
     //Numero de Serie
 
-    function agnadirPorSeries(xseries,xproducto,xcantidad,xcod){
+function agnadirPorSeries(xseries,xproducto,xcantidad,xcod,xunidades){
 
 	id("selCB").value = xcod;
 	limpiarlistaserie();
-	listarseries(xseries);	
+        listarseries(xseries,xunidades);	
 
 	id("nsProducto").setAttribute("label",xproducto);
 	id("totalNS").setAttribute("label",xcantidad);
@@ -2973,7 +3131,7 @@
 	id("ckserie").focus();
     }
 
-    function listarseries(xseries){
+function listarseries(xseries,xunidades){
 
 	var xcod    = id("selCB").value;
 	//var aseries = xseries.split(",");
@@ -3007,7 +3165,7 @@
 	    }
 	}	    
 	id("totalSelNS").setAttribute('label',xnscart);
-	
+	id("totalSelNSDef").value = xunidades;
     }
 
     function limpiarlistaserie(){
@@ -3125,8 +3283,8 @@
 	}
 
 	//Stock Carrito
-	id("tic_unid_" + xcod).value = xunidades;
 	ticket[xcod].unidades        = xunidades;
+	id("tic_unid_" + xcod).value = ticket[xcod].unidades;
 
 	//Pedido Detalle...
 	if (ticket[xcod]) CargarPedidoDetFila(xcod,ticket[xcod].unidades );
@@ -3145,6 +3303,16 @@
         id("tic_detalle_"+xcod).value = vdetalle;
 	id("tic_status_"+xcod).value  = '1~0~0';
         RecalculoTotal();
+        //Pregunta si ya eligio todo
+
+        //Unidades Elegidas
+        if( id("totalSelNSDef").value == xunidades ) return VerTPV();
+        //Todas las Unidades Seleccionadas
+        if( productos[xcod].serie      == xunidades ) 
+            if(confirm('gPOS TPV:  \n\n'+
+                       '  Número de Serie Seleccionados : '+xunidades+'\n\n'+
+	               '  ¿Desea regresar a TPV ?'))
+                return VerTPV();
     }
 
     function limpiar_cajackbox(){
@@ -3167,6 +3335,7 @@
                         fila.parentNode.removeChild(fila);
                         ticket[codigo] = null;
                         ticketlist.splice(t,1);
+			iticket--;
                     }
                 }		 
             }
@@ -3205,6 +3374,7 @@
         prodlist       = new Array();
         prodlist_cb    = new Array();
         prodlist_tag   = new Array();
+	setViewListaProductoPrecios();
     }
 
     function VaciarListadoTickets(){
@@ -3228,11 +3398,12 @@
         var unidcod = id("tic_unid_" + cod );	
 
 	if (!cod) return;
+        if (productos[cod].servicio || productos[cod].ilimitado) modo = "pedidos";//Servicio
 
 	//Series
 	if( modo != "pedidos" && productos[cod].serie)
 	    return agnadirPorSeries(productos[cod].serie,productos[cod].producto,
-				    productos[cod].unidades,cod);
+				    productos[cod].unidades,cod,0);
 
         cuantas = ( cuantas<0 )? prompt(po_cuantasunidades,0):parseInt(cuantas);
 	cuantas = parseInt(cuantas);//Control de Enteros
@@ -3243,7 +3414,7 @@
 
         if (cuantas==0) return QuitarArticulo();
 
-        unidadesenventa = unidcod.getAttribute("value");
+        unidadesenventa = ticket[cod].unidades;//unidcod.getAttribute("value");
         unidadesalmacen = productos[cod].unidades;
 
 	if ( cuantas > unidadesalmacen && modo!="pedidos" )
@@ -3286,16 +3457,19 @@
 		var ounid    = parseInt( ticket[cod].ofertaunid );
 		var pvo      = parseFloat( ticket[cod].pvo );
 		var precio   = ticket[cod].precio;		
-		var unid      = ticket[cod].unid;
+		var unid     = ticket[cod].unid;
 
 		oferta   = ( ounid >= tunid )? tunid:ounid;
 		xdetalle = '**OFERTA '+oferta+''+unid+' c/u '+formatDinero(pvo)+'** ';
 		oferta   = tunid+'~'+ounid+'~'+precio+'~'+pvo;//uni:ofertaunid:pv:pvo
 		precio   = ( ounid >= tunid )? pvo:(pvo*ounid+(tunid-ounid)*precio)/tunid;
 
-		id("tic_precio_"+cod).value  = precio.toFixed(2);
-		id("tic_oferta_"+cod).value  = oferta;
-		id("tic_detalle_"+cod).value = xdetalle;
+		ticket[cod].precio   = precio.toFixed(2);
+		ticket[cod].oferta   = oferta;
+		ticket[cod].vdetalle = xdetalle;
+		id("tic_precio_"+cod).value  = ticket[cod].precio;
+		id("tic_oferta_"+cod).value  = ticket[cod].oferta;
+		id("tic_detalle_"+cod).value = ticket[cod].vdetalle;
 	    }
 
 
@@ -3320,7 +3494,7 @@
 		return agnadirPorSeries(productos[cod].serie,
 					productos[cod].producto,
 					productos[cod].unidades,
-					cod);
+					cod,0);
     }
 
     function ConvertirSignoApropiado(unidades){
@@ -3517,19 +3691,20 @@
                     fila = id("tic_" + codigo);
                     if (fila) 
 		    {
-                        dato 	       = id("tic_unid_" + codigo).value;
-                        impuesto       = id("tic_impuesto_" + codigo).value;
-                        impuesto       = CleanInpuesto(impuesto);
+                        dato 	       = ticket[codigo].unidades;
+                        impuesto       = parseMoney(ticket[codigo].impuesto);//id("tic_impuesto_" + codigo).value;
                         filacantidad   = parseMoney( dato );
-                        filaprecio     = parseMoney( id("tic_precio_" + codigo).value );
-                        filadscto      = CleanDescuento( id("tic_descuento_" + codigo).value );
+                        filaprecio     = parseMoney( ticket[codigo].precio ); // id("tic_precio_" + codigo).value
+                        filadscto      = CleanDescuento( ticket[codigo].descuento ); // id("tic_descuento_" + codigo).value
                         filasubtotal   = (parseFloat( filacantidad ) * parseFloat( filaprecio ));
                         filatotal      = parseFloat( filasubtotal ) - parseFloat( filasubtotal )*(parseFloat( filadscto )/100);
 			filatotal       = formatDineroTotal( filatotal );
                         ticketsubtotal += parseFloat( filasubtotal);
 			tickettotal    += parseFloat( filatotal );
 
-                        id("tic_importe_" + codigo).value = formatDineroTotal( filatotal );
+			ticket[codigo].importe = formatDineroTotal( filatotal );
+                        id("tic_importe_" + codigo).value = ticket[codigo].importe;
+			id("tic_importe_" + codigo).setAttribute("value",ticket[codigo].importe);
                     }
                 }		 
             }
@@ -3537,10 +3712,11 @@
 
 	tickettotaldscto = ticketsubtotal - tickettotal;
 
-        id("TotalLabel").setAttribute("label", cMoneda[1]['S'] +" "+ formatDineroTotal( tickettotal ) );
-        id("SubTotalLabel").setAttribute("value", cMoneda[1]['S'] +" "+ formatDineroTotal( ticketsubtotal ) );
-        id("DescuentoLabel").setAttribute("value", cMoneda[1]['S'] +" "+ formatDineroTotal( tickettotaldscto ) );
-
+        id("TotalLabel").setAttribute("label", cMoneda[1]['S'] +" "+formatDineroTotal(tickettotal));
+        id("SubTotalLabel").setAttribute("value",cMoneda[1]['S']+" "+formatDineroTotal(ticketsubtotal));
+        id("DescuentoLabel").setAttribute("value",cMoneda[1]['S']+" "+formatDineroTotal(tickettotaldscto));
+        id("TotalListadoLabel").setAttribute("value", 'en '+ticketlist.length+' productos');
+	
         Global.totalbase   = formatDineroTotal( tickettotal );
 	ticketTotalImporte = formatDineroTotal( ticketsubtotal );
  
@@ -3558,7 +3734,9 @@
 
         p = (precio)? precio:parseMoney(prompt("Nuevo precio?", ticprecio.value ));
         if(p){
-            ticprecio.setAttribute("value",formatDinero(p));	
+	    ticket[ticketcodigo].precio = formatDinero(p);
+	    ticprecio.value             = ticket[ticketcodigo].precio;	
+            ticprecio.setAttribute("value", ticket[ticketcodigo].precio );	
             Blink("tic_precio_" + ticketcodigo, "label-precio" );
             RecalculoTotal();
         }
@@ -3569,16 +3747,15 @@
         if (!ticketcodigo)	return;
         var ticimporte = id("tic_importe_"+ ticketcodigo);
         if (!ticimporte) return;
-        var ticunid    = id("tic_unid_"+ ticketcodigo);
 
-	var oldimporte = parseFloat(ticimporte.value);
-	var cantidad   = parseFloat(ticunid.value);
+	var oldimporte = parseFloat( ticket[ticketcodigo].importe );
+	var cantidad   = parseFloat( ticket[ticketcodigo].unidades );
 	var precioorig = (Local.TPV=='VC')? productos[ticketcodigo].pvc  : productos[ticketcodigo].pvd;
 	var importeorig= formatDinero(precioorig*cantidad);
 	var dscto      = '0';
 	var newprecio  = precioorig;
-
-        p = parseMoney(prompt("Nuevo importe?", ticimporte.value ));
+ 
+        p = parseMoney(prompt("Nuevo importe?", ticket[ticketcodigo].importe));
 	if(!p) return;
 
 	if(parseMoney(oldimporte) == p) return;
@@ -3621,8 +3798,8 @@
         if (!ticketcodigo) return;
 
         var ticdscto   = id("tic_descuento_"+ ticketcodigo);
-        var ticprecio  = parseFloat( id("tic_precio_"+ ticketcodigo).value );
-        var cantidad   = parseFloat( id("tic_unid_" + ticketcodigo).value );
+        var ticprecio  = parseFloat( ticket[ticketcodigo].precio );
+        var cantidad   = parseFloat( ticket[ticketcodigo].unidades );
  	var precio     = (Local.TPV=='VC')? productos[ticketcodigo].pvc  : productos[ticketcodigo].pvd;
         var preciodcto = (Local.TPV=='VC')? productos[ticketcodigo].pvcd : productos[ticketcodigo].pvdd;
         var maxdes     = Math.round(parseFloat((precio - preciodcto)*cantidad)*100)/100;
@@ -3640,16 +3817,18 @@
 
 	if ( esAdmin && esDscto ) alert( c_gpos + "\n    Descuento no permitido.");
 
-        ticdscto.setAttribute("value",FormateComoDescuento(dscto));	 
-        Blink("tic_descuento_" + ticketcodigo, "label-descuento" );
+	ticket[ticketcodigo].descuento = dscto;
+	ticdscto.value = FormateComoDescuento(ticket[ticketcodigo].descuento);
+	ticdscto.setAttribute("value", FormateComoDescuento(ticket[ticketcodigo].descuento));
+	Blink("tic_descuento_" + ticketcodigo, "label-descuento" );
         RecalculoTotal();
     }
 
     function CleanDescuento( valor ) {
         if (!valor) 	return 0.0;
 
-        valor = valor.replace(/ /g,"");
-        valor = valor.replace(/%/g,"");
+        //valor = valor.replace(/ /g,"");
+        //valor = valor.replace(/%/g,"");
         valor = parseFloat(valor);
         if (isNaN( valor ))
             return 0.0;
@@ -3662,7 +3841,8 @@
 
     function FormateComoDescuento(valor) {
         if (!valor || valor ==0 || valor =="0")
-            return "  ";//Especial para no hacer tan presente el descuento, dado que la mayor parte del 
+            return "  ";
+	//Especial para no hacer tan presente el descuento, dado que la mayor parte del 
         // tiempo no es bonito ni relevante.
 
         return valor + " %";
@@ -3864,17 +4044,9 @@
 
     }
 
-    function DesactivarImpresion(){
-	id("BotonAceptarImpresion").setAttribute("disabled","true");
-    }
-
-    function HabilitarImpresion(){
-	id("BotonAceptarImpresion").setAttribute("disabled","false");
-    }
-
-
-
-        function AjustarEtiquetaMetaproducto(){
+    function DesactivarImpresion(){ id("BotonAceptarImpresion").setAttribute("disabled","true");}
+    function HabilitarImpresion(){ id("BotonAceptarImpresion").setAttribute("disabled","false");}
+    function AjustarEtiquetaMetaproducto(){
 	    //Boton Imprimir
 	    var btimpr   = id("botonImprimir");
 	    var btborr   = id("botonBorrar");
@@ -3997,10 +4169,9 @@
 	    xpedidodet = ( productos[xcod].servicio  )? 'servicio'  : xpedidodet;
 
 	    //Carrito...
-	    id("tic_pedidodet_"+xcod).value = xpedidodet;
-	    id("tic_pedidodet_"+xcod).setAttribute('value',xpedidodet);
-
-	    ticket[xcod].pedidodet          = xpedidodet;
+	    ticket[xcod].pedidodet = xpedidodet;
+	    id("tic_pedidodet_"+xcod).value = ticket[xcod].pedidodet;
+	    id("tic_pedidodet_"+xcod).setAttribute('value',ticket[xcod].pedidodet);
 
 	    //Stock...
 	    if( productos[xcod].ilimitado || productos[xcod].servicio ) return;	    
@@ -4017,10 +4188,8 @@
 		var selpedido  = aselpedido[sel].split(":");
 		xselunidad     = parseInt(xselunidad)+parseInt( selpedido[1]);
 	    }
-
-	    id("tic_unid_" + xcod).value = xselunidad;
 	    ticket[xcod].unidades        = xselunidad;
-
+	    id("tic_unid_" + xcod).value = ticket[xcod].unidades;
 	}
 
         function CargarPedidoDetFilaSerie(xcod){
@@ -4059,7 +4228,7 @@
          var c_stockalmacen = c_gpos+"STOCK ALMACÉN \n\n Producto: ";
          var c_mproducto    = c_gpos+"TPV MIXPRODUCTO ";
          var c_preventa     = c_gpos+"TPV PREVENTA "
-         var c_pedido       = c_gpos+"TPV PEDIDO "
+         var c_pedido       = c_gpos+"TPV PROFORMA "
 
          /*+++++++++++++  TOOL ++++++++++++++++++++++++*/
          var log = function (param) {
@@ -4090,7 +4259,7 @@
          function unIluminate(name,tipo) {
 
              var me  = id(name);
-             id(name).style.backgroundColor='white';
+             id(name).style.backgroundColor='transparent';
              id(name).style.color='black';
 	     
              if (tipo=="listbox"){
@@ -4264,8 +4433,9 @@
 	      Local.esSuscripcion        = ares[5];
 	      Local.esSAT                = ares[6];
 	      Local.esStock              = ares[6];
-	      
+
 	      updatexAtt("ticketModificarPrecio",Local.esPrecios);
+	      updatexAtt("ticketModificarImporte",Local.esPrecios);
 	      updatexAtt("ckCodigoAutorizacionCliente",Local.esPrecios);	      
 	      updatexAtt("ckCodigoAutorizacion",Local.esPrecios);	      
 	      updatexAtt("VentaRealizadaDevolver",Local.esStock);
@@ -4294,9 +4464,17 @@
 	      //cambio usuario: mantiene usuario
 	      xdato = ( res[0] == 1 )? 1:2;  
 	      actualizaUsuarioTPV(xdato,xuser);
+
+	      //limpiamos lista de precios
+	      //VaciarListadoProductos();
+	      //listamos busqueda actual
+	      agnadirPorNombre();
+
 	  }
 
            function updatexAtt(xid,xstatus){
+	       if( xstatus == 1 ) id( xid ).setAttribute("collased",false);
+	       if( xstatus == 0 ) id( xid ).setAttribute("collased",true);
 	       if( xstatus == 1 ) id( xid ).removeAttribute("disabled");
 	       if( xstatus == 0 ) id( xid ).setAttribute("disabled",true);
            }
@@ -4345,7 +4523,7 @@
               //	CBFocus();
               esFichaVisible = 0;
 
-              id("panelDerecho").setAttribute("collapsed","false");
+              id("panelDerecho").setAttribute("collapsed",false);
               id("modoVisual").setAttribute("selectedIndex",0);
               id("fichaProducto").setAttribute("src","about:blank");
 
@@ -4356,12 +4534,13 @@
 
           function ToggleFichaForm() {
               var code;
-
+              if(!getCodigoSelectedProd()) return;
+              
               if (esFichaVisible) {
-		  id("panelDerecho").setAttribute("collapsed","false");
+		  id("panelDerecho").setAttribute("collapsed",false);
 		  code = 0;//ocultar
               } else {
-		  id("panelDerecho").setAttribute("collapsed","true");
+		  id("panelDerecho").setAttribute("collapsed",true);
 		  code = 4;
               }
 
@@ -4424,6 +4603,23 @@
 
 	      id("syncTPV").className = "sync_run";
 	      return false;
+	  }
+
+          function esSyncModuleBoton(xmodulo,xval){
+
+	      if( xval == 'on')
+              {
+	          if( id(xmodulo).className == "sync_module_off" )
+                  {
+                      id(xmodulo).className = "sync_module_on";
+                      return false;
+                  }
+                  return true;
+              }
+              //Para todo caso lo desactiva              
+	      if( id(xmodulo).className == "sync_module_on" )
+                  id(xmodulo).className = "sync_module_off";
+              return true;
 	  }
 
           function esOfflineBusquedas(){
@@ -4582,7 +4778,7 @@
 		  if ( prodlist_cb[codigo]) return;
 		  
 		  CrearEntradaEnProductos(k.producto,k.nombre,k.marca,k.color,k.talla,k.laboratorio,
-					  k.codigobarras,k.referencia,precio,
+					  k.codigobarras,k.referencia,precio,k.pvemp,k.pvdoce,k.pvc, 
 					  k.impuesto,k.unidades,k.costo,k.lote,k.vence,k.serie,
 					  k.menudeo,k.unidxcont,k.unid,k.cont,
 					  k.servicio,k.ilimitado,k.oferta,k.ofertaunid,
@@ -4724,7 +4920,7 @@
 
 	    if( !Local.esCajaTPV) return;
 	    
-	    id("panelDerecho").setAttribute("collapsed","true");
+	    id("panelDerecho").setAttribute("collapsed",true);
 	    id("modoVisual").setAttribute("selectedIndex",Vistas.caja);	
 	    frameArqueo.RegenPartidas('Aportacion');
 	    frameArqueo.RegenPartidas('Sustraccion');
@@ -4750,7 +4946,7 @@
         }
 
         function VerListados(){
-            id("panelDerecho").setAttribute("collapsed","true");
+            id("panelDerecho").setAttribute("collapsed",true);
             id("modoVisual").setAttribute("selectedIndex",9);	
 	    resizelistboxticket(false);
 	}
@@ -4781,6 +4977,7 @@
 
 	    //Actualiza lista productos 
 	    resizelistboxticket(true);
+            cIdSuscripcion = 0;
 	}
 
         function resizelistboxticket( xw ){
@@ -4945,7 +5142,10 @@
 
             var concepto = "Adelanto Proforma Nro. "+nroDocumento;
 	    var url      = "modulos/arqueo/arqueoservices.php"
-            var data     = "&modo=hacerIngresoAdelantoDinero&cantidad="+escape(cantidad)+"&concepto="+encodeURIComponent(concepto)+"&r=" + Math.random();
+            var data     = "&modo=hacerIngresoAdelantoDinero&cantidad="+escape(cantidad)+
+		           "&concepto="+encodeURIComponent(concepto)+
+		           "&xidu="+Local.IdDependiente+
+		           "&r=" + Math.random();
 	    
 	    var xrequest = new XMLHttpRequest();
 	    
@@ -5243,6 +5443,9 @@
 	    
 	    if( Local.TPV == xthis.value ) return;
 
+            //limpiamos lista de precios
+	    VaciarListadoProductos()
+
 	    var xtv;
 	    switch(xthis.value){
 	    case 'VC': xtv = "rc";break;
@@ -5269,6 +5472,12 @@
 	    //Recargar Preventa,Clientes,Promociones,Mensajes
 	    syncTipoVentaTPV();
 	    //Muestra mensaje en TPV
+
+	    //actualiamos la vista del listado
+	    Local.ListaProductoViewPVC = true;
+	    setViewListaProductoPrecios();
+	    //listamos busqueda actual
+	    agnadirPorNombre();
 	} 
 
         function setTipoVentaDependiente(xvalue){
@@ -5648,12 +5857,10 @@ function convertirNumLetras(number){
             this.Compra( codigobarras, pool.get().nombre, pool.get().referencia, pool_precio,
 			 pool.get().impuesto,unidades,pool.get().talla, pool.get().color, 
 			 pool.get().descuento,0);
-
-            //RecalculoTotal();***
             return true;
 	}
 
-        tpv.AddCarritoMayoreo = function (codigobarras,unidades) 
+        tpv.AddCarritoCorporativo = function (codigobarras,unidades) 
         {
 	    
   	    var modo   = id("rgModosTicket").value;//MProducto
@@ -5664,13 +5871,135 @@ function convertirNumLetras(number){
 
             pool.select(codigobarras);
 
- 	    var precio      =  pool.get().pvc;
- 	    var pool_precio =  (modo == "mproducto")? obtenerPrecioBaseMProducto( pool.get().costo ) : precio;
+ 	    var precio      = ( Local.esB2B == 1 )? pool.get().pvc:pool.get().pvd;
+ 	    var pool_precio = ( modo == "mproducto")? obtenerPrecioBaseMProducto( pool.get().costo ) : precio;
+	    //Actualizamos precios listados
+	    if(ticket[codigobarras] ){
+		ticket[codigobarras].precio = pool_precio;
+		id("tic_precio_"+ codigobarras).value= ticket[codigobarras].precio;}
 
             this.Compra( codigobarras, pool.get().nombre, pool.get().referencia, pool_precio,
 			 pool.get().impuesto,unidades,pool.get().talla, pool.get().color, 
 			 pool.get().descuento,0);
-            //RecalculoTotal();***
+            return true;
+	}
+
+        tpv.AddCarritoMayoreo = function (codigobarras,unidades) 
+        {
+            if (!pool.Existe(codigobarras)) return false;
+  	    var modo        = id("rgModosTicket").value;//MProducto
+            setImagenProducto(codigobarras);
+            pool.select(codigobarras);
+
+	    var xcuantosemp = parseFloat( unidades/pool.get().unidxcont );
+	    var ximpemp     = pool.get().pvemp * xcuantosemp.toFixed(2);//total base
+	    var xprecio_emp = parseFloat( (ximpemp/unidades).toFixed(2) );
+	    var xnewimpemp  = xprecio_emp*unidades;//total base redondeado
+	    var xdscto_emp  = 0;
+	    var xresto_emp  = ximpemp-xnewimpemp;
+
+	    if( xresto_emp < 0)
+	    {
+		//EXESO
+		//***calcular el descuento
+		xdscto_emp = (-1)*xresto_emp;
+	    }
+	    else if( xresto_emp > 0)
+	    {
+		//DEFECTO
+		//***calcular nuevo precio incrementando
+		//***calcular el descuento
+		xprecio_emp = parseFloat( xprecio_emp ) + parseFloat( 0.01 );
+		xnewimpemp  = xprecio_emp*unidades;//total base redondeado
+		xresto_emp  = ximpemp-xnewimpemp;
+		xdscto_emp  = ( xresto_emp < 0 )? (-1)*xresto_emp:0;
+	    }
+	    if ( xdscto_emp > 0 )
+	    {
+		//Utilizamos el formato dscto del carrito tpv
+		xdscto_emp = parseFloat(xdscto_emp);
+		xdscto_emp = ( 100*xdscto_emp / xprecio_emp ) / unidades;
+		xdscto_emp = xdscto_emp.toFixed(2);
+	    }
+	    else
+		xdscto_emp = 0;
+ 
+	    //CERO
+	    //***cargar precio
+	    var pool_dscto  = xdscto_emp ;
+ 	    var precio      = ( pool.get().pvemp > 0 )? xprecio_emp:pool.get().pvd;
+ 	    var pool_precio = ( modo == "mproducto" )? obtenerPrecioBaseMProducto( pool.get().costo ) : precio;
+	    //Actualizamos precios listados
+	    if(ticket[codigobarras] ){
+		ticket[codigobarras].precio = pool_precio;
+		ticket[codigobarras].descuento = pool_dscto;
+		id("tic_precio_"+ codigobarras).value= ticket[codigobarras].precio;
+		id("tic_descuento_"+ codigobarras).value= ticket[codigobarras].descuento;}
+
+            this.Compra( codigobarras, pool.get().nombre, pool.get().referencia, pool_precio,
+			 pool.get().impuesto,unidades,pool.get().talla, pool.get().color, 
+			 pool_dscto,0);
+            return true;
+	}
+
+        tpv.AddCarritoDocena = function (codigobarras,unidades) 
+        {
+	    
+            if (!pool.Existe(codigobarras)) return false;
+            setImagenProducto(codigobarras);
+            pool.select(codigobarras);
+	    
+  	    var modo        = id("rgModosTicket").value;//MProducto
+ 
+	    var xcuantasdoc = parseFloat( unidades/12 );
+	    var ximpdoc     = pool.get().pvdoce * xcuantasdoc;//total base  
+	    var xprecio_doc = parseFloat( (ximpdoc/unidades).toFixed(2) );
+	    var xnewimpdoc  = xprecio_doc*unidades;//total base redondeado
+	    var xdscto_doc  = 0;
+	    var xresto_doc  = ximpdoc-xnewimpdoc;
+
+	    if( xresto_doc < 0)
+	    {
+		//EXESO
+		//***calcular el descuento
+		xdscto_doc = (-1)*xresto_doc;
+	    }
+	    else if( xresto_doc > 0)
+	    {
+		//DEFECTO
+		//***calcular nuevo precio incrementando
+		//***calcular el descuento
+		xprecio_doc = parseFloat( xprecio_doc ) + parseFloat( 0.01 );
+		xnewimpdoc  = xprecio_doc*unidades;//total base redondeado
+		xresto_doc  = ximpdoc-xnewimpdoc;
+		xdscto_doc  = ( xresto_doc < 0 )? (-1)*xresto_doc:0;
+	    }
+	    if ( xdscto_doc > 0 )
+	    {
+		//Utilizamos el formato dscto del carrito tpv
+		xdscto_doc = parseFloat(xdscto_doc);
+		xdscto_doc = ( 100*xdscto_doc / xprecio_doc ) / unidades;
+		xdscto_doc = xdscto_doc.toFixed(2);
+	    }
+	    else
+		xdscto_doc = 0;
+ 
+	    //CERO
+	    //***cargar precio
+	    var pool_precio        = ( pool.get().pvdoce > 0 )? xprecio_doc:pool.get().pvd;
+	    var pool_dscto          = xdscto_doc;
+
+	    //Actualizamos precios listados
+	    if(ticket[codigobarras] ){
+		ticket[codigobarras].precio = pool_precio;
+		ticket[codigobarras].descuento = pool_dscto;
+		id("tic_precio_"+ codigobarras).value= ticket[codigobarras].precio;
+		id("tic_descuento_"+ codigobarras).value= ticket[codigobarras].descuento;}
+	    
+	    //recalcula el Precio desde el importe i el descuento 
+	    this.Compra( codigobarras, pool.get().nombre, pool.get().referencia, pool_precio,
+			 pool.get().impuesto,unidades,pool.get().talla, pool.get().color, 
+			 pool_dscto,0);
             return true;
 	}
 
@@ -5710,12 +6039,26 @@ function convertirNumLetras(number){
 	    
 	    if (!pool.ExisteTicket(codigo)) 
 	    {
+                //Valida Tipo Ticket Presupuesto
+                if( IdTipoPresupuesto != 0 )
+                    if( parseInt( IdPresupuesto ) == 0 )
+                        return selTipoPresupuesto(0);
+
 		pool.CreaTicket(codigo);
 		nuevo = 1;
 	    }	
 
-	    ticket[codigo].unidades += unidades;	
 
+	    ticket[codigo].unidades += unidades;	
+	    ticket[codigo].impuesto = impuesto;	
+	    ticket[codigo].nombre   = nombre;	
+	    ticket[codigo].referencia = referencia;
+	    ticket[codigo].precio    = precio;
+	    ticket[codigo].talla     = talla;
+	    ticket[codigo].color     = color;
+	    ticket[codigo].descuento = descuento;
+	    ticket[codigo].idsubsidiario = idsubsidiario;
+	    ticket[codigo].concepto      = nombre2;
 	    //stock oferta?
 	    var oferta    = ticket[codigo].oferta;
 	    var xunidades = ticket[codigo].unidades;
@@ -5726,7 +6069,7 @@ function convertirNumLetras(number){
 	    var lote      = ticket[codigo].lote;
 	    var vence     = ticket[codigo].vence;
 	    var series    = ticket[codigo].series;
-	    var vdetalle  = '';
+	    var vdetalle  = ( menudeo )? '':productos[codigo].unid;
 	    //Detalle
 	    var xvence    = ( vence   )? vence[0].split(":")      : false;
 	    var xlote     = ( lote    )? lote[0].split(":")       : false;
@@ -5738,7 +6081,7 @@ function convertirNumLetras(number){
 	    var xmenudeo  = ( menudeo )? xcant+''+cont+'+'+xresto+''+unid : false;
 	    var vdetalle  = ( menudeo )? ' '+xmenudeo+'  '+vdetalle       : vdetalle;
 	    var srt       = ( vdetalle.length >80)? '...':'';
-	    var cssdetalle = ( oferta )? 'font-weight: bold;':'';
+	    var cssdetalle = ( oferta )? 'font-weight: bold;text-align:right;':'text-align:right';
 	    vdetalle      = ( vdetalle)? vdetalle.slice(0,80)+srt:''; 
 	    //Status
 	    var esSerie   = ( productos[codigo].serie )? 1:0;
@@ -5756,21 +6099,31 @@ function convertirNumLetras(number){
 		vdetalle  = '**OFERTA '+oferta+''+unid+' c/u '+formatDinero(pvo)+'** '+vdetalle;
 		oferta    = tunid+'~'+ounid+'~'+precio+'~'+pvo;//uni:ofertaunid:pv:pvo
 		precio    = ( ounid >= tunid )? pvo:(pvo*ounid+(tunid-ounid)*precio)/tunid;
-
-		if (!nuevo) id("tic_precio_"+codigo).value = precio.toFixed(2);
-		if (!nuevo) id("tic_oferta_"+codigo).value = oferta;
+		
+		if (!nuevo) {
+		    ticket[codigo].precio = precio.toFixed(2);
+		    ticket[codigo].oferta = oferta;
+		    
+		    id("tic_precio_"+codigo).value = ticket[codigo].precio;
+		    id("tic_oferta_"+codigo).value = ticket[codigo].oferta;
+		}
+		
 	    }
+
+	    ticket[codigo].vdetalle   = vdetalle;
+	    ticket[codigo].cStatus    = cStatus;
+	    ticket[codigo].oferta     = oferta;
 
 	    //*+++ Nuevo +++++*//
 	    if (nuevo) { //agnadimos	
 		
 		var xlistadoTicket = id("listadoTicket");				
-		//var vprecio        = ( modo == "mproducto")? precio:ticket[codigo].precio;
-		var vprecio        = precio;
-		var xcod           = document.createElement("label");
 
+		ticket[codigo].precio = precio;
+
+		var xcod      = document.createElement("label");
 		xcod.setAttribute("value",ticket[codigo].referencia);		
-		xcod.setAttribute("id","tic_referencia_"+codigo);				
+		xcod.setAttribute("id","tic_referencia_"+codigo);
 
 		var xnombre   = document.createElement("label");
 		xnombre.setAttribute("value",ticket[codigo].producto);	
@@ -5787,30 +6140,30 @@ function convertirNumLetras(number){
 		xunid.setAttribute("value",ticket[codigo].unidades);			
 
 		var xprecio   = document.createElement("label");
-		xprecio.setAttribute("value",formatDinero(vprecio));	
+		xprecio.setAttribute("value",formatDinero(ticket[codigo].precio));	
 
 		var ximporte  = document.createElement("label");
-		ximporte.setAttribute("value",formatDinero(vprecio* ticket[codigo].unidades));	
+		ximporte.setAttribute("value",formatDinero(ticket[codigo].precio* ticket[codigo].unidades));	
 
 		var xtalla    = document.createElement("label");
-		xtalla.setAttribute("value",talla);	
+		xtalla.setAttribute("value",ticket[codigo].talla);	
 		xtalla.setAttribute("id","tic_talla_"+codigo);
 		xtalla.setAttribute("collapsed","true");		
 		xtalla.setAttribute("style","width:300px");
 		
 		var xcolor     = document.createElement("label");
-		xcolor.setAttribute("value",color);		
+		xcolor.setAttribute("value",ticket[codigo].color);		
 		xcolor.setAttribute("id","tic_color_"+codigo);		
 		xcolor.setAttribute("collapsed","true");		
 
 		var ximpuesto  = document.createElement("label");
-		ximpuesto.setAttribute("value",impuesto);		
+		ximpuesto.setAttribute("value",impuesto);
 
 		var xdescuento = document.createElement("label");
-		xdescuento.setAttribute("value",FormateComoDescuento(descuento));		
+		xdescuento.setAttribute("value",FormateComoDescuento(ticket[codigo].descuento));		
 
 		var xdetalle   = document.createElement("label");
-		xdetalle.setAttribute("value",vdetalle);	
+		xdetalle.setAttribute("value", ticket[codigo].vdetalle);	
 		xdetalle.setAttribute("id","tic_detalle_"+codigo);
 		xdetalle.setAttribute("style",cssdetalle);
 
@@ -5820,12 +6173,12 @@ function convertirNumLetras(number){
 		xpedidodet.setAttribute("collapsed","true");		
 
 		var xstatus = document.createElement("label");
-		xstatus.setAttribute("value",cStatus);		
+		xstatus.setAttribute("value",ticket[codigo].cStatus);		
 		xstatus.setAttribute("id","tic_status_"+codigo);		
 		xstatus.setAttribute("collapsed","true");		
 
 		var xoferta = document.createElement("label");
-		xoferta.setAttribute("value",oferta);		
+		xoferta.setAttribute("value",ticket[codigo].oferta);		
 		xoferta.setAttribute("id","tic_oferta_"+codigo);		
 		xoferta.setAttribute("collapsed","true");		
 
@@ -5835,19 +6188,21 @@ function convertirNumLetras(number){
 		xcosto.setAttribute("collapsed","true");		
 
 		var xconcepto = document.createElement("label");
-		xconcepto.setAttribute("value",nombre2);		
+		xconcepto.setAttribute("value", ticket[codigo].concepto);
 		xconcepto.setAttribute("id","tic_concepto_"+codigo);		
 		xconcepto.setAttribute("collapsed","true");		
 
 		if(idsubsidiario)
 		{
 		    var xsubsidiario = document.createElement("label");
-		    xsubsidiario.setAttribute("value",idsubsidiario);
+		    xsubsidiario.setAttribute("value",ticket[codigo].idsubsidiario);
 		    xsubsidiario.setAttribute("id","tic_subsidiario_"+codigo);
 		}
 
 		var xlistitem = document.createElement("listitem");	
 		xlistitem.setAttribute("id","tic_"+codigo);
+                xlistitem.setAttribute("oncontextmenu","seleccionarfilatpv("+codigo+",true)");
+                
 		xunid.setAttribute("id","tic_unid_"+codigo);
 		xunid.style.textAlign ="right";
 
@@ -5900,7 +6255,7 @@ function convertirNumLetras(number){
 		    xunid.setAttribute("value", ticket[codigo].unidades);
 		    Blink(name);
 
-		    id("tic_detalle_"+codigo).value = vdetalle;
+		    id("tic_detalle_"+codigo).value = ticket[codigo].vdetalle;
 		    id("tic_detalle_"+codigo).setAttribute("style",cssdetalle);
 		}
 	    }
@@ -5908,9 +6263,14 @@ function convertirNumLetras(number){
 	    //Pedido Detalle...
 	    CargarPedidoDetFila(codigo,ticket[codigo].unidades );
 
+            //Selecciona ultimo producto agregado o modificado
+            seleccionarfilatpv(codigo,true);
+            
 	    //Redibuja el nuevo TOTAL
 	    RecalculoTotal();
 	    //log("Comprando "+ticket[codigo].unidades +" de "+ticket[codigo].nombre);
+            //log
+            cLoadCBalter = codigo;
 	}
 
         function gridListarProductosTPV(){
@@ -5931,12 +6291,12 @@ function convertirNumLetras(number){
 		break;
 	    }
 	    id("gridListarTPV").setAttribute('image','img/'+ximage);
-	    cListaProductos = xlista; 
+	    cListaProductos = xlista;
 	    agnadirPorNombre();
 	}
 
-function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
-					 codigo,referencia,precio,
+        function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
+					 codigo,referencia,precio,precioemp,preciodoce,preciocorp,
   					 impuesto,unidades,costo,lote,vence,serie,
 					 menudeo,unidxcont,unid,cont,servicio,ilimitado,
 					 oferta,ofertaunid,
@@ -5948,9 +6308,13 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
 	    var modo       = id("rgModosTicket").value;//Mproducto
             var vprecio    = ( modo == "mproducto")? obtenerPrecioBaseMProducto(costo):precio;
-
+            var vprecioemp = ( !Local.ListaProductoViewPVE && menudeo )? precioemp  : 0.00;
+	    var vcosto     = ( !Local.ListaProductoViewCTO && Local.esAdmin )? costo : 0.00;
+	    var vpreciodoce= ( !Local.ListaProductoViewPVD )? preciodoce : 0.00;
+	    var vpreciocorp= ( !Local.ListaProductoViewPVC && Local.esB2B == 1 )? preciocorp : 0.00;
+            vcosto = parseFloat(vcosto) + parseFloat(vcosto)*impuesto/100;
+	    
             prodlist_cb[codigo] = 1;
-
 	    //Listar
 	    var xnombre    = ( cListaCompacta )? producto:codigo+' '+nombre; 
 	    //Detalle
@@ -6025,7 +6389,36 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
             xprecio.style.align     ="right";
             xprecio.style.textAlign ="right";
             xprecio.setAttribute("id","precio_"+codigo);
+	    xprecio.style.color='#000';
+    
+            var xpreciocorp      = document.createElement("label");
+	    xpreciocorp.setAttribute("value",formatDinero(vpreciocorp));	
+            xpreciocorp.style.align     ="right";
+            xpreciocorp.style.textAlign ="right";
+            xpreciocorp.setAttribute("id","preciocorp_"+codigo);
+	    //xpreciocorp.setAttribute("collapsed",Local.ListaProductoViewPVC);
 
+            var xprecioemp      = document.createElement("label");
+	    xprecioemp.setAttribute("value",formatDinero(vprecioemp));	
+            xprecioemp.style.align     ="right";
+            xprecioemp.style.textAlign ="right";
+            xprecioemp.setAttribute("id","precioemp_"+codigo);
+	    //xprecioemp.setAttribute("collapsed",Local.ListaProductoViewPVE);
+
+            var xpreciodoce      = document.createElement("label");
+	    xpreciodoce.setAttribute("value",formatDinero(vpreciodoce));	
+            xpreciodoce.style.align     ="right";
+            xpreciodoce.style.textAlign ="right";
+            xpreciodoce.setAttribute("id","preciodoce_"+codigo);
+	    //xpreciodoce.setAttribute("collapsed",Local.ListaProductoViewPVD);
+	    
+            var xcosto      = document.createElement("label");
+	    xcosto.setAttribute("value",formatDinero(vcosto));
+            xcosto.style.align     ="right";
+            xcosto.style.textAlign ="right";
+            xcosto.setAttribute("id","costo_"+codigo);
+	    //xcosto.setAttribute("collapsed",Local.ListaProductoViewCTO);
+	    
             var xdetalle     = document.createElement("label");
 	    xdetalle.setAttribute("value",vdetalle);	
             xdetalle.setAttribute("id","detalle_"+codigo);
@@ -6033,6 +6426,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
             var xlistitem    = document.createElement("listitem");
             xlistitem.setAttribute("id","prod_"+codigo);
+            xlistitem.setAttribute("oncontextmenu","seleccionarfilatpv("+codigo+",false)");
 
             xlistitem.appendChild( xref);
             xlistitem.appendChild( xdescripcion);
@@ -6042,7 +6436,11 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
             xlistitem.appendChild( xlab);
             xlistitem.appendChild( xdetalle);
             xlistitem.appendChild( xexistencias);
+	    xlistitem.appendChild( xcosto );
             xlistitem.appendChild( xprecio );
+	    xlistitem.appendChild( xpreciocorp );
+	    xlistitem.appendChild( xpreciodoce );
+            xlistitem.appendChild( xprecioemp );
             if( xnombre.length > 80 || talla.length > 30 ) xlistitem.setAttribute("tooltiptext",producto);
             xlistadoProductos.appendChild( xlistitem );
 
@@ -6050,7 +6448,54 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
             prodlist[iprod++]   = codigo;	 	
 	}
 
-        function ModificarEntradaEnProductos(producto,codigo,referencia,precio,
+        function seleccionarfilatpv(cb,xval){
+            var lista = (xval)? id("listadoTicket"):id("listaProductos");
+            var fila  = (xval)? id("tic_"+cb):id("prod_"+cb);
+            lista.selectItem(fila);
+        }
+
+        function viewListaProductoPrecios(xpvview){
+            //limpiamos lista de precios
+	    VaciarListadoProductos();
+	    //Control perfil
+    	    switch( xpvview ){
+	    case 'CTO': Local.ListaProductoViewCTO = ( Local.ListaProductoViewCTO )? false:true; break;
+	    case 'PVC': Local.ListaProductoViewPVC = ( Local.ListaProductoViewPVC )? false:true; break;
+	    case 'PVD': Local.ListaProductoViewPVD = ( Local.ListaProductoViewPVD )? false:true; break;
+	    case 'PVE': Local.ListaProductoViewPVE = ( Local.ListaProductoViewPVE )? false:true; break;
+	    case 'CR' : Local.ListaProductoViewCR  = ( Local.ListaProductoViewCR  )? false:true; break;
+	    }
+
+	    if( Local.TPV == 'VC' )
+		Local.ListaProductoViewPVC = true;
+	    
+	    //actualiamos la vista del listado
+	    setViewListaProductoPrecios();
+	    //listamos busqueda actual
+	    agnadirPorNombre();
+	}
+
+        function setViewListaProductoPrecios(){
+	    //col list
+	    id("colListaProductoViewCR").setAttribute("collapsed", Local.ListaProductoViewCR);
+	    id("colListaTicketViewCR").setAttribute("collapsed", Local.ListaProductoViewCR);
+	    id("colListaProductoViewCTO").setAttribute("collapsed", Local.ListaProductoViewCTO);
+	    id("colListaProductoViewPVC").setAttribute("collapsed", Local.ListaProductoViewPVC);
+	    id("colListaProductoViewPVE").setAttribute("collapsed", Local.ListaProductoViewPVE);
+	    id("colListaProductoViewPVD").setAttribute("collapsed", Local.ListaProductoViewPVD);
+	    //head list
+	    id("headListaProductoViewCR").setAttribute("collapsed", Local.ListaProductoViewCR);
+	    id("headListaTicketViewCR").setAttribute("collapsed", Local.ListaProductoViewCR);
+	    id("headListaProductoViewCTO").setAttribute("collapsed", Local.ListaProductoViewCTO);
+	    id("headListaProductoViewPVC").setAttribute("collapsed", Local.ListaProductoViewPVC);
+	    id("headListaProductoViewPVE").setAttribute("collapsed", Local.ListaProductoViewPVE);
+	    id("headListaProductoViewPVD").setAttribute("collapsed", Local.ListaProductoViewPVD);
+	    var xlabelpv = ( Local.TPV == 'VC' )? 'PVC/U':'PVP/U';
+	    id("headListaProductoViewPVP").setAttribute('label',xlabelpv);
+
+	}
+        function ModificarEntradaEnProductos(producto,codigo,referencia,
+					     precio,precioemp,preciodoce,preciocorp,
   					     impuesto,unidades,costo,lote,vence,serie,
 					     menudeo,unidxcont,unid,cont,servicio,ilimitado,
 					     oferta,ofertaunid,pvo,condventa,
@@ -6062,6 +6507,10 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
             var xdescripcion    = id("descripcion_"+codigo);
             var xexistencias    = id("stock_"+codigo);
             var xprecio         = id("precio_"+codigo);
+	    var xpreciocorp     = id("preciocorp_"+codigo);
+	    var xpreciodoce     = id("preciodoce_"+codigo);
+	    var xprecioemp      = id("precioemp_"+codigo);
+	    var xcosto          = id("costo_"+codigo);
             var xdetalle        = id("detalle_"+codigo);
             var xnombreproducto = (parseInt(producto.length)>80)? producto.slice(0,81)+ '...':producto;
 	    //Detalle
@@ -6096,12 +6545,14 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 	    xref.setAttribute("value",referencia);
 	    xdescripcion.setAttribute("value", xnombreproducto);
 	    xexistencias.setAttribute("value",unidades+' '+unid );
-	    xprecio.setAttribute("value",formatDinero(vprecio));	
+	    xprecio.setAttribute("value",formatDinero(vprecio));
+	    xcosto.setAttribute("value",formatDinero(costo));
+	    xprecioemp.setAttribute("value",formatDinero(precioemp));
+	    xpreciodoce.setAttribute("value",formatDinero(preciodoce));
+	    xpreciocorp.setAttribute("value",formatDinero(preciocorp));	
 	    xdetalle.setAttribute("style",cssdetalle);	
 	    xdetalle.setAttribute("value",vdetalle);
 	}
-
-
 
         /*+++++++++++++++ SYNC ++++++++++++++++++++*/
         function syncCheckConnection() {
@@ -6767,8 +7218,9 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
 			//Stock Carrito...
 			xunidades = (ticket[xcod])? ticket[xcod].series.length:0;
-			id("tic_unid_" + xcod).value = xunidades;
 			ticket[xcod].unidades        = xunidades;
+			id("tic_unid_" + xcod).value = ticket[xcod].unidades;
+
 
 			//Detalle...
 			var vxSeries = '';
@@ -6799,16 +7251,18 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
         function loadListHotKey(){
 
 	    alert('gPOS: TECLAS DE ACCESO DIRECTO:\n\n'+
-		  '     [ F1   ] -> Stock / Buscar \n'+
-		  '     [ F2   ] -> Clientes / Buscar \n'+
-		  '     [ F4   ] -> Imprimir Comprobante\n\n'+
-		  '     [ F7   ] -> Proforma / Buscar \n'+
-		  '     [ F8   ] -> Preventa / Buscar \n\n'+
-		  '     [ F9   ] -> Ventas / Buscar \n'+
-		  '     [ F10  ] -> Caja  \n\n'+
-		  '     [ Shift + F12  ] -> Servicios \n\n'+
-		  '     [ Insert ] -> Sincroniza TPV\n'+
-		  '     [ Shift + Supr ] -> Limpia Ticket ');
+                  '     [ F1 ] -> Stock / Buscar         \n'+
+		  '     [ F2 ] -> Clientes / Buscar      \n'+
+		  '     [ F4 ] -> Imprimir Comprobante   \n'+
+                  '     [ F7 ] -> Proforma / Buscar      \n'+
+		  '     [ F8 ] -> Preventa / Buscar      \n'+
+                  '     [ F9 ] -> Sincroniza Clientes    \n\n'+
+                  '     [ Ctrl + F1 ] -> Ventas                  \n'+
+                  '     [ Crtl + F2 ] -> Servicios               \n'+
+                  '     [ Crtl + F3 ] -> Codigo Barras / Buscar  \n'+
+                  '     [ Crtl + F9 ] -> Caja                    \n'+
+                  '     [ Ctrl + F11] -> Sincroniza Ticket Preventa  \n\n'+
+		  '     [ Shift + Supr ] -> Limpia Ticket          ');
 	}
 
         function elijeComprobanteTPV(){
@@ -6940,13 +7394,15 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
     /*+++++++++++++++++ Clientes  ++++++++++++++++*/
 
     // Agnadir Cliente Contado     
-    aU( "Cliente Contado",1,0,'',0,0,0,'Interno','','','','Cliente Contado','','');
+    aU( "Cliente Contado",1,0,'',0,0,0,'Interno','','','','Cliente Contado','',0,'');
 
     // Agnadir Otros Clientes
-    function aU(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf,email,dir,legal,naci,obs) {
+    function aU(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf,email,dir,legal,naci,
+                suscrip,obs) {
 	
 	if( usuarios[idcliente] )
-	    return saU(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf,email,dir,legal,naci,obs);
+	    return saU(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf,email,dir,legal,naci,
+                       suscrip,obs);
 
         idusuarios.push(idcliente);
         usuarios[idcliente] = new Object();
@@ -6964,11 +7420,13 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
         usuarios[idcliente].legal  = legal;
         usuarios[idcliente].obs    = obs;
         usuarios[idcliente].naci   = naci;
+        usuarios[idcliente].suscrip= suscrip;
 
-        addXUser(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf);
+        addXUser(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf,suscrip);
     }
 
-    function saU(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf,email,dir,legal,naci,obs) {
+    function saU(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf,email,dir,legal,naci,
+                 suscrip,obs) {
 
         usuarios[idcliente].nombre = nombre;
         usuarios[idcliente].ruc    = ruc;
@@ -6983,20 +7441,23 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
         usuarios[idcliente].legal  = legal;
         usuarios[idcliente].obs    = obs;
         usuarios[idcliente].naci   = naci;
-
+        usuarios[idcliente].suscrip= suscrip;
+        
         //Lista...
         if(!id("user_picker_"+idcliente))
-            return addXUser(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf);
+            return addXUser(nombre,idcliente,debe,ruc,bono,credito,promo,tipo,telf,suscrip);
 
         //Actualiza...
+        var txtsuscrip = ( parseInt(suscrip) == 1)? '  **Suscrito.':'';
     	var xdebe = (debe>0)? cMoneda[1]['S']+" "+formatDinero(debe):"";
         id("user_picker_ruc_"+idcliente).setAttribute("label",ruc );
-	id("user_picker_nombre_"+idcliente).setAttribute("label",nombre );
+	id("user_picker_nombre_"+idcliente).setAttribute("label",nombre+txtsuscrip );
 	id("user_picker_debe_"+idcliente).setAttribute("label",xdebe);	
     }
 
     function MostrarUsuariosForm() {
 
+	id("panelDerecho").setAttribute("collapsed",true);	
         id("modoVisual").setAttribute("selectedIndex",3);
 
         esListadoUsuariosVisible = true;
@@ -7004,8 +7465,9 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
 	//Sync
 	if( Local.esSyncClientes ) 
-	    setTimeout("runsyncTPV('Clientes')",800);
+	    setTimeout("runsyncTPV('Clientes')",600);
 
+	resizelistboxticket(false); 
 	resizelistboxcliente( true );
     }
 
@@ -7077,7 +7539,9 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
 
 	/*++++ Promocion +++++*/
 	cargarPromocion();
-    }	    Local.esSyncStock = false;
+
+	VerTPV();
+    }	    //Local.esSyncStock = false;
 
     function LimpiaToClienteContado() {
         var labelCliente = id("tCliente");
@@ -7177,7 +7641,7 @@ function CrearEntradaEnProductos(producto,nombre,marca,color,talla,labo,
     }
 
     //INFO: agnade un usuario al listado de usuarios
-function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
+function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf,suscrip){
 
         var xroot    = id("clientPickArea");
         var xclient  =  document.createElement("listitem");
@@ -7193,7 +7657,8 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 	var txtbono  = (bono)? cMoneda[1]['S']+" "+formatDinero(bono):"";
 	var txtcredito  = (credito)? cMoneda[1]['S']+" "+formatDinero(credito):"";
 	var txtpromo = ( promo != '0' )? gettxtPromocion( promo ):"";
-	var txttelefono = telf;
+        var txttelefono = telf;
+        var txtsuscrip = ( parseInt(suscrip) == 1)? '  **Suscrito.':'';
 	var imgico   = 'gpos_clienteparticular.png';
 	imgico = (tipo == 'Empresa')? 'gpos_clienteempresa.png':imgico;
 	imgico = (tipo == 'Interno')? 'gpos_tpv_clientecontado.png':imgico;
@@ -7210,7 +7675,7 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
         xnf.setAttribute("readonly","true");
 
         xnombre.setAttribute("id","user_picker_nombre_"+iduser);
-        xnombre.setAttribute("label",nombreUser );	
+        xnombre.setAttribute("label",nombreUser+txtsuscrip );	
         xnombre.setAttribute("value",iduser );
         xnombre.setAttribute("readonly","true");
         //xcell1.setAttribute("onclick","pickClient("+iduser+")");	
@@ -7277,7 +7742,8 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 			 usuarios[idcliente].credito, 
 			 usuarios[idcliente].promo,
 			 usuarios[idcliente].tipo,
-			 usuarios[idcliente].telf);
+			 usuarios[idcliente].telf,
+                         usuarios[idcliente].suscrip);
 	    }
         }else{
 
@@ -7291,12 +7757,17 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
                 var idcliente = idusuarios[i];
                 var ruc       = new String(usuarios[idcliente].ruc);
                 var nombre    = new String(usuarios[idcliente].nombre);
+                var telf      = new String(usuarios[idcliente].telf);
+                var legal     = new String(usuarios[idcliente].legal);
                 var cliente   = theList.getItemAtIndex(0);
 
 		ruc    = ruc.toUpperCase();
                 nombre = nombre.toUpperCase();
 
-                if((nombre.indexOf(ns) != -1) || (ruc.indexOf(ns) != -1) )
+                if((nombre.indexOf(ns) != -1) ||
+                   (ruc.indexOf(ns) != -1)    ||
+                   (telf.indexOf(ns) != -1)   ||
+                   (legal.indexOf(ns) != -1) )                    
 		{
 		    addXUser(usuarios[idcliente].nombre,
 			     usuarios[idcliente].id,
@@ -7306,12 +7777,14 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 			     usuarios[idcliente].credito, 
 			     usuarios[idcliente].promo,
 			     usuarios[idcliente].tipo,
-			     usuarios[idcliente].telf);
+                             usuarios[idcliente].telf,
+                             usuarios[idcliente].suscrip);
 
 
 		    xcliente = ( theList.itemCount == 1 )? usuarios[idcliente].id:0;
 		    id("buscaClienteSelect").value = xcliente;
                 }
+               
 		theList.selectItem(cliente);
 	    }
         }
@@ -7458,6 +7931,16 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 
         return false;
     }
+    function getDatoClienteTelef(vistamodificada,nombre) {
+        var nombrefinal = nombre;
+        if(vistamodificada)
+            nombrefinal = "vis"+nombrefinal;
+
+        var obj = id(nombrefinal);
+        if(obj)
+            return obj.value;
+        return false;
+    }
 
 
     function EnviarCliente(modificar,idcliente){
@@ -7484,7 +7967,7 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
         data =  data + "NombreLegal=" + nombrelegal + cr;       
         data =  data + "Direccion=" + getDatoCliente(modificar,"Direccion") + cr;    
         data =  data + "CP=" + getDatoCliente(modificar,"CP") + cr;    
-        data =  data + "Telefono1=" + getDatoCliente(modificar,"Telefono1") + cr;    
+        data =  data + "Telefono1=" + getDatoClienteTelef(modificar,"Telefono1") + cr;    
         data =  data + "NumeroFiscal=" + getDatoCliente(modificar,"NumeroFiscal") + cr;    
         data =  data + "Comentarios=" + getDatoCliente(modificar,"Comentarios") + cr;    
         data =  data + "TipoCliente=" + getDatoCliente(modificar,"TipoCliente") + cr;    
@@ -7507,11 +7990,11 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 		   parseInt(idCliente), 
 		   0,ruc,0,0,0,
 		   tipo,
-		   getDatoCliente(modificar,"Telefono1"),
+		   getDatoClienteTelef(modificar,"Telefono1"),
 		   decodeURIComponent(getDatoCliente(modificar,"Email")),
 		   decodeURIComponent(getDatoCliente(modificar,"Direccion")),
 		   decodeURIComponent(nombrelegal),
-		   decodeURIComponent(getDatoCliente(modificar,"FechaNacimiento")),
+		   decodeURIComponent(getDatoCliente(modificar,"FechaNacimiento")),0,
 		   decodeURIComponent(getDatoCliente(modificar,"Comentarios")) );
 
                 LimpiarClienteForm();
@@ -7568,6 +8051,9 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 	id("tab-vistacliente").setAttribute("collapsed",false);
 	id("tab-vistacliente").setAttribute("label", "Cliente: "+ id("visNombreComercial").value);
 	id("tab-vistacliente").setAttribute("selected",true);
+        id("tab-vistacliente").setAttribute("visuallyselected",true);
+
+        id("tab-selcliente").setAttribute("visuallyselected",false);
 	id("tab-selcliente").setAttribute("selected",false);
 	id("tab-boxclient").setAttribute("selectedIndex",2);
 	id("buscaCliente").focus();	
@@ -7949,6 +8435,9 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 	habilitarMensajePrivado('e_pedidos');
 	id("modoVisual").setAttribute("selectedIndex",6);
 
+        id("panelDerecho").setAttribute("collapsed",true);
+	resizelistboxticket(false);
+	
 	keyLoadTipoComprobante(xval);
 
 	id("peticionEntrega").focus();
@@ -7970,7 +8459,27 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
     function CerrarPeticion(){
 	HabilitarImpresion();//si el boton imprimir fue desabilitado, se rehabilita
 	id("modoVisual").setAttribute("selectedIndex",0);
-	CBFocus();
+	VerTPV();
+	//CBFocus();
+    }
+
+    function VerGuiaRemision(){
+
+	//if( !Local.esCajaTPV) return;
+	var serie  = id("SerieNDocumento").value;
+        var numero = id("NumeroDocumento").value;
+        
+        ImprimirTicket();
+        
+	id("panelDerecho").setAttribute("collapsed",true);
+	id("modoVisual").setAttribute("selectedIndex",Vistas.guia);
+
+        frameGuiaRemision.id("SerieGuia").setAttribute("value",serie);
+        frameGuiaRemision.id("NumeroGuia").setAttribute("value",numero);
+        frameGuiaRemision.id("txtTipoGuia").setAttribute("value",'Remitente');
+        frameGuiaRemision.id("BotonCancelarImpresion").setAttribute("collapsed",'true');
+        
+	resizelistboxticket(false);
     }
 
     function CerrarImprimir(){
@@ -7979,8 +8488,8 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 	id("fichaProducto").setAttribute("src","about:blank");
 	CBFocus();
     }
-     
-    function ImprimirTicket() {    
+
+    function ImprimirTicket() {
 
 	//  - TICKET     : 0
 	//  - BOLETA     : 1
@@ -8147,7 +8656,8 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 	    var nroSerie      = dtComprobante[4];
 	    var importeletras = convertirNumLetras(importe,1);
 	    importeletras     = importeletras.toUpperCase();
-	    
+	    cIdComprobante    = idcomprobante;
+            
 	    //Liga
 	    var url=
 		"modulos/fpdf/imprimir_"+textdoc+"_tpv.php?"+
@@ -8157,6 +8667,7 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 		"nroSerie="+sreDocumento+"&"+
 		"nombreusuario="+Local.nombreDependiente+"&"+
 		"idcomprobante="+idcomprobante;
+            cURLPrint = url;
 	    break;
 
 	case 1://Ticket
@@ -8206,8 +8717,13 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 	NuevoModo();
 
 	//Lanzamos Impresion Comprobante
-	if( comprobante == 0 && Local.Imprimir) location.href=url;//Imprime Comprobante
+	if( comprobante == 0 && Local.Imprimir)
+            if(textdoc != 'Albaran') imprimirComprobantePDF(url);//Imprime Comprobante
 
+    }
+
+    function imprimirComprobantePDF(url){
+        location.href=url;
     }
 
     function CambiarModoImpresion(xvalue){
@@ -8368,9 +8884,6 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 	if( p_stock != "true" && IdPresupuesto !=0 )
 	    return alert( c_gpos + "\n  - Active check - [x] Stock - del Ticket Actual")
 
-	//Usuario...
-	//var alertuser = ( UsuarioSeleccionado == 1 )? '\n - Selecione un cliente diferente al - '+tcliente+' - ':'';
-
 	//Modo...
 	var modotpv       = (modo=="venta"|| modo=="cesion" )?1:0;
 	var alertpreventa = (modotpv == '0')?'\n - Selecione el modo - CONTADO ó CREDITO - en el TPV.':'';
@@ -8383,10 +8896,6 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 	//Modo...
 	if(modotpv == '0') 
 	    return alert( c_preventa + alertpreventa);
-
-	//Alert...
-	//if ( UsuarioSeleccionado == 1 )
-	    //return alert( c_preventa + alertuser);
 
 	//Inicia variables Ajax 
 	var data,firma,resultado,esCopia,unidades,precio,descuento,codigo;
@@ -8465,7 +8974,12 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 	var elemento      = id("gruponb");
 	var elemento2     = id("NumeroDocumento");
 	var modo          = id("rgModosTicket").value;
+        var esAlba = (opcion == 4)? false:true;
 
+        id("BotonAceptarImpresion").setAttribute("collapsed",!esAlba);
+        //id("BotonCancelarImpresion").setAttribute("collapsed",!esAlba);
+        id("BotonGuiaRemision").setAttribute("collapsed",esAlba);
+        
 	//Albaran y Sesion
 	/*if(modo!="cesion"){
 	    radioalbaran.setAttribute("disabled", true);
@@ -8513,7 +9027,7 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 
 		if ( UsuarioSeleccionado == 1 )
 		    alertuser = '\n - Selecione un cliente diferente al - '+tcliente+' - ';
-		alert('gPOS Proformas: \n - Selecione - PEDIDO - en el TPV '+alertuser);
+		alert('gPOS Proformas: \n - Selecione - PROFORMA - en el TPV '+alertuser);
   		setTextDocumento('',0);
 		radioproforma.setAttribute("selected", "false");
 		radioticket.setAttribute("selected", "true");
@@ -8524,12 +9038,12 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 
 	//Boleta
 	if( opcion == 1 ){
-            elemento.setAttribute("collapsed", "false");
-	    radiofactura.setAttribute("selected", "false");
-	    radioticket.setAttribute("selected", "false");
-	    radioproforma.setAttribute("selected", "false");
-	    radioproforma.setAttribute("disabled", "true");
-	    radioboleta.setAttribute("selected", "true");
+            elemento.setAttribute("collapsed", false);
+	    radiofactura.setAttribute("selected", false);
+	    radioticket.setAttribute("selected", false);
+	    radioproforma.setAttribute("selected", false);
+	    radioproforma.setAttribute("disabled", true);
+	    radioboleta.setAttribute("selected", true);
 	    setTextDocumento('Boleta',opcion);
 	    CargarNroDocumentoVenta(opcion,0);
             elemento2.focus();
@@ -8797,30 +9311,30 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 	var elemento = id("gruponb");
 
 	//Default TEXT 
-	elemento.setAttribute("collapsed", "false");
+	elemento.setAttribute("collapsed", false);
 
 	//Valores default pedido
-	radioboleta.setAttribute("disabled", "true");
-	radiofactura.setAttribute("disabled", "true");
-	radioalbaran.setAttribute("disabled", "true");
-	radioticket.setAttribute("disabled", "true");
-	radioboleta.setAttribute("selected", "false");
-	radiofactura.setAttribute("selected", "false");
-	radioproforma.setAttribute("disabled", "false");
-	radioalbaran.setAttribute("selected", "false");
-	radioticket.setAttribute("selected", "false");
+	radioboleta.setAttribute("disabled", true);
+	radiofactura.setAttribute("disabled", true);
+	radioalbaran.setAttribute("disabled", true);
+	radioticket.setAttribute("disabled", true);
+	radioboleta.setAttribute("selected", false);
+	radiofactura.setAttribute("selected", false);
+	radioproforma.setAttribute("disabled", false);
+	radioalbaran.setAttribute("selected", false);
+	radioticket.setAttribute("selected", false);
 	setTextDocumento('Proforma','5');
-	radioproforma.setAttribute("selected", "true");
+	radioproforma.setAttribute("selected", true);
 	CargarNroDocumentoVenta('5',0);
     }
 
     function AjustarEtiquetaDefault(){
 
-	id("radioboleta").setAttribute("disabled", "false");
-	id("radiofactura").setAttribute("disabled", "false");
-	id("radioalbaran").setAttribute("disabled", "false");
-	id("radioproforma").setAttribute("disabled", "false");
-	id("radioticket").setAttribute("disabled", "false");
+	id("radioboleta").setAttribute("disabled", false);
+	id("radiofactura").setAttribute("disabled", false);
+	id("radioalbaran").setAttribute("disabled", false);
+	id("radioproforma").setAttribute("disabled", false);
+	id("radioticket").setAttribute("disabled", false);
 	tipocomprobante(0);
     }
 
@@ -8836,10 +9350,10 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
             codigo = ticketlist[t];
             if ( !agnadidos[codigo] && id( "tic_" + codigo )  ) {	
                 //txt += " " + id("tic_"+codigo)
-                unidades = id("tic_unid_" + codigo).value;	
-                unidades = ConvertirSignoApropiado( unidades );
-
-                id("tic_unid_" + codigo).value = unidades;
+                unidades = ticket[codigo].unidades;//id("tic_unid_" + codigo).value;	
+                //unidades = ConvertirSignoApropiado( unidades );
+		ticket[codigo].unidades = ConvertirSignoApropiado( unidades );
+                id("tic_unid_" + codigo).value = ticket[codigo].unidades;
 
                 agnadidos[codigo] = true;
             }		
@@ -9163,11 +9677,11 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
             codigo = ticketlist[h];	
 
             var ticdscto   = id("tic_descuento_"+ codigo);
-            var ticprecio  = parseFloat( id("tic_precio_"+ codigo).value );
-            var cantidad   = parseFloat( id("tic_unid_" + codigo).value );
+            var ticprecio  = parseFloat( ticket[codigo].precio );
+            var cantidad   = parseFloat( ticket[codigo].unidades );
 
-            dscto = parseMoney(dscto);
-            ticdscto.setAttribute("value",FormateComoDescuento(dscto));	 
+	    ticket[codigo].descuento = parseMoney(dscto);
+            ticdscto.setAttribute("value",FormateComoDescuento(ticket[codigo].descuento));	 
             Blink("tic_descuento_" + codigo, "label-descuento" );
 
 	    lPromocionSeleccionado = true;
@@ -9198,7 +9712,7 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 	if ( !cbDispo ) return;
 
 	if ( ticket[ cbDispo ] ){
-	    xcant  = parseInt( id("tic_unid_"+cbDispo).value );
+	    xcant  = parseInt( ticket[cbDispo].unidades );//id("tic_unid_"+cbDispo).value
 	    xdscto = Math.round( (xdscto/xcant)*100 )/100;
 	}
 
@@ -9248,8 +9762,8 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 
 	    if(!xfila) continue;
 
-	    esPedidodet = ( id("tic_pedidodet_"+xcodigo).value == '')? 1:0;
-	    esUnidades  = ( id("tic_unid_"+xcodigo).value > 0       )? 0:1;
+	    esPedidodet = ( ticket[xcodigo].pedidodet == '')? 1:0;//id("tic_pedidodet_"+xcodigo).value
+	    esUnidades  = ( ticket[xcodigo].unidades > 0 )? 0:1;//id("tic_unid_"+xcodigo).value
 	    esQuitar    = ( esPedidodet == 0 && esUnidades == 0  )? false:true;
 
             if (!esQuitar) continue;
@@ -9285,8 +9799,9 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 
         //Creamos producto imaginario 
         if (!pool.Existe(codigo))
-	    tA(idproducto,codigo,servicio,"",referencia,precio*100,precio*100,impuesto,talla,color,
-	       0,0,0,0,idsubsidiario,nombre,"","","","",0,0,marca,0,0,0,"unid","","",0,0,0,0,0,0,0,"" )
+	    tA(idproducto,codigo,servicio,"",referencia,precio*100,precio*100,precio*100,precio*100,
+	       impuesto,talla,color,0,0,0,0,idsubsidiario,nombre,"","","","",0,0,marca,0,0,0,
+	       "unid","","",0,0,0,0,0,0,0,"" )
 
         pool.select(codigo); 	
         arreglotex = pool.get().nombre;
@@ -9298,8 +9813,6 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 
         this.Compra( codigo,arreglotex,referencia,precio,impuesto,1, 
 		     talla,color,descuento,idsubsidiario,nombre2);
-
-        //RecalculoTotal();***
     }
 
 
@@ -9964,13 +10477,24 @@ function addXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,telf){
 	    
 	}
 
+        function auxAltaSubsidiario(){
+           var url   = 'modsubsidiarios.php?modo=altapopup';
+           var tipo  = 'altaproveedor';
+           //var extra = "dialogWidth:" + "400" + "px;dialogHeight:" + "520" + "px"; 
+           //window.showModalDialog(url,tipo,extra);
+           popup(url,tipo);
+        }
+
         function loadSubsidiarioHab(){
 	    if(!SubsidiarioPost) return;
 	    if(cSubsidiario == SubsidiarioPost) return;
 	    id("tbox_subsidiario").value = SubsidiarioPost;
 	    id("idsubsidiariohab").value = IdSubsidiarioPost;
 
-	    ModificarServicio(2);
+            if(cIdSuscripcion == 0)
+	        ModificarServicio(2);
+            else
+                ModificarSuscripcionCliente('10');
 	}
 /*+++++++++++++++++++++++++++++ SERVICIOS  ++++++++++++++++++++++++++++++++++*/
 
@@ -9998,6 +10522,8 @@ var cIdComprobanteDet     = 0;
 var esOrdenServicio       = 0;
 var cReservado            = 0;
 var cFechaEntrega         = "";
+var cIdAlbaranes          = 0;
+var cIdComprobantesNum    = 0;
 
 // Busqueda abanzada
 var vFormaVenta    = true;
@@ -10031,6 +10557,12 @@ function VaciarBusquedaVentas(){
     ilineabuscaventas = 0;
 }
 
+function seleccionarlineaventatpv(linea,xval){
+    var lista = (xval)? id("busquedaDetallesVenta"):id("busquedaVentas");
+    var fila  = (xval)? id("detalleventa_"+linea):id("lineabuscaventa_"+linea);
+    lista.selectItem(fila);
+}
+
 function RevisarVentaSeleccionada(){
     
     var idex = id("busquedaVentas").selectedItem;
@@ -10059,6 +10591,8 @@ function RevisarVentaSeleccionada(){
     cIdSuscripcionVenta   = idex.childNodes[15].attributes.getNamedItem('value').nodeValue;
     cReservado            = id("venta_reservado_"+idex.value).getAttribute("value");
     cFechaEntrega         = id("venta_fechareserva_"+idex.value).getAttribute("value");
+    cIdAlbaranes          = id("venta_albaranes_"+idex.value).getAttribute("value");
+    cIdComprobantesNum    = id("venta_comprobantesnum_"+idex.value).getAttribute("value");
 
     menuContextualVentasRealizadas(cIdComprobante,false,false);
 
@@ -10421,6 +10955,21 @@ function obtenerTipoComprobante(num){
     
 }
 
+function obtenerIdComprobantesAlbaran(num){
+    var	url =
+	"services.php?"
+	+"modo=ObtenerIdComprobantesAlbaran&"
+	+"idex="+num+
+	+"esVenta=off";
+    var xrequest = new XMLHttpRequest();
+    xrequest.open("GET",url,false);
+    xrequest.send(null);
+    var resultado = xrequest.responseText;
+    
+    var res = xrequest.responseText;
+    return res.split(',');
+}
+
 function  ReimprimirVentaSeleccionada(){
     //VaciarDetallesVentas();
     var idex = id("busquedaVentas").selectedItem;
@@ -10464,6 +11013,50 @@ function  imprimirTicketCreditoClienteSeleccionado(){
     t_RecuperaTicketCreditosCliente();
 }
 
+function imprimirGuiaRemisionVentaSeleccionada(){
+    var idex = id("busquedaVentas").selectedItem;
+    var num  = idex.value;
+    //var res  = obtenerTipoComprobante(num);
+
+    var aAlbaran = cIdAlbaranes.split(",");
+    var idcomp   = obtenerIdComprobantesAlbaran(num);
+    if(aAlbaran.length > 1)
+        alert("gPOS:   Impresión Guías de Remisión \n\n    - El comprobante tiene "+aAlbaran.length+" Guía(s) de Remisión");
+
+    if(trim(cIdAlbaranes) != ''){
+        for(var i=0;i<idcomp.length;i++){
+            t_RecuperaTicket(idcomp[i],'Albaran');
+        }
+    }
+    else
+        t_RecuperaTicket(num,'Albaran');    
+}
+
+function editarGuiaRemisionVentaSeleccionada(){
+    var idex = id("busquedaVentas").selectedItem;
+    if(!idex) return;
+
+    var idguia = id("venta_guiaremision_"+idex.value).getAttribute('value');
+    if(trim(idguia) == '' || !trim(idguia))
+        return;
+
+    id("panelDerecho").setAttribute("collapsed",true);
+    id("modoVisual").setAttribute("selectedIndex",Vistas.guia);
+
+    frameGuiaRemision.id("BotonCancelarImpresion").setAttribute("oncommand",'parent.cerrarFormGuiaRemision()');
+    frameGuiaRemision.id("BotonCancelarImpresion").setAttribute("collapsed",'false');
+    frameGuiaRemision.id("txtTipoGuia").setAttribute("value",'Remitente');
+
+    frameGuiaRemision.editarGuiaRemision(idguia);
+        
+    resizelistboxticket(false);    
+}
+
+function cerrarFormGuiaRemision(){
+    id("panelDerecho").setAttribute("collapsed",true);
+    id("modoVisual").setAttribute("selectedIndex",Vistas.ventas);
+    frameGuiaRemision.id("BotonCancelarImpresion").setAttribute("collapsed",'true');
+}
 
 var Abonar = new Object();
 var modomultipagoabono = false;
@@ -10875,82 +11468,27 @@ function AbonarPorCliente(){
 }
 
 function AsignarCreditoPorCliente(){
-
     if( preSeleccionadoCliente == 1 )
 	return alert(  c_gpos + " ASIGNAR CREDITO"+
 		      "\n\n -   Elija un cliente diferente a Cliente Contado. - ");
 
-    var xid    = preSeleccionadoCliente;
-    //Codigo Validacion
-    if( !Local.esCajaTPV)
-	if( !validaCodigoAutorizacionCliente(xid,'Abonar' ) ) return;
-
-    var xconcepto = prompt( c_gpos + " ASIGNAR CREDITO - CONCEPTO \n"+
-			    "\n  CLIENTE        : "+ usuarios[ xid ].nombre +
-			    "\n  MODO           : EFECTIVO "+
-			    "\n\n Ingrese el CONCEPTO por asignación de crédito:\n", '' );
-    //cancelo?
-    if( xconcepto == null || trim(xconcepto ) == '' ) return false;
-    
-    var xmonto = prompt( c_gpos + " ASIGNAR CREDITO - MONTO \n"+
-			 "\n  CLIENTE        : "+ usuarios[ xid ].nombre +
-			 "\n  MODO           : EFECTIVO "+
-			 "\n\n Ingrese MONTO asignado:\n", 0 );
-    //cancelo?
-    if( xmonto == null)
-	return false;
-    
-    //monto vacio?
-    if ( !( parseFloat( xmonto ) > 0) ) {
-	alert( c_gpos + " ASIGNAR CREDITO - MONTO \n"+
-	       "\n  CLIENTE         : "+ usuarios[ xid ].nombre +
-	       "\n  CREDITO        : "+cMoneda[1]['S']+' '+formatDinero( usuarios[ xid ].debe )+
-	       "\n\n     -   Ingrese correctamente el monto asignar  - ");
-	return AbonarPorCliente();
-    }
-
-
-    if( !confirm( c_gpos + " ASIGNAR CREDITO \n"+
-		  "\n  CLIENTE            : "+ usuarios[ xid ].nombre +
-		  "\n  CREDITO           : "+cMoneda[1]['S']+' '+formatDinero( xmonto )+
-		  "\n  CONCEPTO        : "+xconcepto+
-		  "\n\n se asignara el monto de "+cMoneda[1]['S']+' '+formatDinero( xmonto )+
-		  " como crédito, ¿está seguro?") )
-	return;
+    var xid     = preSeleccionadoCliente;
+    var cliente = usuarios[ xid ].nombre;
+    var credit  = usuarios[ xid ].credito;
 
     //Codigo Validacion
     if( !Local.esCajaTPV ) return;
 
-    //Caja...
-    if( esCajaCerrada() == 1)
-	return alert("gPOS Caja :\n\n"+
-		     "  ESTADO CAJA : CERRADO \n\n"+
-		     "  Debe -Abrir Caja- para continuar.")
+    popup("modulos/clientes/selcreditos.php?modo=credito&xidc="+xid+"&xcredit="+credit+"&xcliente="+cliente+"&xidu="+Local.IdDependiente,'credito');
+}
 
-    //Mensaje de confirmacion
-    var obj = new XMLHttpRequest();
-    var url = "services.php?"+
-	      "modo=realizarAsignacionCreditoBrutal&IdCliente=" + escape(xid) +
-	      "&dependiente="+Local.IdDependiente +
-              "&xmonto=" + parseFloat(xmonto) +
-	      "&xconcepto="+xconcepto+
-              "&r=" + Math.random();		
-
-    obj.open("POST",url,false);
-    obj.send(null);	
-    
-    var text = obj.responseText;
-    var ares = text.split("~");
-    if(ares[0] != 1)
-	alert( c_gpos + " ASIGNAR CREDITO \n"+po_servidorocupado);
-    else {
-	Local.CreditoClienteImporte   = parseFloat( usuarios[ xid ].credito );
-	Local.CreditoClienteEntregado = parseFloat( xmonto );
-	Local.CreditoClienteTotal     = parseFloat( usuarios[ xid ].credito ) + parseFloat( xmonto );
-	imprimirTicketCreditoClienteSeleccionado();
-    }
+function imprimirCreditoCliente(xmonto){
+    var xid = preSeleccionadoCliente;
+    Local.CreditoClienteImporte   = parseFloat( usuarios[ xid ].credito );
+    Local.CreditoClienteEntregado = parseFloat( xmonto );
+    Local.CreditoClienteTotal     = parseFloat( usuarios[ xid ].credito ) + parseFloat( xmonto );
+    imprimirTicketCreditoClienteSeleccionado();
     setTimeout('syncClientes()',600);
-
 }
 
 var serialNum = (Math.random()*9000).toFixed();
@@ -11047,6 +11585,7 @@ function AddLineaDetallesVenta(CodBar, Nombre,Talla, Color, unidades, Descuento,
     xitem = document.createElement("listitem");
     xitem.value = IdComprobanteDet;
     xitem.setAttribute("id","detalleventa_" + idetallesVenta);
+    xitem.setAttribute("oncontextmenu","seleccionarlineaventatpv("+idetallesVenta+",true)");
     idetallesVenta++;
 
     xObservaciones = document.createElement("listcell");
@@ -11241,7 +11780,7 @@ function CambiarIdClienteDocumento(iduser){
     IdCompCambioCliente = 0;//reset
     esCambiodeCliente = false;//reset 
     //Regresa a ventas
-    id("panelDerecho").setAttribute("collapsed","true");
+    id("panelDerecho").setAttribute("collapsed",true);
     id("modoVisual").setAttribute("selectedIndex",Vistas.ventas);	
     //Recarga Lista
     BuscarVentas();
@@ -11710,25 +12249,25 @@ function mostrarPanelModificarFecha(xval){
 
 }
 
-function cargarDatosPanelModificaFecha(xfecha){
+function cargarDatosPanelModificaFecha(tfecha){
 
     var num = aModificaFecha["idcomprobante"];
     var xfecha,wtitleFecha,xcommand;
     var xval = false;
-    switch(xfecha){
+    switch(tfecha){
     case 'fechaemision':
 	xfecha = id("venta_fecha_emision_"+num).getAttribute("label");
-	wtitleFecha = "Modificar Fecha Emisión";
+	wtitleFecha = "    Modificar Fecha Emisión    ";
 	xcommand = "t_ModificarFechaEmisionComprobante()";
 	break;
     case 'fechareserva':
 	xfecha = id("venta_fechareserva_"+num).getAttribute("label");
-	wtitleFecha = "Fecha Entrega";
+	wtitleFecha = "    Fecha Entrega    ";
 	xcommand = "registrarEntregaReserva()";
 	break;
     case 'fechapago':
 	xfecha = id("venta_plazopago_"+num).getAttribute("label");
-	wtitleFecha = "Fecha Pago";
+	wtitleFecha = "    Fecha Pago    ";
 	xcommand = "ModificarFechaPago()";
 	xval = true;
 	break;
@@ -11741,13 +12280,12 @@ function cargarDatosPanelModificaFecha(xfecha){
 	var fecha  = dfecha[2]+"-"+dfecha[1]+"-"+dfecha[0];
 	var hora   = (afecha[1])? afecha[1]:'00:00:00';
     }else{
-	var f = new Date();
-	var fecha = f.getFullYear() + "-" + (f.getMonth() +1) + "-" + f.getDate();
-	var hora  = f.getHours()+":"+f.getMinutes()+":"+f.getSeconds();
+	var fecha = calcularFechaActual('fecha');
+	var hora  = calcularFechaActual('hora');
     }
 
-    id("dateFechaEmision").value = fecha;
-    id("timeFechaEmision").value = hora;
+    id("dateFechaEmision").value = calcularFechaActual('fecha');
+    id("timeFechaEmision").value = calcularFechaActual('hora');
     id("timeFechaEmision").setAttribute("collapsed",xval);
     id("dateFechaEmision").setAttribute("collapsed",false);
 
@@ -11815,9 +12353,9 @@ var ilineabuscaventas = 0;
 
 function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,IdComprobante,
 			nombreCliente,NumeroDocumento,TipoDocumento,IdCliente,MotivoAlba,
-			IdSuscripcion,FechaEmision,Reservado,FechaEntregaReserva,PlazoPago){
+			IdSuscripcion,FechaEmision,Reservado,FechaEntregaReserva,PlazoPago,Albaranes,IdComprobanteNum,IdGuiaRemision){
     var lista = id("busquedaVentas");
-    var xitem,xnumitem,xvendedor,xserie,xnum,xfecha,xtotal,xpendiente,xestado,xtipodoc,xop,xsucripcion,xfechaemision,xreserva,xfechareserva,xplazopago;
+    var xitem,xnumitem,xvendedor,xserie,xnum,xfecha,xtotal,xpendiente,xestado,xtipodoc,xop,xsucripcion,xfechaemision,xreserva,xfechareserva,xplazopago,xalbaranes,xcomprobantesnum,xguiaremision;
     
     var vfecha = "0000-00-00 00:00:00";
     var lfecha = "";
@@ -11834,6 +12372,7 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,IdC
     xitem = document.createElement("listitem");
     xitem.value = IdComprobante;
     xitem.setAttribute("id","lineabuscaventa_"+ilineabuscaventas);
+    xitem.setAttribute("oncontextmenu","seleccionarlineaventatpv("+ilineabuscaventas+",false)");
     ilineabuscaventas++;
     
     xnumitem = document.createElement("listcell");
@@ -11927,7 +12466,25 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,IdC
     xplazopago.setAttribute("label", FechaPlazo);
     xplazopago.setAttribute("style","text-align:right");
     xplazopago.setAttribute("id","venta_plazopago_"+IdComprobante);
-    
+
+    xalbaranes = document.createElement("listcell");
+    xalbaranes.setAttribute("value", Albaranes);
+    xalbaranes.setAttribute("style","text-align:left");
+    xalbaranes.setAttribute("collapsed","true");
+    xalbaranes.setAttribute("id","venta_albaranes_"+IdComprobante);
+
+    xcomprobantesnum = document.createElement("listcell");
+    xcomprobantesnum.setAttribute("value", IdComprobanteNum);
+    xcomprobantesnum.setAttribute("style","text-align:left");
+    xcomprobantesnum.setAttribute("collapsed","true");
+    xcomprobantesnum.setAttribute("id","venta_comprobantesnum_"+IdComprobante);
+
+    xguiaremision = document.createElement("listcell");
+    xguiaremision.setAttribute("value", IdGuiaRemision);
+    xguiaremision.setAttribute("style","text-align:left");
+    xguiaremision.setAttribute("collapsed","true");
+    xguiaremision.setAttribute("id","venta_guiaremision_"+IdComprobante);
+
     xitem.appendChild( xnumitem );
     xitem.appendChild( xserie );
     xitem.appendChild( xop );
@@ -11945,6 +12502,9 @@ function AddLineaVentas(item,vendedor,serie,num,fecha,total,pendiente,estado,IdC
     xitem.appendChild( xvendedor );
     xitem.appendChild( xsuscripcion );
     xitem.appendChild( xreservado );
+    xitem.appendChild( xalbaranes );
+    xitem.appendChild( xcomprobantesnum );
+    xitem.appendChild( xguiaremision );
 
     lista.appendChild( xitem );		
 }
@@ -12039,7 +12599,7 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
     var tex = "";
     var cr = "\n";
     
-    var vendedor,serie,num,fecha,total,pendiente,estado,IdComprobante,NumeroDocumento,TipoDocumento,IdCliente,IdSuscripcion,FechaEmision,Reservado,FechaEntregaReserva,esContable,PlazoPago;
+    var vendedor,serie,num,fecha,total,pendiente,estado,IdComprobante,NumeroDocumento,TipoDocumento,IdCliente,IdSuscripcion,FechaEmision,Reservado,FechaEntregaReserva,esContable,PlazoPago,Albaranes,IdComprobanteNum,IdGuiaRemision;
     var node,t,i,codventa,xLocal; 
     var totalVenta = 0;
     var totalVentaPendiente = 0;
@@ -12099,11 +12659,15 @@ function RawBuscarVentas(desde,hasta,nombre,modo,modoserie,modosuscripcion,modof
 	    PlazoPago     = node.childNodes[t++].firstChild.nodeValue;
 	    Reservado     = node.childNodes[t+2].firstChild.nodeValue;
 	    FechaEntregaReserva = node.childNodes[t+3].firstChild.nodeValue;
+            Albaranes           = node.childNodes[t+4].firstChild.nodeValue;
+            IdComprobanteNum    = node.childNodes[t+5].firstChild.nodeValue;
+            IdGuiaRemision      = node.childNodes[t+6].firstChild.nodeValue;
 
 	    FuncionProcesaLinea(item,vendedor,serie,num,fecha,total,pendiente,estado,
 				IdComprobante,nombreCliente,NumeroDocumento,TipoDocumento,
 				IdCliente,MotivoAlba,IdSuscripcion,FechaEmision,
-				Reservado,FechaEntregaReserva,PlazoPago);
+				Reservado,FechaEntregaReserva,PlazoPago,Albaranes,
+                                IdComprobanteNum,IdGuiaRemision);
 	    
 	    item--;
         }
@@ -12180,21 +12744,23 @@ function mostrarBusquedaAvanzada(xthis){
 
 function menuContextualVentasRealizadas(xval,xvaldet,esGarantia){
     
-    id("VentaRealizadaAbonar").setAttribute("disabled",true);
-    id("VentaRealizadaDevolver").setAttribute("disabled",true);
-    id("VentaRealizadaBoletar").setAttribute("disabled",true);
-    id("VentaRealizadaFacturar").setAttribute("disabled",true);
-    id("VentaRealizadaFacturarLote").setAttribute("disabled",true);
-    id("VentaRealizadaCambioCliente").setAttribute("disabled",true);
-    id("VentaRealizadaCambioNro").setAttribute("disabled",true);
-    id("VentaRealizadaAnularNro").setAttribute("disabled",true);
-    id("VentaRealizadaCambioAnularNro").setAttribute("disabled",true);
-    id("VentaRealizadaDetalleNS").setAttribute("disabled",true);
-    id("VentaRealizadaDetalleMProducto").setAttribute("disabled",true);
-    id("VentaGarantiaComprobante").setAttribute("disabled",true);
-    id("VentaRealizadaEntregarReserva").setAttribute("disabled",true);
-    id("VentaRealizadaFechaPago").setAttribute("disabled",true);
-    id("VentaEstadoReserva").setAttribute("disabled",true);
+    id("VentaRealizadaAbonar").setAttribute("collapsed",true);
+    id("VentaRealizadaDevolver").setAttribute("collapsed",true);
+    id("VentaRealizadaBoletar").setAttribute("collapsed",true);
+    id("VentaRealizadaFacturar").setAttribute("collapsed",true);
+    id("VentaRealizadaFacturarLote").setAttribute("collapsed",true);
+    id("VentaRealizadaCambioCliente").setAttribute("collapsed",true);
+    id("VentaRealizadaCambioNro").setAttribute("collapsed",true);
+    id("VentaRealizadaAnularNro").setAttribute("collapsed",true);
+    id("VentaRealizadaCambioAnularNro").setAttribute("collapsed",true);
+    id("VentaRealizadaDetalleNS").setAttribute("collapsed",true);
+    id("VentaRealizadaDetalleMProducto").setAttribute("collapsed",true);
+    id("VentaGarantiaComprobante").setAttribute("collapsed",true);
+    id("VentaRealizadaEntregarReserva").setAttribute("collapsed",true);
+    id("VentaRealizadaFechaPago").setAttribute("collapsed",true);
+    id("VentaEstadoReserva").setAttribute("collapsed",true);
+    id("VentaGuiaRemision").setAttribute("collapsed",true);
+    id("VentaGuiaRemisionEdit").setAttribute("collapsed",true);
 
     var esSuscripcionVenta = (cIdSuscripcionVenta == 0)? true:false;
     id("VentaSuscripcionImprimir").setAttribute("collapsed",esSuscripcionVenta);
@@ -12243,21 +12809,30 @@ function menuContextualVentasRealizadas(xval,xvaldet,esGarantia){
     }
 
     //Abono
-    if ( esAbonar   ) id("VentaRealizadaAbonar").removeAttribute("disabled");
-    if ( esDevolver ) id("VentaRealizadaDevolver").removeAttribute("disabled");
-    if ( esBoletar  ) id("VentaRealizadaBoletar").removeAttribute("disabled");
-    if ( esFacturar ) id("VentaRealizadaFacturar").removeAttribute("disabled");
-    if ( esFacturarLote ) id("VentaRealizadaFacturarLote").removeAttribute("disabled");
-    if ( esCambioCliente ) id("VentaRealizadaCambioCliente").removeAttribute("disabled");
-    if ( esCambioNro ) id("VentaRealizadaCambioNro").removeAttribute("disabled");
-    if ( esCambioNro ) id("VentaRealizadaAnularNro").removeAttribute("disabled");
-    if ( esCambioNro ) id("VentaRealizadaCambioAnularNro").removeAttribute("disabled");
-    if ( esSeries )    id("VentaRealizadaDetalleMProducto").removeAttribute("disabled");
-    if ( esSeries )    id("VentaRealizadaDetalleNS").removeAttribute("disabled");
-    if ( esGarantia ) id("VentaGarantiaComprobante").removeAttribute("disabled");
-    if ( esEntregado ) id("VentaRealizadaEntregarReserva").removeAttribute("disabled");
-    if ( esPlazo)     id("VentaRealizadaFechaPago").removeAttribute("disabled");
-    if ( esreserva)   id("VentaEstadoReserva").removeAttribute("disabled");
+    if ( esAbonar   ) id("VentaRealizadaAbonar").setAttribute("collapsed",false);
+    if ( esDevolver ) id("VentaRealizadaDevolver").setAttribute("collapsed",false);
+    if ( esBoletar  ) id("VentaRealizadaBoletar").setAttribute("collapsed",false);
+    if ( esFacturar ) id("VentaRealizadaFacturar").setAttribute("collapsed",false);
+    if ( esFacturarLote ) id("VentaRealizadaFacturarLote").setAttribute("collapsed",false);
+    if ( esCambioCliente ) id("VentaRealizadaCambioCliente").setAttribute("collapsed",false);
+    if ( esCambioNro ) id("VentaRealizadaCambioNro").setAttribute("collapsed",false);
+    if ( esCambioNro ) id("VentaRealizadaAnularNro").setAttribute("collapsed",false);
+    if ( esCambioNro ) id("VentaRealizadaCambioAnularNro").setAttribute("collapsed",false);
+    if ( esSeries )    id("VentaRealizadaDetalleMProducto").setAttribute("collapsed",false);
+    if ( esSeries )    id("VentaRealizadaDetalleNS").setAttribute("collapsed",false);
+    if ( esGarantia ) id("VentaGarantiaComprobante").setAttribute("collapsed",false);
+    if ( esEntregado ) id("VentaRealizadaEntregarReserva").setAttribute("collapsed",false);
+    if ( esPlazo)     id("VentaRealizadaFechaPago").setAttribute("collapsed",false);
+    if ( esreserva)   id("VentaEstadoReserva").setAttribute("collapsed",false);
+
+    //Guia remision
+    var xidguia = id("venta_guiaremision_"+xval).getAttribute('value');
+    var esGuia = (cComprobante == 'Factura' || cComprobante == 'Albaran')? 'true':false;
+    var esEditGuia = (trim(xidguia) != '')? true:false;
+
+    if(esGuia) id("VentaGuiaRemision").setAttribute("collapsed",false);
+    if(esEditGuia) id("VentaGuiaRemisionEdit").setAttribute("collapsed",false);
+
 }
 
 function verGarantiaComprobante(){
@@ -12409,6 +12984,7 @@ function VerFechaReservaEntregado(xval){
 var icuentas = 0;
 var acuentasb = "";
 var ientidadfinanciera = 0;
+
 function VaciarCuentas(){
     var xlistitem = id("elementosCuenta");
     var iditem;
@@ -13325,6 +13901,9 @@ function getSpaces(num){
 	}
 	return salida;
 }
+function preparaNombreTicket(xnomb,xcb){
+    return xnomb.replace(xcb, "");
+}
 function preparaCadena(cadena,tline,crl){
     var ncaract = cadena.length;
     var t_linea="";
@@ -13336,13 +13915,29 @@ function preparaCadena(cadena,tline,crl){
 	nline = ((ncaract-(ncaract%tline))/tline)+1;
 
     for (var t=0;t<nline;t++) {    
-	t_linea += cadena.substring(iline,fline) +" " + crl;			
+	t_linea += trim( cadena.substring(iline,fline) ) +" " + crl;			
 	iline   += tline;
 	fline   += tline;
     }
     return t_linea;
 }
 
+function preparaCadenaNombre(cadena,tline,crl){
+    var ncaract = cadena.length;
+    var t_linea="";
+    var nline   = 1;
+    var iline   = 0;
+    var fline   = tline;
+    if (ncaract > tline)
+	nline = ((ncaract-(ncaract%tline))/tline)+1;
+
+    for (var t=0;t<nline;t++) {    
+	t_linea += trim( cadena.substring(iline,fline) ) +" " + crl;			
+	iline   += tline;
+	fline   += tline;
+    }
+    return t_linea;
+}
 
 // Función modulo, regresa el residuo de una división 
 function mod(dividendo , divisor) 
@@ -13730,7 +14325,8 @@ Ticket.prototype.generaTextTicket = function(){
         salida += po_ticketcliente+getSpaces(1)+nombrecliente+cr;
 	salida += this.TexModoTicket(ModoDeTicket)+cr;	
         salida += this.Linea();	
-	salida += this.Colum( new Array(po_unid,po_precio,po_descuento,po_Total));	
+        salida += this.Colum( new Array(po_unid,po_precio,po_descuento,
+							       po_Total));	
 	salida += this.Linea();
 	salida += this.GenerarTextoProductos();
 	salida += this.Linea();
@@ -13818,7 +14414,9 @@ Ticket.prototype.generaTextTicketAbono = function(){
         if( Local.ImprimirFormatoTicket )
         {
             salida += this.Linea();
-            salida += this.Colum( new Array(po_unid,po_precio,po_descuento,po_Total));	
+	    salida += this.Colum( new Array(po_unid,po_precio,po_descuento,
+								   po_Total));	
+
 	    salida += this.Linea();
             salida += this.GenerarTextoProductos();
 	} else 
@@ -14141,8 +14739,8 @@ Ticket.prototype.sizeOfTab = function(){
 	return 8;
 }	
 
-Ticket.prototype.Linea = function() {
-	return "------------------------------"  + this.cr;
+Ticket.prototype.Linea = function(){
+    return "------------------------------------"  + this.cr;
 }
 
 
@@ -14202,7 +14800,8 @@ Ticket.prototype.TexModoTicket = function(Modo){
 }
 
 Ticket.prototype.Fecha = function (){
-	return "Fecha:"+ this.cr + this.LocalGlobal.fechahoy +' ' +calcularFechaActual('hora');+ this.cr;
+    return "Fecha:"+ this.LocalGlobal.fechahoy + this.cr + 
+	   "Hora :"+ calcularFechaActual('hora') + this.cr;
 }
 
 Ticket.prototype.pgetIdSubsidiario = function (){
@@ -14252,6 +14851,10 @@ Ticket.prototype.pgetPrecio = function (){
 	return this.productoSombra["precio"];
 }
 
+Ticket.prototype.pgetPrecioAlmacen = function (){
+	return this.productoSombra["precioalmacen"];
+}
+
 Ticket.prototype.pgetDescuento = function (){
 	return this.productoSombra["descuento"];
 }
@@ -14293,10 +14896,11 @@ Ticket.prototype.pgetConcepto = function (){
 
 
 Ticket.prototype.genSombraDesdeTic = function(){
- 	var datos = new Array(); 	
-        datos["unid"] 		= parseInt(this.ProductoDato("tic_unid_"));
+
+/*        datos["unid"] 		= parseInt(this.ProductoDato("tic_unid_"));
         datos["unidmedida"]     = productos[this.CodigoProductoSeleccionado].unid;
-	datos["precio"] 	= normalFloat(CleanMoney(this.ProductoDato("tic_precio_")));
+        datos["precio"] 	= normalFloat(CleanMoney(this.ProductoDato("tic_precio_")));
+        datos["precioalmacen"]  = productos[this.CodigoProductoSeleccionado].pvd;
 	datos["importe"] 	= normalFloat(CleanMoney(this.ProductoDato("tic_importe_")));
         datos["costo"]  	= normalFloat(CleanMoney(this.ProductoDato("tic_costo_")));
 	datos["descuento"] 	= normalFloat(this.ProductoDato("tic_descuento_"));
@@ -14304,7 +14908,8 @@ Ticket.prototype.genSombraDesdeTic = function(){
 	datos["referencia"]     = this.ProductoDato("tic_referencia_");
 	datos["talla"] 		= this.ProductoDato("tic_talla_");
 	datos["color"] 		= this.ProductoDato("tic_color_");
-	datos["nombre"] 	= this.ProductoDato("tic_nombre_");
+        datos["nombre"] 	= preparaNombreTicket( this.ProductoDato("tic_nombre_"),
+						       this.CodigoProductoSeleccionado );
 	datos["concepto"] 	= this.ProductoDato("tic_concepto_");
 	datos["pedidodet"] 	= this.ProductoDato("tic_pedidodet_");
 	datos["idproducto"] 	= this.ProductoDato("tic_idproducto_");
@@ -14313,6 +14918,35 @@ Ticket.prototype.genSombraDesdeTic = function(){
         datos["oferta"]	        = this.ProductoDato("tic_oferta_");
 	datos["codigo"]		= this.CodigoProductoSeleccionado;
 	this.productoSombra = datos;
+*/
+
+
+    var datos              = new Array(); 	
+    var codigo             = this.CodigoProductoSeleccionado;
+    var xnombreticket      = ( productos[codigo].menudeo )? ticket[codigo].producto+' '+
+	                                                    ticket[codigo].vdetalle
+                                                           :ticket[codigo].producto;
+    datos["unid"]          = ticket[codigo].unidades;
+    datos["unidmedida"]    = productos[codigo].unid;
+    datos["precio"] 	   = normalFloat(CleanMoney(ticket[codigo].precio));
+    datos["precioalmacen"] = productos[codigo].pvd;
+    datos["importe"] 	   = normalFloat(CleanMoney(ticket[codigo].importe));
+    datos["costo"]  	   = normalFloat(CleanMoney(ticket[codigo].costo));
+    datos["descuento"] 	   = normalFloat(ticket[codigo].descuento);
+    datos["impuesto"] 	   = normalFloat( ticket[codigo].impuesto/100.0 );
+    datos["referencia"]    = ticket[codigo].referencia;
+    datos["talla"] 	   = ticket[codigo].talla;
+    datos["color"] 	   = ticket[codigo].color;
+    datos["nombre"] 	   = preparaNombreTicket(xnombreticket ,codigo );
+    datos["concepto"] 	   = ticket[codigo].concepto;
+    datos["pedidodet"] 	   = ticket[codigo].pedidodet;
+    datos["idproducto"]    = ticket[codigo].idproducto;
+    datos["idsubsidiario"] = ticket[codigo].idsubsidiario;
+    datos["status"]	   = ticket[codigo].cStatus;
+    datos["oferta"]	   = ticket[codigo].oferta
+    datos["codigo"]	   = codigo;
+
+    this.productoSombra    = datos;
 }
 
 Ticket.prototype.genSombraDesdeRemota = function(){
@@ -14329,7 +14963,7 @@ Ticket.prototype.genSombraDesdeRemota = function(){
 	datos["color"] 		= prod.color;
 	datos["marca"] 		= prod.marca;
 	datos["lab"] 		= prod.lab;
-	datos["nombre"] 	= prod.nombre;
+        datos["nombre"] 	= preparaNombreTicket( prod.nombre, prod.codigobarra);
 	datos["concepto"] 	= prod.concepto;
 	datos["idsubsidiario"]	= prod.idsubsidiario;
 	datos["codigo"] 	= prod.codigobarra;//prod.codigobarra
@@ -14405,7 +15039,8 @@ Ticket.prototype.GeneraProducto = function(codigo, indiceDeEntrada){
 	prod.status 	   = this.pgetStatus();
         prod.oferta 	   = this.pgetOferta();
 	prod.idproducto	   = this.pgetIdProducto();
-	prod.precio 	   = this.pgetPrecio();		
+        prod.precio 	   = this.pgetPrecio();
+	prod.precioalmacen = this.pgetPrecioAlmacen();		
 	prod.descuento 	   = this.pgetDescuento();
 	prod.impuesto  	   = this.pgetImpuesto();
 	prod.referencia    = this.pgetReferencia();
@@ -14426,9 +15061,11 @@ Ticket.prototype.RawGeneraProducto = function(prod){
 
     var cr             = this.cr;
     var nombreenticket = "";
+    var unidmedticket  = "";
     var pvp            = 0;
     var total          = 0;
     nombreenticket     = ( prod.idsubsidiario>0 )? prod.concepto:prod.nombre;
+
     prod.concepto      = ( prod.concepto != "undefined")? prod.concepto:"";
     pvp  	       = parseFloat(prod.precio);//Impuesto incluido
     total 	       = formatDineroTotal( parseFloat(pvp) * parseFloat(prod.unidades) );
@@ -14440,21 +15077,33 @@ Ticket.prototype.RawGeneraProducto = function(prod){
     //this.aportacionimpuestos  += parseFloat(total) * prod.impuesto;
 
     //Total del ticket
-    total = Math.round(total*10)/10;
-    this.TotalBase = parseFloat(this.TotalBase) + parseFloat(total);
-    var salida = "";
+    total           = Math.round(total*10)/10;
+    this.TotalBase  = parseFloat(this.TotalBase) + parseFloat(total);
+    var salida      = "";
+    var stringcore  = 36;
 
-//    if(comprobante==1){
+    //*** Listado de productos y detalles ticket
+    //
+    //*** Formato Basico Clasicc
+    // [  Unid - PV - DCTO - Importe ]
+    // [  Producto                   ]
+    //
+    nombreenticket  = nombreenticket.trim();
+    nombreenticket  = nombreenticket.toLowerCase();
+    nombreenticket  = nombreenticket.charAt(0).toUpperCase() + nombreenticket.slice(1);
+    nombreenticket  = nombreenticket.replace(/\./g, '');//quita puntos
+    nombreenticket  = nombreenticket.replace(/\s+/g, ' ');//quita spacios
+    //nombreenticket  = nombreenticket.replace(/\s/g, '');//quita spacios
+    unidmedticket   = prod.unid.substring(0,3);
+    unidmedticket   = unidmedticket.toUpperCase()
 
-    salida += cr + this.Colum( new Array(prod.unidades+" "+prod.unid,
-					 formatDinero(pvp),
-					 formatDescuento(prod.descuento),
-					 formatDinero(total)));					
-    //salida += "CB." + prod.codigo + " " + cr;			
-    //nombreenticket = prod.codigo+' '+nombreenticket;
-    nombreenticket = nombreenticket.trim();
-    salida += preparaCadena(nombreenticket,35,cr);
-    //salida += nombreenticket.substring(bline,tline) +" " + cr;			
+    //formatos lines
+    salida         += this.Colum( new Array(prod.unidades+unidmedticket,
+					    formatDinero(pvp),
+					    formatDescuento(prod.descuento),
+					    formatDinero(total)));
+    //formatos sublines
+    salida         += ( nombreenticket != '')? preparaCadenaNombre(nombreenticket,stringcore,cr):'';
 
     this.datos_text_productos += salida;
 		
@@ -14467,7 +15116,8 @@ Ticket.prototype.RawGeneraProducto = function(prod){
     
 	data_tickets2 += firma + "cod=" 	  + escape(prod.codigo) + crd;
 	data_tickets2 += firma + "unid=" 	  + prod.unidades + crd;
-	data_tickets2 += firma + "precio=" 	  + prod.precio + crd;
+        data_tickets2 += firma + "precio=" 	  + prod.precio + crd;
+        data_tickets2 += firma + "precioalmacen=" + prod.precioalmacen + crd;
 	data_tickets2 += firma + "importe=" 	  + prod.importe + crd;
 	data_tickets2 += firma + "impuesto=" 	  + escape(prod.impuesto) + crd;
 	data_tickets2 += firma + "descuento="	  + escape(prod.descuento) + crd;
@@ -14841,7 +15491,7 @@ Meca.cargarXML = function (revisor) {
 
 /*++++++++++++++++++++++++ CADENAS  ++++++++++++++++++++++++++++*/
 
-var po_numtic='Código :'; var po_dir='Dir.'; var po_web='Web.'; var po_telf='Telefono:'; var po_movil='Movil.';var po_comprobante='Doc.   :';var po_unid='Unid.';var po_precio='Precio';var po_costo='Costo';var po_descuento='Desc.';var po_Total='Total';var po_TOTAL='TOTAL:';var po_TOTALDEUDA='Debe:';var po_TOTALCREDITO='TOTAL:';var po_Entregado='Entregado:';var po_Abonado='Abonado:';var po_Credito='Entregado:';var po_CreditoCliente='Credito:';var po_Cambio='Vuelto:';var po_Pendiente='Pendiente:';var po_desgloseiva='Desglose de IGV:';var po_leatendio='Le atendió:';var po_ticketarreglointerno='Ticket arreglo interno';var po_ticketcesionprenda='Ticket crédito de producto';var po_ticketcesionprendareserva='Ticket reserva de producto';var po_boucherde = 'Ticket de Pago '; var po_boucherdecredito = 'Ticket de asignación de crédito '; var po_tienda = 'Tienda : '; var po_ticketdevolucionprenda='Ticket devolución de prenda';var po_ticketnoserver='El servidor no ha podido autorizar la impresión de este ticket. Inténtelo mas tarde';var po_txtTicketVenta='Comprobante de venta';var po_txtTicketCesion='Ticket cesión';var po_txtTicketDevolucion='Ticket devolución';var po_txtTicketPedido='Presupuestos';var po_txtTicketMProducto='Meta Productos';var po_txtTicketServicioInterno='Ticket servicio';var po_imprimircopia='Impr. copia';var po_cerrar='Cerrar';var po_servidorocupado='Servidor ocupado, inténtelo más tarde';var po_nopuedeseliminarcontado='¡No puedes eliminar el cliente contado!';var po_seguroborrarcliente='¿Quieren borrar este cliente?';var po_clienteeliminado='Cliente eliminado del sistema';var po_noseborra='No se puede borrar ese cliente';var po_nuevocreado='Nuevo cliente creado';var po_clientemodificado='Cliente modificado';var po_operacionincompleta='Operacion con cliente incompleta, inténtelo mas tarde';var po_mensajeenviado='Mensaje enviado';var po_modopago='Modo de pago:';var po_nombreclientecontado='Cliente Contado';var po_ticketcliente='Cliente:';var po_Elige='Elije...';var po_15diaslimite='No se admiten devoluciones.\\nCambios dentro de las 24 horas.';var po_cuentascopias='¿Cuántas copias del código de barras necesita imprimir?';var po_cuantasunidadesquiere='¿Cuántas unidades del producto requiere?';var po_cuantasunidades='¿Cuántas unidades?';var po_faltadefcolor='Falta definir Modelo';var po_faltadeftalla='Falta definir Detalles';var po_faltadefcb='Falta definir el CB';var po_errorrepcod='Código de barras repetido';var po_tallacolrep='Detalle o Modelo repetidos';var po_unidadescompra='Debe especificar unidades de compra';var po_modnombreprod='Debe modificar el nombre del producto';var po_especificarref='Debe especificar una referencia';var po_especifiprecioventa='Debe especificar un precio de venta';var po_especificoste='Debe especificar un coste';var po_nuevoproducto='Nuevo producto';var po_nohayproductos='No hay productos';var po_sehandadodealtacodigos='Se han dado de alta %d códigos';var po_segurocancelar='¿Esta seguro que quiere cancelar?';var po_imprimircodigos='Imprimir CB';var po_borrar='Eliminar';var po_avisoborrar='¿Desea eliminar?';var po_nombre='Nombre';var po_talla='Concentración/Detalle';var po_color='Presentación/Modelo';var po_unidades='Unid.';var po_local='Local';var po_almacen='Almacén';var po_nombrecorto='Nombre de cliente demasiado corto';var po_quierecerrar='Seguro que quiere proceder al \'CIERRE DE CAJA\'?';var po_quiereabrir='Seguro que quiere proceder a \'ABRIR CAJA\'?';var po_sugerenciarecibida='Sugerencia recibida';var po_incidenciaanotada='Incidencia anotada';var po_notaenviada='Nota enviada';var po_confirmatraslado='¿Esta seguro?';var po_destino='Destino:';var po_mododepago='Modo de pago';var po_cuantascopias='¿Cuantas copias?';var po_moviendoa='Moviendo mercancía a: ';var po_importereal='Importe real de la caja:';var po_error=po_servidorocupado;var po_pagmas=">>";var po_pagmenos="<<";
+var po_numtic='Código :'; var po_dir='Dir.'; var po_web='Web.'; var po_telf='Telefono:'; var po_movil='Movil.';var po_comprobante='Doc.   :';var po_unid='Unid.';var po_prod='Prod.               ';var po_precio='Precio';var po_costo='Costo';var po_descuento='Desc.';var po_Total='Total';var po_TOTAL='TOTAL:';var po_TOTALDEUDA='Debe:';var po_TOTALCREDITO='TOTAL:';var po_Entregado='Entregado:';var po_Abonado='Abonado:';var po_Credito='Entregado:';var po_CreditoCliente='Credito:';var po_Cambio='Vuelto:';var po_Pendiente='Pendiente:';var po_desgloseiva='Desglose de IGV:';var po_leatendio='Le atendió:';var po_ticketarreglointerno='Ticket arreglo interno';var po_ticketcesionprenda='Ticket crédito de producto';var po_ticketcesionprendareserva='Ticket reserva de producto';var po_boucherde = 'Ticket de Pago '; var po_boucherdecredito = 'Ticket de asignación de crédito '; var po_tienda = 'Tienda : '; var po_ticketdevolucionprenda='Ticket devolución de prenda';var po_ticketnoserver='El servidor no ha podido autorizar la impresión de este ticket. Inténtelo mas tarde';var po_txtTicketVenta='Comprobante de venta';var po_txtTicketCesion='Ticket cesión';var po_txtTicketDevolucion='Ticket devolución';var po_txtTicketPedido='Presupuestos';var po_txtTicketMProducto='Meta Productos';var po_txtTicketServicioInterno='Ticket servicio';var po_imprimircopia='Impr. copia';var po_cerrar='Cerrar';var po_servidorocupado='Servidor ocupado, inténtelo más tarde';var po_nopuedeseliminarcontado='¡No puedes eliminar el cliente contado!';var po_seguroborrarcliente='¿Quieren borrar este cliente?';var po_clienteeliminado='Cliente eliminado del sistema';var po_noseborra='No se puede borrar ese cliente';var po_nuevocreado='Nuevo cliente creado';var po_clientemodificado='Cliente modificado';var po_operacionincompleta='Operacion con cliente incompleta, inténtelo mas tarde';var po_mensajeenviado='Mensaje enviado';var po_modopago='Modo de pago:';var po_nombreclientecontado='Cliente Contado';var po_ticketcliente='Cliente:';var po_Elige='Elije...';var po_15diaslimite='No se admiten devoluciones.\\nCambios dentro de las 24 horas.';var po_cuentascopias='¿Cuántas copias del código de barras necesita imprimir?';var po_cuantasunidadesquiere='¿Cuántas unidades del producto requiere?';var po_cuantasunidades='¿Cuántas unidades?';var po_faltadefcolor='Falta definir Modelo';var po_faltadeftalla='Falta definir Detalles';var po_faltadefcb='Falta definir el CB';var po_errorrepcod='Código de barras repetido';var po_tallacolrep='Detalle o Modelo repetidos';var po_unidadescompra='Debe especificar unidades de compra';var po_modnombreprod='Debe modificar el nombre del producto';var po_especificarref='Debe especificar una referencia';var po_especifiprecioventa='Debe especificar un precio de venta';var po_especificoste='Debe especificar un coste';var po_nuevoproducto='Nuevo producto';var po_nohayproductos='No hay productos';var po_sehandadodealtacodigos='Se han dado de alta %d códigos';var po_segurocancelar='¿Esta seguro que quiere cancelar?';var po_imprimircodigos='Imprimir CB';var po_borrar='Eliminar';var po_avisoborrar='¿Desea eliminar?';var po_nombre='Nombre';var po_talla='Concentración/Detalle';var po_color='Presentación/Modelo';var po_unidades='Unid.';var po_local='Local';var po_almacen='Almacén';var po_nombrecorto='Nombre de cliente demasiado corto';var po_quierecerrar='Seguro que quiere proceder al \'CIERRE DE CAJA\'?';var po_quiereabrir='Seguro que quiere proceder a \'ABRIR CAJA\'?';var po_sugerenciarecibida='Sugerencia recibida';var po_incidenciaanotada='Incidencia anotada';var po_notaenviada='Nota enviada';var po_confirmatraslado='¿Esta seguro?';var po_destino='Destino:';var po_mododepago='Modo de pago';var po_cuantascopias='¿Cuantas copias?';var po_moviendoa='Moviendo mercancía a: ';var po_importereal='Importe real de la caja:';var po_error=po_servidorocupado;var po_pagmas=">>";var po_pagmenos="<<";
 
 /*++++++++++++++++++++++++ CADENAS  ++++++++++++++++++++++++++++*/
 
@@ -14865,9 +15515,11 @@ function cargarSuscripcion(){
     if( !id("user_picker_"+xid) ) return;
 
     cIdClienteSuscripcion = preSeleccionadoCliente;
-
+    
     id("tab-vistacliente").setAttribute("collapsed",true);
-    id("tab-suscripcion").setAttribute("collapsed",false); 
+    id("tab-selcliente").setAttribute("visuallyselected",false);
+    id("tab-suscripcion").setAttribute("collapsed",false);
+    id("tab-suscripcion").setAttribute("visuallyselected",true);
     id("tab-suscripcion").setAttribute("label", " Suscripción: "+ usuarios[ cIdClienteSuscripcion ].nombre);
     id("tab-suscripcion").setAttribute("selected",true);
     id("tab-selcliente").setAttribute("selected",false);
@@ -15150,13 +15802,15 @@ function cleanSuscripcion(){
     id("suscripFechaInicio").value      = fecha;
     id("suscripFechaFin").value         = fecha;
     id("suscripEstado").value           = 'Pendiente';
-    id("suscripComprobante").value      = 'Factura';
+    id("suscripComprobante").value      = 'Ticket';
     id("suscripSerieComprobante").value = '1';
     id("suscripComentarios").value      = '';
     id("suscripTipoSuscripcion").setAttribute('label', 'Elige...');
 
     id("rowFechaFinSuscripcion").setAttribute("collapsed",true);//Ilimitado
     id("rowSuscripcionSerieComprobante").setAttribute("collapsed",false);
+    id("EmpresaTextGasto").value = '';
+    id("IdSubsidiario").value = '';
 }
 
 function nuevoSuscripcionCliente(){
@@ -15194,7 +15848,8 @@ function filtrarComboEstadoSuscripcion(){
 	xejecucion  = false;
 	break;
     case 'Suspendido':
-	xejecucion = false;
+	xejecucion  = false;
+        xfinalizado = false;
 	break;
     case 'Cancelado':
 	xpendiente  = false;
@@ -15376,7 +16031,8 @@ function ModificarSuscripcionCliente(xitem){
     case '4': xmensaje = 'fecha inicio'; 
     case '5': xmensaje = 'fecha fin'; 
     case '7': xmensaje = 'combrobante'; 
-    case '8': xmensaje = 'serie comprobante'; 
+    case '8': xmensaje = 'serie comprobante';
+    case '10': xmensaje = 'administrador';
     default:
         var xestado = suscripciones[ cIdSuscripcion ].estado;
 	if(xestado == 'Ejecucion' || xestado == 'Cancelado' || xestado == 'Finalizado') 
@@ -15446,6 +16102,11 @@ function ModificarSuscripcionCliente(xitem){
 	xdato = trim(id("suscripComentarios").value);
         if(trim(suscripciones[ cIdSuscripcion ].observaciones) == xdato) return;
 	break;
+    case '10'://Administrador del suscriptor
+	xdato = id("idsubsidiariohab").value;
+        if(!xdato) return;
+        if(trim(suscripciones[ cIdSuscripcion ].idsubsidiario) == xdato) return;
+	break;        
     }
     setTimeout("mostrarMensajeTPVHead(1,xmensaje)",100);
     var xml = '';
@@ -15486,7 +16147,7 @@ function obtenerSuscripcionesCliente(){
 
 function crearSuscripcion2XML(xml){
 
-    var idsuscipcion,idcliente,idtiposuscripcion,tiposuscripcion,fechainicio,fechafin,estado,prolongacion,comprobante,tipopago,observaciones,detalle;
+    var idsuscipcion,idcliente,idtiposuscripcion,tiposuscripcion,fechainicio,fechafin,estado,prolongacion,comprobante,tipopago,observaciones,detalle,idsubsidiario,subsidiario;
     
     for (var i=0; i<xml.childNodes.length; i++) {
         node = xml.childNodes[i];
@@ -15504,9 +16165,11 @@ function crearSuscripcion2XML(xml){
 	    serie             = node.childNodes[t++].firstChild.nodeValue;
 	    tipopago  	      = node.childNodes[t++].firstChild.nodeValue;
 	    observaciones     = node.childNodes[t++].firstChild.nodeValue;
+            idsubsidiario     = node.childNodes[t++].firstChild.nodeValue;
 	    detalle           = node.childNodes[t++].firstChild.nodeValue;
+            subsidiario       = node.childNodes[t++].firstChild.nodeValue;
 
-	    crearSuscripcion2Cliente(idsuscipcion,idcliente,idtiposuscripcion,tiposuscripcion,fechainicio,fechafin,estado,prolongacion,comprobante,tipopago,observaciones,serie,detalle);
+	    crearSuscripcion2Cliente(idsuscipcion,idcliente,idtiposuscripcion,tiposuscripcion,fechainicio,fechafin,estado,prolongacion,comprobante,tipopago,observaciones,serie,detalle,idsubsidiario,subsidiario);
 
         }
     }
@@ -15515,13 +16178,13 @@ function crearSuscripcion2XML(xml){
 
 function crearSuscripcion2Cliente( xid,xidcliente,xidtiposuscripcion,xtiposuscripcion,xfechainicio,
 				   xfechafin,xestado,xprolongacion,xcomprobante,xtipopago,
-				   xobservaciones,xserie,xdetalle ){
+				   xobservaciones,xserie,xdetalle,xidsubsidiario,xsubsidiario){
     
 
     if( suscripciones[ xid ] )
 	return updateSuscripcion2Cliente( xid,xidcliente,xidtiposuscripcion,xtiposuscripcion,xfechainicio,
 					  xfechafin,xestado,xprolongacion,xcomprobante,xtipopago,
-					  xobservaciones,xserie,xdetalle );
+					  xobservaciones,xserie,xdetalle,xidsubsidiario,xsubsidiario );
     //Suscripcion
     suscripciones[ xid ]                   = new Object();	
     suscripciones[ xid ].idsuscripcion     = xid;
@@ -15537,6 +16200,8 @@ function crearSuscripcion2Cliente( xid,xidcliente,xidtiposuscripcion,xtiposuscri
     suscripciones[ xid ].tipopago          = xtipopago;
     suscripciones[ xid ].observaciones     = xobservaciones;
     suscripciones[ xid ].detalle           = xdetalle;
+    suscripciones[ xid ].idsubsidiario     = xidsubsidiario;
+    suscripciones[ xid ].subsidiario       = xsubsidiario;
 
     //Cliente
     if( !suscripcionesclient[ xidcliente ] ) 
@@ -15547,7 +16212,7 @@ function crearSuscripcion2Cliente( xid,xidcliente,xidtiposuscripcion,xtiposuscri
 }
 function updateSuscripcion2Cliente( xid,xidcliente,xidtiposuscripcion,xtiposuscripcion,xfechainicio,
 				    xfechafin,xestado,xprolongacion,xcomprobante,xtipopago,
-				    xobservaciones,xserie,xdetalle ){
+				    xobservaciones,xserie,xdetalle,xidsubsidiario,xsubsidiario ){
     
     suscripciones[ xid ].idtiposuscripcion = xidtiposuscripcion;
     suscripciones[ xid ].tiposuscripcion   = xtiposuscripcion;
@@ -15560,6 +16225,8 @@ function updateSuscripcion2Cliente( xid,xidcliente,xidtiposuscripcion,xtiposuscr
     suscripciones[ xid ].tipopago          = xtipopago;
     suscripciones[ xid ].observaciones     = xobservaciones;
     suscripciones[ xid ].detalle           = xdetalle;
+    suscripciones[ xid ].idsubsidiario     = xidsubsidiario;
+    suscripciones[ xid ].subsidiario       = xsubsidiario;
 }
     
 function cargarSuscripcionCliente(xid){
@@ -15581,6 +16248,9 @@ function cargarSuscripcionCliente(xid){
     id("suscripSerieComprobante").value= suscripciones[ xid ].serie;
     id("suscripTipoPago").value        = suscripciones[ xid ].tipopago;
     id("suscripComentarios").value     = trim(suscripciones[ xid ].observaciones);
+
+    id("EmpresaTextGasto").value       = suscripciones[ xid ].subsidiario;
+    id("IdSubsidiario").value          = suscripciones[ xid ].idsubsidiario;
 
     id("rowFechaFinSuscripcion").setAttribute("collapsed",xprolong);
     id("rowSuscripcionSerieComprobante").setAttribute("collapsed",xcbte);
@@ -16436,7 +17106,8 @@ function mostrarSuscripcionFichaTecnica(xop){
 			      usuarios[idcliente].bono, 
 			      usuarios[idcliente].credito, 
 			      usuarios[idcliente].promo,
-			      usuarios[idcliente].tipo);
+			      usuarios[idcliente].tipo,
+                              usuarios[idcliente].suscrip);
 	    }
         }else{
 	    
@@ -16464,7 +17135,8 @@ function mostrarSuscripcionFichaTecnica(xop){
 				  usuarios[idcliente].bono, 
 				  usuarios[idcliente].credito, 
 				  usuarios[idcliente].promo,
-				  usuarios[idcliente].tipo);
+				  usuarios[idcliente].tipo,
+                                  usuarios[idcliente].suscrip);
 
 
 		    xcliente = ( theList.itemCount == 1 )? usuarios[idcliente].id:0;
@@ -16481,7 +17153,7 @@ function mostrarSuscripcionFichaTecnica(xop){
 	}
     }
 
-function paneladdXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo){
+function paneladdXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo,suscrip){
 
         var xroot    = id("panelclientPickArea");
         var xclient  =  document.createElement("listitem");
@@ -16493,7 +17165,8 @@ function paneladdXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo){
         var xnf      = document.createElement("listcell");
 	var txtdebe  = (debe)? cMoneda[1]['S']+" "+formatDinero(debe):"";
 	var txtbono  = (bono)? cMoneda[1]['S']+" "+formatDinero(bono):"";
-	var txtpromo = ( promo != '0' )? gettxtPromocion( promo ):"";
+        var txtpromo = ( promo != '0' )? gettxtPromocion( promo ):"";
+        var txtsuscrip = ( parseInt(suscrip) == 1)? '  **Suscrito.':'';
 	var imgico   = 'gpos_clienteparticular.png';
 	imgico = (tipo == 'Empresa')? 'gpos_clienteempresa.png':imgico;
 	imgico = (tipo == 'Interno')? 'gpos_tpv_clientecontado.png':imgico;
@@ -16510,7 +17183,7 @@ function paneladdXUser(nombreUser,iduser,debe,ruc,bono,credito,promo,tipo){
         xnf.setAttribute("readonly","true");
 
         xnombre.setAttribute("id","panel_user_picker_nombre_"+iduser);
-        xnombre.setAttribute("label",nombreUser );	
+        xnombre.setAttribute("label",nombreUser+txtsuscrip);	
         xnombre.setAttribute("value",iduser );
         xnombre.setAttribute("readonly","true");
 
@@ -16636,6 +17309,8 @@ var ordenserviciodet     = new Array();
 var ordenserviciodetlist = new Array();
 var ordenserviciodetserv = new Array();
 var iordenserviciodet    = 0;
+
+var cSubsidiario = '';
 
 function mostrarServicios(xid){
     var xordenservicio = true,xoutsourcing = true;
@@ -16941,6 +17616,7 @@ function AddLineaOrdenServicio(item,osIdLocal,osLocal,osUsuario,osIdCliente,
 
     xitem.setAttribute('class',xclass);
     xitem.setAttribute("id","linealistaordenservicio_"+ilinealistaordenservicio);
+    xitem.setAttribute("oncontextmenu","seleccionarlineaordenservicio("+ilinealistaordenservicio+",false)");
     ilinealistaordenservicio++;
 
     xnumitem = document.createElement("listcell");
@@ -17071,6 +17747,12 @@ function AddLineaOrdenServicio(item,osIdLocal,osLocal,osUsuario,osIdCliente,
     xitem.appendChild( xTipo );
     xitem.appendChild( xIdSuscripcion );
     lista.appendChild( xitem );	
+}
+
+function seleccionarlineaordenservicio(linea,xval){
+    var lista = (xval)? id("listadoOrdenServicioDetalle"):id("listadoOrdenServicio");
+    var fila  = (xval)? id("linealistaordenserviciodet_"+linea):id("linealistaordenservicio_"+linea);
+    lista.selectItem(fila);
 }
 
 function RevisarOrdenServicioSeleccionada(){
@@ -17214,8 +17896,8 @@ function verOrdenServicioDetalle(xver,xedit){
     id("rowdtnEstadoOrdenServicioDet").setAttribute('collapsed',xver);
     id("rowListaUsuario").setAttribute('collapsed',!xver);
     id("rowdtnListaUsuario").setAttribute('collapsed',xver);
-    id("rowFechaInicioServicio").setAttribute('collapsed',!xver);
-    id("rowdtnFechaInicioServicio").setAttribute('collapsed',xver);
+    //id("rowFechaInicioServicio").setAttribute('collapsed',!xver);
+    //id("rowdtnFechaInicioServicio").setAttribute('collapsed',xver);
     id("rowFechaFinServicio").setAttribute('collapsed',!xver);
     id("rowdtnFechaFinServicio").setAttribute('collapsed',xver);
     id("rowObservacionServicio").setAttribute('collapsed',!xver);
@@ -17420,7 +18102,10 @@ function mostrarPanelOrdenServicioDet(xval=false,xedit=false){
     vboxOrdenServicioDisplay('block');
 
     id("tab-servicios-sat-oc").setAttribute("selected",false);
+    id("tab-servicios-sat-oc").setAttribute("visuallyselected",false);
+    
     id("tab-servicios-oc").setAttribute("selected",true);
+    id("tab-servicios-oc").setAttribute("visuallyselected",true);
     id("tab-boxservicios").setAttribute("selectedIndex",0);
 
     var xleft   = parseInt( window.screen.width)/2;
@@ -17612,6 +18297,7 @@ function AddLineaOrdenServicioDetalle(item,IdOrdenServicioDet,osIdProducto,
 
     xitem.setAttribute('class',xclass);
     xitem.setAttribute("id","linealistaordenserviciodet_"+ilinealistaordenserviciodet);
+    xitem.setAttribute("oncontextmenu","seleccionarlineaordenservicio("+ilinealistaordenserviciodet+",true)");
     ilinealistaordenserviciodet++;
 
     xnumitem = document.createElement("listcell");
@@ -18427,8 +19113,8 @@ function ModificarOrdenServicioDet(){
     if(ordenserviciodet[ cIdOrdenServicioDet ]){
 	var fechaini = ordenserviciodet[ cIdOrdenServicioDet ].fechainicio.split("~");
 	var fechafin = ordenserviciodet[ cIdOrdenServicioDet ].fechafin.split("~");
-	osvFechaInicio = fechaini[1];
-	osvFechaFin    = fechafin[1];
+	//osvFechaInicio = fechaini[1];
+	//osvFechaFin    = fechafin[1];
     }
 
 
@@ -18591,10 +19277,10 @@ function RegistrarOrdenServicioDet(){
     var osIdProducto     = ostiposerv[0];
     var osFechaInicio    = id("fInicioAtencionServicio").value;
     var osHoraInicio     = id("hInicioAtencionServicio").value;
-    var osvFechaInicio   = '0000-00-00 00:00:00';//osFechaInicio+' '+osHoraInicio;
+    var osvFechaInicio   = osFechaInicio+' '+osHoraInicio;//'0000-00-00 00:00:00';//
     var osFechaFin       = id("fFinAtencionServicio").value;
     var osHoraFin        = id("hFinAtencionServicio").value;
-    var osvFechaFin      = '0000-00-00 00:00:00';//osFechaFin+' '+osHoraFin;
+    var osvFechaFin      = osFechaFin+' '+osHoraFin;//'0000-00-00 00:00:00';//
     var osEstado         = id("FiltroEstadoOSDet").value;
     var osIdUsuarioRes   = id("listIdUsuario").value;
     var osConcepto       = trim(id("ConceptoServicio").value);
@@ -19469,8 +20155,8 @@ function verificarEstadoOrdenServicioDet(xvalue){
     id("rowEstadoSolucion").setAttribute("collapsed",xstdosol);
     id("rowGarantiaCondicion").setAttribute("collapsed",xgtiacond);
     id("rowListaUsuario").setAttribute("collapsed",xuserresp);
-    id("rowFechaInicioServicio").setAttribute("collapsed",xfechaservi);
-    id("rowFechaFinServicio").setAttribute("collapsed",xfechaservf);
+    //id("rowFechaInicioServicio").setAttribute("collapsed",xfechaservi);
+    //id("rowFechaFinServicio").setAttribute("collapsed",xfechaservf);
 }
 
 function mostrarBusquedaAvanzadaOrdenServicioDet(xthis){
@@ -19908,5 +20594,11 @@ function actualizarGarantiaComprobante(){
     id("xdetalleventa_ordenservicio_"+cIdComprobanteDet).setAttribute("value",cIdOrdenServicio);
     
 }
-/*++++++++++++++++++++++++ ORDEN SERVICIO  ++++++++++++++++++++++++++++*/
+/*++++++++++++++++++++++++ ORDEN SERVICIO ++++++++++++++++++++++++++++*/
+
+
+/*++++++++++++++++++++++++ INIT XULVIEW LIST PRODUCTOs  ++++++++++++++++++++++++++*/
+ if( Local.esB2B == 1 ) viewListaProductoPrecios('PVC');
+ if( Local.esWESL  ) viewListaProductoPrecios('PVD');
+ if( Local.esWESL  ) viewListaProductoPrecios('PVE');
 

@@ -1,9 +1,8 @@
 <?php
-SimpleAutentificacionAutomatica("visual-xulframe");
-StartXul('Productos Series',$predata="",$css='');
-?>
-<script type="application/x-javascript" src="<?php echo $_BasePath; ?>modulos/compras/numerosdeserie.js?v=3.1" />
-<?php
+ SimpleAutentificacionAutomatica("visual-xulframe");
+ StartXul('Productos Series',$predata="",$css='');
+ StartJs($js='modulos/compras/numerosdeserie.js?v=3.2');
+
  $unid       = ($validarSeries==1)? $cantidadNS:$unidades; 
  $unid       = ($Comprar)? 0:$unid; 
  $btnexittxt = ($btnexittxt)? $btnexittxt:" Volver Comprobantes ";
@@ -21,9 +20,18 @@ $item        = 0;
 var cIdPedidoDet = "<?php echo $idpedidodet;?>";
 var n            = "<?php echo $unid;?>";
 var cIdLocal     = "<?php echo $idlocal;?>";
+var cIdProducto  = "<?php echo $id; ?>";
+var cUnidades    = "<?php echo $unidades; ?>";
 var cOpEntrada   = "<?php echo $opentrada;?>";
 <?php if($Agregar) echo "nsAdd=true;";?>
 //]]></script>
+
+<!--  no-visuales -->
+      <hbox class="box">	
+	<html:div id='box-popup' class='box-popup-off'><html:span class='closepopup' onclick='closepopup()'></html:span>
+	<html:iframe id='windowpopup' name='windowpopup' src='about:blank' width='100%' style='border: 0' height='100%'  onload='if(this.src != "about:blank" ) loadFocusPopup()'></html:iframe> 
+	</html:div>
+      </hbox>	
 
 <popup  id="oe-date-picker-popup" position="after_start" oncommand="RecibeCalendario( this )" value=""/>
 <popup id="accionesNS" class="media">
@@ -75,6 +83,7 @@ var cOpEntrada   = "<?php echo $opentrada;?>";
 		     acciones('<?php echo $unidades; ?>',<?php echo $id; ?>,
 		              '<?php echo $validarSeries; ?>',event);
                      return soloAlfaNumericoSerie(event);"/>
+            <toolbarbutton class="btn" oncommand="CogerNumeroSeriesLote()" label="+" tooltiptext="Ingrese número de serie por lotes." collapsed="<?php echo $valor; ?>"></toolbarbutton>
 	  </row>
 
           <row collapsed="<?php echo $escKBoxtx; ?>">

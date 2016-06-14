@@ -409,7 +409,7 @@ function FormularioEditarArticulo($id){
 	    $empaques       = ($esMenudeo)? ($existencias-$resto)/$unidxemp:0;
 	    $existencias    = ($esMenudeo)? $empaques." ".$empaque." + ".$resto:$existencias;
 	    $disponibleunid = ($disponibleunid>0)? $disponibleunid:$stockunidades;
-	    $txtMoDet       = getModeloDetalle2txt();
+	    $txtMoDet       = getGiroNegocio2txt();
 	    $txtModelo      = $txtMoDet[1];
 	    $txtDetalle     = $txtMoDet[2];
 	    $txtalias       = $txtMoDet[3];

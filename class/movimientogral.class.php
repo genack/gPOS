@@ -227,15 +227,23 @@ function obtenerMovimientoGralProv($IdPagoProvDoc){
 }
 
 function obtenerDocGralProv($IdPagoProvDoc){
-  $sql = "SELECT IF(ges_pagosprovdoc.Estado = 'Confirmado',(SELECT ges_pagosprov.IdComprobanteProv FROM ges_pagosprov WHERE ges_pagosprov.IdPagoProvDoc = ges_pagosprovdoc.IdPagoProvDoc AND Eliminado = 0),'') as IdComprobanteProv ".
-         "FROM ges_pagosprovdoc ".
-         "WHERE ges_pagosprovdoc.IdPagoProvDoc = $IdPagoProvDoc ";
-
-  $row = queryrow($sql);
+  $sql = "SELECT ges_pagosprov.IdComprobanteProv, ".
+       "ges_pagosprovdoc.Estado ".
+       "FROM ges_pagosprov ".
+       "INNER JOIN ges_pagosprovdoc ON ges_pagosprovdoc.IdPagoProvDoc = ges_pagosprov.IdPagoProvDoc ".
+       "WHERE ges_pagosprovdoc.IdPagoProvDoc = $IdPagoProvDoc ".
+       "AND ges_pagosprov.Eliminado = 0 ";
+  
+  $res = query($sql);
   $ComprobanteDoc = "";
-  if($row["IdComprobanteProv"]){
-    $ComprobanteDoc = obtenerDocComprobanteProv($row["IdComprobanteProv"]);
+  $t = '';
+  while($row = Row($res)){
+      if($row["Estado"] == 'Confirmado'){
+          $ComprobanteDoc .= $t.obtenerDocComprobanteProv($row["IdComprobanteProv"]);
+          $t = '~~';
+      }
   }
+
   return $ComprobanteDoc;
 }
 
@@ -254,5 +262,28 @@ function actualizarMovimientoCjaGral($idoc){
          "WHERE  IdPagoProvDoc = $idoc";
   $res = query($sql,"Documento Modificado");
 }
+
+function RegistrarMovimientoBancario($IdLocal,$IdOperacionCaja,$IdOperacionCajaGral,
+				     $IdUsuario,$IdCuenta,$TipoMovimiento,$concepto,
+				     $cantidad){
+
+  $listkey = "IdLocal,IdUsuario,IdCuentaBancaria,IdOperacionCaja,IdOperacionCajaGral, 
+              TipoMovimiento,Concepto,Importe";
+  
+  $keyvalues = "'$IdLocal','$IdUsuario','$IdCuenta','$IdOperacionCaja','$IdOperacionCajaGral',
+                '$TipoMovimiento','$concepto',$cantidad";
+  
+  $sql = "INSERT INTO ges_movimiento_bancario ($listkey) values ($keyvalues)";
+  $res = query($sql,'Insertando nueva operacion cuenta bancaria');  
+}
+
+function obtenerIdPartidaCaja($CodPartida){
+  $sql = "SELECT IdPartidaCaja as Id ".
+         "FROM   ges_partidascaja ".
+         "WHERE  Codigo = '$CodPartida'";
+  $row = queryrow($sql);
+  return $row["Id"];
+}
+
 
 ?>

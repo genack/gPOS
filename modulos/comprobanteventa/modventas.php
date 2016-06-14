@@ -12,7 +12,7 @@ $locales = getLocalesPrecios($IdLocal);
 switch($modo) {
 	case "mostrarComprobantes":
 	  #Valida Suscripciones
-	  checkSuscripciones();
+	  #checkSuscripciones();
 	  include("xulventas.php"); 
 	  break;
 }

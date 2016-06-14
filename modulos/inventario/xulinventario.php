@@ -1,7 +1,7 @@
 <?php
 SimpleAutentificacionAutomatica("visual-xulframe");
 StartXul('Inventario Ajustes',$predata="",$css='');
-StartJs($js='modulos/inventario/inventario.js?v=3.1');
+StartJs($js='modulos/inventario/inventario.js?v=3.1.9');
 ?>
 
   <script>//<![CDATA[
@@ -11,12 +11,19 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
   var cDescuentoGral  = <?php echo $DescuentoGral ?>;
   var cMetodoRedondeo = "<?php echo $MetodoRedondeo ?>";
   var COPImpuesto     = <?php echo $COPImpuesto ?>;
+  var cModo           = "<?php echo $modo ?>";
   //]]></script>
   <?php getMonedaJS($Moneda); ?>
 
 <!--  no-visuales -->
 <?php include("../kardex/kardex.php"); ?>
-<!--  no-visuales -->
+  <!--  no-visuales -->
+
+  <hbox>	
+      <html:div id='box-popup' class='box-popup-off'><html:span class='closepopup' onclick='closepopup()'></html:span>
+          <html:iframe id='windowpopup' name='windowpopup' src='about:blank' width='100%' style='border: 0' height='100%'  onload='if(this.src != "about:blank" ) loadFocusPopup()'></html:iframe> 
+      </html:div>
+  </hbox>	  
 
 <popup id="accionesNS" class="media">
   <menuitem class="menuitem-iconic" image="<?php echo $_BasePath; ?>img/remove16.gif" label="Quitar"  oncommand="quitarns()"/>
@@ -118,6 +125,7 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
       <description>Existencias:</description>
       <menulist  id="idstock" oncommand="BuscarAlmacen()">
        <menupopup>
+ 	 <menuitem value="4" label="Todos" /> 
  	 <menuitem value="0" label="C/S Stock" />
  	 <menuitem value="1" label="Con Stock" />
  	 <menuitem value="2" label="Sin Stock"/>
@@ -180,7 +188,7 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
 </vbox>
 
 <!-- Movimientos Resumen -->
-<vbox id="resumenMovimiento" collapsed="false" class="box" >
+<vbox id="resumenMovimiento" collapsed="true" class="box" >
 <spacer style="height:5px"/>
   <hbox flex="1">
     <caption class="box" id="listKardexResumen" label="<?php echo _("Listado de Ajustes") ?>" />
@@ -189,7 +197,7 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
 </vbox>
 
 <!-- Movimientos Listado-->
-<listbox flex="1" id="listadoMovimiento" collapsed="false" 
+<listbox flex="1" id="listadoMovimiento" collapsed="true" 
 	 contextmenu="AccionesBusquedaMovimientoInventario"> 
     <!-- onkeypress="if (event.keyCode==13) RevisarMovimientoSeleccionada()"
 	 ondblclick="RevisarMovimientoSeleccionada()" -->
@@ -235,7 +243,7 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
     </listhead>
 </listbox>
 
-<vbox  id="resumenMovimientoFooter"  pack="top" align="left" collapsed="false" class="box">
+<vbox  id="resumenMovimientoFooter"  pack="top" align="left" collapsed="true" class="box">
   <caption class="box" label="<?php echo _("Resumen") ?>" />
   <hbox class="resumen" >
     <label value="Total Movimientos:"/>
@@ -250,7 +258,7 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
 
 
 <!-- Resumen Almacen  -->
-<vbox id="resumenAlmacen" collapsed="true" class="box">
+<vbox id="resumenAlmacen" collapsed="false" class="box">
   <hbox flex="1">
     <caption class="box" label="<?php echo _("Stock Almacén") ?>" />
   </hbox>
@@ -258,7 +266,7 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
 
 
 <!-- Almacen Listado-->
-<listbox flex="1" id="listadoAlmacen" collapsed="true"
+<listbox flex="1" id="listadoAlmacen" collapsed="false"
 	 contextmenu="AccionesBusquedaAlmacenInventario" 
 	 onkeypress="if (event.keyCode==13) modificarArticuloSeleccionada()"  
 	 ondblclick="modificarArticuloSeleccionada()" >
@@ -268,6 +276,8 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
       <splitter class="tree-splitter" />
       <listcol flex="0" />
       <splitter class="tree-splitter" />
+      <listcol flex="0" />
+      <splitter class="tree-splitter" />      
       <listcol flex="0" />
       <splitter class="tree-splitter" />
       <listcol flex="6" />
@@ -289,6 +299,7 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
     <listhead>
       <listheader label=" # " style="font-style:italic;"/>
       <listheader label="Almacén"/>
+      <listheader label="Inventariado"/>
       <listheader label="Ultimo Movimiento"/>
       <listheader label="Producto"/>
       <listheader label="Existencias"/>
@@ -301,7 +312,7 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
     </listhead>
 </listbox>
 
-<vbox  id="resumenAlmacenFooter"  pack="top" align="left"  collapsed="true" class="box">
+<vbox  id="resumenAlmacenFooter"  pack="top" align="left"  collapsed="false" class="box">
   <caption class="box" label="<?php echo _("Resumen") ?>" />
    <hbox class="resumen" >
       <label value="Total Productos:"/>
@@ -323,7 +334,7 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
 
 <!-- Form Modificar -->
 <vbox id="formAjustesExistencias" class="box" flex="1" collapsed="true">
-<vbox  class="box" style="margin-top:2em"
+<vbox  class="box" style="margin-top:0.5em"
       align="center"  pack="top" >
   <spacer flex="1"></spacer>
   <hbox pack="center">
@@ -347,9 +358,9 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
 	      <description class="xbase" id="xAjuste" onfocus="this.select()" readonly="true"/>
 	    </row>
 
-	    <row id="rowContenedor" collapsed="true">
+	    <row id="rowContenedor" class="xbase" collapsed="true">
 	      <caption label="Unid/Empaque "/>
-	      <description id="xUnidxEmpaque" style="text-align:right;font-size:11px;" 
+	      <description id="xUnidxEmpaque" class="xbase" 
 		       onfocus="this.select()" readonly="true"/>
 	    </row>
 	    <row id="rowDatoContenedor" collapsed="true">
@@ -380,6 +391,7 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
 	        <textbox style="text-align:right" id="xValorCompra"   onfocus="this.select()" 
 		       onkeypress="return soloNumeros(event,this.value)" 
 		       onchange="setCostoPrecios('costo',this.value)"/>
+	        <textbox id="xCostoEmpaque" value="0" collapsed="true"/>
 	        <button id="xEmpaqueProducto" oncommand="mostrarCostoTotalInvent()" collapsed="false"/>
 	      </hbox>
 	    </row>
@@ -424,6 +436,22 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
 	      <textbox style="text-align:right" id="xPVCD" onfocus="this.select()"
 		       onkeypress="return soloNumeros(event,this.value)" 
 		       onchange="setCostoPrecios('pvcd',this.value)"/>
+
+	    </row>
+
+	    <row id="rowPrecioxEmpaque" collapsed="true">
+	      <caption label="PV/Empaq.." />
+	      <textbox style="text-align:right" id="xPVDE" onfocus="this.select()"
+		       onkeypress="return soloNumeros(event,this.value)" 
+		       onchange="setCostoPrecios('pvde',this.value)"/>
+
+	    </row>
+
+	    <row id="rowPrecioxDocena" collapsed="true">
+	      <caption label="PV/Docena." />
+	      <textbox style="text-align:right" id="xPVDED" onfocus="this.select()"
+		       onkeypress="return soloNumeros(event,this.value)" 
+		       onchange="setCostoPrecios('pvded',this.value)"/>
 
 	    </row>
 	    <spacer style="height:0.8em"/>
@@ -535,7 +563,10 @@ StartJs($js='modulos/inventario/inventario.js?v=3.1');
 </vbox>
 
 <script>//<![CDATA[
-<?php echo "mostrarOperacion('".$xload."',true);"?>
+     <?php echo "mostrarOperacion('".$xload."',true);"?>;
+     <?php  if($xload == 'invent') echo "continuarOperacionInventario();"?>;
+     <?php if($xload == 'ajust') echo "nuevaOperacionAjuste();" ?>;
+ 
 //]]></script>
 
   <?php

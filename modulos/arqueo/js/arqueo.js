@@ -346,6 +346,8 @@ function RegenerarCuadroDeMovimientos(){
 	var xrow = document.createElement("listitem");
 	xrow.setAttribute("esMov",true);
 	xrow.setAttribute("value",mov.IdOperacionCaja);
+        xrow.setAttribute("id","listamovimientos_"+mov.IdOperacionCaja);
+        xrow.setAttribute("oncontextmenu","seleccionarlistamovimientos("+mov.IdOperacionCaja+")");
 	
 	xcell = document.createElement("listcell"); xcell.setAttribute("esMov",true);
 	xcell.setAttribute("label",datetimeToFechaCastellano(mov.FechaPago) );
@@ -397,6 +399,12 @@ function RegenerarCuadroDeMovimientos(){
 	if(mov.Codigo == "S112")
 	    xtransfgral++;
     }
+}
+
+function seleccionarlistamovimientos(linea){
+    var lista = id("listaMovimientos");
+    var fila  = id("listamovimientos_"+linea);
+    lista.selectItem(fila);
 }
 
 // desde "4,43.33 $"  hacia  "443,33"
@@ -460,7 +468,7 @@ function hacerTransferenciaCjaGral(){
 		
 	    var res = entregarOperacionPartidaCaja(cantidad,concepto,fechacaja,
 						   idarqueocaja,op,partida,codpartida);
-	    
+
 	    if(res == "cjacerrada"){
 		alert("gPOS   Operación Caja  \n\n  - La caja está cerrada");
 		return false;
@@ -470,6 +478,12 @@ function hacerTransferenciaCjaGral(){
 		alert("gPOS   Operación Transferencia \n\n  - No se registró la operación \n  - Caja General está cerrada");
 		return false;
 	    }
+
+	    if(res == "cjacentralcerrada"){
+		alert("gPOS   Operación Transferencia \n\n  - No se registró la operación \n  - Caja Central está cerrada");
+		return false;
+	    }
+
 	    CargarArqueoSeleccionado(0);
 	    return true;
 	}
@@ -661,7 +675,7 @@ function comando_HacerUnaOperacion(op){
     var cantidad, concepto, documento, codigodoc, proveedor, partida, codpartida;
 
     if(esCajaSol == 0)
-	return alert("gPOS: Caja \n\n - La caja está cerrada \n - Debe abrir para realizar la operacion");
+	return alert("gPOS: Operación Caja TPV \n\n - La caja está cerrada \n - Debe abrir para realizar la operación");
 
     switch(op){
     case 'Aportacion':
@@ -677,9 +691,12 @@ function comando_HacerUnaOperacion(op){
 	concepto     = id("conceptoTextSubs").value;
 	partida      = id("SeleccionPartidaSust").label;
 	codpartida   = id("SeleccionPartidaSust").value;
-	msj          = "Se hizo una sutraccion de la caja: ";
-	if(trim(codpartida) == 'S112')
+	msj          = "Se hizo una sutracción de la caja: ";
+	if(trim(codpartida) == 'S112'){
 	    msj1 = "\n - Se hizo un ingreso a la caja general: "+cMoneda[1]['S']+" "+formatDinero(cantidad);
+	    if(Local.CajaCentral)
+		msj1 += "\n - Se hizo una sustracción a la caja central: "+cMoneda[1]['S']+" "+formatDinero(cantidad);
+	}
 	break;
 
     case 'Ingreso':
@@ -715,11 +732,14 @@ function comando_HacerUnaOperacion(op){
     if(val)
 	return;
 
+    var p = confirm('gPOS:   Operación Caja TPV \n\n  - Va registrar operación caja, desea continuar?');
+    if (!p) return;
+
     var res = entregarOperacionPartidaCaja(cantidad,concepto,fechacaja,idarqueocaja,op,
 					   partida,codpartida);
 
     if(res == "cjacerrada"){
-	alert("gPOS   Operacion Caja  \n\n  - La caja está cerrada");
+	alert("gPOS   Operación Caja  \n\n  - La caja está cerrada");
     }
 
     if(res == "cjagralcerrada"){
@@ -728,6 +748,11 @@ function comando_HacerUnaOperacion(op){
 
     if(res == "cjacerrada"){
 	alert("gPOS   Operación Caja \n\n  - Partida no seleccionada");
+    }
+
+    if(res == "cjacentralcerrada"){
+	alert("gPOS   Operación Transferencia \n\n  - No se registró la operación \n  - Caja Central está cerrada");
+	return false;
     }
 
     if(res == "exito")
@@ -966,6 +991,15 @@ function exportarMovimientosCaja(xtipo){
 function ModificarOperacionCaja(){
     if(cCodPartida == "0") return;
 
+    var p = prompt("Modificar concepto",cConcepto);
+
+    if(!p) return false;
+
+    if(p == '')
+        return false;
+
+    p = trim(p);
+    
     var	url      = "arqueoservices.php?";
     var xrequest = new XMLHttpRequest();
     var msj      = "";
@@ -974,26 +1008,26 @@ function ModificarOperacionCaja(){
 
     switch(cOperacion){
     case 'Aportacion':
-	concepto     = id("conceptoText").value;
+	concepto     = p;//id("conceptoText").value;
 	break;
 
     case 'Sustraccion':
-	concepto     = id("conceptoTextSubs").value;
+	concepto     = p;//id("conceptoTextSubs").value;
 	break;
 
     case 'Ingreso':
-	concepto     = id("conceptoTextIngreso").value;
+	concepto     = p;//id("conceptoTextIngreso").value;
 	break;
 
     case 'Gasto':
-	concepto     = trim(id("conceptoTextGasto").value);
+	concepto     = p;//trim(id("conceptoTextGasto").value);
 	documento    = id("SeleccionDocumentoGasto").label;
 	codigodoc    = id("CodigoTextGasto").value;
 	proveedor    = id("EmpresaTextGasto").value;
 	concepto     = trim(concepto+', '+documento+' '+codigodoc+' '+proveedor);
 
-	if(!codigodoc || !proveedor)
-	    return alert("gPOS: \n\n   - Ingrese el código del comprobante y seleccione la empresa");
+	//if(!codigodoc || !proveedor)
+	    //return alert("gPOS: \n\n   - Ingrese el código del comprobante y seleccione la empresa");
 	break;
     }
     msj          = "Se guardó los cambios: ";
@@ -1017,7 +1051,7 @@ function ModificarOperacionCaja(){
     
     alert("gPOS:  Operación Caja \n\n - "+ msj);
     id("tpv_concepto_"+cIdOperacionCaja).setAttribute("label",concepto);
-    habilitarOperacionCaja();
+    //habilitarOperacionCaja();
     CargarArqueoSeleccionado(0);
     id("SeleccionArqueo").value = 0;
 }
@@ -1039,7 +1073,7 @@ function revisarOperacionCaja(){
     
     id("ConceptoOperacionCaja").setAttribute("disabled",xcpto);
 
-    habilitarOperacionCaja();
+    //habilitarOperacionCaja();
 }
 
 function editarOperacionCaja(){
@@ -1104,6 +1138,8 @@ function editarOperacionCaja(){
     id("tab_ingreso").setAttribute("selected",xtabingr);
     id("tab_gasto").setAttribute("selected",xtabgast);
     id("tab_boxoperacion").setAttribute("selectedIndex",xselindex);
+
+    mostrarPanelOperacionesCaja('arqueo');
 }
 
 function habilitarOperacionCaja(){
@@ -1338,6 +1374,8 @@ function cargarDatosDefault(){
 
     id("filtroMes").value = afecha[1];
     id("filtroMes").setAttribute("selected",true);
+    id("filtroAnio").value = afecha[0];
+    id("filtroAnio").setAttribute("selected",true);
 
     mesactual = parseInt(afecha[1]);
 }
@@ -1410,4 +1448,18 @@ function obtenerUltimaFechaCaja(){
     var xres = xrequest.responseText;
 
     return xres;
+}
+
+function mostrarPanelOperacionesCaja(xval){
+    var xop    = (xval == 'arqueo')? 'operacion':'arqueo';
+    var xlabel = (xval == 'arqueo')? 'Arqueo Actual':'Operaciones';
+    var xvalue = (xval == 'arqueo')? false:true;
+    var ximage = (xval == 'arqueo')? "../../img/gpos_arqueo.png":"../../img/gpos_tpvcaja_guardarpartida.png";
+    var xcommand = "mostrarPanelOperacionesCaja('"+xop+"')";
+
+    id("boxOperacionesCaja").setAttribute("collapsed",xvalue);
+    id("boxArqueoActualCaja").setAttribute("collapsed",!xvalue);
+    id("btnOperacionesCaja").setAttribute("label",xlabel);
+    id("btnOperacionesCaja").setAttribute("oncommand",xcommand);
+    id("btnOperacionesCaja").setAttribute("image",ximage);
 }

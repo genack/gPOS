@@ -21,6 +21,8 @@ var cPVD                  = 0;
 var cPVDD                 = 0;
 var cPVC                  = 0;
 var cPVCD                 = 0;
+var cPVDE                 = 0;
+var cPVDED                = 0;
 var cExistencias          = 0;
 var ctExistencias         = '';
 var cAjusteExistencias    = 0;
@@ -45,6 +47,11 @@ var cMUSubFamilia         = '';
 var cCostoOP              = 0;
 var cCOPOrigen            = 0;
 var cCostoOrigen          = 0;
+var cModo                 = "";
+var cIdProdBase           = 0;
+
+var PBASE                 = 0;
+
 //var cImpuesto           = 0;
 var ilinealistamovimiento = 0;
 var ilinealistaalmacen    = 0;
@@ -73,6 +80,8 @@ var sPVD  = 0;
 var yPVC  = 0;
 var yPVCD = 0;
 var sPVC  = 0;
+var yPVDE = 0;
+var yPVDED= 0;
 
 var costoxcontenedor = 0;
 
@@ -287,6 +296,7 @@ function AddLineaMovimiento(item,IdKardex,FechaMovimiento,KardexOperacion,Cantid
 
     xitem.setAttribute('class',xclass);
     xitem.setAttribute("id","linealistamovimiento_"+ilinealistamovimiento);
+    xitem.setAttribute("oncontextmenu","seleccionarlineamovmiento("+ilinealistamovimiento+")");
     ilinealistamovimiento++;
 
     xnumitem = document.createElement("listcell");
@@ -401,6 +411,11 @@ function AddLineaMovimiento(item,IdKardex,FechaMovimiento,KardexOperacion,Cantid
     id("MovValorTotal").value           = cMoneda[1]['S']+" "+formatDinero(totalImporte);
 }
 
+function seleccionarlineamovmiento(linea){
+    var lista = id("listadoMovimiento");
+    var fila  = id("linealistamovimiento_"+linea);
+    lista.selectItem(fila);
+}
 
 //Busqueda Almacen
 function BuscarAlmacen(){
@@ -456,7 +471,7 @@ function RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 
     var tex = "";
     var cr = "\n";
-    var item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,Unidades,Costo,PVD,PVDD,PVC,PVCD,Producto,Almacen,ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,Vence,MUSubFamilia,CostoOperativo,COPOrigen,CostoOrigen;
+    var item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,Unidades,Costo,PVD,PVDD,PVC,PVCD,Producto,Almacen,ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,Vence,MUSubFamilia,CostoOperativo,COPOrigen,CostoOrigen,PVDE,PVDED,EstadoInventario,IdProdBase;
     var node,t,i;
     var totalProductos = 0;
     var totalStock     = 0;
@@ -499,9 +514,13 @@ function RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 	    Lote            = node.childNodes[t++].firstChild.nodeValue;
 	    Vence           = node.childNodes[t++].firstChild.nodeValue;
 	    CostoOperativo  = node.childNodes[t+2].firstChild.nodeValue;
-	    MUSubFamilia    = node.childNodes[t+3].firstChild.nodeValue;
-	    COPOrigen       = node.childNodes[t+4].firstChild.nodeValue;
-	    CostoOrigen     = node.childNodes[t+5].firstChild.nodeValue;
+	    PVDE            = node.childNodes[t+3].firstChild.nodeValue;
+	    PVDED           = node.childNodes[t+4].firstChild.nodeValue;
+            EstadoInventario= node.childNodes[t+5].firstChild.nodeValue;
+            IdProdBase      = node.childNodes[t+6].firstChild.nodeValue;
+	    MUSubFamilia    = node.childNodes[t+7].firstChild.nodeValue;
+	    COPOrigen       = node.childNodes[t+8].firstChild.nodeValue;
+	    CostoOrigen     = node.childNodes[t+9].firstChild.nodeValue;
 
 	    if ( Unidades >0   ) totalStock++; 
  	    if ( Unidades == 0 ) totalSinStock++; 
@@ -513,7 +532,7 @@ function RawBuscarAlmacen(nombre,codigo,familia,marca,stock,
 				       ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,
 				       Vence,totalStock,totalImporte,totalSinStock,
 				       totalProductos,MUSubFamilia,CostoOperativo,COPOrigen,
-				       CostoOrigen);
+				       CostoOrigen,PVDE,PVDED,EstadoInventario,IdProdBase);
         }
     }
 }
@@ -522,10 +541,11 @@ function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
 			 Cantidad,Costo,PVD,PVDD,PVC,PVCD,Producto,Almacen,
 			 ResumenKardex,Cont,Unid,UnidxCont,Menudeo,Serie,Lote,Vence,
 			 totalStock,totalImporte,totalSinStock,totalProductos,
-			 MUSubFamilia,CostoOperativo,COPOrigen,CostoOrigen){
+			 MUSubFamilia,CostoOperativo,COPOrigen,CostoOrigen,PVDE,PVDED,
+                         EstadoInventario,IdProdBase){
 
     var lista    = id("listadoAlmacen");
-    var xnumitem,xitem,xFechaMovimiento,xUnidades,xCosto,xPVD,xPVDD,xPVC,xPVCD,xProducto,xAlmacen,vCantidad,vExistencias,xResumenKardex,xSerie,xLote,xVence,xMenudeo,xUnidxCont,xCont,xMUSubFamilia,xCostoOperativo,xCOPOrigen,xCostoOrigen;
+    var xnumitem,xitem,xFechaMovimiento,xUnidades,xCosto,xPVD,xPVDD,xPVC,xPVCD,xProducto,xAlmacen,vCantidad,vExistencias,xResumenKardex,xSerie,xLote,xVence,xMenudeo,xUnidxCont,xCont,xMUSubFamilia,xCostoOperativo,xCOPOrigen,xCostoOrigen,xPVDE,xPVDED,xEstadoInventario,xIdProdBase;
     var vResto,vMenudeo,vExistencias,vCantidad,xclass;
 
     //Cantidad
@@ -540,6 +560,7 @@ function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
 
     xitem.setAttribute('class',xclass);
     xitem.setAttribute("id","linealistaalmacen_"+ilinealistaalmacen);
+    xitem.setAttribute("oncontextmenu","seleccionarlineaalmacen("+ilinealistaalmacen+")");
     ilinealistaalmacen++;
 
     xnumitem = document.createElement("listcell");
@@ -645,6 +666,18 @@ function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
     xPVCD.setAttribute("id","pvcd_"+IdAlmacen);
     xPVCD.setAttribute("style","text-align:right;");
 
+    xPVDE = document.createElement("listcell");
+    xPVDE.setAttribute("label",PVDE);
+    xPVDE.setAttribute("id","pvde_"+IdAlmacen);
+    xPVDE.setAttribute("style","text-align:right;");
+    xPVDE.setAttribute("collapsed","true");
+
+    xPVDED = document.createElement("listcell");
+    xPVDED.setAttribute("label",PVDED);
+    xPVDED.setAttribute("id","pvded_"+IdAlmacen);
+    xPVDED.setAttribute("style","text-align:right;");
+    xPVDED.setAttribute("collapsed","true");
+
     xAlmacen = document.createElement("listcell");
     xAlmacen.setAttribute("label", Almacen);
     xAlmacen.setAttribute("style","text-align:left;");
@@ -669,8 +702,18 @@ function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
     xCostoOrigen.setAttribute("collapsed","true");
     xCostoOrigen.setAttribute("id","costoorigen_"+IdAlmacen);
 
+    xEstadoInventario = document.createElement("listcell");
+    xEstadoInventario.setAttribute("label", (EstadoInventario == 1)? 'Inventariado':'');
+    xEstadoInventario.setAttribute("style","text-align:left;");
+
+    xIdProdBase = document.createElement("listcell");
+    xIdProdBase.setAttribute("value",IdProdBase);
+    xIdProdBase.setAttribute("collapsed","true");
+    xIdProdBase.setAttribute("id","idprodbase_"+IdAlmacen);
+    
     xitem.appendChild( xnumitem );
     xitem.appendChild( xAlmacen );
+    xitem.appendChild( xEstadoInventario );
     xitem.appendChild( xFechaMovimiento );
     xitem.appendChild( xProducto );
     xitem.appendChild( xExistencias );
@@ -695,6 +738,9 @@ function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
     xitem.appendChild( xMUSubFamilia );
     xitem.appendChild( xCOPOrigen );
     xitem.appendChild( xCostoOrigen );
+    xitem.appendChild( xPVDE );
+    xitem.appendChild( xPVDED );
+    xitem.appendChild( xIdProdBase );
     lista.appendChild( xitem );	
 
     //totalStock,totalImporte,totalSinStock,
@@ -703,6 +749,14 @@ function AddLineaAlmacen(item,IdAlmacen,IdProducto,IdLocal,FechaMovimiento,
     id("sinStock").value       = totalSinStock;
     id("ValorTotal").value     = cMoneda[1]['S']+" "+formatDinero(totalImporte);
 }
+
+function seleccionarlineaalmacen(linea){
+    var lista = id("listadoAlmacen");
+    var fila  = id("linealistaalmacen_"+linea);
+    lista.selectItem(fila);
+}
+
+
 
 function VerObservCompra(){
 
@@ -806,7 +860,7 @@ function nuevaOperacionAjuste(){
     cIdPedido         = 0;
     cIdComprobante    = 0;
 
-    id("btnVolver").setAttribute("label",' Volver Ajustes');
+    id("btnVolver").setAttribute("label",' Ver Ajustes');
     id("btnVolver").setAttribute("oncommand","mostrarOperacion('ajust',false)");
     id("btnVolver").setAttribute("image","../../img/gpos_volver.png");
     
@@ -844,7 +898,7 @@ function nuevaOperacionInventario(xinv){
     id("btnImprimirInventarioPDF").setAttribute("collapsed",true);
     id("btnImprimirInventarioCVS").setAttribute("collapsed",true);
 
-    id("btnVolver").setAttribute("label",' Volver Inventarios');
+    id("btnVolver").setAttribute("label",' Ver Inventarios');
     id("btnVolver").setAttribute("oncommand","mostrarOperacion('invent',false)");
     id("btnVolver").setAttribute("image","../../img/gpos_volver.png");
 
@@ -867,7 +921,7 @@ function continuarOperacionInventario(){
     cIdComprobante    = acinvent[2];
     cEstadoInventario = 'Pendiente';
 
-    id("btnVolver").setAttribute("label",' Volver Inventarios');
+    id("btnVolver").setAttribute("label",' Ver Inventarios');
     id("btnVolver").setAttribute("oncommand","mostrarOperacion('invent',false)");
     id("btnVolver").setAttribute("image","../../img/gpos_volver.png");
 
@@ -883,6 +937,7 @@ function continuarOperacionInventario(){
     id("wtitleInventario").setAttribute("label","Inventario "+linvent+" > Stock Almacén");
     id("listaPaginas").setAttribute('collapsed',true);
     //id("btnFinalizarInventario").setAttribute('collapsed',true);
+    id("btnAltaRapida").setAttribute('collapsed',false);
 }
 
 function finalizaOperacionInventario(){
@@ -907,6 +962,7 @@ function finalizaOperacionInventario(){
     id("inventario_Pendiente").setAttribute("label",newinv[0]+"- Finalizado");
     id("inventario_Pendiente").setAttribute("id","inventario_Finalizado");
     mostrarOperacion('invent',false);
+    continuarOperacionInventario();
 }
 
 function xlistboxInventario(xlist){
@@ -992,8 +1048,8 @@ function mostrarOperacion(xval,xinit){
     var xfechainv   = true;
     var xbtnvolver  = true;
     var xtxtinvent  = '';
-    var lbtnvolver  = ' Volver Inventarios';
-    var cbtnvolver  = "mostrarOperacion('invent',false)";
+    var lbtnvolver  = ' Ver Inventarios';
+    var cbtnvolver  = "continuarOperacionInventario()";//"mostrarOperacion('invent',false)";
     var mbtnvolver  = "../../img/gpos_volver.png";
     var txtInvent   = 'Inventarios';
     var xtitleInv   = true;
@@ -1009,7 +1065,7 @@ function mostrarOperacion(xval,xinit){
 	xfecha            = false;
 	xajuste           = false;
 	xope              = 5;
-	cEstadoInventario ='none';
+	cEstadoInventario = 'none';
 	cIdInventario     = 0;
 	cIdPedido         = 0;
 	cIdComprobante    = 0;
@@ -1089,6 +1145,8 @@ function mostrarOperacion(xval,xinit){
     id("menuAlmacenFinalizarInventario").setAttribute("collapsed",xmenuopal);
     id("fechaHasta").setAttribute("collapsed",xfecha);
     id("fechaDesde").setAttribute("collapsed",xfecha);
+    id("menuModificarDescripcionArticulo").setAttribute("collapsed",xmenualta);
+    id("menuModificarDetalleArticulo").setAttribute("collapsed",xmenualta);
 
     var xval = (cTotalFilas > cFilasPagina)? false:true;
     id("listaPaginas").setAttribute('collapsed',xval);
@@ -1154,12 +1212,15 @@ function modificarArticuloSeleccionada(){
     cPVC           = id("pvc_"+idex.value).getAttribute("label");
     cPVCD          = id("pvcd_"+idex.value).getAttribute("label");
     cCostoOP       = id("costooperativo_"+idex.value).getAttribute("label");
+    cPVDE          = id("pvde_"+idex.value).getAttribute("label");
+    cPVDED         = id("pvded_"+idex.value).getAttribute("label");
 
     cCosto         = (cCosto == 0 && cInventario == 'Inventario')? cCostoOrigen:cCosto;
     cCostoOP       = (cCostoOP == 0 && cInventario == 'Inventario')? cCOPOrigen:cCostoOP;
 
     cPrecio        = parseFloat(cCosto*(parseFloat(cImpuesto)+100)/100).toFixed(2);
     cMUSubFamilia  = id("musubfamilia_"+idex.value).getAttribute("value");
+    cIdProdBase    = id("idprodbase_"+idex.value).getAttribute("value");
 
     id("formAjustesExistencias").setAttribute("collapsed",false);
     id("btnVolver").setAttribute("collapsed",true);
@@ -1178,6 +1239,7 @@ function modificarArticuloSeleccionada(){
     id("xEmpaques").removeAttribute("readonly");
     id("xUnidades").removeAttribute("readonly");
     id("xExistenciasFisico").removeAttribute("readonly");
+    id("busquedaMovimiento").setAttribute("collapsed",true);
     
     id("xExistenciasFisico").focus();
     id("xAjusteOperacionSalida").label  = "Elige motivo ajuste";
@@ -1185,6 +1247,9 @@ function modificarArticuloSeleccionada(){
     id("rowContenedor").setAttribute("collapsed",esMenudeo);
     id("rowExistencias").setAttribute("collapsed",!esMenudeo);
     id("rowDatoContenedor").setAttribute("collapsed",esMenudeo);
+    id("rowPrecioxEmpaque").setAttribute("collapsed",esMenudeo);
+    id("rowPrecioxDocena").setAttribute("collapsed",esMenudeo);
+
     id("xUnidxEmpaque").setAttribute("value",cUnidxCont+''+cUnidad+'/'+cContenedor);
     id("xEmpaques").value          = cEmpaques;
     id("xUnidades").value          = cUnidades;
@@ -1199,6 +1264,8 @@ function modificarArticuloSeleccionada(){
     id("xPVDD").value              = cPVDD;  
     id("xPVC").value               = cPVC;  
     id("xPVCD").value              = cPVCD;  
+    id("xPVDE").value              = cPVDE;  
+    id("xPVDED").value             = cPVDED;  
     cAjusteModo                    = 'igual';
     cAjusteExistencias             = 0;
     cSeries                        = false;
@@ -1329,7 +1396,9 @@ function igualStock(){
 	           "&xpvd="+cPVD+
 	           "&xpvdd="+cPVDD+
 	           "&xpvc="+cPVC+
-	           "&xpvcd="+cPVCD;
+	           "&xpvcd="+cPVCD+
+	           "&xpvde="+cPVDE+
+	           "&xpvded="+cPVDED;
 
     xrequest.open("POST",url,false);
     xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -1402,7 +1471,9 @@ function quitaStock(xget){
 	           "&lotevence="+LoteVence+
 	           "&serievence="+cSeriesVence+
                    "&xajustes="+cAjusteExistencias+
-	           "&xrkardex="+cResumenKardex;
+	           "&xrkardex="+cResumenKardex+
+	           "&xpvde="+cPVDE+
+	           "&xpvded="+cPVDED;
 
     xrequest.open("POST",url,false);
     xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -1546,6 +1617,8 @@ function agregaStockAltaRapida(arProducto,xlist,xitem){
     cPVDD              = arProducto[cb+'_pvdd'];
     cPVC               = arProducto[cb+'_pvc'];
     cPVCD              = arProducto[cb+'_pvcd'];
+    cPVDE              = arProducto[cb+'_pvde'];
+    cPVDED             = arProducto[cb+'_pvded'];
     cPrecio            = parseFloat(cCosto*(parseFloat(cImpuesto)+100)/100).toFixed(2);
 
     esSerie            = ( arProducto[cb+'_serie'] == '1');
@@ -1598,7 +1671,9 @@ function registraStockAltaRapida(xget){
 	           "&serievence="+cSeriesVence+
                    "&xajuste="+cAjusteExistencias+
 	           "&xrkardex="+cResumenKardex+
-                   "&xcostoop="+cCostoOP;
+                   "&xcostoop="+cCostoOP+
+                   "&xpvde="+cPVDE+
+                   "&xpvded="+cPVDED;
 
     xrequest.open("POST",url,false);
     xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -1690,7 +1765,9 @@ function agregaStock(xget){
 	           "&serievence="+cSeriesVence+
                    "&xajuste="+cAjusteExistencias+
 	           "&xrkardex="+cResumenKardex+
-                   "&xcostoop="+cCostoOP;
+                   "&xcostoop="+cCostoOP+
+                   "&xpvde="+cPVDE+
+                   "&xpvded="+cPVDED;
 
     xrequest.open("POST",url,false);
     xrequest.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -1831,7 +1908,7 @@ function volverStock(){
     var vinvent    = (xinvent)? id("inventario_Pendiente").value:'';
     var cinvent    = id("filtroInventarios").value;
     var xcontinuar = (  cInventario != 'Ajuste' && vinvent == cinvent )? false:true; 
-    var xbtnvolver = (	cInventario != 'Ajuste')? " Volver Inventarios":" Volver Ajustes";
+    var xbtnvolver = (	cInventario != 'Ajuste')? " Ver Inventarios":" Ver Ajustes";
     var cbtnvolver = (	cInventario != 'Ajuste')? "mostrarOperacion('invent',false)":"mostrarOperacion('ajust',false)";
  
     id("formAjustesExistencias").setAttribute("collapsed",true);
@@ -1904,8 +1981,13 @@ function setCostoPrecios(xval,xdato){
 
     var xCosto  = parseFloat(id("xValorCompra").value);  //cCosto
     var xPrecio = parseFloat(id("xCostoOP").value);     //cCostoOP
+    var xCostoE = parseFloat(id("xCostoEmpaque").value);  // costo por empaque
+    var uxcont  = parseFloat(id("xEmpaques").value);
     xCosto      = (!xCosto)? 0:xCosto;
     xPrecio     = (!xPrecio)? 0:xPrecio;
+    var xCostoDoc = xCosto*12;
+    xCostoE     = (xCostoE > 0.01)? xCostoE:xCosto*uxcont;
+
     cCosto      = xCosto;
     cCostoOP    = xPrecio;
     cPrecio     = parseFloat(xCosto*(parseFloat(cImpuesto)+100)/100).round(2);
@@ -1914,10 +1996,15 @@ function setCostoPrecios(xval,xdato){
     var MUD     = (xCosto + COP)*(xMUD/100);
     var MUC     = (xCosto + COP)*(xMUC/100);
 
+    PBASE = parseFloat(xCosto) + parseFloat(xCosto*cImpuesto/100);
+    PBASE = PBASE.round(2);
+
     yPVD  = cPVD;
     yPVDD = cPVDD;
     yPVC  = cPVC;
     yPVCD = cPVCD;
+    yPVDE = cPVDE;
+    yPVDED= cPVDED;
 
     switch (xval) {
 
@@ -1944,13 +2031,32 @@ function setCostoPrecios(xval,xdato){
 	cPVC     = yPVC;
 	cPVCD    = yPVCD;
 
+	// Precio por empaque
+	yPVDE    = xCostoE + MUD + COP;
+	IMP      = (yPVDE*cImpuesto/100).round(2);
+	yPVDE    = (COPImpuesto)? (yPVDE + IMP + xPrecio):(yPVDE + IMP);
+	yPVDE    = yPVDE.round(2);
+	sPVDE    = yPVDE;
+	cPVDE    = yPVDE;
+
+	// Precio por docena
+	yPVDED   = xCostoDoc + MUD + COP;
+	IMP      = (yPVDED*cImpuesto/100).round(2);
+	yPVDED   = (COPImpuesto)? (yPVDED + IMP + xPrecio):(yPVDED + IMP);
+	yPVDED   = yPVDED.round(2);
+	sPVDED   = yPVDED;
+	cPVDED   = yPVDED;
+
 	break;
 
     case 'pvd':
         var PVD  = parseFloat(id("xPVD").value);
-	PVD      = (PVD <= FormatPreciosTPV(sPVD))? sPVD:PVD;
+	//PVD      = (PVD <= FormatPreciosTPV(sPVD))? sPVD:PVD;
+
+        PVD      = (PVD < PBASE)? sPVD:PVD;
 	yPVD     = PVD;
-	yPVDD    = (yPVD-(MUD*xDSTO/100)).round(2);
+        var xdto = (PVD < sPVD)? 0:(MUD*xDSTO/100);
+	yPVDD    = (yPVD-xdto).round(2);
 	cPVD     = yPVD;
 	cPVDD    = yPVDD;
 
@@ -1958,7 +2064,9 @@ function setCostoPrecios(xval,xdato){
 
     case 'pvdd':
 	var PVDD = parseFloat(id("xPVDD").value);
-	PVDD     = (PVDD < FormatPreciosTPV(sPVD) || PVDD > yPVD)? sPVD-(MUD*xDSTO/100):PVDD;
+	//PVDD     = (PVDD < FormatPreciosTPV(sPVD) || PVDD > yPVD)? sPVD-(MUD*xDSTO/100):PVDD;
+        var xdto = (PVDD < sPVD)? PBASE:sPVD-(MUD*xDSTO/100);
+        PVDD     = (PVDD < PBASE || PVDD > yPVD)? xdto:PVDD;
 	yPVDD    = PVDD;
 	cPVDD    = yPVDD;
 
@@ -1966,9 +2074,11 @@ function setCostoPrecios(xval,xdato){
 
     case 'pvc':
 	var PVC  = parseFloat(id("xPVC").value);
-	PVC      = (PVC <= FormatPreciosTPV(sPVC))? sPVC:PVC;
+	//PVC      = (PVC <= FormatPreciosTPV(sPVC))? sPVC:PVC;
+        PVC      = (PVC < PBASE)? sPVC:PVC;
 	yPVC     = PVC;
-	yPVCD    = (yPVC-(MUC*xDSTO/100)).round(2);
+        var xdto = (PVC < sPVC)? 0:(MUC*xDSTO/100);
+	yPVCD    = (yPVC-xdto).round(2);
 	cPVC     = yPVC;
 	cPVCD    = yPVCD;
 
@@ -1976,22 +2086,44 @@ function setCostoPrecios(xval,xdato){
 
     case 'pvcd':
 	var PVCD = parseFloat(id("xPVCD").value);
-	PVCD     = (PVCD < FormatPreciosTPV(sPVC) || PVCD > yPVC)? sPVC-(MUC*xDSTO/100):PVCD;
+	//PVCD     = (PVCD < FormatPreciosTPV(sPVC) || PVCD > yPVC)? sPVC-(MUC*xDSTO/100):PVCD;
+        var xdto = (PVCD < sPVC)? PBASE:sPVC-(MUC*xDSTO/100);
+        PVCD     = (PVCD < PBASE || PVCD > yPVC)? xdto:PVCD;
 	yPVCD    = PVCD;
 	cPVCD    = yPVCD;
 
 	break;
+
+    case 'pvde':
+	var PVDE = parseFloat(id("xPVDE").value);
+	PVDE     = (PVDE <= 0 )? sPVDE:PVDE;
+	yPVDE    = PVDE;
+	cPVDE    = yPVDE;
+
+	break;
+
+    case 'pvded':
+	var PVDED = parseFloat(id("xPVDED").value);
+	PVDED     = (PVDED <= 0 )? sPVDED:PVDED;
+	yPVDED    = PVDED;
+	cPVDED    = yPVDED;
+
+	break;
     }
 
-    cPVD  = FormatPreciosTPV(yPVD);
-    cPVDD = FormatPreciosTPV(yPVDD);
-    cPVC  = FormatPreciosTPV(yPVC);
-    cPVCD = FormatPreciosTPV(yPVCD);
+    cPVD   = FormatPreciosTPV(yPVD);
+    cPVDD  = FormatPreciosTPV(yPVDD);
+    cPVC   = FormatPreciosTPV(yPVC);
+    cPVCD  = FormatPreciosTPV(yPVCD);
+    cPVDE  = FormatPreciosTPV(yPVDE);
+    cPVDED = FormatPreciosTPV(yPVDED);
 
     id("xPVD").value   = FormatPreciosTPV(yPVD);
     id("xPVDD").value  = FormatPreciosTPV(yPVDD);
     id("xPVC").value   = FormatPreciosTPV(yPVC);
     id("xPVCD").value  = FormatPreciosTPV(yPVCD);
+    id("xPVDE").value  = FormatPreciosTPV(yPVDE);
+    id("xPVDED").value = FormatPreciosTPV(yPVDED);
 }
 
 function exportarInventario(xval){
@@ -2188,6 +2320,35 @@ function seleccionarModoAjuste(){
 function CambioLocalInventario(){
     var local = id("FiltroMovimientoLocal").value;
     if(cIdLocal == local) return;
-    var url = "modinventario.php?modo=verInventario&local="+local;
+
+    if(cModo == 'verInventario')
+	var url = "modinventario.php?modo=verInventario&local="+local;
+    else
+	var url = "modinventario.php?modo=verAjuste&local="+local;
+
     document.location=url;
+}
+
+function modificarDescripcionArticulo(xvalue){
+    var idex       = id("listadoAlmacen").selectedItem;
+    if(!idex) return;
+
+    cIdProducto  = id("idproducto_"+idex.value).getAttribute("value");
+    cIdProdBase  = id("idprodbase_"+idex.value).getAttribute("value");
+    
+    switch(xvalue){
+    case 'nombre':
+        var url = '../../modproductos.php?modo=editar&id='+cIdProducto+'&idBase='+cIdProdBase+'&espopup=true';
+        break;
+    case 'detalle':
+        var url = '../../modproductos.php?modo=editarbar&id='+cIdProducto+'&idBase='+cIdProdBase+'&espopup=true';
+        break;
+    }
+
+    popup(url,'editproducto');
+}
+
+function cerrarVentanaEditProducto(){
+    closepopup();
+    BuscarAlmacen();
 }

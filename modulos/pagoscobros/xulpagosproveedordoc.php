@@ -1,7 +1,7 @@
 <?php
 SimpleAutentificacionAutomatica("visual-xulframe");
 StartXul('Documentos de Pagos',$predata="",$css='');
-StartJs($js='modulos/pagoscobros/pagosproveedordoc.js?v=3.1');
+StartJs($js='modulos/pagoscobros/pagosproveedordoc.js?v=3.1.2');
 ?>
 
   <script>//<![CDATA[
@@ -15,6 +15,7 @@ StartJs($js='modulos/pagoscobros/pagosproveedordoc.js?v=3.1');
   var IdMonedaOC     = "<?php echo $idmoneda?>";
 
   //]]></script>
+<?php getMonedaJS($Moneda); ?>
 
 <!--  no-visuales -->
 <?php include("pagosproveedor.php"); ?>
@@ -284,6 +285,10 @@ StartJs($js='modulos/pagoscobros/pagosproveedordoc.js?v=3.1');
 	     </menupopup>
 	    </menulist>
 	  </row>
+	  <row id="trasladomoneda" collapsed="false">
+	    <caption label="" />
+            <checkbox id="checkCambioDivisa" label="Registrar cambio divisa"/>
+	  </row>           
 	  <row id="cambmoneda">
 	    <caption label="Cambio Moneda" />
 	    <textbox id="CambioMoneda"  size="20" value="1"

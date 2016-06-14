@@ -297,7 +297,12 @@ function ModificarCliente($parametros,$IdLocal2=false) {
 }
 
 function BorrarCliente($id){
-	$oCliente = new cliente;	
+	$oCliente = new cliente;
+
+    if(verficarEstadoSuscripcionCliente($id)){
+        echo gas("aviso",_("No se ha podido borrar el cliente, su estado de suscripcion debe estar en Finalizado o Cancelado"));
+        return;
+    }
 	
 	if ($oCliente->Load($id)) {		
 		if(isVerbose())
@@ -329,8 +334,8 @@ switch ($modo) {
 		$poblacion 	= CleanText($_POST["Localidad"]);
 		$cp 		= CleanCP($_POST["CP"]);
 		$email 		= (isset($_POST["Email"]))? CleanEmail($_POST["Email"]):'';
-		$telefono1 	= CleanText($_POST["Telefono1"]);
-		$telefono2 	= (isset($_POST["Telefono2"]))? CleanText($_POST["Telefono2"]):'';
+		$telefono1 	= CleanTextTel($_POST["Telefono1"]);
+		$telefono2 	= (isset($_POST["Telefono2"]))? CleanTextTel($_POST["Telefono2"]):'';
 		$contacto 	= (isset($_POST["Contacto"]))? CleanText($_POST["Contacto"]):'';
 		$cargo 		= (isset($_POST["Cargo"]))? CleanText($_POST["Cargo"]):'';
 		$cuentabancaria = CleanCC($_POST["CuentaBancaria"]);
@@ -362,8 +367,8 @@ switch ($modo) {
 		$poblacion 	= CleanText($_POST["Localidad"]);
 		$cp		= CleanCP($_POST["CP"]);
 		$email 		= (isset($_POST["Email"]))? CleanEmail($_POST["Email"]):'';
-		$telefono1 	= CleanText($_POST["Telefono1"]);
-		$telefono2 	= (isset($_POST["Telefono2"]))? CleanText($_POST["Telefono2"]):'';
+		$telefono1 	= CleanTextTel($_POST["Telefono1"]);
+		$telefono2 	= (isset($_POST["Telefono2"]))? CleanTextTel($_POST["Telefono2"]):'';
 		$contacto 	= (isset($_POST["Contacto"]))? CleanText($_POST["Contacto"]):'';
 		$cargo 		= (isset($_POST["Cargo"]))? CleanText($_POST["Cargo"]):'';
 		$cuentabancaria = CleanCC($_POST["CuentaBancaria"]);

@@ -5,9 +5,10 @@ include("../../tool.php");
 $IdLocal   = CleanID(getSesionDato("IdTiendaDependiente"));
 $TipoVenta = CleanText(getSesionDato("TipoVentaTPV"));
 $Moneda = getSesionDato("Moneda"); 
+$esCajaCentral = getSesionDato("esCajaCentral"); 
 
 StartXul('Caja TPV',$predata="",$css='');
-StartJs($js='modulos/arqueo/js/arqueo.js?v=3.1.1');
+StartJs($js='modulos/arqueo/js/arqueo.js?v=3.1.6');
 ?>
 
   <?php getMonedaJS($Moneda); ?>
@@ -25,7 +26,7 @@ StartJs($js='modulos/arqueo/js/arqueo.js?v=3.1.1');
       </menu>
       <menuseparator />
 	<menuitem label="<?php echo _("Modificar Concepto"); ?>" id="ConceptoOperacionCaja"
-		  oncommand="editarOperacionCaja()"/> 
+		  oncommand="ModificarOperacionCaja()"/> 
     </popup>
   </popupset>
   <!-- No Visuales /-->
@@ -37,7 +38,7 @@ StartJs($js='modulos/arqueo/js/arqueo.js?v=3.1.1');
   </hbox>	
       
   <vbox  flex="1" class="box">
-    <hbox align="start" flex="1">
+    <hbox align="start" flex="0">
       <hbox>
           <caption class="box" label="Arqueos de caja"/>
           <menulist id="filtroAnio" oncommand="actualizarArqueo()">
@@ -102,7 +103,7 @@ StartJs($js='modulos/arqueo/js/arqueo.js?v=3.1.1');
       </listhead>
     </listbox>
 
-    <groupbox flex="1">
+    <vbox id="boxArqueoActualCaja">
       <caption class="box" label="<?php echo _("Arqueo actual") ?>"/>
 
       <hbox pack="center">
@@ -191,8 +192,11 @@ StartJs($js='modulos/arqueo/js/arqueo.js?v=3.1.1');
 	  <button id="botonArqueo" image="<?php echo $_BasePath ?>/img/gpos_tpvcaja_arqueo.png" label=" <?php echo _(" Arqueo caja") ?> " flex="1" oncommand="Comando_ArqueoCaja()" class="btn"/>
 	</vbox>
       </hbox>
-      <spacer style="height: 16px"/>
-      <tabbox  flex="1">
+      </vbox>
+      <spacer style="height: 3px"/>
+      <vbox id="boxOperacionesCaja" collapsed="true">
+      <caption class="box" label="<?php echo _("Operaciones") ?>"/>
+      <tabbox  flex="0">
 	<tabs >
 	  <tab image="<?php echo $_BasePath ?>img/gpos_tpv_dinero_aport.png"
                id="tab_aportacion" label="<?php echo _(" Aportación") ?>"/>
@@ -203,7 +207,7 @@ StartJs($js='modulos/arqueo/js/arqueo.js?v=3.1.1');
 	  <tab image="<?php echo $_BasePath ?>img/gpos_tpv_dinero_output.png"
                id="tab_gasto" label="<?php echo _(" Gasto") ?>"/>
 	</tabs>
-	<tabpanels flex="1" id="tab_boxoperacion" class="box">
+	<tabpanels flex="1" id="tab_boxoperacion" class="box" style="padding:0em">
 	  <groupbox>
 	    <hbox align="center">
               <caption label="<?php echo _("Partida:") ?>"/>
@@ -313,7 +317,15 @@ StartJs($js='modulos/arqueo/js/arqueo.js?v=3.1.1');
 	  </groupbox>
 	</tabpanels>          
       </tabbox>
-    </groupbox> 
+    </vbox>
+   <spacer style="height:3px"/>    
+     <hbox >
+      <button flex="1" class="media btn" image="<?php echo $_BasePath; ?>img/gpos_volver.png" label="Volver TPV" oncommand="parent.VerTPV()" collapsed="false"></button>						    
+      <button flex="1" id="btnOperacionesCaja" label="Operaciones" collapsed="false" 
+            image="<?php echo $_BasePath; ?>img/gpos_tpvcaja_guardarpartida.png" 
+            oncommand="mostrarPanelOperacionesCaja('arqueo')" 
+            style="height:2.5em;font-size:18px" class="btn"></button>
+     </hbox>						    
   </vbox> 
 
 <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/cadenas.js.php?ver=1/r<?php echo rand(0,99999999); ?>"/>
@@ -353,6 +365,7 @@ document.onkeydown = function(event) {
 
 var Local = new Object();
 Local.IdLocalActivo = '<?php echo CleanID(getSesionDato("IdTiendaDependiente")) ?>';
+Local.CajaCentral   = '<?php echo $esCajaCentral ?>';
 
 setTimeout("onLoadFormulario()",300);
 

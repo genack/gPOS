@@ -55,13 +55,16 @@ function MostrarLocalParaEdicion($id) {
 
 function setAlmacenCentral($id){
 	$id = CleanID($id);
-	$sql = "UPDATE ges_locales SET AlmacenCentral = 0";
+	$sql = "UPDATE ges_locales SET AlmacenCentral = 0, CajaCentral = 0";
 	query($sql);
 	
 	$sql = "UPDATE ges_locales SET AlmacenCentral = 1 WHERE IdLocal = '$id'";
 	query($sql);
 	
 	$sql = "UPDATE ges_parametros SET AlmacenCentral = '$id'";
+	query($sql);
+
+	$sql = "UPDATE ges_locales SET CajaCentral = 0 WHERE IdLocal <> '$id'";
 	query($sql);
 	
 	if(getSesionDato("IdTienda")==$id)
@@ -84,7 +87,8 @@ function ModificarLocal($id,$nombre,
 			$vigencia,$garantia,$nfiscal,$MensajePromo,
 			$moneda0,$moneda0plural,$moneda0simbolo,
 			$moneda1,$moneda1plural,$moneda1simbolo,$descuento,
-			$metodoredondeo,$esCOPImpuesto,$cuentabancaria2,$esPass){
+			$metodoredondeo,$esCOPImpuesto,$cuentabancaria2,$esPass,
+			$esCajaCentral){
 	$oLocal = new local;
 	if (!$oLocal->Load($id)){
 		error(__FILE__ . __LINE__ ,"W: no pudo mostrareditar '$id'");
@@ -123,6 +127,7 @@ function ModificarLocal($id,$nombre,
 	$oLocal->set("COPImpuesto",$esCOPImpuesto,FORCE);
 	$oLocal->set("CuentaBancaria2",$cuentabancaria2,FORCE);
 	$oLocal->set("AdmitePassword",$esPass,FORCE);
+	$oLocal->set("CajaCentral",$esCajaCentral,FORCE);
 
 	if ($esCentral){
 		setAlmacenCentral($id);	
@@ -203,8 +208,9 @@ function CrearLocal($nombre,$nombrelegal,$direccion,$poblacion,$codigopostal,
 	$oLocal->set("Impuesto",$igv,FORCE);
 	$oLocal->set("Percepcion",$ipc,FORCE);
 	$oLocal->set("AdmitePassword",$esPass,FORCE);
-	
-	if ($oLocal->Alta()){
+
+	$IdLocalCreado = $oLocal->Alta();
+	if ($IdLocalCreado){
 		invalidarSesion("ListaTiendas");
 		$alm = new almacenes;
 		$arrayTodos = array_keys($alm->listaTodosConNombre());
@@ -214,7 +220,7 @@ function CrearLocal($nombre,$nombrelegal,$direccion,$poblacion,$codigopostal,
 		//TODO: aqui tenemos una ligadura fuerte entre un modulo y la aplicación.
 		// esto se debe automatizar para que la ligadura sea debil.		
 		$oLocal->IniciarArqueos();		
-
+		updateDashBoard($IdLocalCreado);
 		return true;
 	} else {
 		//echo gas("aviso",_("No se ha podido registrar el nuevo local"));
@@ -342,6 +348,12 @@ switch($modo){
 		if($esPass)
 		  if(strlen($pass) < 8) return MostrarLocalParaEdicion($id);
 
+		$esCajaCentral 	                = (isset($_POST["CentralizaCaja"]))? ($_POST["CentralizaCaja"] =='on'):false;
+		$esCajaCentral                  = ($esCajaCentral)? 1:0;
+
+		if(!$esCentral)
+		  $esCajaCentral = 0;
+
 		ModificarLocal($id,$nombre,
 			       $nombrelegal,$direccion,
 			       $poblacion,$codigopostal,
@@ -356,7 +368,8 @@ switch($modo){
 			       $vigencia,$garantia,$nfiscal,$promocion,
 			       $moneda0,$moneda0plural,$moneda0simbolo,
 			       $moneda1,$moneda1plural,$moneda1simbolo,$descuento,
-			       $metodoredondeo,$esCOPImpuesto,$cuentabancaria2,$esPass);
+			       $metodoredondeo,$esCOPImpuesto,$cuentabancaria2,$esPass,
+			       $esCajaCentral);
 		PaginaBasica();	
 
 		break;

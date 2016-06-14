@@ -40,6 +40,9 @@ radio[selected="true"] label{ color:#aa0000!important; font-weight: 400;}
 .sync_pause{ list-style-image: url("../img/gpos_tpvsynch_pause.png");}
 .sync_run{ list-style-image: url("../img/gpos_tpvsynch_run.png");}
 
+.sync_module_off{ list-style-image: url("../img/gpos_syncmodules_off.png");}
+.sync_module_on{ list-style-image: url("../img/gpos_syncmodules_on.png");}
+
 #listSuscripcionLinea{ height:150px;}
 #listComprobantesSuscripcion{ height:80px;}
 
@@ -61,3 +64,18 @@ caption.xtitle label{ font-size: 1.4rem!important; color:#aa0000!important;font-
 vbox.xvbox{ padding: 0 1em 0 1em }
 
 textbox#NOM{ min-width:10em; }
+
+#colListaProductoViewCR,
+#colListaTicketViewCR{ border-right: 1px solid #eee;}
+
+#colListaTicketViewDCTO,
+#colListaTicketViewPV,
+#colListaTicketViewUND,
+#colListaTicketViewImporte,
+#colListaProductoViewSTOCK,
+#colListaProductoViewPVE,
+#colListaProductoViewPVD,
+#colListaProductoViewPVC,
+#colListaProductoViewCTO,
+#colListaProductoViewPVP{ border-left: 1px solid #cfcfcf;}
+

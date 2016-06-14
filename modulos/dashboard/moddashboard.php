@@ -65,8 +65,8 @@
 
     }
 
-    function updateDashBoard(){
-      $IdLocal = getSesionDato("IdTienda");
+    function updateDashBoard($IdLocal = false){
+      $IdLocal = (!$IdLocal)? getSesionDato("IdTienda"):$IdLocal;
 
       // comprobante borrador
       $sql = "SELECT COUNT(IdComprobanteProv) as Data ".
@@ -150,6 +150,7 @@
 	     "INNER JOIN ges_productos p ON p.IdProducto = a.IdProducto ".
 	     "WHERE p.Eliminado = 0 ".
 	     "AND a.Unidades = 0 ".
+	     "AND p.Servicio = 0 ".
 	     "AND a.IdLocal = $IdLocal ";
 
       actualizarDataDB($sql,'a_ProductosSinStock',$IdLocal);

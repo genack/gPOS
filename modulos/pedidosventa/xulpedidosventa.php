@@ -266,7 +266,7 @@ StartJs($js='modulos/pedidosventa/pedidosventa.js?v=3.1');
 	<hbox>
 	  <grid>
 	    <rows>
-	      <row id="lineaPedido1">
+	      <row id="lineaPedido1" class="xbase">
 		<caption label="Pedido"/>
 		<description id="xPedidosVenta" style="font-size:13px;"
 			     size="20" onfocus="this.select()" readonly="true"/>

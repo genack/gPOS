@@ -189,8 +189,12 @@
 
         //+++++++++++++++++++++++++++++++++ KARDEX ++++++++++++++++++++++++//
 
-        function validaNumeroSerie($idproducto,$serie,$idlocal){
+function validaNumeroSerie($idproducto,$serie,$idlocal,$modo){
 
+    $xmodo = ($modo == 'venta')? " AND ges_productos_series.Disponible = 1 ".
+                                 " AND ges_productos_series.Estado = 'Almacen' ".
+                                 " AND ges_productos_series.DocumentoSalida = 0 ":"";
+    
 	  $sql     = 
 	    " select NumeroSerie ".
 	    " from   ges_productos_series ".
@@ -201,7 +205,8 @@
 	    " where  ges_pedidos.IdLocal              = '".$idlocal."' ".
 	    " and    ges_productos_series.NumeroSerie = '".$serie."' ".
 	    " and    ges_productos_series.IdProducto  = '".$idproducto."' ".
-	    " and    ges_productos_series.Eliminado   = 0";
+	    " and    ges_productos_series.Eliminado   = 0 ".
+        " $xmodo ";
 
 	  $res = query($sql);
 

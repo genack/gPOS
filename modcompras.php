@@ -19,7 +19,7 @@ function ListarProductos($idprov,$idmarca,$idcolor,$idtalla,
     $indice       = getSesionDato("PaginadorCompras");
     $Moneda       = getSesionDato("Moneda");
 
-    $txtMoDet     = getModeloDetalle2txt();
+    $txtMoDet     = getGiroNegocio2txt();
     $txtModelo    = $txtMoDet[1];
     $txtDetalle   = $txtMoDet[2];
 
@@ -205,7 +205,7 @@ function ListaFormaDeUnidades() {
         $indice         = getSesionDato("PaginadorSeleccionCompras2");			
         $carrito        = getSesionDato("CarritoCompras");
         $costescarrito  = getSesionDato("CarroCostesCompra");
-        $DestinoAlmacen = getSesionDato("DestinoAlmacen");	
+        $DestinoAlmacen = getSesionDato("DestinoAlmacen");
 	$descuentos     = getSesionDato("descuentos");
 	$Moneda         = getSesionDato("Moneda");
         $quitar         = _("Quitar");
@@ -322,6 +322,12 @@ function ActualizarAlmacen(){
 	$IdLocal = CleanID($_POST["IdLocal"]);
 	if ($IdLocal)
 		setSesionDato("DestinoAlmacen",$IdLocal);							
+}
+
+function ActualizarTipoComprobanteGiro(){
+	$TipoComprobanteGiro = CleanText($_POST["TipoComprobanteGiro"]);
+	if ($TipoComprobanteGiro)
+		setSesionDato("TipoComprobanteGiro",$TipoComprobanteGiro);	
 }
 
 function ReseleccionarLocal() {
@@ -591,6 +597,7 @@ switch($modo){
 	
 	case "comprarPaso3":
 	        ActualizarAlmacen();//Actualiza sesion dato -DestinoAlmacen- IdLocal Seleccionado
+		ActualizarTipoComprobanteGiro();//Actualiza sesion dato -TipoComprobanteGiro- 
 		ActualizarCantidades();//Actualiza sesion dato -CarritoCompras- y -CarroCostesCompra-
 		//echo gas("aviso","comprando...");
 		$IdLocal  = getSesionDato("DestinoAlmacen");

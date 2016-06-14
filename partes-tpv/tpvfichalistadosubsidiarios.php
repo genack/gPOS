@@ -21,11 +21,11 @@
 	<hbox align="start" pack="center" >
 	  <vbox>
 	    <description>Desde:</description>
-	    <datepicker id="FechaBuscaDesde" type="popup" onchange="BuscarOrdenServicio()"/>
+	    <datepicker id="FechaBuscaDesde" type="popup" />
 	  </vbox>
 	  <vbox>
 	    <description>Hasta:</description>
-	    <datepicker id="FechaBuscaHasta" type="popup" onchange="BuscarOrdenServicio()"/>
+	    <datepicker id="FechaBuscaHasta" type="popup" />
 	  </vbox>
 	  <vbox>
 	    <description>Cliente:</description>
@@ -230,7 +230,7 @@
       <listhead>
 	<listheader label=" # " style="font-style:italic;"/>
 	<listheader label="Concepto" />
-	<listheader label="Fecha Asignación" />
+	<listheader label="Fecha Inicio" />
 	<listheader label="Fecha Fin" id="vlistFecha_Fin" collapsed="true"/>
 	<listheader label="Estado" style="text-align:center"/>
 	<listheader label="Estado Garantía" id="vlistEstado_Garantia" collapsed="true"/>
@@ -412,26 +412,26 @@
 			<description value="Asignado a" style="font-weight: bold;"/>
 			<description id="dtnListaUsuario" style="width:20em"/>
 		      </row>
-		      <row id="rowFechaInicioServicio" collapsed="true">
-			<description value="Fecha Asignación" style="width:10em"/>
+		      <row id="rowFechaInicioServicio" collapsed="false">
+			<description value="Fecha Inicio" style="width:10em"/>
 			<hbox>
 			  <datepicker id="fInicioAtencionServicio" type="popup"/>
 			  <timepicker id="hInicioAtencionServicio" type="popup"/>
 			</hbox>
 		      </row>
 		      <row id="rowdtnFechaInicioServicio" collapsed="true">
-			<description value="Fecha Asignación" style="font-weight: bold;"/>
+			<description value="Fecha Inicio" style="font-weight: bold;"/>
 			<description id="dtnFechaInicioServicio" />
 		      </row>
-		      <row id="rowFechaFinServicio" collapsed="true">
-			<description value="Fecha Finalizado"/>
+		      <row id="rowFechaFinServicio" collapsed="false">
+			<description value="Fecha Fin"/>
 			<hbox>
 			  <datepicker id="fFinAtencionServicio" type="popup"/>
 			  <timepicker id="hFinAtencionServicio" type="popup"/>
 			</hbox>
 		      </row>
 		      <row id="rowdtnFechaFinServicio" collapsed="true">
-			<description value="Fecha Finalizado" style="font-weight: bold;"/>
+			<description value="Fecha Fin" style="font-weight: bold;"/>
 			<description id="dtnFechaFinServicio" />
 		      </row>
 		      
@@ -511,7 +511,7 @@
 		      
 		      <row id="rowDireccionServicio" collapsed="true">
 			<description value="Dirección"/>
-			<textbox id="DireccionServicio" value=""
+			<textbox id="DireccionServicio" value="" rows="1" multiline="true"
 				 onkeypress="return soloAlfaNumerico(event);"/>
 		      </row>
 		      <row id="rowdtnDireccionServicio" collapsed="true">

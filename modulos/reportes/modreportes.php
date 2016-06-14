@@ -232,7 +232,7 @@ function obtenerVencimientos($IdLocal,$Desde,$Hasta,$Estado){
          "FROM ges_kardex ".
          "INNER JOIN ges_locales ON ges_kardex.IdLocal = ges_locales.IdLocal ".
          "WHERE ges_kardex.Eliminado = 0 ".
-         "x$IdLocal ".
+         "$xIdLocal ".
          "GROUP BY IdPedidoDet ".
          "HAVING Saldo > 0 ";
 

@@ -79,7 +79,15 @@ tab{ -moz-appearance: none;
   border-radius: 2px 2px 0 0;
   font-size: 0.9rem;
    		font-style: italic; }
-tab[selected="true"] {  padding: .2em;}
+tab[ visuallyselected="true" ] label{
+                                      color: #aa0000 !important;
+                                      font-size: 1.07rem !important;
+                                      font-style: normal!important;
+                                      padding-left: .4rem;
+                                      padding-right: 1rem;                                      
+                                      }
+
+
 tabpanels {
     border: 1px solid #33c3f0!important;
     border-left: 0px solid #33c3f0!important;
@@ -112,7 +120,7 @@ listitem {
            -moz-border-left-colors: none;
            -moz-border-right-colors: none;
            -moz-border-top-colors: none;
-           border-bottom-color: #eee;
+           border-bottom-color: #cfcfcf;
            border-bottom-style: solid;
            border-bottom-width: 1px;
            border-image-outset: 0 0 0 0;
@@ -596,6 +604,8 @@ div.box-popup-on{ position: fixed; left: 50%; display: block; }
 .ven_color,
 .ven_marca { top: 25%; transform: translate(-50%, -25%);  width:250px; height:315px;}
 .ven_cuenta { top: 25%; transform: translate(-50%, -25%);  width:420px; height:350px;}
+.ven_editproducto { top: 25%; transform: translate(-50%, -25%);  width:600px; height:400px;}
+.ven_credito { top: 25%; transform: translate(-50%, -25%);  width:650px; height:380px;}
 .ven_avanzada { top: 25%; transform: translate(-50%, -25%);  width:600px; height:80px;}
 .ven_familiaplus { top: 25%; transform: translate(-50%, -25%);  width:450px; height:350px;}
 .ven_lab { top: 10%; transform: translate(-50%, -0%);  width:350px; height: 350px;}
@@ -666,3 +676,11 @@ description.xtext{ padding-top: 1.2em; }
 label.xtext{ padding-top: 1.2em; }
 caption.xtotal{ margin-top:0em!important;  }
 caption.xtotal label{color:#33C3F0!important; font-style:normal!important;font-size: 1.25rem!important;  font-weight: 400;}
+
+#faceMatrisBox{ padding: .1em 3em .1em 3em; }
+/*#my_tree_children{ min-height:26em; }*/
+
+menu#onlistDetalle{font-size: 1.05rem!important;font-weight: 400; margin-left: -2rem;}
+menu#onlistDetalle label{ color:#aa0000!important;font-weight: 400; }
+menu#onlistDetalle menupopup label{ color:#33C3F0!important; }
+image.btn{ cursor:pointer; }

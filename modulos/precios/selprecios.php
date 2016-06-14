@@ -19,8 +19,10 @@ switch ($modo) {
     $codigo      = (isset($_GET["codigo"]))? CleanText($_GET["codigo"]):'';
     $descripcion = (isset($_GET["descripcion"]))? CleanText($_GET["descripcion"]):'';
     $idmarca     = (isset($_GET["idmarca"]))? CleanID($_GET["idmarca"]):0;
-    
-    $idfamilia   = (isset($_GET["idfamilia"]))? CleanID($_GET["idfamilia"]):0; 
+    $txtMoDet       = getGiroNegocio2txt();
+    $esWESL         = ( $txtMoDet[0] == "WESL" );
+    $wesl           = ( $esWESL )?'false':'true';
+    $idfamilia      = (isset($_GET["idfamilia"]))? CleanID($_GET["idfamilia"]):0; 
     if (!isset($codigo) ) $codigo = '';
     if (!isset($descripcion) ) $descripcion = '';
     if ( $descripcion == 'todos' || $descripcion == 'all' ) $descripcion = '';
@@ -114,6 +116,17 @@ switch ($modo) {
     $COP        = $_GET["COP"];
     $idproducto = CleanID($_GET["idproducto"]);
     echo guardarCostoOperativo($COP,$idproducto,$IdLocal);
+    exit(); 		
+    break;
+
+  case "actualizarPrecioEmpaque":
+    $listalocal = CleanID($_GET["listalocal"]);	
+    $IdLocal    = getSesionDato("IdTienda");
+    $IdLocal    = ($listalocal!=0)? $listalocal:$IdLocal;
+    $PVDE       = $_GET["PVDE"];
+    $PVDED      = $_GET["PVDED"];
+    $idproducto = CleanID($_GET["idproducto"]);
+    echo guardarPrecioVentaEmpaque($PVDE,$PVDED,$idproducto,$IdLocal);
     exit(); 		
     break;
 

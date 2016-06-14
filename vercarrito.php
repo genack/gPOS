@@ -257,6 +257,25 @@ function ListaFormaDeUnidades() {
 	$ot->fijar("vImportePercepcion",dosdecimales($ImportePercepcion));
 	$ot->fijar("vImportePago",dosdecimales($ImportePago));
 	$ot->fijar("vImportePagoMonedaBase",dosdecimales($ImportePagoMonedaBase));
+
+    //Guia Remision
+        $undpeso = $detadoc[24];
+        $vCheckMedidaKlg  = ($undpeso == 'TN')? 'selected':'';
+        $vCheckMedidaTN   = ($undpeso == 'Klg')? 'selected':'';
+        $stGuiaRemision   = ($tipodoc=='F')? "block":"none";
+        $ot->fijar("vGuiaRemisionConcepto",$detadoc[17],FORCE);
+        $ot->fijar("vGuiaRemisionPartida",$detadoc[18],FORCE);
+        $ot->fijar("vGuiaRemisionLlegada",$detadoc[19],FORCE);
+        $ot->fijar("vGuiaRemisionMarca",$detadoc[20],FORCE);
+        $ot->fijar("vGuiaRemisionPlaca",$detadoc[21],FORCE);
+        $ot->fijar("vGuiaRemisionLicencia",$detadoc[22],FORCE);
+        $ot->fijar("vGuiaRemisionPeso",$detadoc[23],FORCE);
+        $ot->fijar("vCheckMedidaKlg",$vCheckMedidaKlg,FORCE);
+        $ot->fijar("vCheckMedidaTN",$vCheckMedidaKlg,FORCE);
+        $ot->fijar("vFechaTraslado",$detadoc[25],FORCE);
+        $ot->fijar("vIdSubsiHab",$detadoc[9],FORCE);
+        $ot->fijar("vSubsidiarioHab",$detadoc[10],FORCE);
+        $ot->fijar("stGuiaRemision",$stGuiaRemision);
 	$jsOut .= jsPaginador($indice,$ot->getPagina(),$num);
 	
 	$ot->fijar("CLIST",$jsOut );

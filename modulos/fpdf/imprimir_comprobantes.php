@@ -21,14 +21,14 @@ $sql="SELECT
 		ges_comprobantesprov.IdComprobanteProv,
                 ges_comprobantesprov.Codigo,
                 UPPER(ges_comprobantesprov.TipoComprobante) As Documento,
-                DATE_FORMAT(ges_comprobantesprov.FechaRegistro, '%e %b %Y  %k:%i') As Registro,
-                IF ( DATE_FORMAT(ges_comprobantesprov.FechaFacturacion, '%e %b %Y') IS NULL, 
+                DATE_FORMAT(ges_comprobantesprov.FechaRegistro, '%d/%m/%Y %H:%i') As Registro,
+                IF ( DATE_FORMAT(ges_comprobantesprov.FechaFacturacion, '%d/%m/%Y') IS NULL, 
                     ' ',
-                    DATE_FORMAT(ges_comprobantesprov.FechaFacturacion, '%e %b %Y ') ) 
+                    DATE_FORMAT(ges_comprobantesprov.FechaFacturacion, '%d/%m/%Y') ) 
                     As Emision,
-                IF ( DATE_FORMAT(ges_comprobantesprov.FechaPago, '%e %b %y') IS NULL, 
+                IF ( DATE_FORMAT(ges_comprobantesprov.FechaPago, '%d/%m/%y') IS NULL, 
                     ' ',
-                    DATE_FORMAT(ges_comprobantesprov.FechaPago, '%e %b %Y') ) 
+                    DATE_FORMAT(ges_comprobantesprov.FechaPago, '%d/%m/%Y') ) 
                     As Pago,
                 ges_pedidos.Impuesto,
                 ROUND(ges_comprobantesprov.TotalImporte*ges_pedidos.Percepcion/100,2) as Percepcion,
@@ -94,6 +94,35 @@ $Observaciones= utf8_decode($row["Observaciones"]);
 $ImportePago  = $row["ImportePago"];
 $ImporteFlete = $row["ImporteFlete"];
 $IdPedidosDetalle = $row["IdPedidosDetalle"];
+$IdComprobanteProv = $row["IdComprobanteProv"];
+
+// guia de remision --Albaran
+$sql = "SELECT MotivoTraslado, PuntoPartida,PuntoLlegada, ".
+       "MarcaUnidadTransp,PlacaUnidadTransp,LicenciaConductor, ".
+       "Peso, UnidadPeso, ".
+       "DATE_FORMAT(FechaInicioTraslado,'%d/%m/%Y') as FechaTraslado, ".
+       "ges_subsidiarios.NombreLegal as Legal, ".
+       "ges_subsidiarios.NombreComercial as Subsidiario ".
+       "FROM ges_guiaremision ".
+       "INNER JOIN ges_subsidiarios ON ges_subsidiarios.IdSubsidiario = ges_guiaremision.IdSubsidiario ".
+       "WHERE IdComprobanteProv = '$IdComprobanteProv' ".
+       "AND IdLocal = '$IdLocal' ".
+       "AND TipoGuia = 'Proveedor' ";
+$guia = queryrow($sql);
+
+$MotivoTraslado = 'Compra';
+$ConceptoTraslado = $guia["MotivoTraslado"];
+$PuntoPartida = $guia["PuntoPartida"];
+$PuntoLlegada = $guia["PuntoLlegada"];
+$MarcaUnidadTransp = $guia["MarcaUnidadTransp"];
+$PlacaUnidadTrasnp = $guia["PlacaUnidadTransp"];
+$LicenciaConductor = $guia["LicenciaConductor"];
+$PesoCarga = $guia["Peso"];
+$UnidadPeso = $guia["UnidadPeso"];
+$FechaTraslado = $guia["FechaTraslado"];
+$Subsidiario = $guia["Subsidiario"];
+$Legal = $guia["Legal"];
+$Subsidiario = ($Legal || $Legal != '')? $Legal:$Subsidiario;
 
 //PDF ESTRUCTURA
 $pdf=new PDF();
@@ -180,6 +209,87 @@ $pdf->SetX(168);
 $pdf->SetFont('Courier','',9);	
 $pdf->Cell(120,4,$Pago);
 
+// Detalle Guia
+if($Documento == 'ALBARAN'){
+    $pdf->Ln(6);
+    $pdf->SetX(18); 
+    $pdf->SetFont('Courier','B',9);	
+    $pdf->Cell(120,4,utf8_decode('Fecha Traslado:'));
+
+    $pdf->SetX(49); 
+    $pdf->SetFont('Courier','',9);	
+    $pdf->Cell(120,4,$FechaTraslado);
+
+    $pdf->SetX(85); 
+    $pdf->SetFont('Courier','B',9);	
+    $pdf->Cell(120,4,utf8_decode('Peso Carga :'));
+
+    $pdf->SetX(108); 
+    $pdf->SetFont('Courier','',9);	
+    $pdf->Cell(120,4,$PesoCarga." ".$UnidadPeso);
+
+    $pdf->Ln(4);
+    $pdf->SetX(18); 
+    $pdf->SetFont('Courier','B',9);	
+    $pdf->Cell(120,4,utf8_decode('Marca Transporte:'));
+
+    $pdf->SetX(52); 
+    $pdf->SetFont('Courier','',9);
+    $pdf->Cell(120,4,$MarcaUnidadTransp);
+
+    $pdf->SetX(85); 
+    $pdf->SetFont('Courier','B',9);	
+    $pdf->Cell(120,4,utf8_decode('Placa Transporte:'));
+
+    $pdf->SetX(120); 
+    $pdf->SetFont('Courier','',9);	
+    $pdf->Cell(120,4,$PlacaUnidadTrasnp);
+
+    $pdf->Ln(4);
+    $pdf->SetX(18); 
+    $pdf->SetFont('Courier','B',9);	
+    $pdf->Cell(120,4,utf8_decode('Motivo Traslado:'));
+
+    $pdf->SetX(52); 
+    $pdf->SetFont('Courier','',9);
+    $pdf->Cell(120,4,utf8_decode($ConceptoTraslado));
+
+    $pdf->Ln(4);
+    $pdf->SetX(18); 
+    $pdf->SetFont('Courier','B',9);	
+    $pdf->Cell(120,4,utf8_decode('Punto de Partida:'));
+
+    $pdf->SetX(52); 
+    $pdf->SetFont('Courier','',9);
+    $pdf->Cell(120,4,utf8_decode($PuntoPartida));
+
+    $pdf->Ln(4);
+    $pdf->SetX(18); 
+    $pdf->SetFont('Courier','B',9);	
+    $pdf->Cell(120,4,utf8_decode('Punto de Llegada:'));
+
+    $pdf->SetX(52); 
+    $pdf->SetFont('Courier','',9);
+    $pdf->Cell(120,4,utf8_decode($PuntoLlegada));
+
+    $pdf->Ln(4);
+    $pdf->SetX(18); 
+    $pdf->SetFont('Courier','B',9);	
+    $pdf->Cell(120,4,utf8_decode('Transportista:'));
+
+    $pdf->SetX(52); 
+    $pdf->SetFont('Courier','',9);
+    $pdf->Cell(120,4,utf8_decode($Subsidiario));
+
+    $pdf->Ln(4);
+    $pdf->SetX(18); 
+    $pdf->SetFont('Courier','B',9);	
+    $pdf->Cell(120,4,utf8_decode('Licencia Conductor:'));
+    
+    $pdf->SetX(55); 
+    $pdf->SetFont('Courier','',9);	
+    $pdf->Cell(120,4,$LicenciaConductor);
+}
 
 //Detalle
 $pdf->Ln(6);

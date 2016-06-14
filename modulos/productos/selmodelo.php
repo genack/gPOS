@@ -4,7 +4,7 @@ include("../../tool.php");
 
 SimpleAutentificacionAutomatica("visual-xulframe");
 $idfamilia  = CleanID($_GET['idfamilia']);
-$txtMoDet   = getModeloDetalle2txt();
+$txtMoDet   = getGiroNegocio2txt();
 $txtModelo  = $txtMoDet[1];
 $txtDetalle = $txtMoDet[2];
 

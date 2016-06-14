@@ -563,7 +563,7 @@ function cleanFormProductoInfirmacion(){
 
 function volverProductos(){
     parent.solapa('xulproductos.php?modo=lista',
-		  'Productos - Gestión de Productos',
+		  'Productos > Gestión de Productos',
 		  'productos');
 }
 

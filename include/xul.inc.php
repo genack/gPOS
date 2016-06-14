@@ -19,7 +19,7 @@ function StartXul($titulo,$predata="",$css=false){
 	
 	echo '<?xml version="1.0" encoding="UTF-8"?>';
 	echo '<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>';	
-	echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css?v=2" type="text/css"?>';
+	echo '<?xml-stylesheet href="'.$_BasePath.'css/xul.css?v=3.2" type="text/css"?>';
         //if($css) echo $cr . "xml-stylesheet href='data:text/css,$css'" . $crf; 
         if($css) echo $cr . "xml-stylesheet href='".$_BasePath.$css."' type='text/css'" . $crf; 
 ?>
@@ -34,7 +34,7 @@ function StartXul($titulo,$predata="",$css=false){
 function StartJs($js=false){
   $_BasePath   = $_SESSION['BasePath'];
   ?>
-  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js?v=2.1" /> 
+  <script type="application/x-javascript" src="<?php echo $_BasePath; ?>js/tools.js?v=2.4" /> 
   <?php
   if($js){
     ?>

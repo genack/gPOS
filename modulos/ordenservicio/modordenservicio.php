@@ -364,12 +364,12 @@ function guardarOrdenServicioDet($IdOrdenServicio,$FechaInicio,$FechaFin,
 
   switch($Opcion){
   case 'Nuevo':
-    $FechaInicio = ($Estado == 'Ejecucion')? $FechaHoy:$FechaBase;
+      //$FechaInicio = ($Estado == 'Ejecucion')? $FechaHoy:$FechaBase;
     $ImporteOS   = $xImporteOS + $Importe;
     break;
   case 'Modifica':
-    $FechaInicio = ($esInicio && $Estado == 'Ejecucion')? $FechaHoy:$FechaInicio;
-    $FechaFin    = ($esFin && $Estado == 'Finalizado')? $FechaHoy:$FechaFin;
+      //$FechaInicio = ($esInicio && $Estado == 'Ejecucion')? $FechaHoy:$FechaInicio;
+      //$FechaFin    = ($esFin && $Estado == 'Finalizado')? $FechaHoy:$FechaFin;
     $ImporteOS   = $xImporteOS - $xImporteOSDet + $Importe;
     break;
   }

@@ -244,6 +244,9 @@ class local extends Cursor {
 	$txtCuentaEmp1    = ($this->get("CuentaBancaria") == 0)? "":getNroCuenta($this->get("CuentaBancaria"));
 	$txtCuentaEmp2    = ($this->get("CuentaBancaria2") == 0)? "":getNroCuenta($this->get("CuentaBancaria2"));
 
+	$esCajaCentral      = ( $this->is("CajaCentral")   )? "checked":"";
+	$mostrarCajaCentral = ( $esCentral)? "style='visibility:visible'":"style='visibility:hidden'";
+
 	$cambios = array(
 			 "tMensajeMes" => _("Mensaje Ticket"),
 			 "vMensajeMes" => $this->get("MensajeMes"),
@@ -301,6 +304,8 @@ class local extends Cursor {
 			 //"vPassword" => $this->get("Password"),
 			 "vPassword" => _("localess"),
 			 "sPassword" => $mostrarpass,
+			 "vCentralizaCaja" => $esCajaCentral,
+			 "sCentralizaCaja" => $mostrarCajaCentral,
 			 //"Ver" => _("Ver"),
 			 "Identificacion" => _("Identificación"),
 			 "vIdentificacion" => $this->get("Identificacion"),
@@ -315,7 +320,7 @@ class local extends Cursor {
 			 "PaginaWeb" => _("Pagina web"),
 			 "CuentaBancaria" => _("CTA Moneda Principal"),
 			 "CuentaBancaria2" => _("CTA Moneda Secundaria"),
-			 "tAlmacenCentral" => _("El almacén central"),
+			 "tAlmacenCentral" => _("Almacén central"),
 			 "HIDDENDATA" => Hidden("id",$this->getId()),
 			 "ACTION" => "$action?modo=$modo",
 
@@ -408,7 +413,7 @@ class local extends Cursor {
 	  }
 	}
 	
-	return true;		
+	return $IdLocalCreado;		
 	
       }
 

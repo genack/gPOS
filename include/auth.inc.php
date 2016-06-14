@@ -109,10 +109,19 @@ function RegistrarVigenciaPresupuesto($id){
 
 function RegistrarAlmacenCentral($id){
     $id = CleanID($id);
-    $sql = "SELECT AlmacenCentral FROM ges_locales WHERE IdLocal = '$id'";
+    $sql = "SELECT AlmacenCentral, CajaCentral FROM ges_locales WHERE IdLocal = '$id'";
     $row = queryrow($sql,"Obteniendo idAlmacenCentral del local");
     if($row)
-      setSesionDato("esAlmacenCentral",$row["AlmacenCentral"]);	
+      setSesionDato("esAlmacenCentral",$row["AlmacenCentral"]);
+
+    RegistrarCajaCentral();
+}
+
+function RegistrarCajaCentral(){
+    $sql = "SELECT CajaCentral FROM ges_locales WHERE AlmacenCentral = 1 ";
+    $row = queryrow($sql,"Obteniendo caja central");
+    if($row)
+      setSesionDato("esCajaCentral",$row["CajaCentral"]);
 }
 
 function RegistrarMUTienda($id){

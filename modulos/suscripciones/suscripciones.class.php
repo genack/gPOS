@@ -142,7 +142,8 @@ function mostrarSuscripcionCliente($IdCliente){
          "       Comprobante, ".
          "       SerieComprobante, ".
          "       TipoPago, ".
-         "       if( Observaciones like '', ' ', Observaciones ) as Observaciones ".
+         "       if( Observaciones like '', ' ', Observaciones ) as Observaciones, ".
+         "       IdSubsidiario ".
          "FROM   ges_suscripciones ".
          "INNER JOIN ges_suscripciontipo ON ges_suscripciones.IdTipoSuscripcion = 
                  ges_suscripciontipo.IdTipoSuscripcion ".
@@ -160,10 +161,11 @@ function mostrarSuscripcionCliente($IdCliente){
     $nombre = "suscripcion_" . $t++;
     $xdetalle  =  mostrarSuscripcionLinea($row["IdSuscripcion"]);
     $row["Detalle"]  = ($xdetalle)? $xdetalle:' ';
+    $row["Subsidiario"] = ($row["IdSubsidiario"] != 0)? getNombreSubsidiario($row["IdSubsidiario"]):' ';
     $suscripciones[$nombre] = $row;
     
   }
-  
+
   return $suscripciones;
 }
 
@@ -381,7 +383,7 @@ function crearSuscripciones2facturar($asuscrip){
 	   global $UltimaInsercion;
 
 	   #Crear comprobante
-	   $IdLocal          = getSesionDato("IdTienda");    
+	   $IdLocal          = $suscrip["local"]; //getSesionDato("IdTienda");    
 	   $IdUsuario        = getSesionDato("IdUsuario");
 	   $textDoc          = $suscrip["comprobante"];
 	   $sreDocumento     = $suscrip["seriecomprobante"];
@@ -422,7 +424,7 @@ function crearSuscripciones2facturar($asuscrip){
 
 	   #Registra Numero Comprobante
 	   if( $IdComprobante == 0 ) continue;
-	   if( RegistrarNumeroComprobante($Nro,$IdComprobante,$textDoc,$Serie,false,false,$IdUsuario) ) continue;
+	   if( RegistrarNumeroComprobante($Nro,$IdComprobante,$textDoc,$Serie,false,$IdLocal,$IdUsuario) ) continue;
 
 	   #Registrar detalle
 	   $detalleporfactura = explode(',',$xdetallefecha);
@@ -435,7 +437,7 @@ function crearSuscripciones2facturar($asuscrip){
 	     {
 	       //echo "<br/> DETALLE  - ".$xitem." - ID ".$detalleAfacturar[$xitem]['producto']."   ".$detalleAfacturar[$xitem]['concepto']." - ".$detalleAfacturar[$xitem]['conceptoperiodo']."  cant ".$detalleAfacturar[$xitem]['cantidad']."  S/.".$detalleAfacturar[$xitem]['importeAFacturar']." CB ".$detalleAfacturar[$xitem]['codigobarras'] ;
 	      $TotalImporte += $detalleAfacturar[$xitem]['importeAFacturar'];
-
+                 $xconcepto = str_replace($detalleAfacturar[$xitem]['codigobarras'],'',$detalleAfacturar[$xitem]['concepto']);
 	      //ComprobanteDet...
 	      $Keys    = "IdComprobante,";
 	      $Values  = "'".$IdComprobante."',";	
@@ -456,7 +458,8 @@ function crearSuscripciones2facturar($asuscrip){
 	      $Keys   .= "Impuesto,";
 	      $Values .= "'".$Impuesto."',";
 	      $Keys   .= "Concepto,";
-	      $Values .= "'".$detalleAfacturar[$xitem]['concepto']." -".$detalleAfacturar[$xitem]['conceptoperiodo']."',";
+	         //$Values .= "'".$detalleAfacturar[$xitem]['concepto']." -".$detalleAfacturar[$xitem]['conceptoperiodo']."',";
+                 $Values.= "'".$xconcepto." -".$detalleAfacturar[$xitem]['conceptoperiodo']."',";
 	      $Keys   .= "Talla,";
 	      $Values .= "'".$detalleAfacturar[$xitem]['talla']."',";
 	      $Keys   .= "Color,";
@@ -502,6 +505,18 @@ function crearSuscripciones2facturar($asuscrip){
 
 function ModificaSuscripcion($xid,$campoxdato){
         $Tb         = 'ges_suscripciones';
+	$IdKey      = 'IdSuscripcion';
+	$Id         = CleanID($xid);
+	$KeysValue  = $campoxdato;
+	$sql   =
+	  " update ".$Tb.
+	  " set    ".$KeysValue." ".
+	  " where  ".$IdKey." = ".$Id;
+	return query($sql); 
+}
+
+function ModificaSuscripcionDet($xid,$campoxdato){
+        $Tb         = 'ges_suscripcionesdet';
 	$IdKey      = 'IdSuscripcion';
 	$Id         = CleanID($xid);
 	$KeysValue  = $campoxdato;
@@ -585,6 +600,22 @@ function getFechafinSuscripcion($xsuscrip,$xdiafacturar,$xesvencido,
     
   }
   return $zfechafin;
+}
+
+function verficarEstadoSuscripcionCliente($id){
+    $sql = "SELECT Estado ".
+           "FROM ges_suscripciones ".
+           "WHERE IdCliente = '$id' ";
+    $res = query($sql);
+
+    if(!$res) return false;
+
+    while($row = Row($res)){
+        if($row["Estado"] == 'Finalizado' || $row["Estado"] == 'Cancelado')
+            return false;
+        else
+            return true;
+    }
 }
 
 ?>

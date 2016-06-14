@@ -1370,8 +1370,10 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
                 $titulo = _("Nuevo producto");			
             }
 
-        if ($esPopup)
-            $onClose = "window.close();";	
+            if ($esPopup){
+                $onClose = "parent.closepopup()";//"window.close();";
+                echo "<script> function loadfocus(){ }</script>";
+            }
         else
             $onClose = "location.href='modproductos.php'";
 
@@ -1382,13 +1384,13 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
                 $ListadoCombinado = genListadoCruzado($this->getId(),$this->get("IdTallaje"));
         }
 
-
+        $esPopup = ($esPopup)? 'true':'false';
 
 	$incluido   = ($this->get("Serie")==1)? "checked":"";
 	$incluido4  = ($this->get("Lote")==1)? "checked":"";
 	$incluido3  = ($this->get("FechaVencimiento")==1)? "checked":"";
 	$incluido2  = ($this->get("VentaMenudeo")==1)? "checked":"";
-	$txtMoDet   = getModeloDetalle2txt();
+	$txtMoDet   = getGiroNegocio2txt();
 	$txtModelo  = $txtMoDet[1];
 	$txtDetalle = $txtMoDet[2];
 	$txtalias   = $txtMoDet[3];
@@ -1400,6 +1402,7 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
             "ListadoCombinado" => $ListadoCombinado,
             "vIdProducto" => $this->getId(),
             "onClose" => $onClose,
+            "esPopup" => $esPopup,
             "tImprimirCodigoBarras" => _("Imprimir código barras"),
             "vRefProvHab"=> $this->get("RefProvHab"),
             "tRefProvHab"=> $txtref,
@@ -1495,8 +1498,16 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
 
         $modo    = "modsavebar";		
         $titulo  = _("Modificando producto");	
-        $onClose = "location.href='modproductos.php'";
+        //$onClose = "location.href='modproductos.php'";
+        if ($esPopup){
+            $onClose = "parent.closepopup()";//"window.close();";
+            echo "<script> function loadfocus(){ }</script>";
+        }
+        else
+            $onClose = "location.href='modproductos.php'";
 
+        $esPopup = ($esPopup)? 'true':'false';
+        
         $ListadoCombinado = genListadoCruzado($this->getId(),$this->get("IdTallaje"));
 	$incluidons  = ($this->get("Serie")==1)? "checked":"";
 	$incluidolt  = ($this->get("Lote")==1)? "checked":"";
@@ -1513,14 +1524,45 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
         $ometro      = "";
         $olitro      = "";
         $okilo       = "";
+	$obolsa      = "";
+	$ocaja       = "";
+	$omts2       = "";
+	$omts3       = "";
+	$ovllas      = "";
+	$opzas       = "";
+	$oplchs      = "";
+	$omdjs       = "";
+	$ogls        = "";
+	$oblds       = "";
+        $odisplay    = "";
+        $oblister    = "";
+	$otiras      = "";
+	$opack       = "";
+	$osaco       = "";
+
         switch ($this->get("UnidadMedida")) 
 	  {
 	  case 'und': $um = "Unidades"; $ounidad = "selected"; break;
 	  case 'mts': $um = "Metros"; $ometro = "selected"; break;
 	  case 'lts': $um = "Litros"; $olitro = "selected"; break;
 	  case 'kls': $um = "Kilos";  $okilo = "selected"; break;
+	  case 'cjas': $um = "Caja";  $ocaja = "selected"; break;
+	  case 'bolsa': $um = "Bolsa";  $obolsa = "selected"; break;
+	  case 'mts3': $um = "Metros3";  $omts3 = "selected"; break;
+	  case 'mts2': $um = "Metros2";  $omts2 = "selected"; break;
+	  case 'vllas': $um = "Vallas";  $ovllas = "selected"; break;
+	  case 'pzas': $um = "Pzas";  $opzas = "selected"; break;
+	  case 'plchs': $um = "Planchas";  $oplchs = "selected"; break;
+	  case 'mdjs': $um = "Madejas";  $omdjs = "selected"; break;
+	  case 'gls': $um = "Galones";  $ogls = "selected"; break;
+	  case 'blds': $um = "Baldes";  $oblds = "selected"; break;
+          case 'displ': $um = "Display"; $odisplay = "selected"; break;
+          case 'blist': $um = "Blister"; $oblister = "selected"; break;
+	  case 'tira': $um  = "Tiras"; $otiras = "selected"; break;
+	  case 'pack': $um  = "Packs"; $opack = "selected"; break;
+	  case 'saco': $um  = "Saco";  $osaco = "selected"; break;
 	  }
-	
+	     
 	$osrm  = "";
 	$ocrm  = "";
 	$ocrmr = "";
@@ -1531,7 +1573,7 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
 	  case 'CRMR': $ocrmr = "selected"; break;
 	  }
 
-	$txtMoDet   = getModeloDetalle2txt();
+	$txtMoDet   = getGiroNegocio2txt();
 	$esBTCA     = (  $txtMoDet[0]  == "BTCA" );
 	$hidden     = "style='display:none;'";
 	$btca       = ( $esBTCA )?false:$hidden;
@@ -1549,6 +1591,7 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
             "ListadoCombinado" => $ListadoCombinado,
             "vIdProducto" => $this->getId(),
             "onClose" => $onClose,
+            "esPopup" => $esPopup,
             "tImprimirCodigoBarras" => _("Imprimir código barras"),
             "vRefProvHab"=> $this->get("RefProvHab"),
             "tRefProvHab"=> $txtref,
@@ -1618,6 +1661,21 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
             "ometro" => $ometro,
             "olitro" => $olitro,
             "okilo" => $okilo,
+	    "ocaja" => $ocaja,
+	    "obolsa" => $obolsa,
+	    "ometro2" => $omts2,
+	    "ometro3" => $omts3,
+	    "ovallas" => $ovllas,
+	    "opzas" => $opzas,
+	    "oplanchas" => $oplchs,
+	    "omadejas" => $omdjs,
+	    "ogalones" => $ogls,
+	    "obaldes" => $oblds,
+	    "odisplay" => $odisplay,
+	    "oblister" => $oblister,
+	    "otiras" => $otiras,
+	    "opack" => $opack,
+	    "osaco" => $osaco,
             "oSRM" => $osrm,
             "oCRM" => $ocrm,
             "oCRMR" => $ocrmr,
@@ -1680,7 +1738,7 @@ function ListadoLaboratorio($IdLabHab,$lang,$min=0){
 		  case 'CRM' : $ocrm = "selected";  break;
 		  case 'CRMR': $ocrmr = "selected"; break;
 		  }
-		$txtMoDet   = getModeloDetalle2txt();
+		$txtMoDet   = getGiroNegocio2txt();
 		$esBTCA     = (  $txtMoDet[0]  == "BTCA" );
 		$hidden     = "style='display:none;'";
 		$btca       = ( $esBTCA )?false:$hidden;
@@ -2691,4 +2749,22 @@ function getIdProdbase($referencia){
     return 0;
 }
 
+function checkIntegridadProducto($idmarca,$idlaboratorio,$descripcion){
+
+  $sql = "select ges_productos.IdProdBase,ges_productos.IdProducto 
+          from   ges_productos 
+          inner  join ges_productos_idioma 
+          on     ges_productos.IdProdBase = ges_productos_idioma.IdProdBase 
+          where  ges_productos.IdMarca    = ".$idmarca." 
+          and    ges_productos.IdLabHab  = ".$idlaboratorio." 
+          and    ges_productos.Eliminado  = 0
+          and    ges_productos_idioma.Descripcion like '".$descripcion."' limit 1";	
+  $row = queryrow($sql);
+  
+  if ($row) 
+    return $row["IdProducto"];
+  else
+    return 0;
+
+}
 ?>

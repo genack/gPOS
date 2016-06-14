@@ -47,7 +47,7 @@ include("baseurl.php");
 // PINF: Productos Informáticos
 // BTCA: Botica
 // BTQE: Boutique
-// MMKT: MiniMarket
+// WESL: Wholesale
 
 #### DATOS DEL NEGOCIO ####
 $_SESSION["GlobalNombreNegocio"] = '%NOMBRENEGOCIO%';

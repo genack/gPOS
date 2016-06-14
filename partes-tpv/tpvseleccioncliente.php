@@ -20,9 +20,10 @@
 		<button class="btn" image="img/gpos_clienteparticular.png"  style="font-size: 13px;"
 			 label="  Usar seleccionado"   oncommand ="cargarCliente('sel')"/>
 		<textbox  id="buscaCliente" onkeyup="if (event.which == 13) cargarCliente('uno')" 
-			  oninput="buscarCliente()" placeholder=" Buscar " 
-			  style="width: 25em;font-size: 13px;"/>
+			  oninput="buscarCliente()" placeholder=" Buscar cliente " 
+			  style="width: 25em;font-size: 13px;" tooltiptext="Buscar Cliente: Nombre,Telefono,DNI"/>
 		<textbox  id="buscaClienteSelect" value="0" collapsed="true"/>
+                <toolbarbutton id="syncModuloClientes" class="sync_module_off" oncommand="pushSyncModule('Clientes')" tooltiptext="Sincronizar Clientes..."></toolbarbutton>
 	      </hbox>
 	    </vbox>   
 	    <listbox id="clientPickArea" class="listado"  flex="1" style="height: 100%;" 
@@ -307,9 +308,9 @@
 			    oncommand="mostrarSuscripcionComprobante(this.value);
                                        ModificarSuscripcionCliente('7');">
 		    <menupopup>
-		      <menuitem value="Factura" label="Factura" selected="true"></menuitem>
+		      <menuitem value="Factura" label="Factura" ></menuitem>
 		      <menuitem value="Boleta" label="Boleta" ></menuitem>
-		      <menuitem value="Ticket" label="Ticket" ></menuitem>
+		      <menuitem value="Ticket" label="Ticket" selected="true"></menuitem>
 		    </menupopup>
 		  </menulist>
 		</row>
@@ -325,6 +326,17 @@
 		  <textbox onkeypess="return soloAlfaNumericoTPV(event)" 
 			   multiline="true" id="suscripComentarios"
                            onchange="ModificarSuscripcionCliente('9');"/>
+		</row>
+		<row>
+                    <caption label="Administrador"/>
+                    <hbox>
+	                <toolbarbutton id="btnSubsidiario" label="+"
+                                       oncommand="auxAltaSubsidiario()"/> 
+	                <toolbarbutton id="btnSubsidiarioHab" label="..." oncommand="auxSubsidiarioHab()"/>
+                        <textbox id="EmpresaTextGasto" value="" flex="1" readonly="true"
+                                 onkeypress="return soloAlfaNumerico(event);"/>
+                        <textbox id="IdSubsidiario" value="" flex="1" collapsed="true"/>
+                    </hbox>
 		</row>
 	      </rows>
 	    </grid>

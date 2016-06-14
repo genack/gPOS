@@ -403,6 +403,8 @@ switch($modo){
 		$PVDD          = CleanDinero($_GET["xpvdd"]);
 		$PVC           = CleanDinero($_GET["xpvc"]);
 		$PVCD          = CleanDinero($_GET["xpvcd"]);
+		$PVDE          = CleanDinero($_GET["xpvde"]);
+		$PVDED         = CleanDinero($_GET["xpvded"]);
 		$SerieVence    = (isset($_GET["serievence"]))? CleanCadena($_GET["serievence"]):'';
 		$Series        = (isset($_POST["numerosdeserie"]))?CleanCadena($_POST["numerosdeserie"]):'';
 		$xIdInvent     = CleanID($_GET["xidinventario"]);//>IdInventario
@@ -421,7 +423,7 @@ switch($modo){
 		actualizaIdInventarioToKardex($IdLocal,$IdInventario,$IdProducto);
 
 		//Ventas Precios
-		registrarPreciosVentaAlmacen($PVD,$PVDD,$PVC,$PVCD,$IdArticulo);
+		registrarPreciosVentaAlmacen($PVD,$PVDD,$PVC,$PVCD,$IdArticulo,$PVDE,$PVDED);
 
 		if($IdInventario && $esInvent)
 		  {    
@@ -448,6 +450,8 @@ switch($modo){
 		$PVDD          = CleanDinero($_GET["xpvdd"]);
 		$PVC           = CleanDinero($_GET["xpvc"]);
 		$PVCD          = CleanDinero($_GET["xpvcd"]);
+		$PVDE          = CleanDinero($_GET["xpvde"]);
+		$PVDED         = CleanDinero($_GET["xpvded"]);
 		$Ajustes       = CleanCadena($_GET["xajustes"]);
 		$xrKardex      = CleanCadena($_GET["xrkardex"]);
 		$SerieVence    = CleanCadena($_GET["serievence"]);
@@ -566,7 +570,7 @@ switch($modo){
 					    $IdOpeAjuste,$IdInventario,$xObs,$xkeydet,$ckeydet);
 
 		//Ventas Precios
-		registrarPreciosVentaAlmacen($PVD,$PVDD,$PVC,$PVCD,$IdArticulo);
+		registrarPreciosVentaAlmacen($PVD,$PVDD,$PVC,$PVCD,$IdArticulo,$PVDE,$PVDED);
 
 		//Retorna IdInventario, IdPedido & IdComprobante
 		echo "1~".$IdInventario."~".$IdPedido."~".$IdComprobante;
@@ -587,6 +591,8 @@ switch($modo){
 		$PVDD          = CleanDinero($_GET["xpvdd"]);
 		$PVC           = CleanDinero($_GET["xpvc"]);
 		$PVCD          = CleanDinero($_GET["xpvcd"]);
+		$PVDE          = CleanDinero($_GET["xpvde"]);
+		$PVDED         = CleanDinero($_GET["xpvded"]);
 		$Cantidad      = CleanFloat($_GET["xajuste"]);
 		$xrKardex      = CleanCadena($_GET["xrkardex"]);
 		$SerieVence    = CleanCadena($_GET["serievence"]);
@@ -681,7 +687,7 @@ switch($modo){
 		sModificarCompra($IdPedido,$campoxdato,false,false);
 		
 		//Ventas Precios
-		registrarPreciosVentaAlmacen($PVD,$PVDD,$PVC,$PVCD,$IdArticulo);
+		registrarPreciosVentaAlmacen($PVD,$PVDD,$PVC,$PVCD,$IdArticulo,$PVDE,$PVDED);
 
 		//Registro Costo Operativo
 		guardarCostoOperativo($CostoOP,$IdProducto,$IdLocal);

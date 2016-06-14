@@ -82,6 +82,8 @@ class pedido extends Cursor {
 		$IdProveedor    = $detadoc[1];
  		$IdUsuario      = getSesionDato("IdUsuario");
 		$IdLocal        = getSesionDato("DestinoAlmacen");
+		$TipoComprobanteGiro = getSesionDato("TipoComprobanteGiro");
+		$EstadoDocumento     = ( $TipoComprobanteGiro == 'Produccion')? 'Pendiente':'Borrador';
 		$Moneda         = getSesionDato("Moneda");
 		$FechaEntrega   = $detadoc[4];
 		$Codigo         = $detadoc[3];
@@ -158,7 +160,7 @@ class pedido extends Cursor {
 		  $listaValues .= ", '".$IPC."'";
 		  $listaKeys   .= ", IncluyeImpuesto";
 		  $listaValues .= ", '".$InclImpuesto."'";
-	  
+
 		  $sql = "INSERT INTO ges_pedidos ( $listaKeys ) ".
 		         "VALUES ( $listaValues )";
 		  $res = query($sql);
@@ -190,6 +192,10 @@ class pedido extends Cursor {
 		    $listacpValues  .= ",'".$codigodoc."'";
 		    $listacpKeys    .= ",CodigoAlbaran";
 		    $listacpValues  .= ",'".$albaranes."'";
+		    $listacpKeys    .= ",TipoComprobanteGiro";
+		    $listacpValues  .= ",'".$TipoComprobanteGiro."'";
+		    $listacpKeys    .= ",EstadoDocumento";
+		    $listacpValues  .= ",'".$EstadoDocumento."'";
 		    $listacpKeys    .= ",FechaRegistro";
 		    $listacpValues  .= ", NOW()";		
 		    $listacpKeys    .= ",FechaFacturacion";
@@ -201,14 +207,18 @@ class pedido extends Cursor {
 		    $listacpKeys    .= ",IdPedidosDetalle";
 		    $listacpValues  .= ",'".$IdPedido."'";
 
+            global   $UltimaInsercion;
 		    $sql = "insert into ".
 		      "ges_comprobantesprov ( ".$listacpKeys." ) ".
 		      "values ( ".$listacpValues." )";
 
 		    $res = query($sql);
+
 		    if (!$res) { $this->Error(__FILE__ . __LINE__ , "E: no pudo guardar pedido");
 		      return false;	}
-
+            $uIdComprobanteProv = $UltimaInsercion;
+            altaGuiaRemisionComprobanteProv($uIdComprobanteProv,$IdUsuario,
+                                            $IdLocal,$FechaEntrega,$codigodoc);
 		  }
 
 		//Detalle		
@@ -657,6 +667,34 @@ function ClonarCarritoSeriesBuyTwoCart(){
 
     setSesionDato("idprodseriecart",$idprodseriebuy);
     setSesionDato("seriescart",$seriesbuy);
+}
+
+function altaGuiaRemisionComprobanteProv($IdComprobanteProv,$IdUsuario,$IdLocal,
+                                         $FechaEntrega,$codigodoc){
+    $guia    = new guiaremision;
+    $aCodigo = explode('-',$codigodoc);
+    $detadoc = getSesionDato("detadoc");
+
+    $guia->set("IdLocal",$IdLocal,FORCE);
+    $guia->set("IdUsuario",$IdUsuario,FORCE);
+    $guia->set("IdComprobanteProv",$IdComprobanteProv,FORCE);
+    $guia->set("IdMotivoAlbaran",'3',FORCE);
+    $guia->set("Idsubsidiario",$detadoc[9],FORCE);
+    $guia->set("TipoGuia",'Proveedor',FORCE);
+    $guia->set("FechaEmision",explota($FechaEntrega),FORCE);
+    $guia->set("NumeroSerie",$aCodigo[0],FORCE);
+    $guia->set("NumeroGuia",$aCodigo[1],FORCE);
+    $guia->set("MotivoTraslado",$detadoc[17],FORCE);
+    $guia->set("PuntoPartida",$detadoc[18],FORCE);
+    $guia->set("PuntoLlegada",$detadoc[19],FORCE);
+    $guia->set("MarcaUnidadTransp",$detadoc[20],FORCE);
+    $guia->set("PlacaUnidadTransp",$detadoc[21],FORCE);
+    $guia->set("LicenciaConductor",$detadoc[22],FORCE);
+    $guia->set("Peso",$detadoc[23],FORCE);
+    $guia->set("UnidadPeso",$detadoc[24],FORCE);
+    $guia->set("FechaInicioTraslado",explota($detadoc[25]),FORCE);
+
+    $guia->Alta();
 }
 
 ?>

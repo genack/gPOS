@@ -4,6 +4,7 @@
 class filaTicket {
 	var $unidades;
 	var $precio;
+	var $precioalmacen;
 	var $descuento;
 	var $codigo;
 	var $impuesto;
@@ -39,10 +40,11 @@ class filaTicket {
 	function Set($codigo,$unidades,$precio,$descuento,$impuesto,
 		     $importe,$concepto,$talla,$color,$referencia,$cb,
 		     $idsubsidiario,$nombre,$pedidodet,$status,$oferta,
-		     $costo,$idproducto,$unidadimporte){
+		     $costo,$idproducto,$unidadimporte,$precioalmacen){
 			
 		$this->unidades 	= $unidades;
 		$this->precio 		= $precio;
+		$this->precioalmacen    = $precioalmacen;
 		$this->descuento 	= $descuento;
 		$this->codigo 		= $codigo;//puede contener el codigo de arreglo
 		$this->CB		= $codigo;//Codigo real		
@@ -137,6 +139,8 @@ class filaTicket {
 	      $Values .= "'".$unidades."',";
 	      $Keys   .= "Precio,";
 	      $Values .= "'".$this->precio."',";
+	      $Keys   .= "PrecioAlmacen,";
+	      $Values .= "'".$this->precioalmacen."',";
 	      $Keys   .= "CostoUnitario,";
 	      $Values .= "'".$this->costo."',";
 	      $Keys   .= "Descuento,";

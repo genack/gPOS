@@ -38,14 +38,14 @@ class jsLextable {
 			$this->lex = array();
 			$this->index = 0;
 		}
-		
+
 		if ($iso8859){
 			$palabra = iso2utf($palabra);				
 		}		
 		
 		if (isset($this->lex[$palabra]) and $this->lex[$palabra] )
 			return $this->lex[$palabra];
-			
+
 		$this->index = $this->index + 1;			
 		$this->lex[$palabra] = $this->index;
 		return $this->index;	
@@ -67,19 +67,21 @@ class jsLextable {
 			return $out; //no hay datos 		
 		
 		foreach ($this->lex as $key=>$value){
-			
+
 			//TODO: todo este masajeo de codificaciones es un poco absurdo
 			// y seguramente no es seguro. Habria que reducir a uno solo perfecto.
 			
 			$keyformat = htmlentities($key, ENT_QUOTES,'UTF-8');
+
 			if ($modo=="xul")
 				$keyformat = str_replace("&ntilde;","ñ", $keyformat);
-			
+
 			$keyformat = addslashes($keyformat);
+            $keyformat = html_entity_decode($keyformat);
 			$keyformat = str_replace("�","",$keyformat);
 			$out .= $prefix."[".$value."] = \"$keyformat\";\n";
 		}
-		return $out;		
+		return $out;
 	}
 }
 
