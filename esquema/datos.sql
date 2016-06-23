@@ -152,7 +152,7 @@ VALUES (1,'...', 0),
 
 
 ;;;;;;
-INSERT INTO `ges_usuarios` VALUES (1, 'Mantenimiento', 'soporte', md5('x0+admin13'), 1, 'Las labores de mantenimiento se realizan con esta cuenta. Por tanto es aconsejable no borrarla.', '', '', '0000-00-00', 0, 1, 0, 1, 0, '', '', 'Activo', 0);
+INSERT INTO `ges_usuarios` VALUES (1, 'Mantenimiento', 'soporte', md5('gadministrador13'), 1, 'Las labores de mantenimiento se realizan con esta cuenta. Por tanto es aconsejable no borrarla.', '', '', '0000-00-00', 0, 1, 0, 1, 0, '', '', 'Activo', 0);
 ;;;;;;
 
 INSERT INTO `ges_usuarios` VALUES (2, 'Web', 'web', md5('web'), 1, '', '', '', '0000-00-00', 0, 7, 0, 0, 0, '', '', 'Inactivo', 0);
